@@ -5,6 +5,10 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "format": "prettier . --write --cache",
+    "format:check": "prettier . --check --cache",
+    "lint": "eslint . --cache --concurrency=auto",
+    "lint:fix": "bun run lint --fix",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc"
   },
@@ -22,6 +26,7 @@
     "@types/node": "^22",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+    "js-style-kit": "^0.5.2",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2",
     "vite": "^7.1.7",
