@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 
+import { Providers } from "./providers";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -33,7 +34,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => (
       <Links />
     </head>
     <body>
-      {children}
+      <Providers>{children}</Providers>
       <ScrollRestoration />
       <Scripts />
     </body>
