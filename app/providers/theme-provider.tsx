@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useEffect, useState } from "react";
 import { z } from "zod";
 
@@ -30,6 +32,9 @@ export const ThemeProvider = ({
   ...props
 }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") {
+      return defaultTheme;
+    }
     const storedTheme = localStorage.getItem(storageKey);
     const result = themeSchema.safeParse(storedTheme);
     return result.success ? result.data : defaultTheme;
@@ -67,7 +72,9 @@ export const ThemeProvider = ({
 
   const value = {
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(storageKey, theme);
+      }
       setTheme(theme);
     },
     theme,

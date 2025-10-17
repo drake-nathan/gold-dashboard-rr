@@ -3,7 +3,6 @@ import {
   Links,
   Meta,
   Outlet,
-  Scripts,
   ScrollRestoration,
 } from "react-router";
 
@@ -36,7 +35,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => (
     <body>
       <Providers>{children}</Providers>
       <ScrollRestoration />
-      <Scripts />
     </body>
   </html>
 );

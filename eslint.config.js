@@ -2,10 +2,10 @@
 import { eslintConfig } from "js-style-kit";
 
 export default eslintConfig({
+  convex: true,
   ignores: [".react-router"],
   react: {
-    framework: "vite",
-    reactRefresh: false,
+    framework: "react-router",
   },
   typescript: "tsconfig.eslint.json",
 });
