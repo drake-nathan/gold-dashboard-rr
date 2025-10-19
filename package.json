@@ -13,6 +13,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@radix-ui/react-switch": "1.2.6",
     "@react-router/node": "7.9.4",
     "@react-router/serve": "7.9.4",
     "babel-plugin-react-compiler": "1.0.0",
