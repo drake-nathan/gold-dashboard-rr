@@ -1,21 +1,20 @@
-import { unstable_reactRouterRSC as reactRouterRSC } from "@react-router/dev/vite";
+import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
-import rsc from "@vitejs/plugin-rsc";
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-const ReactCompilerConfig = {};
+// Import server env to validate at build time
+// import "./app/env.server";
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    reactRouterRSC(),
-    rsc(),
+    reactRouter(),
     tsconfigPaths(),
     babel({
       babelConfig: {
-        plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
+        plugins: [["babel-plugin-react-compiler", {}]],
         presets: ["@babel/preset-typescript"],
       },
       filter: /\.[jt]sx?$/,

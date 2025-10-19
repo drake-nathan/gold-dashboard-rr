@@ -1,5 +1,4 @@
 .DS_Store
-.env
 /node_modules/
 
 # React Router
@@ -7,3 +6,7 @@
 /build/
 
 .eslintcache
+
+# Environment variables (keep .env as template, ignore .env.local)
+.env.local
+.env*.local

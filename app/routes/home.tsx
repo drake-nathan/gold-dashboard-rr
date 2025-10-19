@@ -1,6 +1,7 @@
-import type { Route } from "./+types/home";
+import { api } from "convex/_generated/api";
+import { useQuery } from "convex/react";
 
-import { Welcome } from "../welcome/welcome";
+import type { Route } from "./+types/home";
 
 // eslint-disable-next-line no-empty-pattern
 export const meta = ({}: Route.MetaArgs) => [
@@ -9,7 +10,9 @@ export const meta = ({}: Route.MetaArgs) => [
 ];
 
 const Home = () => {
-  return <Welcome />;
+  const stats = useQuery(api.dashboard.getStats);
+
+  return <div>{stats?.lastFetch?.timestamp}</div>;
 };
 
 export default Home;

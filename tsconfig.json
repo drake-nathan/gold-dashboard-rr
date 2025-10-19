@@ -18,6 +18,7 @@
     "types": ["node", "vite/client"],
     "verbatimModuleSyntax": true
   },
+  "exclude": ["convex"],
   "include": [
     "**/*",
     "**/.server/**/*",

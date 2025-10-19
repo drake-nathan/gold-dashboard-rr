@@ -3,13 +3,15 @@ import {
   Links,
   Meta,
   Outlet,
+  Scripts,
   ScrollRestoration,
 } from "react-router";
+
+import "./app.css";
 
 import type { Route } from "./+types/root";
 
 import { Providers } from "./providers";
-import "./app.css";
 
 export const links: Route.LinksFunction = () => [
   { href: "https://fonts.googleapis.com", rel: "preconnect" },
@@ -24,20 +26,23 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export const Layout = ({ children }: { children: React.ReactNode }) => (
-  <html lang="en">
-    <head>
-      <meta charSet="utf-8" />
-      <meta content="width=device-width, initial-scale=1" name="viewport" />
-      <Meta />
-      <Links />
-    </head>
-    <body>
-      <Providers>{children}</Providers>
-      <ScrollRestoration />
-    </body>
-  </html>
-);
+export const Layout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta content="width=device-width, initial-scale=1" name="viewport" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Providers>{children}</Providers>
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+};
 
 const App = () => <Outlet />;
 
