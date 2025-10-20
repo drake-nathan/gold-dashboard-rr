@@ -1,3 +1,9 @@
+import { ClerkProvider, useAuth } from "@clerk/react-router";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
+import { shadcn } from "@clerk/themes";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { useMemo } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -11,7 +17,7 @@ import "./app.css";
 
 import type { Route } from "./+types/root";
 
-import { Providers } from "./providers";
+import { ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
   { href: "https://fonts.googleapis.com", rel: "preconnect" },
@@ -26,6 +32,12 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export const middleware = [clerkMiddleware()];
+
+export const loader = (args: Route.LoaderArgs) => {
+  return rootAuthLoader(args);
+};
+
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="en">
@@ -36,7 +48,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Links />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <ThemeProvider>{children}</ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -44,7 +56,34 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const App = () => <Outlet />;
+const App = ({ loaderData }: Route.ComponentProps) => {
+  const url = import.meta.env.VITE_CONVEX_URL;
+  const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+  if (!url) {
+    throw new Error("VITE_CONVEX_URL environment variable is not set");
+  }
+
+  if (!clerkApiKey) {
+    throw new Error(
+      "VITE_CLERK_PUBLISHABLE_KEY environment variable is not set",
+    );
+  }
+
+  const convex = useMemo(() => new ConvexReactClient(url), [url]);
+
+  return (
+    <ClerkProvider
+      appearance={{ baseTheme: shadcn }}
+      loaderData={loaderData}
+      publishableKey={clerkApiKey}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <Outlet />
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
+  );
+};
 
 export default App;
 

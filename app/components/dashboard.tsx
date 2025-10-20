@@ -1,17 +1,14 @@
 import { useMemo, useState } from "react";
 
-import type {
-  MetalFilter,
-  SortOption,
-} from "~/components/product-filters";
+import type { MetalFilter, SortOption } from "~/components/product-filters";
 
+import { AuthButtons } from "~/components/auth-buttons";
 import {
   type CalculatorSettings,
   PRESET_CARDS,
 } from "~/components/calculator-settings";
 import { ProductCard, type ProductCardData } from "~/components/product-card";
 import { ThemeToggle } from "~/components/theme-toggle";
-import { Button } from "~/components/ui/button";
 import { Switch } from "~/components/ui/switch";
 
 interface DashboardProps {
@@ -121,13 +118,8 @@ export const Dashboard = ({
           <h1 className="text-xl font-bold">Gold Dashboard</h1>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost">
-              Sign In
-            </Button>
-            <Button size="sm" variant="default">
-              Sign Up
-            </Button>
             <ThemeToggle />
+            <AuthButtons />
           </div>
         </div>
       </header>
@@ -160,7 +152,8 @@ export const Dashboard = ({
               </div>
             </div>
 
-            {collectPure.gold ? <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
+            {collectPure.gold ?
+              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
                 <div className="text-xs text-muted-foreground">Gold Spot</div>
                 <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
                   $
@@ -169,20 +162,11 @@ export const Dashboard = ({
                     minimumFractionDigits: 0,
                   })}
                 </div>
-              </div> : null}
+              </div>
+            : null}
 
-            {collectPure.gold ? <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">Gold Bid</div>
-                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                  $
-                  {collectPure.gold.bidPrice.toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                    minimumFractionDigits: 0,
-                  })}
-                </div>
-              </div> : null}
-
-            {collectPure.silver ? <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
+            {collectPure.silver ?
+              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
                 <div className="text-xs text-muted-foreground">Silver Spot</div>
                 <div className="text-lg font-bold text-slate-500 dark:text-slate-400">
                   $
@@ -191,18 +175,8 @@ export const Dashboard = ({
                     minimumFractionDigits: 2,
                   })}
                 </div>
-              </div> : null}
-
-            {collectPure.silver ? <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">Silver Bid</div>
-                <div className="text-lg font-bold text-slate-500 dark:text-slate-400">
-                  $
-                  {collectPure.silver.bidPrice.toLocaleString(undefined, {
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                  })}
-                </div>
-              </div> : null}
+              </div>
+            : null}
 
             <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
               <div className="text-xs text-muted-foreground">
@@ -213,7 +187,8 @@ export const Dashboard = ({
               </div>
             </div>
 
-            {lastFetch ? <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
+            {lastFetch ?
+              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
                 <div className="text-xs text-muted-foreground">Last Update</div>
                 <div className="text-lg font-bold">
                   {new Date(lastFetch.timestamp).toLocaleTimeString(undefined, {
@@ -221,7 +196,8 @@ export const Dashboard = ({
                     minute: "2-digit",
                   })}
                 </div>
-              </div> : null}
+              </div>
+            : null}
           </div>
         </div>
 
@@ -248,9 +224,9 @@ export const Dashboard = ({
                 <select
                   className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                   id="metal-filter"
-                  onChange={(e) =>
-                    { setMetalFilter(e.target.value as MetalFilter); }
-                  }
+                  onChange={(e) => {
+                    setMetalFilter(e.target.value as MetalFilter);
+                  }}
                   value={metalFilter}
                 >
                   <option value="all">All</option>
@@ -266,7 +242,9 @@ export const Dashboard = ({
                 <select
                   className="h-9 rounded-md border border-input bg-background px-3 text-sm"
                   id="sort"
-                  onChange={(e) => { setSortOption(e.target.value as SortOption); }}
+                  onChange={(e) => {
+                    setSortOption(e.target.value as SortOption);
+                  }}
                   value={sortOption}
                 >
                   <option value="spread-asc">Spread (Low to High)</option>
@@ -286,12 +264,12 @@ export const Dashboard = ({
                 <Switch
                   checked={calculatorSettings.costcoMembershipEnabled}
                   id="costco-exec"
-                  onCheckedChange={(checked) =>
-                    { setCalculatorSettings({
+                  onCheckedChange={(checked) => {
+                    setCalculatorSettings({
                       ...calculatorSettings,
                       costcoMembershipEnabled: checked,
-                    }); }
-                  }
+                    });
+                  }}
                 />
               </div>
 

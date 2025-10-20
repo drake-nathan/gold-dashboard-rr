@@ -176,12 +176,12 @@ export const CalculatorSettingsDialog = ({
                 <Label htmlFor="earn-rate">Earn Rate (%)</Label>
                 <Input
                   id="earn-rate"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    { handleCustomValuesChange(
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    handleCustomValuesChange(
                       parseFloat(e.target.value) || 0,
                       customPointValue,
-                    ); }
-                  }
+                    );
+                  }}
                   placeholder="1.5"
                   type="number"
                   value={customEarnRate}
@@ -192,12 +192,12 @@ export const CalculatorSettingsDialog = ({
                 <Label htmlFor="point-value">Point Value ($)</Label>
                 <Input
                   id="point-value"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    { handleCustomValuesChange(
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    handleCustomValuesChange(
                       customEarnRate,
                       parseFloat(e.target.value) || 0,
-                    ); }
-                  }
+                    );
+                  }}
                   placeholder="0.01"
                   step="0.001"
                   type="number"

@@ -4,10 +4,8 @@
    * You can modify it, but some settings are required to use Convex.
    */
   "compilerOptions": {
-    /* These settings are not required by Convex and can be modified. */
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -17,7 +15,6 @@
     "noEmit": true,
     "skipLibCheck": true,
     "strict": true,
-    /* These compiler options are required by Convex */
     "target": "ESNext"
   },
   "exclude": ["./_generated"],

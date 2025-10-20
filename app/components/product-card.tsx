@@ -73,15 +73,19 @@ export const ProductCard = ({
             <CardTitle className="line-clamp-2 text-base leading-tight">
               {product.name}
             </CardTitle>
-            {product.brand ? <CardDescription className="mt-1 line-clamp-1">
+            {product.brand ?
+              <CardDescription className="mt-1 line-clamp-1">
                 {product.brand}
-              </CardDescription> : null}
+              </CardDescription>
+            : null}
           </div>
-          {product.thumbnail ? <img
+          {product.thumbnail ?
+            <img
               alt={product.name}
               className="h-16 w-16 flex-shrink-0 rounded object-cover"
               src={product.thumbnail}
-            /> : null}
+            />
+          : null}
         </div>
       </CardHeader>
 
@@ -97,9 +101,11 @@ export const ProductCard = ({
         </div>
 
         <div className="min-h-[1.5rem]">
-          {product.metalWeight ? <div className="text-muted-foreground">
+          {product.metalWeight ?
+            <div className="text-muted-foreground">
               Weight: {product.metalWeight}
-            </div> : null}
+            </div>
+          : null}
         </div>
 
         <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
@@ -121,29 +127,35 @@ export const ProductCard = ({
             </div>
           )}
 
-          {product.currentPricePerOunce ? <>
+          {product.currentPricePerOunce ?
+            <>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Price/oz:</span>
                 <span className="font-medium">
                   ${product.currentPricePerOunce.toLocaleString()}
                 </span>
               </div>
-              {totalCashbackPercentage > 0 && pricePerOzAfterCashback ? <div className="flex justify-between">
+              {totalCashbackPercentage > 0 && pricePerOzAfterCashback ?
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">
                     Price/oz (after cashback):
                   </span>
                   <span className="font-medium">
                     ${pricePerOzAfterCashback.toLocaleString()}
                   </span>
-                </div> : null}
-            </> : null}
+                </div>
+              : null}
+            </>
+          : null}
 
-          {product.collectPureBid ? <div className="flex justify-between">
+          {product.collectPureBid ?
+            <div className="flex justify-between">
               <span className="text-muted-foreground">Pure Bid/oz:</span>
               <span className="font-medium">
                 ${product.collectPureBid.toLocaleString()}
               </span>
-            </div> : null}
+            </div>
+          : null}
 
           {adjustedSpread !== null && (
             <>

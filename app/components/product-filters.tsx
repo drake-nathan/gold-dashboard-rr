@@ -50,9 +50,9 @@ export const ProductFilters = ({
           Metal Type:
         </Label>
         <Select
-          onValueChange={(value: string) =>
-            { onMetalFilterChange(value as MetalFilter); }
-          }
+          onValueChange={(value: string) => {
+            onMetalFilterChange(value as MetalFilter);
+          }}
           value={metalFilter}
         >
           <SelectTrigger className="w-[120px]" id="metal-filter">
@@ -71,7 +71,9 @@ export const ProductFilters = ({
           Sort By:
         </Label>
         <Select
-          onValueChange={(value: string) => { onSortChange(value as SortOption); }}
+          onValueChange={(value: string) => {
+            onSortChange(value as SortOption);
+          }}
           value={sortOption}
         >
           <SelectTrigger className="w-[200px]" id="sort">
