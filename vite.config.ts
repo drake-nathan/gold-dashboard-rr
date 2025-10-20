@@ -2,10 +2,8 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
+import devtoolsJson from "vite-plugin-devtools-json";
 import tsconfigPaths from "vite-tsconfig-paths";
-
-// Import server env to validate at build time
-// import "./app/env.server";
 
 export default defineConfig({
   plugins: [
@@ -19,5 +17,6 @@ export default defineConfig({
       },
       filter: /\.[jt]sx?$/,
     }),
+    devtoolsJson(),
   ],
 });
