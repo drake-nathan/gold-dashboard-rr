@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,23 +9,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card";
+} from "@/components/ui/card";
 
-export interface ProductCardData {
-  brand: null | string;
-  collectPureBid: null | number;
-  currentInStock: boolean;
-  currentPrice: number;
-  currentPricePerOunce: null | number;
-  metalType: "gold" | "silver";
-  metalWeight: null | string;
-  name: string;
-  productId: string;
-  spread: null | number;
-  spreadPercentage: null | number;
-  thumbnail: null | string;
-  url: string;
-}
+import type { ProductCardData } from "./dashboard";
 
 interface ProductCardProps {
   product: ProductCardData;

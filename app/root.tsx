@@ -3,7 +3,6 @@ import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { shadcn } from "@clerk/themes";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { useMemo } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -27,7 +26,7 @@ export const links: Route.LinksFunction = () => [
     rel: "preconnect",
   },
   {
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Outfit:wght@100..900&display=swap",
     rel: "stylesheet",
   },
 ];
@@ -57,10 +56,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = ({ loaderData }: Route.ComponentProps) => {
-  const url = import.meta.env.VITE_CONVEX_URL;
+  const convexUrl = import.meta.env.VITE_CONVEX_URL;
   const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-  if (!url) {
+  if (!convexUrl) {
     throw new Error("VITE_CONVEX_URL environment variable is not set");
   }
 
@@ -70,7 +69,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  const convex = useMemo(() => new ConvexReactClient(url), [url]);
+  const convex = new ConvexReactClient(convexUrl);
 
   return (
     <ClerkProvider

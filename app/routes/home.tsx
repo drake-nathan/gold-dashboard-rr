@@ -1,8 +1,10 @@
+import type { FunctionReturnType } from "convex/server";
+
 import { api } from "convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import { usePreloadedQuery } from "convex/react";
 
-import { Dashboard } from "~/components/dashboard";
+import { Dashboard } from "@/components/dashboard";
 
 import type { Route } from "./+types/home";
 
@@ -13,6 +15,8 @@ export const meta = () => [
     name: "description",
   },
 ];
+
+type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 
 export const loader = async () => {
   const convexUrl = process.env.VITE_CONVEX_URL;
@@ -35,10 +39,6 @@ export const loader = async () => {
 };
 
 const Home = ({ loaderData }: Route.ComponentProps) => {
-  // Use the preloaded query - this will:
-  // 1. Return the server-rendered data immediately (no loading state)
-  // 2. Subscribe to real-time updates from Convex
-  // 3. Automatically update when data changes
   const stats = usePreloadedQuery(loaderData.preloadedStats);
 
   // Check if there's actually no data
@@ -56,51 +56,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  // Transform the data to match ProductCardData interface
-  const goldProducts = (stats.goldProducts?.bestSpread ?? []).map(
-    (product) => ({
-      brand: product.brand,
-      collectPureBid: product.collectPureBid,
-      currentInStock: product.currentInStock,
-      currentPrice: product.currentPrice,
-      currentPricePerOunce: product.currentPricePerOunce,
-      metalType: product.metalType,
-      metalWeight: product.metalWeight,
-      name: product.name,
-      productId: product.productId,
-      spread: product.spread,
-      spreadPercentage: product.spreadPercentage,
-      thumbnail: product.thumbnail,
-      url: product.url,
-    }),
-  );
-
-  const silverProducts = (stats.silverProducts?.bestSpread ?? []).map(
-    (product) => ({
-      brand: product.brand,
-      collectPureBid: product.collectPureBid,
-      currentInStock: product.currentInStock,
-      currentPrice: product.currentPrice,
-      currentPricePerOunce: product.currentPricePerOunce,
-      metalType: product.metalType,
-      metalWeight: product.metalWeight,
-      name: product.name,
-      productId: product.productId,
-      spread: product.spread,
-      spreadPercentage: product.spreadPercentage,
-      thumbnail: product.thumbnail,
-      url: product.url,
-    }),
-  );
-
-  return (
-    <Dashboard
-      collectPure={stats.collectPure}
-      goldProducts={goldProducts}
-      lastFetch={stats.lastFetch}
-      silverProducts={silverProducts}
-    />
-  );
+  return <Dashboard stats={stats} />;
 };
 
 export default Home;

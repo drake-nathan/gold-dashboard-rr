@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 
 export const AuthButtons = () => {
   const { openSignIn, openSignUp } = useClerk();

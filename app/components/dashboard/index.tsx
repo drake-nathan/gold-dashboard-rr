@@ -1,47 +1,29 @@
+import type { api } from "convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+
 import { useMemo, useState } from "react";
 
-import type { MetalFilter, SortOption } from "~/components/product-filters";
+import type { MetalFilter, SortOption } from "@/components/product-filters";
 
-import { AuthButtons } from "~/components/auth-buttons";
 import {
   type CalculatorSettings,
   PRESET_CARDS,
-} from "~/components/calculator-settings";
-import { ProductCard, type ProductCardData } from "~/components/product-card";
-import { ThemeToggle } from "~/components/theme-toggle";
-import { Switch } from "~/components/ui/switch";
+} from "@/components/calculator-settings";
+import { ProductCard } from "@/components/product-card";
+import { Switch } from "@/components/ui/switch";
+
+import { Header } from "../header";
+import { Stats } from "./stats";
+
+type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
+
+export type ProductCardData = GetStats["goldProducts"]["bestSpread"][number];
 
 interface DashboardProps {
-  collectPure: {
-    gold: null | {
-      bidPrice: number;
-      isMock: boolean;
-      spotPrice: number;
-      timestamp: number;
-    };
-    silver: null | {
-      bidPrice: number;
-      isMock: boolean;
-      spotPrice: number;
-      timestamp: number;
-    };
-  };
-  goldProducts: ProductCardData[];
-  lastFetch: null | {
-    priceChanges: number;
-    productsFound: number;
-    stockChanges: number;
-    timestamp: number;
-  };
-  silverProducts: ProductCardData[];
+  stats: GetStats;
 }
 
-export const Dashboard = ({
-  collectPure,
-  goldProducts,
-  lastFetch,
-  silverProducts,
-}: DashboardProps) => {
+export const Dashboard = ({ stats }: DashboardProps) => {
   // Calculator settings state
   const [calculatorSettings, setCalculatorSettings] =
     useState<CalculatorSettings>({
@@ -64,11 +46,14 @@ export const Dashboard = ({
     let products: ProductCardData[] = [];
 
     if (metalFilter === "all") {
-      products = [...goldProducts, ...silverProducts];
+      products = [
+        ...stats.goldProducts.bestSpread,
+        ...stats.silverProducts.bestSpread,
+      ];
     } else if (metalFilter === "gold") {
-      products = goldProducts;
+      products = stats.goldProducts.bestSpread;
     } else {
-      products = silverProducts;
+      products = stats.silverProducts.bestSpread;
     }
 
     // Filter out of stock if needed
@@ -77,7 +62,12 @@ export const Dashboard = ({
     }
 
     return products;
-  }, [metalFilter, goldProducts, silverProducts, showOutOfStock]);
+  }, [
+    metalFilter,
+    stats.goldProducts.bestSpread,
+    stats.silverProducts.bestSpread,
+    showOutOfStock,
+  ]);
 
   // Sort products
   const sortedProducts = useMemo(() => {
@@ -112,94 +102,16 @@ export const Dashboard = ({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Page Header */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <h1 className="text-xl font-bold">Gold Dashboard</h1>
+      <Header />
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <AuthButtons />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        {/* Dashboard Stats - All Uniform Cards */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
-            <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-              <div className="text-xs text-muted-foreground">
-                Total Products
-              </div>
-              <div className="text-2xl font-bold">
-                {goldProducts.length + silverProducts.length}
-              </div>
-            </div>
-
-            <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-              <div className="text-xs text-muted-foreground">Gold</div>
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                {goldProducts.length}
-              </div>
-            </div>
-
-            <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-              <div className="text-xs text-muted-foreground">Silver</div>
-              <div className="text-2xl font-bold text-slate-500 dark:text-slate-400">
-                {silverProducts.length}
-              </div>
-            </div>
-
-            {collectPure.gold ?
-              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">Gold Spot</div>
-                <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-                  $
-                  {collectPure.gold.spotPrice.toLocaleString(undefined, {
-                    maximumFractionDigits: 0,
-                    minimumFractionDigits: 0,
-                  })}
-                </div>
-              </div>
-            : null}
-
-            {collectPure.silver ?
-              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">Silver Spot</div>
-                <div className="text-lg font-bold text-slate-500 dark:text-slate-400">
-                  $
-                  {collectPure.silver.spotPrice.toLocaleString(undefined, {
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                  })}
-                </div>
-              </div>
-            : null}
-
-            <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-              <div className="text-xs text-muted-foreground">
-                Total Cashback
-              </div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {totalCashbackPercentage.toFixed(1)}%
-              </div>
-            </div>
-
-            {lastFetch ?
-              <div className="w-[140px] rounded-lg border bg-card px-3 py-2">
-                <div className="text-xs text-muted-foreground">Last Update</div>
-                <div className="text-lg font-bold">
-                  {new Date(lastFetch.timestamp).toLocaleTimeString(undefined, {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </div>
-              </div>
-            : null}
-          </div>
-        </div>
+        <Stats
+          collectPure={stats.collectPure}
+          goldProducts={stats.goldProducts.bestSpread}
+          lastFetch={stats.lastFetch}
+          silverProducts={stats.silverProducts.bestSpread}
+          totalCashbackPercentage={totalCashbackPercentage}
+        />
 
         {/* Filters & Calculator */}
         <div className="mb-6 rounded-lg border bg-card p-4">
