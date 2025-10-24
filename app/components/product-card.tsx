@@ -165,13 +165,13 @@ export const ProductCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex-col gap-1.5 pt-0">
-        <Button asChild className="h-8 w-full" size="sm" variant="default">
+      <CardFooter className="flex justify-around gap-1.5">
+        <Button asChild size="sm" variant="ghost">
           <a href={product.url} rel="noopener noreferrer" target="_blank">
             Costco <ExternalLink className="ml-1 h-3 w-3" />
           </a>
         </Button>
-        <Button asChild className="h-8 w-full" size="sm" variant="outline">
+        <Button asChild size="sm" variant="ghost">
           <a href={collectPureUrl} rel="noopener noreferrer" target="_blank">
             Pure <ExternalLink className="ml-1 h-3 w-3" />
           </a>

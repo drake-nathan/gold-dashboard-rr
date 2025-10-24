@@ -1,12 +1,10 @@
-import type { FunctionReturnType } from "convex/server";
-
 import { api } from "convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import { usePreloadedQuery } from "convex/react";
 
 import { Dashboard } from "@/components/dashboard";
 
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/dashboard";
 
 export const meta = () => [
   { title: "Gold Dashboard - Costco vs Collect Pure" },
@@ -16,15 +14,11 @@ export const meta = () => [
   },
 ];
 
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
-
 export const loader = async () => {
   const convexUrl = process.env.VITE_CONVEX_URL;
-
   if (!convexUrl) {
     throw new Error("VITE_CONVEX_URL is not set");
   }
-
   // Use Convex's preloadQuery - this creates a payload that includes both the data
   // and the query metadata needed for client-side subscription
   const preloadedStats = await preloadQuery(
@@ -34,15 +28,16 @@ export const loader = async () => {
       url: convexUrl,
     },
   );
-
   return { preloadedStats };
 };
 
 const Home = ({ loaderData }: Route.ComponentProps) => {
   const stats = usePreloadedQuery(loaderData.preloadedStats);
+  // const stats = useQuery(api.dashboard.getStats);
 
   // Check if there's actually no data
-  if (!stats?.goldProducts || !stats.silverProducts) {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">

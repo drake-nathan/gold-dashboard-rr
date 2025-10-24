@@ -4,6 +4,14 @@ import {
   type CalculatorSettings,
   PRESET_CARDS,
 } from "@/components/calculator-settings";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
 interface FiltersProps {
@@ -28,14 +36,12 @@ export const Filters = ({
   sortOption,
 }: FiltersProps) => {
   return (
-    <div className="mb-6 rounded-lg border bg-card p-4">
+    <div className="mb-6 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         {/* Left Side - Filters */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor="show-oos">
-              Show Out of Stock
-            </label>
+            <Label htmlFor="show-oos">Show Out of Stock</Label>
             <Switch
               checked={showOutOfStock}
               id="show-oos"
@@ -44,49 +50,51 @@ export const Filters = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor="metal-filter">
-              Metal Type:
-            </label>
-            <select
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              id="metal-filter"
-              onChange={(e) => {
-                setMetalFilter(e.target.value as MetalFilter);
+            <Label htmlFor="metal-filter">Metal Type:</Label>
+            <Select
+              onValueChange={(value) => {
+                setMetalFilter(value as MetalFilter);
               }}
               value={metalFilter}
             >
-              <option value="all">All</option>
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-            </select>
+              <SelectTrigger className="min-w-20" id="metal-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="gold">Gold</SelectItem>
+                <SelectItem value="silver">Silver</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor="sort">
-              Sort By:
-            </label>
-            <select
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              id="sort"
-              onChange={(e) => {
-                setSortOption(e.target.value as SortOption);
+            <Label htmlFor="sort">Sort By:</Label>
+            <Select
+              onValueChange={(value) => {
+                setSortOption(value as SortOption);
               }}
               value={sortOption}
             >
-              <option value="spread-asc">Spread (Low to High)</option>
-              <option value="spread-desc">Spread (High to Low)</option>
-              <option value="price-asc">Price (Low to High)</option>
-              <option value="price-desc">Price (High to Low)</option>
-            </select>
+              <SelectTrigger className="min-w-52" id="sort">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="spread-asc">Spread (Low to High)</SelectItem>
+                <SelectItem value="spread-desc">
+                  Spread (High to Low)
+                </SelectItem>
+                <SelectItem value="price-asc">Price (Low to High)</SelectItem>
+                <SelectItem value="price-desc">Price (High to Low)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Right Side - Calculator */}
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor="costco-exec">
-              Costco Executive (2%):
-            </label>
+            <Label htmlFor="costco-exec">Costco Executive (2%):</Label>
             <Switch
               checked={calculatorSettings.costcoMembershipEnabled}
               id="costco-exec"
@@ -100,14 +108,10 @@ export const Filters = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium" htmlFor="credit-card">
-              Credit Card:
-            </label>
-            <select
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-              id="credit-card"
-              onChange={(e) => {
-                const card = PRESET_CARDS.find((c) => c.id === e.target.value);
+            <Label htmlFor="credit-card">Credit Card:</Label>
+            <Select
+              onValueChange={(value) => {
+                const card = PRESET_CARDS.find((c) => c.id === value);
                 if (card) {
                   setCalculatorSettings({
                     ...calculatorSettings,
@@ -117,12 +121,17 @@ export const Filters = ({
               }}
               value={calculatorSettings.creditCard.id}
             >
-              {PRESET_CARDS.filter((c) => c.id !== "custom").map((card) => (
-                <option key={card.id} value={card.id}>
-                  {card.name} ({card.cashbackPercentage.toFixed(2)}%)
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="min-w-80" id="credit-card">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRESET_CARDS.filter((c) => c.id !== "custom").map((card) => (
+                  <SelectItem key={card.id} value={card.id}>
+                    {card.name} ({card.cashbackPercentage.toFixed(2)}%)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

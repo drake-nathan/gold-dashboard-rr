@@ -1,7 +1,7 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import type { MetalFilter, SortOption } from "@/components/product-filters";
 
@@ -34,7 +34,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   // Filter and sort state
   const [metalFilter, setMetalFilter] = useState<MetalFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("spread-asc");
-  const [showOutOfStock, setShowOutOfStock] = useState(false);
+  const [showOutOfStock, setShowOutOfStock] = useState(true);
 
   // Calculate total cashback percentage
   const totalCashbackPercentage =
@@ -42,63 +42,57 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     calculatorSettings.creditCard.cashbackPercentage;
 
   // Combine and filter products
-  const filteredProducts = useMemo(() => {
-    let products: ProductCardData[] = [];
+  let filteredProducts: ProductCardData[] = [];
 
-    if (metalFilter === "all") {
-      products = [
-        ...stats.goldProducts.bestSpread,
-        ...stats.silverProducts.bestSpread,
-      ];
-    } else if (metalFilter === "gold") {
-      products = stats.goldProducts.bestSpread;
-    } else {
-      products = stats.silverProducts.bestSpread;
-    }
+  if (metalFilter === "all") {
+    filteredProducts = [
+      ...stats.goldProducts.bestSpread,
+      ...stats.silverProducts.bestSpread,
+    ];
+  } else if (metalFilter === "gold") {
+    filteredProducts = stats.goldProducts.bestSpread;
+  } else {
+    filteredProducts = stats.silverProducts.bestSpread;
+  }
 
-    // Filter out of stock if needed
-    if (!showOutOfStock) {
-      products = products.filter((p) => p.currentInStock);
-    }
-
-    return products;
-  }, [
-    metalFilter,
-    stats.goldProducts.bestSpread,
-    stats.silverProducts.bestSpread,
-    showOutOfStock,
-  ]);
+  // Filter out of stock if needed
+  if (!showOutOfStock) {
+    filteredProducts = filteredProducts.filter((p) => p.currentInStock);
+  }
 
   // Sort products
-  const sortedProducts = useMemo(() => {
-    const products = [...filteredProducts];
+  const products = [...filteredProducts];
 
-    switch (sortOption) {
-      case "price-asc": {
-        return products.sort((a, b) => a.currentPrice - b.currentPrice);
-      }
-      case "price-desc": {
-        return products.sort((a, b) => b.currentPrice - a.currentPrice);
-      }
-      case "spread-asc": {
-        return products.sort((a, b) => {
-          const aSpread = a.spreadPercentage ?? 999;
-          const bSpread = b.spreadPercentage ?? 999;
-          return aSpread - bSpread;
-        });
-      }
-      case "spread-desc": {
-        return products.sort((a, b) => {
-          const aSpread = a.spreadPercentage ?? -999;
-          const bSpread = b.spreadPercentage ?? -999;
-          return bSpread - aSpread;
-        });
-      }
-      default: {
-        return products;
-      }
+  let sortedProducts: ProductCardData[];
+  switch (sortOption) {
+    case "price-asc": {
+      sortedProducts = products.sort((a, b) => a.currentPrice - b.currentPrice);
+      break;
     }
-  }, [filteredProducts, sortOption]);
+    case "price-desc": {
+      sortedProducts = products.sort((a, b) => b.currentPrice - a.currentPrice);
+      break;
+    }
+    case "spread-asc": {
+      sortedProducts = products.sort((a, b) => {
+        const aSpread = a.spreadPercentage ?? 999;
+        const bSpread = b.spreadPercentage ?? 999;
+        return aSpread - bSpread;
+      });
+      break;
+    }
+    case "spread-desc": {
+      sortedProducts = products.sort((a, b) => {
+        const aSpread = a.spreadPercentage ?? -999;
+        const bSpread = b.spreadPercentage ?? -999;
+        return bSpread - aSpread;
+      });
+      break;
+    }
+    default: {
+      sortedProducts = products;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -137,7 +131,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
               </p>
             </div>
           </div>
-        : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        : <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
             {sortedProducts.map((product) => (
               <ProductCard
                 key={product.productId}

@@ -34,18 +34,6 @@ This project was recently migrated from Next.js to React Router 7 + Vite. Some r
 - `.env` - Template file with empty values (committed to git)
 - `.env.local` - Actual values with API keys (gitignored)
 
-Required environment variables:
-
-```bash
-# Convex
-CONVEX_DEPLOYMENT=dev:nautical-chickadee-997
-VITE_CONVEX_URL=https://nautical-chickadee-997.convex.cloud
-
-# API Keys
-UNWRANGLE_API_KEY=<your-key>
-PURE_API_KEY=<your-key>
-```
-
 ### Validation
 
 Environment variables are validated using `@t3-oss/env-core`:
@@ -249,7 +237,7 @@ This provides optimal performance with instant page loads and real-time reactivi
 - `app/components/product-filters.tsx` - Filter types and constants
 - `app/components/theme-toggle.tsx` - Dark mode toggle
 - `app/providers/theme-provider.tsx` - Theme context with localStorage
-- `app/providers/convex-provider.tsx` - Convex client setup with useMemo
+- `app/providers/convex-provider.tsx` - Convex client setup
 
 ### Future Enhancements
 
