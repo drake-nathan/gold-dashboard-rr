@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-import { action, internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 // Create a new product mapping
 export const createMapping = mutation({

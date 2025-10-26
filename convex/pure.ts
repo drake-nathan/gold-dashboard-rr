@@ -111,13 +111,13 @@ const parseTargetWeight = (weightStr: string): null | number => {
   const normalized = weightStr.toLowerCase().replaceAll(/\s+/g, "");
 
   if (normalized.includes("oz")) {
-    const match = /(\d+(?:\.\d+)?)oz/.exec(normalized);
-    if (match && match[1]) return parseFloat(match[1]);
+    const match = /(?<value>\d+(?:\.\d+)?)oz/.exec(normalized);
+    if (match?.groups?.value) return parseFloat(match.groups.value);
   }
 
   if (normalized.includes("g")) {
-    const match = /(\d+(?:\.\d+)?)g/.exec(normalized);
-    if (match && match[1]) return parseFloat(match[1]) / 31.1035; // Convert grams to oz
+    const match = /(?<value>\d+(?:\.\d+)?)g/.exec(normalized);
+    if (match?.groups?.value) return parseFloat(match.groups.value) / 31.1035; // Convert grams to oz
   }
 
   return null;
@@ -185,7 +185,8 @@ export const fetchNewData = internalAction({
 
       // Get active mappings to determine which Pure products to fetch
       const activeMappings = await ctx.runQuery(
-        "productMappings:getActiveMappings" as any,
+        // @ts-expect-error FIXME: fix once schema is finalize
+        "productMappings:getActiveMappings",
       );
       console.info(`Found ${activeMappings.length} active product mappings`);
 
@@ -331,7 +332,8 @@ export const fetchNewData = internalAction({
             const bidPricePerOz =
               bestMatch.variants[0].highestOffer.price / weightOz;
 
-            await ctx.runMutation("collectPurePrices:upsertProductBid" as any, {
+            // @ts-expect-error FIXME: fix once schema is finalize
+            await ctx.runMutation("collectPurePrices:upsertProductBid", {
               bidPrice: bestMatch.variants[0].highestOffer.price,
               bidPricePerOz,
               isMock: false,
@@ -361,7 +363,8 @@ export const fetchNewData = internalAction({
       }
 
       // Log fetch run with updated stats
-      await ctx.runMutation("metalPrices:logFetchRun" as any, {
+      // @ts-expect-error FIXME: fix once schema is finalize
+      await ctx.runMutation("metalPrices:logFetchRun", {
         priceChanges: productBidsStored,
         productsFound: totalProductsChecked,
         productsUpdated: productBidsStored,
@@ -387,7 +390,8 @@ export const fetchNewData = internalAction({
       console.error("Error fetching Collect Pure prices:", error);
 
       // Log failed fetch run
-      await ctx.runMutation("metalPrices:logFetchRun" as any, {
+      // @ts-expect-error FIXME: fix once schema is finalize
+      await ctx.runMutation("metalPrices:logFetchRun", {
         error: error instanceof Error ? error.message : "Unknown error",
         priceChanges: 0,
         productsFound: 0,
@@ -545,7 +549,8 @@ export const manualFetchPrices = action({
     timestamp: number;
   }> => {
     return await ctx.runAction(
-      "collectPurePrices:fetchCollectPurePrices" as any,
+      // @ts-expect-error FIXME: fix once schema is finalize
+      "collectPurePrices:fetchCollectPurePrices",
     );
   },
 });
