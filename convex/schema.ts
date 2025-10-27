@@ -20,7 +20,6 @@ export default defineSchema({
     // Metal-specific attributes
     metalType: v.union(v.literal("gold"), v.literal("silver")),
     metalWeight: v.union(v.string(), v.null()),
-    metalPurity: v.union(v.string(), v.null()),
 
     // Product features
     marketingFeatures: v.union(v.array(v.string()), v.null()),
@@ -33,6 +32,21 @@ export default defineSchema({
     currentPricePerOunce: v.union(v.number(), v.null()),
     currentInStock: v.boolean(),
 
+    // Pure product matching (optional for backward compatibility with existing products)
+    pureProductId: v.optional(v.union(v.string(), v.null())),
+    pureBidPrice: v.optional(v.union(v.number(), v.null())),
+    pureBidPricePerOz: v.optional(v.union(v.number(), v.null())),
+    pureBidUpdated: v.optional(v.union(v.number(), v.null())),
+    matchStatus: v.optional(
+      v.union(
+        v.literal("auto_matched"),
+        v.literal("manual_matched"),
+        v.literal("fallback"),
+        v.literal("needs_review"),
+        v.null(),
+      ),
+    ),
+
     // Timestamps
     firstSeen: v.number(),
     lastUpdated: v.number(),
@@ -41,7 +55,9 @@ export default defineSchema({
   })
     .index("by_product_id", ["productId"])
     .index("by_metal_type", ["metalType"])
-    .index("by_metal_and_stock", ["metalType", "currentInStock"]),
+    .index("by_metal_and_stock", ["metalType", "currentInStock"])
+    .index("by_metal_and_price", ["metalType", "currentPricePerOunce"])
+    .index("by_price_per_oz", ["currentPricePerOunce"]),
 
   // Price history table - tracks all price changes
   priceHistory: defineTable({
@@ -97,40 +113,43 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_metal_and_time", ["metalType", "timestamp"]),
 
-  // Collect Pure product bids (for specific products matching Costco SKUs)
-  collectPureProductBids: defineTable({
-    productName: v.string(), // Product description (e.g., "1 oz Gold Bar")
+  // Pure products cache - stores all available Pure products for matching
+  pureProducts: defineTable({
+    pureProductId: v.string(), // Unique Pure product ID
+    productName: v.string(), // Full product name from Pure
     metalType: v.union(v.literal("gold"), v.literal("silver")),
-    weight: v.number(), // Weight in oz
-    purity: v.union(v.string(), v.null()), // e.g., ".9999"
-    bidPrice: v.number(), // Total bid price for the product
-    bidPricePerOz: v.number(), // Calculated bid per oz
-    timestamp: v.number(),
-    isMock: v.boolean(),
-    // Optional matching to Costco products
-    matchedCostcoProductId: v.union(v.string(), v.null()),
+    weight: v.number(), // Weight in troy ounces
+    weightGrams: v.union(v.number(), v.null()), // Original weight in grams if available
+    manufacturer: v.union(v.string(), v.null()), // e.g., "PAMP Suisse"
+    productType: v.union(v.string(), v.null()), // "bar", "coin", etc.
+    currentBidPrice: v.union(v.number(), v.null()), // Latest total bid price
+    currentBidPricePerOz: v.union(v.number(), v.null()), // Latest bid per oz
+    lastUpdated: v.number(),
   })
-    .index("by_metal", ["metalType"])
-    .index("by_timestamp", ["timestamp"])
-    .index("by_matched_product", ["matchedCostcoProductId"]),
+    .index("by_pure_id", ["pureProductId"])
+    .index("by_metal_type", ["metalType"])
+    .index("by_metal_and_weight", ["metalType", "weight"]),
 
-  // Mapping table to link Costco products to Pure products
-  costcoPureProductMappings: defineTable({
-    costcoProductId: v.string(), // Costco product ID (e.g., "1957979")
-    pureSearchCriteria: v.object({
-      material: v.string(), // "Gold" or "Silver"
-      weight: v.string(), // "100g", "1oz", "25g", etc.
-      manufacturer: v.optional(v.string()), // "PAMP Suisse", "Rand Refinery", etc.
-      purity: v.optional(v.string()), // ".9999", ".999", etc.
-      productType: v.optional(v.string()), // "bar", "coin", etc.
-      specificSku: v.optional(v.string()), // If we know the exact Pure product ID
-    }),
-    isActive: v.boolean(), // Enable/disable this mapping
-    notes: v.optional(v.string()), // Optional notes about the mapping
-    createdAt: v.number(),
-    updatedAt: v.number(),
+  // Market prices from Gold API
+  marketPrices: defineTable({
+    symbol: v.string(), // e.g., "XAU", "XAG", "BTC"
+    assetType: v.union(
+      v.literal("gold"),
+      v.literal("silver"),
+      v.literal("bitcoin"),
+    ),
+    currentPrice: v.number(),
+    percentChange: v.union(v.number(), v.null()), // 24h percent change (calculated from our history)
+    lastUpdated: v.number(),
+  }).index("by_symbol", ["symbol"]),
+
+  // Market price history - track all price updates for 24h change calculation
+  marketPriceHistory: defineTable({
+    symbol: v.string(),
+    price: v.number(),
+    timestamp: v.number(),
   })
-    .index("by_costco_product", ["costcoProductId"])
-    .index("by_active", ["isActive"])
-    .index("by_material", ["pureSearchCriteria.material"]),
+    .index("by_symbol", ["symbol"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_symbol_and_time", ["symbol", "timestamp"]),
 });

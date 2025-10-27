@@ -39,7 +39,6 @@ interface ApiResponse {
 }
 
 interface ProcessedProduct extends RawProduct {
-  metalPurity?: string;
   metalType: "gold" | "silver";
   metalWeight?: string;
   pricePerOunce?: number;
@@ -92,17 +91,10 @@ const extractMetalAttributes = (
 
   if (!isMetalProduct) return null;
 
-  // Extract weight and purity
+  // Extract weight
   const metalWeight = product.attributes.find(
     (attr) =>
       attr.key === "Metal Weight" || attr.key.toLowerCase().includes("weight"),
-  )?.value;
-
-  const metalPurity = product.attributes.find(
-    (attr) =>
-      attr.key === "Purity" ||
-      attr.key.toLowerCase().includes("purity") ||
-      attr.key.toLowerCase().includes("fineness"),
   )?.value;
 
   // Calculate price per ounce
@@ -127,7 +119,6 @@ const extractMetalAttributes = (
 
   return {
     ...product,
-    metalPurity,
     metalType,
     metalWeight,
     pricePerOunce,
@@ -216,6 +207,11 @@ export const fetchNewData = internalAction({
         if (result.updated) productsUpdated++;
         if (result.priceChanged) priceChanges++;
         if (result.stockChanged) stockChanges++;
+
+        // Auto-match to Pure products (for new products or products without matches)
+        await ctx.runMutation(internal.costco.matchCostcoProductToPure, {
+          costcoProductId: product.id,
+        });
       }
 
       // Mark products not returned as out of stock
@@ -330,7 +326,7 @@ export const upsertProduct = internalMutation({
         updated = true;
       }
     } else {
-      // New product - insert it
+      // New product - insert it with Pure matching fields
       await ctx.db.insert("costcoProducts", {
         brand: product.brand ?? null,
         categories: product.categories,
@@ -344,12 +340,16 @@ export const upsertProduct = internalMutation({
         lastStockChange: null,
         lastUpdated: args.timestamp,
         marketingFeatures: product.marketing_features ?? null,
+        matchStatus: null,
         maxQuantity: product.max_quantity ?? null,
-        metalPurity: product.metalPurity ?? null,
         metalType: product.metalType,
         metalWeight: product.metalWeight ?? null,
         name: product.name,
         productId: product.id,
+        pureBidPrice: null,
+        pureBidPricePerOz: null,
+        pureBidUpdated: null,
+        pureProductId: null,
         retailerId: product.retailer_id,
         shortDescription: product.short_description ?? null,
         thumbnail: product.thumbnail ?? null,
@@ -544,5 +544,524 @@ export const getStockHistory = query({
       .take(1000); // Limit history queries
 
     return history.sort((a, b) => a.timestamp - b.timestamp);
+  },
+});
+
+// Helper to extract weight in oz from Costco product
+const extractWeightInOz = (metalWeight: null | string): null | number => {
+  if (!metalWeight) return null;
+
+  const weightMatch =
+    /(?<weight>\d+(?:\.\d+)?)\s*(?:troy\s+)?(?<unit>gram|g|ounce|oz)/i.exec(
+      metalWeight,
+    );
+  if (weightMatch?.groups?.weight && weightMatch.groups.unit) {
+    const weight = parseFloat(weightMatch.groups.weight);
+    const unit = weightMatch.groups.unit.toLowerCase();
+
+    if (unit === "gram" || unit === "g") {
+      return weight / 31.1035; // Convert grams to troy ounces
+    } else if (unit === "ounce" || unit === "oz") {
+      return weight;
+    }
+  }
+
+  return null;
+};
+
+// Fallback Pure product IDs for standard weights (accredited items)
+const PURE_FALLBACK_IDS: Record<string, Record<string, string>> = {
+  gold: {
+    "5g": "0c4e939a-dd7b-4a1e-ae1e-2907ec4c40fb",
+    "20g": "2a1e58e0-b739-46eb-875f-db22abde20d6",
+    "100g": "92c6a07e-7708-4085-97c8-7cdc3fc85fda",
+    "1oz": "cad52d53-182a-4818-900b-832f94d01d8b",
+  },
+  silver: {
+    "10oz": "07c8e315-2932-474b-b327-627a4dc9e62c",
+    "1000oz": "218972c1-da23-4a80-b394-999acb286d87",
+  },
+};
+
+// Helper to get fallback Pure product ID based on weight and metal type
+const getFallbackPureId = (
+  metalType: "gold" | "silver",
+  weightInOz: number,
+): null | string => {
+  const weightInGrams = weightInOz * 31.1035;
+
+  if (metalType === "gold") {
+    // Match to closest standard gold weight
+    if (Math.abs(weightInGrams - 5) < 0.5) return PURE_FALLBACK_IDS.gold["5g"];
+    if (Math.abs(weightInGrams - 20) < 0.5) return PURE_FALLBACK_IDS.gold["20g"];
+    if (Math.abs(weightInGrams - 100) < 1) return PURE_FALLBACK_IDS.gold["100g"];
+    if (Math.abs(weightInOz - 1) < 0.05) return PURE_FALLBACK_IDS.gold["1oz"];
+  } else if (metalType === "silver") {
+    // Match to closest standard silver weight
+    if (Math.abs(weightInOz - 10) < 0.5) return PURE_FALLBACK_IDS.silver["10oz"];
+    if (Math.abs(weightInOz - 1000) < 10) return PURE_FALLBACK_IDS.silver["1000oz"];
+  }
+
+  return null;
+};
+
+// Auto-match Costco products to Pure products
+export const matchCostcoProductToPure = internalMutation({
+  args: {
+    costcoProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const timestamp = Date.now();
+
+    // Get the Costco product
+    const costcoProduct = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_product_id", (q) =>
+        q.eq("productId", args.costcoProductId),
+      )
+      .first();
+
+    if (!costcoProduct) {
+      console.warn(
+        `Costco product ${args.costcoProductId} not found for matching`,
+      );
+      return { matched: false };
+    }
+
+    // NEVER override manual matches
+    if (costcoProduct.matchStatus === "manual_matched") {
+      console.info(
+        `⏭️  SKIPPING: ${costcoProduct.name} (${args.costcoProductId}) - manually matched`,
+      );
+      return { matched: true, status: "manual_matched", skipped: true };
+    }
+
+    const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
+
+    if (!weightInOz) {
+      console.warn(
+        `Could not extract weight for ${costcoProduct.name} (${args.costcoProductId})`,
+      );
+
+      // Get fallback generic spot price (last resort)
+      const fallbackSpotPrice = await ctx.db
+        .query("collectPurePrices")
+        .withIndex("by_metal", (q) =>
+          q.eq("metalType", costcoProduct.metalType),
+        )
+        .order("desc")
+        .first();
+
+      await ctx.db.patch(costcoProduct._id, {
+        matchStatus: "fallback",
+        pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
+        pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
+        pureBidUpdated: timestamp,
+        pureProductId: null,
+      });
+      return { matched: false, status: "fallback" };
+    }
+
+    // Try to get a weight-specific fallback Pure product
+    const fallbackPureId = getFallbackPureId(costcoProduct.metalType, weightInOz);
+    let fallbackPureProduct = null;
+
+    if (fallbackPureId) {
+      fallbackPureProduct = await ctx.db
+        .query("pureProducts")
+        .withIndex("by_pure_id", (q) => q.eq("pureProductId", fallbackPureId))
+        .first();
+    }
+
+    // Get all Pure products for this metal type
+    const pureProducts = await ctx.db
+      .query("pureProducts")
+      .withIndex("by_metal_type", (q) =>
+        q.eq("metalType", costcoProduct.metalType),
+      )
+      .collect();
+
+    if (pureProducts.length === 0) {
+      console.warn(
+        `No Pure products found for ${costcoProduct.metalType}, using fallback`,
+      );
+
+      if (fallbackPureProduct) {
+        console.info(
+          `Using fallback Pure product: ${fallbackPureProduct.productName} (${fallbackPureId})`,
+        );
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "fallback",
+          pureBidPrice: fallbackPureProduct.currentBidPrice,
+          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
+          pureBidUpdated: timestamp,
+          pureProductId: fallbackPureId,
+        });
+      } else {
+        // Last resort: use generic spot price
+        const fallbackSpotPrice = await ctx.db
+          .query("collectPurePrices")
+          .withIndex("by_metal", (q) =>
+            q.eq("metalType", costcoProduct.metalType),
+          )
+          .order("desc")
+          .first();
+
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "fallback",
+          pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
+          pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
+          pureBidUpdated: timestamp,
+          pureProductId: null,
+        });
+      }
+
+      return { matched: false, status: "fallback" };
+    }
+
+    // Matching logic: conservative approach - only match if very confident
+    interface ScoredMatch {
+      product: (typeof pureProducts)[0];
+      details: string;
+      score: number;
+    }
+
+    const matches: ScoredMatch[] = [];
+
+    // Normalize names for comparison
+    const costcoNameLower = costcoProduct.name
+      .toLowerCase()
+      .replace(/[^\w\s]/g, " ") // Remove punctuation
+      .replace(/\s+/g, " ") // Normalize spaces
+      .trim();
+
+    for (const pureProduct of pureProducts) {
+      const pureNameLower = pureProduct.productName
+        .toLowerCase()
+        .replace(/[^\w\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      let score = 0;
+      const matchDetails: string[] = [];
+
+      // 1. WEIGHT MATCH (REQUIRED - must be exact)
+      const weightDiff = Math.abs(pureProduct.weight - weightInOz);
+      if (weightDiff > 0.05) {
+        continue; // Skip if weight doesn't match closely
+      }
+      score += 100;
+      matchDetails.push("weight");
+
+      // 2. MANUFACTURER MATCH (high confidence indicator)
+      if (pureProduct.manufacturer) {
+        const manufacturer = pureProduct.manufacturer.toLowerCase();
+        // Check for common manufacturer variations
+        const manufacturerVariants = [
+          manufacturer,
+          manufacturer.replace(/\s+/g, ""), // "pamp suisse" -> "pampsuisse"
+        ];
+
+        const hasManufacturer = manufacturerVariants.some((variant) =>
+          costcoNameLower.includes(variant),
+        );
+
+        if (hasManufacturer) {
+          score += 100; // High confidence when manufacturer matches
+          matchDetails.push(`brand:${manufacturer}`);
+        } else if (manufacturer.length > 3) {
+          // If Pure has a manufacturer but Costco doesn't mention it, be cautious
+          score -= 50;
+        }
+      }
+
+      // 3. PRODUCT TYPE MATCH (bar vs coin)
+      if (pureProduct.productType) {
+        const productType = pureProduct.productType.toLowerCase();
+        if (costcoNameLower.includes(productType)) {
+          score += 50;
+          matchDetails.push(`type:${productType}`);
+        }
+      }
+
+      // 4. SPECIFIC PRODUCT LINE MATCH (e.g., "Lady Fortuna", "Britannia", "Maple Leaf")
+      // Extract significant multi-word phrases (2-3 words)
+      const pureWords = pureNameLower.split(/\s+/);
+      const costcoWords = costcoNameLower.split(/\s+/);
+
+      // Look for 2-3 word phrases that appear in both
+      for (let i = 0; i < pureWords.length - 1; i++) {
+        const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
+        const threeWord =
+          i < pureWords.length - 2
+            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
+            : null;
+
+        // Skip common/generic phrases
+        const genericPhrases = [
+          "gold bar",
+          "silver bar",
+          "gold coin",
+          "silver coin",
+          "fine gold",
+          "fine silver",
+          "troy ounce",
+          "in assay",
+          "new in",
+        ];
+
+        if (
+          threeWord &&
+          !genericPhrases.includes(threeWord) &&
+          costcoNameLower.includes(threeWord)
+        ) {
+          score += 75; // Strong match for 3-word phrase
+          matchDetails.push(`phrase:"${threeWord}"`);
+        } else if (
+          !genericPhrases.includes(twoWord) &&
+          costcoNameLower.includes(twoWord)
+        ) {
+          score += 40; // Good match for 2-word phrase
+          matchDetails.push(`phrase:"${twoWord}"`);
+        }
+      }
+
+      // Only consider this a viable match if score is meaningful
+      if (score >= 150) {
+        // Require high confidence
+        matches.push({
+          details: matchDetails.join(", "),
+          product: pureProduct,
+          score,
+        });
+      }
+    }
+
+    // Sort by score
+    matches.sort((a, b) => b.score - a.score);
+
+    // TODO: Add logging service for match notifications
+    if (matches.length === 0) {
+      console.info(
+        `❌ NO MATCH for Costco product: ${costcoProduct.name} (${args.costcoProductId})`,
+      );
+      console.info(`   Weight: ${weightInOz} oz, Metal: ${costcoProduct.metalType}`);
+      console.info(`   Available Pure products: ${pureProducts.length}`);
+
+      if (fallbackPureProduct) {
+        console.info(
+          `   Using fallback Pure product: ${fallbackPureProduct.productName} (${fallbackPureId})`,
+        );
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "fallback",
+          pureBidPrice: fallbackPureProduct.currentBidPrice,
+          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
+          pureBidUpdated: timestamp,
+          pureProductId: fallbackPureId,
+        });
+      } else {
+        console.info(`   Using generic ${costcoProduct.metalType} spot price`);
+        // Last resort: use generic spot price
+        const fallbackSpotPrice = await ctx.db
+          .query("collectPurePrices")
+          .withIndex("by_metal", (q) =>
+            q.eq("metalType", costcoProduct.metalType),
+          )
+          .order("desc")
+          .first();
+
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "fallback",
+          pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
+          pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
+          pureBidUpdated: timestamp,
+          pureProductId: null,
+        });
+      }
+
+      return { matched: false, status: "fallback" };
+    }
+
+    const bestMatch = matches[0];
+
+    // Conservative threshold: require very high confidence
+    if (bestMatch.score < 250 || matches.length > 1) {
+      // Low confidence or multiple matches - needs review or use fallback
+      console.info(
+        `⚠️  NEEDS REVIEW for Costco product: ${costcoProduct.name} (${args.costcoProductId})`,
+      );
+      console.info(
+        `   Found ${matches.length} potential matches, top score: ${bestMatch.score}`,
+      );
+      console.info(`   Top candidates:`);
+      matches.slice(0, 3).forEach((m, i) => {
+        console.info(
+          `     ${i + 1}. ${m.product.productName} (ID: ${m.product.pureProductId})`,
+        );
+        console.info(`        Score: ${m.score} | Matched: ${m.details}`);
+      });
+
+      // Use fallback instead of guessing
+      if (fallbackPureProduct) {
+        console.info(
+          `   Using fallback Pure product instead: ${fallbackPureProduct.productName}`,
+        );
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "needs_review",
+          pureBidPrice: fallbackPureProduct.currentBidPrice,
+          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
+          pureBidUpdated: timestamp,
+          pureProductId: fallbackPureId,
+        });
+      } else {
+        // Use best guess but mark as needs review
+        await ctx.db.patch(costcoProduct._id, {
+          matchStatus: "needs_review",
+          pureBidPrice: bestMatch.product.currentBidPrice,
+          pureBidPricePerOz: bestMatch.product.currentBidPricePerOz,
+          pureBidUpdated: timestamp,
+          pureProductId: bestMatch.product.pureProductId,
+        });
+      }
+
+      return {
+        candidates: matches.slice(0, 3).map((m) => ({
+          details: m.details,
+          pureProductId: m.product.pureProductId,
+          productName: m.product.productName,
+          score: m.score,
+        })),
+        matched: false,
+        status: "needs_review",
+      };
+    }
+
+    // High confidence match (score >= 250 and only one match)
+    console.info(
+      `✅ AUTO MATCHED: ${costcoProduct.name} (${args.costcoProductId})`,
+    );
+    console.info(
+      `   → ${bestMatch.product.productName} (${bestMatch.product.pureProductId})`,
+    );
+    console.info(`   Score: ${bestMatch.score} | Matched: ${bestMatch.details}`);
+
+    await ctx.db.patch(costcoProduct._id, {
+      matchStatus: "auto_matched",
+      pureBidPrice: bestMatch.product.currentBidPrice,
+      pureBidPricePerOz: bestMatch.product.currentBidPricePerOz,
+      pureBidUpdated: timestamp,
+      pureProductId: bestMatch.product.pureProductId,
+    });
+
+    return {
+      matched: true,
+      pureProductId: bestMatch.product.pureProductId,
+      score: bestMatch.score,
+      status: "auto_matched",
+    };
+  },
+});
+
+// Manually set a Pure product match (will never be overridden by auto-matching)
+export const manuallyMatchProduct = internalMutation({
+  args: {
+    costcoProductId: v.string(),
+    pureProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const timestamp = Date.now();
+
+    // Get the Costco product
+    const costcoProduct = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_product_id", (q) =>
+        q.eq("productId", args.costcoProductId),
+      )
+      .first();
+
+    if (!costcoProduct) {
+      throw new Error(`Costco product ${args.costcoProductId} not found`);
+    }
+
+    // Get the Pure product to fetch current bid price
+    const pureProduct = await ctx.db
+      .query("pureProducts")
+      .withIndex("by_pure_id", (q) =>
+        q.eq("pureProductId", args.pureProductId),
+      )
+      .first();
+
+    if (!pureProduct) {
+      throw new Error(`Pure product ${args.pureProductId} not found`);
+    }
+
+    // Set the manual match
+    await ctx.db.patch(costcoProduct._id, {
+      matchStatus: "manual_matched",
+      pureBidPrice: pureProduct.currentBidPrice,
+      pureBidPricePerOz: pureProduct.currentBidPricePerOz,
+      pureBidUpdated: timestamp,
+      pureProductId: args.pureProductId,
+    });
+
+    console.info(
+      `🔧 MANUAL MATCH: ${costcoProduct.name} → ${pureProduct.productName}`,
+    );
+
+    return {
+      costcoProduct: costcoProduct.name,
+      pureProduct: pureProduct.productName,
+      success: true,
+    };
+  },
+});
+
+// Internal query to get all products for batch matching
+export const getAllProductsForMatching = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("costcoProducts").collect();
+  },
+});
+
+// Batch match all Costco products (can be called after Pure products are fetched)
+export const matchAllCostcoProducts = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{ fallback: number; manualMatches: number; matched: number; needsReview: number; total: number }> => {
+    const costcoProducts = await ctx.runMutation(
+      internal.costco.getAllProductsForMatching,
+      {},
+    );
+
+    let matched = 0;
+    let needsReview = 0;
+    let fallback = 0;
+    let manualMatches = 0;
+
+    for (const product of costcoProducts) {
+      const result = await ctx.runMutation(
+        internal.costco.matchCostcoProductToPure,
+        {
+          costcoProductId: product.productId,
+        },
+      );
+
+      if (result.status === "auto_matched") matched++;
+      else if (result.status === "needs_review") needsReview++;
+      else if (result.status === "fallback") fallback++;
+      else if (result.status === "manual_matched") manualMatches++;
+    }
+
+    console.info(
+      `Matching complete: ${matched} auto-matched, ${needsReview} need review, ${fallback} using fallback, ${manualMatches} manual matches (skipped)`,
+    );
+
+    return {
+      fallback,
+      manualMatches,
+      matched,
+      needsReview,
+      total: costcoProducts.length,
+    };
   },
 });

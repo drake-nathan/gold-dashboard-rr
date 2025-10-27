@@ -28,6 +28,7 @@ export const loader = async () => {
       url: convexUrl,
     },
   );
+
   return { preloadedStats };
 };
 

@@ -103,6 +103,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           collectPure={stats.collectPure}
           goldProducts={stats.goldProducts.bestSpread}
           lastFetch={stats.lastFetch}
+          marketPrices={stats.marketPrices}
           silverProducts={stats.silverProducts.bestSpread}
           totalCashbackPercentage={totalCashbackPercentage}
         />

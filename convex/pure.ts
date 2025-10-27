@@ -105,25 +105,18 @@ const parseWeightToOz = (weight: string, weightGrams?: number): number => {
   return 1;
 };
 
-// Helper to parse target weight from mapping criteria
-const parseTargetWeight = (weightStr: string): null | number => {
-  // Handle common formats: "1oz", "0.5oz", "100g", "25g"
-  const normalized = weightStr.toLowerCase().replaceAll(/\s+/g, "");
-
-  if (normalized.includes("oz")) {
-    const match = /(?<value>\d+(?:\.\d+)?)oz/.exec(normalized);
-    if (match?.groups?.value) return parseFloat(match.groups.value);
+// Extract product type from title/category
+const extractProductType = (product: PureProduct): null | string => {
+  const title = product.title.toLowerCase();
+  if (title.includes("bar")) return "bar";
+  if (title.includes("coin")) return "coin";
+  if (product.subCategory?.title) {
+    return product.subCategory.title.toLowerCase();
   }
-
-  if (normalized.includes("g")) {
-    const match = /(?<value>\d+(?:\.\d+)?)g/.exec(normalized);
-    if (match?.groups?.value) return parseFloat(match.groups.value) / 31.1035; // Convert grams to oz
-  }
-
   return null;
 };
 
-// Fetch Collect Pure prices from API
+// Fetch all Pure products and update cache
 export const fetchNewData = internalAction({
   args: {},
   handler: async (ctx) => {
@@ -131,14 +124,13 @@ export const fetchNewData = internalAction({
     const apiKey = process.env.PURE_API_KEY;
 
     if (!apiKey) {
-      throw new Error("No API key configured");
+      throw new Error("PURE_API_KEY environment variable is required");
     }
 
-    // Real API implementation
     try {
-      console.info("Fetching real Collect Pure data from API");
+      console.info("Fetching Collect Pure data from API");
 
-      // Fetch spot prices
+      // Step 1: Fetch spot prices for fallback
       const spotResponse = await fetch(`${PURE_API_BASE_URL}/v1/spot-prices`, {
         headers: {
           Accept: "application/json",
@@ -154,7 +146,7 @@ export const fetchNewData = internalAction({
 
       const spotData = (await spotResponse.json()) as PureSpotPricesResponse;
 
-      // Process and store spot prices
+      // Store spot prices
       const metalMap: Record<
         string,
         "gold" | "palladium" | "platinum" | "silver"
@@ -183,41 +175,16 @@ export const fetchNewData = internalAction({
         }
       }
 
-      // Get active mappings to determine which Pure products to fetch
-      const activeMappings = await ctx.runQuery(
-        // @ts-expect-error FIXME: fix once schema is finalize
-        "productMappings:getActiveMappings",
-      );
-      console.info(`Found ${activeMappings.length} active product mappings`);
+      // Step 2: Fetch all Pure products (gold and silver only for MVP)
+      const metals = ["Gold", "Silver"];
+      let totalProductsFetched = 0;
+      let totalProductsStored = 0;
 
-      let productBidsStored = 0;
-      let totalProductsChecked = 0;
-
-      // Process each mapping to fetch specific Pure products
-      for (const mapping of activeMappings) {
-        const criteria = mapping.pureSearchCriteria;
-
-        // Build search parameters based on mapping criteria
+      for (const material of metals) {
         const searchParams = new URLSearchParams({
-          limit: "10", // Lower limit since we're targeting specific products
-          material: criteria.material,
+          limit: "100", // Fetch in batches of 100
+          material,
         });
-
-        // Add weight-based filtering if available
-        if (criteria.weight) {
-          // Convert weight to a search-friendly format
-          const weightQuery = criteria.weight
-            .toLowerCase()
-            .replace("oz", " oz")
-            .replace("g", " gram")
-            .replace("0.5", "1/2");
-          searchParams.append("search", weightQuery);
-        }
-
-        // Add manufacturer if specified
-        if (criteria.manufacturer) {
-          searchParams.append("search", criteria.manufacturer);
-        }
 
         try {
           const productsResponse = await fetch(
@@ -232,156 +199,73 @@ export const fetchNewData = internalAction({
 
           if (!productsResponse.ok) {
             console.warn(
-              `Failed to fetch products for mapping ${mapping.costcoProductId}: ${productsResponse.status}`,
+              `Failed to fetch ${material} products: ${productsResponse.status}`,
             );
             continue;
           }
 
           const products = (await productsResponse.json()) as PureProduct[];
-          totalProductsChecked += products.length;
+          totalProductsFetched += products.length;
 
-          // Process products and find the best match
-          let bestMatch: null | PureProduct = null;
-          let bestScore = 0;
+          console.info(`Fetched ${products.length} ${material} products`);
 
+          // Process and store each product
           for (const product of products) {
+            // Only store products with bids
             if (
               product.variants.length === 0 ||
               !product.variants[0]?.highestOffer
             ) {
-              continue; // Skip products without bids
+              continue;
             }
 
-            // Calculate matching score
-            let score = 0;
-
-            // Material match (required)
-            if (
-              product.material.toLowerCase() === criteria.material.toLowerCase()
-            ) {
-              score += 10;
-            } else {
-              continue; // Skip if material doesn't match
-            }
-
-            // Manufacturer match
-            if (criteria.manufacturer && product.manufacturer?.title) {
-              if (
-                product.manufacturer.title
-                  .toLowerCase()
-                  .includes(criteria.manufacturer.toLowerCase()) ||
-                criteria.manufacturer
-                  .toLowerCase()
-                  .includes(product.manufacturer.title.toLowerCase())
-              ) {
-                score += 5;
-              }
-            }
-
-            // Weight match
-            if (criteria.weight) {
-              const weightOz = parseWeightToOz(
-                product.weight,
-                product.weightGrams,
-              );
-              const targetWeight = parseTargetWeight(criteria.weight);
-
-              if (targetWeight && Math.abs(weightOz - targetWeight) < 0.1) {
-                score += 8;
-              } else if (
-                targetWeight &&
-                Math.abs(weightOz - targetWeight) < 0.5
-              ) {
-                score += 3;
-              }
-            }
-
-            // Purity match
-            if (criteria.purity && product.purity) {
-              if (product.purity.includes(criteria.purity.replace(".", ""))) {
-                score += 3;
-              }
-            }
-
-            // Product type match (bar/coin)
-            if (criteria.productType) {
-              if (
-                product.title
-                  .toLowerCase()
-                  .includes(criteria.productType.toLowerCase())
-              ) {
-                score += 2;
-              }
-            }
-
-            if (score > bestScore) {
-              bestScore = score;
-              bestMatch = product;
-            }
-          }
-
-          // Store the best match if we found one
-          if (bestMatch?.variants[0]?.highestOffer) {
-            const metalType = bestMatch.material.toLowerCase() as
+            const metalType = product.material.toLowerCase() as
               | "gold"
               | "silver";
             const weightOz = parseWeightToOz(
-              bestMatch.weight,
-              bestMatch.weightGrams,
+              product.weight,
+              product.weightGrams,
             );
-            const bidPricePerOz =
-              bestMatch.variants[0].highestOffer.price / weightOz;
+            const productType = extractProductType(product);
+            const bidPrice = product.variants[0].highestOffer.price;
+            const bidPricePerOz = bidPrice / weightOz;
 
-            // @ts-expect-error FIXME: fix once schema is finalize
-            await ctx.runMutation("collectPurePrices:upsertProductBid", {
-              bidPrice: bestMatch.variants[0].highestOffer.price,
-              bidPricePerOz,
-              isMock: false,
-              matchedCostcoProductId: mapping.costcoProductId, // Link to specific Costco product
+            await ctx.runMutation(internal.pure.upsertPureProduct, {
+              currentBidPrice: bidPrice,
+              currentBidPricePerOz: bidPricePerOz,
+              lastUpdated: timestamp,
+              manufacturer: product.manufacturer?.title ?? null,
               metalType,
-              productName: bestMatch.title,
-              purity: bestMatch.purity || ".999",
-              timestamp,
+              productName: product.title,
+              productType,
+              pureProductId: product.id,
               weight: weightOz,
+              weightGrams: product.weightGrams || null,
             });
-            productBidsStored++;
 
-            console.info(
-              `Matched ${mapping.costcoProductId} to Pure product: ${bestMatch.title} (score: ${bestScore})`,
-            );
-          } else {
-            console.warn(
-              `No matching Pure product found for Costco product ${mapping.costcoProductId}`,
-            );
+            totalProductsStored++;
           }
         } catch (error) {
-          console.warn(
-            `Error fetching Pure products for mapping ${mapping.costcoProductId}:`,
-            error,
-          );
+          console.warn(`Error fetching ${material} products:`, error);
         }
       }
 
-      // Log fetch run with updated stats
-      // @ts-expect-error FIXME: fix once schema is finalize
-      await ctx.runMutation("metalPrices:logFetchRun", {
-        priceChanges: productBidsStored,
-        productsFound: totalProductsChecked,
-        productsUpdated: productBidsStored,
+      // Log fetch run
+      await ctx.runMutation(internal.costco.logFetchRun, {
+        priceChanges: 0,
+        productsFound: totalProductsFetched,
+        productsUpdated: totalProductsStored,
         source: "collectpure",
         stockChanges: 0,
         timestamp,
       });
 
       console.info(
-        `Processed ${activeMappings.length} mappings, checked ${totalProductsChecked} Pure products, stored ${productBidsStored} bid prices`,
+        `Stored ${totalProductsStored} Pure products (${totalProductsFetched} fetched, ${spotPricesStored} spot prices)`,
       );
 
       return {
-        isMock: false,
-        mappingsProcessed: activeMappings.length,
-        productBids: productBidsStored,
-        productsChecked: totalProductsChecked,
+        productsStored: totalProductsStored,
         spotPrices: spotPricesStored,
         success: true,
         timestamp,
@@ -390,8 +274,7 @@ export const fetchNewData = internalAction({
       console.error("Error fetching Collect Pure prices:", error);
 
       // Log failed fetch run
-      // @ts-expect-error FIXME: fix once schema is finalize
-      await ctx.runMutation("metalPrices:logFetchRun", {
+      await ctx.runMutation(internal.costco.logFetchRun, {
         error: error instanceof Error ? error.message : "Unknown error",
         priceChanges: 0,
         productsFound: 0,
@@ -406,7 +289,49 @@ export const fetchNewData = internalAction({
   },
 });
 
-// Upsert spot price
+// Upsert Pure product into cache
+export const upsertPureProduct = internalMutation({
+  args: {
+    currentBidPrice: v.union(v.number(), v.null()),
+    currentBidPricePerOz: v.union(v.number(), v.null()),
+    lastUpdated: v.number(),
+    manufacturer: v.union(v.string(), v.null()),
+    metalType: v.union(v.literal("gold"), v.literal("silver")),
+    productName: v.string(),
+    productType: v.union(v.string(), v.null()),
+    pureProductId: v.string(),
+    weight: v.number(),
+    weightGrams: v.union(v.number(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    // Check if product already exists
+    const existing = await ctx.db
+      .query("pureProducts")
+      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
+      .first();
+
+    if (existing) {
+      // Update existing product
+      await ctx.db.patch(existing._id, {
+        currentBidPrice: args.currentBidPrice,
+        currentBidPricePerOz: args.currentBidPricePerOz,
+        lastUpdated: args.lastUpdated,
+        manufacturer: args.manufacturer,
+        productName: args.productName,
+        productType: args.productType,
+        weight: args.weight,
+        weightGrams: args.weightGrams,
+      });
+      return { updated: true };
+    }
+
+    // Insert new product
+    await ctx.db.insert("pureProducts", args);
+    return { updated: false };
+  },
+});
+
+// Upsert spot price (keep existing logic)
 export const upsertSpotPrice = internalMutation({
   args: {
     askPrice: v.union(v.number(), v.null()),
@@ -429,12 +354,12 @@ export const upsertSpotPrice = internalMutation({
       .order("desc")
       .first();
 
-    // Only insert if price has changed or it's been more than 5 minutes
+    // Only insert if price has changed significantly or it's been more than 1 hour
     const shouldInsert =
       !existing ||
-      Math.abs(existing.spotPrice - args.spotPrice) > 0.01 ||
-      Math.abs(existing.bidPrice - args.bidPrice) > 0.01 ||
-      args.timestamp - existing.timestamp > 5 * 60 * 1000;
+      Math.abs(existing.spotPrice - args.spotPrice) > 1.0 ||
+      Math.abs(existing.bidPrice - args.bidPrice) > 1.0 ||
+      args.timestamp - existing.timestamp > 60 * 60 * 1000;
 
     if (shouldInsert) {
       await ctx.db.insert("collectPurePrices", args);
@@ -442,26 +367,6 @@ export const upsertSpotPrice = internalMutation({
     }
 
     return { updated: false };
-  },
-});
-
-// Upsert product bid
-export const upsertProductBid = internalMutation({
-  args: {
-    bidPrice: v.number(),
-    bidPricePerOz: v.number(),
-    isMock: v.boolean(),
-    matchedCostcoProductId: v.union(v.string(), v.null()),
-    metalType: v.union(v.literal("gold"), v.literal("silver")),
-    productName: v.string(),
-    purity: v.union(v.string(), v.null()),
-    timestamp: v.number(),
-    weight: v.number(),
-  },
-  handler: async (ctx, args) => {
-    // For now, always insert product bids (we'll dedupe in queries)
-    await ctx.db.insert("collectPureProductBids", args);
-    return { inserted: true };
   },
 });
 
@@ -481,7 +386,6 @@ export const getLatestPrices = query({
     if (args.metalType) {
       const prices = await ctx.db
         .query("collectPurePrices")
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         .withIndex("by_metal", (q) => q.eq("metalType", args.metalType!))
         .order("desc")
         .first();
@@ -505,114 +409,27 @@ export const getLatestPrices = query({
   },
 });
 
-// Query to get latest product bids
-export const getLatestProductBids = query({
+// Query all Pure products (for debugging/manual matching)
+export const getAllPureProducts = query({
   args: {
-    limit: v.optional(v.number()),
     metalType: v.optional(v.union(v.literal("gold"), v.literal("silver"))),
   },
   handler: async (ctx, args) => {
-    // Get latest bids grouped by product with limits
-    const allBids =
-      args.metalType ?
-        await ctx.db
-          .query("collectPureProductBids")
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          .withIndex("by_metal", (q) => q.eq("metalType", args.metalType!))
-          .order("desc")
-          .take(1000) // Limit to prevent excessive document reads
-      : await ctx.db.query("collectPureProductBids").order("desc").take(1000); // Limit to prevent excessive document reads
-
-    // Group by product name and get latest for each
-    const latestByProduct = new Map();
-    for (const bid of allBids) {
-      if (!latestByProduct.has(bid.productName)) {
-        latestByProduct.set(bid.productName, bid);
-      }
+    if (args.metalType) {
+      return await ctx.db
+        .query("pureProducts")
+        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType!))
+        .collect();
     }
 
-    const results = Array.from(latestByProduct.values());
-    return args.limit ? results.slice(0, args.limit) : results;
+    return await ctx.db.query("pureProducts").collect();
   },
 });
 
-// Manual trigger for testing (can be called from dashboard)
+// Manual trigger for testing
 export const manualFetchPrices = action({
   args: {},
-  handler: async (
-    ctx,
-  ): Promise<{
-    isMock: boolean;
-    productBids: number;
-    spotPrices: number;
-    success: boolean;
-    timestamp: number;
-  }> => {
-    return await ctx.runAction(
-      // @ts-expect-error FIXME: fix once schema is finalize
-      "collectPurePrices:fetchCollectPurePrices",
-    );
-  },
-});
-
-// Calculate spread between Costco and Collect Pure prices
-export const calculateSpread = query({
-  args: {
-    costcoProductId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    // Get Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
-      .first();
-
-    if (!costcoProduct?.currentInStock) {
-      return null;
-    }
-
-    // Get latest Collect Pure spot price for this metal
-    const collectPurePrice = await ctx.db
-      .query("collectPurePrices")
-      .withIndex("by_metal", (q) => q.eq("metalType", costcoProduct.metalType))
-      .order("desc")
-      .first();
-
-    if (!collectPurePrice) {
-      return null;
-    }
-
-    // Calculate spread
-    const costcoPricePerOz = costcoProduct.currentPricePerOunce;
-    const collectPureBidPerOz = collectPurePrice.bidPrice;
-
-    if (!costcoPricePerOz) {
-      return null;
-    }
-
-    const spread = costcoPricePerOz - collectPureBidPerOz;
-    const spreadPercentage = (spread / costcoPricePerOz) * 100;
-
-    return {
-      collectPure: {
-        bidPrice: collectPurePrice.bidPrice,
-        isMock: collectPurePrice.isMock,
-        spotPrice: collectPurePrice.spotPrice,
-      },
-      costcoProduct: {
-        metalType: costcoProduct.metalType,
-        name: costcoProduct.name,
-        price: costcoProduct.currentPrice,
-        pricePerOz: costcoPricePerOz,
-        weight: costcoProduct.metalWeight,
-      },
-      spread: {
-        dollarAmount: spread,
-        percentage: spreadPercentage,
-        profitable: spread > 0, // Positive spread means you can profit
-      },
-    };
+  handler: async (ctx): Promise<{ productsStored: number; spotPrices: number; success: boolean; timestamp: number }> => {
+    return await ctx.runAction(internal.pure.fetchNewData);
   },
 });

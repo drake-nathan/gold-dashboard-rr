@@ -9,9 +9,12 @@
 
 ## Collect Pure Integration
 
-- [ ] Get actual Collect Pure product URLs (currently using search URL as placeholder)
-- [ ] Improve product matching logic between Costco and Pure products
-- [ ] Add product mapping UI for manual matching/verification
+- [x] ~~Get actual Collect Pure product URLs~~ - Using Pure product IDs directly
+- [x] ~~Improve product matching logic~~ - Conservative algorithm with phrase matching implemented
+- [x] ~~Add product mapping UI for manual matching~~ - Using `manuallyMatchProduct` mutation via Convex dashboard
+- [ ] **Implement logging service for product match notifications** - Currently match results (auto-matched, needs_review, fallback, manual_matched) are logged to console. Need a proper logging service to track match attempts, notify on failures, and provide visibility into matching quality over time.
+- [ ] Add UI for viewing match status and manually matching products (currently done via Convex dashboard)
+- [ ] Add Pure product search/browse UI to make manual matching easier
 
 ## Data & Analytics
 

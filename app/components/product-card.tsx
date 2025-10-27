@@ -31,8 +31,8 @@ export const ProductCard = ({
     : null;
 
   const adjustedSpread =
-    product.collectPureBid && pricePerOzAfterCashback ?
-      pricePerOzAfterCashback - product.collectPureBid
+    product.pureBidPricePerOz && pricePerOzAfterCashback ?
+      pricePerOzAfterCashback - product.pureBidPricePerOz
     : null;
 
   const adjustedSpreadPercentage =
@@ -134,11 +134,11 @@ export const ProductCard = ({
             </>
           : null}
 
-          {product.collectPureBid ?
+          {product.pureBidPricePerOz ?
             <div className="flex justify-between">
               <span className="text-muted-foreground">Pure Bid/oz:</span>
               <span className="font-medium">
-                ${product.collectPureBid.toLocaleString()}
+                ${product.pureBidPricePerOz.toLocaleString()}
               </span>
             </div>
           : null}

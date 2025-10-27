@@ -33,9 +33,7 @@ export const links: Route.LinksFunction = () => [
 
 export const middleware = [clerkMiddleware()];
 
-export const loader = (args: Route.LoaderArgs) => {
-  return rootAuthLoader(args);
-};
+export const loader = rootAuthLoader;
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
