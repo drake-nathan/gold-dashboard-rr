@@ -1,8 +1,12 @@
 import { ClerkProvider, useAuth } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { shadcn } from "@clerk/themes";
+import { Analytics } from "@vercel/analytics/react";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+
+import "./app.css";
+
 import {
   isRouteErrorResponse,
   Links,
@@ -11,8 +15,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
-import "./app.css";
 
 import type { Route } from "./+types/root";
 
@@ -48,6 +50,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <ThemeProvider>{children}</ThemeProvider>
         <ScrollRestoration />
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );
