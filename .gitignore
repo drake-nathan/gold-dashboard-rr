@@ -10,3 +10,6 @@
 # Environment variables (keep .env as template, ignore .env.local)
 .env.local
 .env*.local
+
+# Local Netlify folder
+.netlify
