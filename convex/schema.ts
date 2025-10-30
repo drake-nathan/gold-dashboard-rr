@@ -32,11 +32,9 @@ export default defineSchema({
     currentPricePerOunce: v.union(v.number(), v.null()),
     currentInStock: v.boolean(),
 
-    // Pure product matching (optional for backward compatibility with existing products)
+    // Pure product matching - only stores the pureProductId for JOIN
+    // Fresh bid prices are retrieved from pureProducts table
     pureProductId: v.optional(v.union(v.string(), v.null())),
-    pureBidPrice: v.optional(v.union(v.number(), v.null())),
-    pureBidPricePerOz: v.optional(v.union(v.number(), v.null())),
-    pureBidUpdated: v.optional(v.union(v.number(), v.null())),
     matchStatus: v.optional(
       v.union(
         v.literal("auto_matched"),

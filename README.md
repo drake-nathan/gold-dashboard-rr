@@ -32,6 +32,7 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
 ### Installation
 
 1. **Clone and install dependencies**:
+
    ```bash
    bun install
    ```
@@ -39,6 +40,7 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
 2. **Configure environment variables**:
 
    Copy `.env.template` to `.env.local` and fill in your values:
+
    ```bash
    cp .env.template .env.local
    ```
@@ -67,6 +69,7 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
    ```
 
 4. **Start development server**:
+
    ```bash
    bun run dev
    ```

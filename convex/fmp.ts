@@ -7,46 +7,46 @@ import { internalAction, internalMutation, query } from "./_generated/server";
  * FMP API response types
  */
 interface QuoteResponse {
-  symbol: string;
-  name: string;
-  price: number;
-  changePercentage: number; // Note: field name is changePercentage, not changesPercentage
   change: number;
-  dayLow: number;
+  changePercentage: number; // Note: field name is changePercentage, not changesPercentage
   dayHigh: number;
-  yearHigh: number;
-  yearLow: number;
-  marketCap: number | null;
-  priceAvg50: number;
-  priceAvg200: number;
+  dayLow: number;
   exchange: string;
-  volume: number;
+  marketCap: null | number;
+  name: string;
   open: number;
   previousClose: number;
+  price: number;
+  priceAvg50: number;
+  priceAvg200: number;
+  symbol: string;
   timestamp: number;
+  volume: number;
+  yearHigh: number;
+  yearLow: number;
 }
 
 /**
  * Check if current time is within market hours (8 AM - 6 PM ET)
  * Used to throttle API calls during extended hours
  */
-function isMarketHours(): boolean {
+const isMarketHours = (): boolean => {
   const now = new Date();
 
   // Convert to ET (UTC-5 or UTC-4 depending on DST)
   // Simple approach: use Intl API with America/New_York timezone
   const etTimeString = now.toLocaleString("en-US", {
-    timeZone: "America/New_York",
     hour: "2-digit",
     hour12: false,
     minute: "2-digit",
+    timeZone: "America/New_York",
   });
 
   const [hours] = etTimeString.split(":").map(Number);
 
   // 8 AM - 6 PM ET (inclusive)
   return hours >= 8 && hours < 18;
-}
+};
 
 /**
  * Fetch S&P 500 data from FMP API
@@ -94,8 +94,7 @@ export const fetchSP500 = internalAction({
 
       // FMP provides changePercentage directly (previous close to current)
       // This is essentially the "today's change" percentage
-      const percentChange =
-        quote.changePercentage !== undefined ? quote.changePercentage : null;
+      const percentChange = quote.changePercentage;
 
       // Update the database
       await ctx.runMutation(internal.fmp.upsertSP500Price, {

@@ -429,7 +429,14 @@ export const getAllPureProducts = query({
 // Manual trigger for testing
 export const manualFetchPrices = action({
   args: {},
-  handler: async (ctx): Promise<{ productsStored: number; spotPrices: number; success: boolean; timestamp: number }> => {
+  handler: async (
+    ctx,
+  ): Promise<{
+    productsStored: number;
+    spotPrices: number;
+    success: boolean;
+    timestamp: number;
+  }> => {
     return await ctx.runAction(internal.pure.fetchNewData);
   },
 });

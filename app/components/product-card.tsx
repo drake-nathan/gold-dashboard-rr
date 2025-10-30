@@ -1,3 +1,6 @@
+import type { api } from "convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+
 import { ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,41 +13,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatCurrency, formatPercentage } from "@/utils/format";
+import { calculateProductMetrics } from "@/utils/product-calculations";
 
+import type { CalculatorSettings } from "./calculator-settings";
 import type { ProductCardData } from "./dashboard";
 
+import { PriceRow } from "./product-card/price-row";
+import { Separator } from "./ui/separator";
+
+type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
+
 interface ProductCardProps {
+  calculatorSettings: CalculatorSettings;
+  marketPrices: GetStats["marketPrices"];
   product: ProductCardData;
-  totalCashbackPercentage: number;
 }
 
 export const ProductCard = ({
+  calculatorSettings,
+  marketPrices,
   product,
-  totalCashbackPercentage,
 }: ProductCardProps) => {
-  // Calculate the adjusted spread with cashback
-  const priceAfterCashback =
-    product.currentPrice * (1 - totalCashbackPercentage / 100);
-  const pricePerOzAfterCashback =
-    product.currentPricePerOunce ?
-      product.currentPricePerOunce * (1 - totalCashbackPercentage / 100)
-    : null;
-
-  const adjustedSpread =
-    product.pureBidPricePerOz && pricePerOzAfterCashback ?
-      pricePerOzAfterCashback - product.pureBidPricePerOz
-    : null;
-
-  const adjustedSpreadPercentage =
-    adjustedSpread && pricePerOzAfterCashback ?
-      (adjustedSpread / pricePerOzAfterCashback) * 100
-    : null;
-
-  const positiveColor = "text-red-600 dark:text-red-400";
-  const negativeColor = "text-green-600 dark:text-green-400";
-
-  const isPositiveSpread = (adjustedSpread ?? 0) > 0;
-  const spreadColor = isPositiveSpread ? positiveColor : negativeColor;
+  // Calculate all metrics using utility function
+  const calc = calculateProductMetrics(
+    product,
+    marketPrices,
+    calculatorSettings,
+  );
 
   // Collect Pure URL (placeholder for now)
   const collectPureUrl = `https://collectpure.com/search?q=${encodeURIComponent(
@@ -80,7 +76,7 @@ export const ProductCard = ({
           <Badge variant={product.currentInStock ? "default" : "secondary"}>
             {product.currentInStock ? "In Stock" : "Out of Stock"}
           </Badge>
-          <Badge variant="outline">
+          <Badge variant={product.metalType === "gold" ? "gold" : "silver"}>
             {product.metalType.charAt(0).toUpperCase() +
               product.metalType.slice(1)}
           </Badge>
@@ -95,51 +91,101 @@ export const ProductCard = ({
           : null}
         </div>
 
-        {/* Price */}
+        {/* Pricing Breakdown */}
         <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
-          <div className="flex justify-between">
+          {/* Costco Price with Above Spot Badge */}
+          <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Costco Price:</span>
-            <span className="font-medium">
-              ${product.currentPrice.toLocaleString()}
-            </span>
+            <div className="flex items-center gap-2">
+              {calc.aboveSpotPercentage !== null && (
+                <Badge variant="destructive">
+                  {formatPercentage(calc.aboveSpotPercentage)} Above Spot
+                </Badge>
+              )}
+              <span className="font-medium">
+                -{formatCurrency(calc.costcoPrice)}
+              </span>
+            </div>
           </div>
-          {/* 
-          {totalCashbackPercentage > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">
-                After {totalCashbackPercentage.toFixed(1)}% cashback:
-              </span>
-              <span className="font-medium">
-                ${priceAfterCashback.toLocaleString()}
-              </span>
-            </div>
-          )} */}
 
-          {product.pureBidPrice ?
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Pure Bid Price:</span>
-              <span className="font-medium">
-                ${product.pureBidPrice.toLocaleString()}
-              </span>
-            </div>
-          : null}
+          <Separator />
 
-          {adjustedSpread !== null && (
+          {/* Pure Bid Section */}
+          {calc.pureBidPrice !== null ?
             <>
-              <div className="my-2 border-t" />
-              <div className="flex justify-between">
-                <span className="font-medium">Spread:</span>
-                <span className={`font-bold ${spreadColor}`}>
-                  ${adjustedSpread.toFixed(2)}
-                </span>
-              </div>
-              {adjustedSpreadPercentage !== null && (
-                <div className="flex justify-between">
-                  <span className="font-medium">Spread %:</span>
-                  <span className={`font-bold ${spreadColor}`}>
-                    {adjustedSpreadPercentage.toFixed(2)}%
-                  </span>
-                </div>
+              <PriceRow
+                label="Pure Bid Price:"
+                value={`+${formatCurrency(calc.pureBidPrice)}`}
+              />
+              <PriceRow
+                label="Pure Fee (0.75%):"
+                value={`-${formatCurrency(calc.pureFee)}`}
+              />
+              <PriceRow
+                label="Net from Sale:"
+                value={
+                  calc.netFromSale !== null ?
+                    formatCurrency(calc.netFromSale)
+                  : "—"
+                }
+                valueClassName="font-semibold"
+              />
+            </>
+          : <div className="text-center text-muted-foreground">
+              No Pure bid available
+            </div>
+          }
+
+          <Separator />
+
+          {/* Initial Cash Loss */}
+          {calc.initialCashLoss !== null && (
+            <PriceRow
+              label="Initial Cash Loss:"
+              value={`-${formatCurrency(calc.initialCashLoss)}`}
+              valueClassName="font-bold text-red-600 dark:text-red-400"
+            />
+          )}
+
+          <Separator />
+
+          {/* Cashback Section */}
+          {calc.costcoCashbackPercentage > 0 && (
+            <PriceRow
+              label={`Costco Cashback (${formatPercentage(calc.costcoCashbackPercentage, 1)}):`}
+              value={`+${formatCurrency(calc.costcoCashback)}`}
+            />
+          )}
+          {calc.creditCardCashbackPercentage > 0 && (
+            <PriceRow
+              label={`CC Cashback (${formatPercentage(calc.creditCardCashbackPercentage)}):`}
+              value={`+${formatCurrency(calc.creditCardCashback)}`}
+            />
+          )}
+          {calc.totalCashback > 0 && (
+            <PriceRow
+              label="Total Cashback:"
+              value={`+${formatCurrency(calc.totalCashback)}`}
+              valueClassName="font-semibold"
+            />
+          )}
+
+          <Separator />
+
+          {/* Net Profit */}
+          {calc.netProfit !== null && (
+            <>
+              <PriceRow
+                label="Net Profit:"
+                value={`${calc.netProfit >= 0 ? "+" : "-"}${formatCurrency(Math.abs(calc.netProfit))}`}
+                valueClassName={`font-bold ${calc.profitColor}`}
+              />
+              {calc.netProfitPercentage !== null && (
+                <PriceRow
+                  label="Profit %:"
+                  value={`${calc.netProfitPercentage >= 0 ? "+" : ""}${formatPercentage(calc.netProfitPercentage)}`}
+                  valueClassName={`font-bold ${calc.profitColor}`}
+                />
               )}
             </>
           )}

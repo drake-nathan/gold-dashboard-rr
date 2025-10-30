@@ -35,26 +35,44 @@ export const getStats = query({
     // Get market prices from Gold API
     const marketPrices = await ctx.db.query("marketPrices").collect();
 
-    // Helper to calculate spread directly from product data
+    // Get all Pure products for JOIN
+    const pureProducts = await ctx.db.query("pureProducts").collect();
+    const pureProductsMap = new Map(
+      pureProducts.map((p) => [p.pureProductId, p]),
+    );
+
+    // Helper to calculate spread with fresh Pure bid prices
     const calculateSpread = (
       product: (typeof goldProducts)[0],
       fallbackBidPrice: null | number,
     ) => {
-      // Use product-specific bid if available, fallback to generic
-      const bidPrice = product.pureBidPricePerOz ?? fallbackBidPrice;
+      // JOIN: Look up Pure product by pureProductId to get FRESH bid price
+      let pureBidPrice: null | number = null;
+      let pureBidPricePerOz: null | number = null;
+
+      if (product.pureProductId) {
+        const pureProduct = pureProductsMap.get(product.pureProductId);
+        if (pureProduct) {
+          pureBidPrice = pureProduct.currentBidPrice;
+          pureBidPricePerOz = pureProduct.currentBidPricePerOz;
+        }
+      }
+
+      // Fallback to generic spot price if no product-specific match
+      const bidPrice = pureBidPricePerOz ?? fallbackBidPrice;
 
       const spread =
-        bidPrice && product.currentPricePerOunce
-          ? product.currentPricePerOunce - bidPrice
-          : null;
+        bidPrice && product.currentPricePerOunce ?
+          product.currentPricePerOunce - bidPrice
+        : null;
       const spreadPercentage =
-        spread && product.currentPricePerOunce
-          ? (spread / product.currentPricePerOunce) * 100
-          : null;
+        spread && product.currentPricePerOunce ?
+          (spread / product.currentPricePerOunce) * 100
+        : null;
 
       return {
         ...product,
-        pureBidPrice: product.pureBidPrice,
+        pureBidPrice,
         pureBidPricePerOz: bidPrice,
         spread,
         spreadPercentage,
@@ -83,16 +101,18 @@ export const getStats = query({
 
     return {
       collectPure: {
-        gold: collectPureGold
-          ? {
+        gold:
+          collectPureGold ?
+            {
               bidPrice: collectPureGold.bidPrice,
               isMock: collectPureGold.isMock,
               spotPrice: collectPureGold.spotPrice,
               timestamp: collectPureGold.timestamp,
             }
           : null,
-        silver: collectPureSilver
-          ? {
+        silver:
+          collectPureSilver ?
+            {
               bidPrice: collectPureSilver.bidPrice,
               isMock: collectPureSilver.isMock,
               spotPrice: collectPureSilver.spotPrice,
@@ -110,8 +130,9 @@ export const getStats = query({
         inStock: goldProducts.filter((p) => p.currentInStock).length,
         total: goldProducts.length,
       },
-      lastFetch: lastFetch
-        ? {
+      lastFetch:
+        lastFetch ?
+          {
             priceChanges: lastFetch.priceChanges,
             productsFound: lastFetch.productsFound,
             stockChanges: lastFetch.stockChanges,

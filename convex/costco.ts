@@ -346,9 +346,6 @@ export const upsertProduct = internalMutation({
         metalWeight: product.metalWeight ?? null,
         name: product.name,
         productId: product.id,
-        pureBidPrice: null,
-        pureBidPricePerOz: null,
-        pureBidUpdated: null,
         pureProductId: null,
         retailerId: product.retailer_id,
         shortDescription: product.short_description ?? null,
@@ -572,10 +569,10 @@ const extractWeightInOz = (metalWeight: null | string): null | number => {
 // Fallback Pure product IDs for standard weights (accredited items)
 const PURE_FALLBACK_IDS: Record<string, Record<string, string>> = {
   gold: {
+    "1oz": "cad52d53-182a-4818-900b-832f94d01d8b",
     "5g": "0c4e939a-dd7b-4a1e-ae1e-2907ec4c40fb",
     "20g": "2a1e58e0-b739-46eb-875f-db22abde20d6",
     "100g": "92c6a07e-7708-4085-97c8-7cdc3fc85fda",
-    "1oz": "cad52d53-182a-4818-900b-832f94d01d8b",
   },
   silver: {
     "10oz": "07c8e315-2932-474b-b327-627a4dc9e62c",
@@ -593,13 +590,21 @@ const getFallbackPureId = (
   if (metalType === "gold") {
     // Match to closest standard gold weight
     if (Math.abs(weightInGrams - 5) < 0.5) return PURE_FALLBACK_IDS.gold["5g"];
-    if (Math.abs(weightInGrams - 20) < 0.5) return PURE_FALLBACK_IDS.gold["20g"];
-    if (Math.abs(weightInGrams - 100) < 1) return PURE_FALLBACK_IDS.gold["100g"];
+    if (Math.abs(weightInGrams - 20) < 0.5) {
+      return PURE_FALLBACK_IDS.gold["20g"];
+    }
+    if (Math.abs(weightInGrams - 100) < 1) {
+      return PURE_FALLBACK_IDS.gold["100g"];
+    }
     if (Math.abs(weightInOz - 1) < 0.05) return PURE_FALLBACK_IDS.gold["1oz"];
-  } else if (metalType === "silver") {
+  } else {
     // Match to closest standard silver weight
-    if (Math.abs(weightInOz - 10) < 0.5) return PURE_FALLBACK_IDS.silver["10oz"];
-    if (Math.abs(weightInOz - 1000) < 10) return PURE_FALLBACK_IDS.silver["1000oz"];
+    if (Math.abs(weightInOz - 10) < 0.5) {
+      return PURE_FALLBACK_IDS.silver["10oz"];
+    }
+    if (Math.abs(weightInOz - 1000) < 10) {
+      return PURE_FALLBACK_IDS.silver["1000oz"];
+    }
   }
 
   return null;
@@ -633,7 +638,7 @@ export const matchCostcoProductToPure = internalMutation({
       console.info(
         `⏭️  SKIPPING: ${costcoProduct.name} (${args.costcoProductId}) - manually matched`,
       );
-      return { matched: true, status: "manual_matched", skipped: true };
+      return { matched: true, skipped: true, status: "manual_matched" };
     }
 
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
@@ -643,27 +648,19 @@ export const matchCostcoProductToPure = internalMutation({
         `Could not extract weight for ${costcoProduct.name} (${args.costcoProductId})`,
       );
 
-      // Get fallback generic spot price (last resort)
-      const fallbackSpotPrice = await ctx.db
-        .query("collectPurePrices")
-        .withIndex("by_metal", (q) =>
-          q.eq("metalType", costcoProduct.metalType),
-        )
-        .order("desc")
-        .first();
-
+      // No weight available - can't match to Pure product
       await ctx.db.patch(costcoProduct._id, {
         matchStatus: "fallback",
-        pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
-        pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
-        pureBidUpdated: timestamp,
         pureProductId: null,
       });
       return { matched: false, status: "fallback" };
     }
 
     // Try to get a weight-specific fallback Pure product
-    const fallbackPureId = getFallbackPureId(costcoProduct.metalType, weightInOz);
+    const fallbackPureId = getFallbackPureId(
+      costcoProduct.metalType,
+      weightInOz,
+    );
     let fallbackPureProduct = null;
 
     if (fallbackPureId) {
@@ -692,26 +689,12 @@ export const matchCostcoProductToPure = internalMutation({
         );
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "fallback",
-          pureBidPrice: fallbackPureProduct.currentBidPrice,
-          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
-          pureBidUpdated: timestamp,
           pureProductId: fallbackPureId,
         });
       } else {
-        // Last resort: use generic spot price
-        const fallbackSpotPrice = await ctx.db
-          .query("collectPurePrices")
-          .withIndex("by_metal", (q) =>
-            q.eq("metalType", costcoProduct.metalType),
-          )
-          .order("desc")
-          .first();
-
+        // Last resort: use generic spot price (no Pure product match)
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "fallback",
-          pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
-          pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
-          pureBidUpdated: timestamp,
           pureProductId: null,
         });
       }
@@ -721,8 +704,8 @@ export const matchCostcoProductToPure = internalMutation({
 
     // Matching logic: conservative approach - only match if very confident
     interface ScoredMatch {
-      product: (typeof pureProducts)[0];
       details: string;
+      product: (typeof pureProducts)[0];
       score: number;
     }
 
@@ -731,15 +714,15 @@ export const matchCostcoProductToPure = internalMutation({
     // Normalize names for comparison
     const costcoNameLower = costcoProduct.name
       .toLowerCase()
-      .replace(/[^\w\s]/g, " ") // Remove punctuation
-      .replace(/\s+/g, " ") // Normalize spaces
+      .replaceAll(/[^\s\w]/g, " ") // Remove punctuation
+      .replaceAll(/\s+/g, " ") // Normalize spaces
       .trim();
 
     for (const pureProduct of pureProducts) {
       const pureNameLower = pureProduct.productName
         .toLowerCase()
-        .replace(/[^\w\s]/g, " ")
-        .replace(/\s+/g, " ")
+        .replaceAll(/[^\s\w]/g, " ")
+        .replaceAll(/\s+/g, " ")
         .trim();
 
       let score = 0;
@@ -759,7 +742,7 @@ export const matchCostcoProductToPure = internalMutation({
         // Check for common manufacturer variations
         const manufacturerVariants = [
           manufacturer,
-          manufacturer.replace(/\s+/g, ""), // "pamp suisse" -> "pampsuisse"
+          manufacturer.replaceAll(/\s+/g, ""), // "pamp suisse" -> "pampsuisse"
         ];
 
         const hasManufacturer = manufacturerVariants.some((variant) =>
@@ -787,15 +770,14 @@ export const matchCostcoProductToPure = internalMutation({
       // 4. SPECIFIC PRODUCT LINE MATCH (e.g., "Lady Fortuna", "Britannia", "Maple Leaf")
       // Extract significant multi-word phrases (2-3 words)
       const pureWords = pureNameLower.split(/\s+/);
-      const costcoWords = costcoNameLower.split(/\s+/);
 
       // Look for 2-3 word phrases that appear in both
       for (let i = 0; i < pureWords.length - 1; i++) {
         const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
         const threeWord =
-          i < pureWords.length - 2
-            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
-            : null;
+          i < pureWords.length - 2 ?
+            `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
+          : null;
 
         // Skip common/generic phrases
         const genericPhrases = [
@@ -845,7 +827,9 @@ export const matchCostcoProductToPure = internalMutation({
       console.info(
         `❌ NO MATCH for Costco product: ${costcoProduct.name} (${args.costcoProductId})`,
       );
-      console.info(`   Weight: ${weightInOz} oz, Metal: ${costcoProduct.metalType}`);
+      console.info(
+        `   Weight: ${weightInOz} oz, Metal: ${costcoProduct.metalType}`,
+      );
       console.info(`   Available Pure products: ${pureProducts.length}`);
 
       if (fallbackPureProduct) {
@@ -854,27 +838,13 @@ export const matchCostcoProductToPure = internalMutation({
         );
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "fallback",
-          pureBidPrice: fallbackPureProduct.currentBidPrice,
-          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
-          pureBidUpdated: timestamp,
           pureProductId: fallbackPureId,
         });
       } else {
         console.info(`   Using generic ${costcoProduct.metalType} spot price`);
-        // Last resort: use generic spot price
-        const fallbackSpotPrice = await ctx.db
-          .query("collectPurePrices")
-          .withIndex("by_metal", (q) =>
-            q.eq("metalType", costcoProduct.metalType),
-          )
-          .order("desc")
-          .first();
-
+        // No Pure product match - will use generic spot price from dashboard query
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "fallback",
-          pureBidPrice: fallbackSpotPrice?.bidPrice ?? null,
-          pureBidPricePerOz: fallbackSpotPrice?.bidPrice ?? null,
-          pureBidUpdated: timestamp,
           pureProductId: null,
         });
       }
@@ -908,18 +878,12 @@ export const matchCostcoProductToPure = internalMutation({
         );
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "needs_review",
-          pureBidPrice: fallbackPureProduct.currentBidPrice,
-          pureBidPricePerOz: fallbackPureProduct.currentBidPricePerOz,
-          pureBidUpdated: timestamp,
           pureProductId: fallbackPureId,
         });
       } else {
         // Use best guess but mark as needs review
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "needs_review",
-          pureBidPrice: bestMatch.product.currentBidPrice,
-          pureBidPricePerOz: bestMatch.product.currentBidPricePerOz,
-          pureBidUpdated: timestamp,
           pureProductId: bestMatch.product.pureProductId,
         });
       }
@@ -927,8 +891,8 @@ export const matchCostcoProductToPure = internalMutation({
       return {
         candidates: matches.slice(0, 3).map((m) => ({
           details: m.details,
-          pureProductId: m.product.pureProductId,
           productName: m.product.productName,
+          pureProductId: m.product.pureProductId,
           score: m.score,
         })),
         matched: false,
@@ -943,13 +907,12 @@ export const matchCostcoProductToPure = internalMutation({
     console.info(
       `   → ${bestMatch.product.productName} (${bestMatch.product.pureProductId})`,
     );
-    console.info(`   Score: ${bestMatch.score} | Matched: ${bestMatch.details}`);
+    console.info(
+      `   Score: ${bestMatch.score} | Matched: ${bestMatch.details}`,
+    );
 
     await ctx.db.patch(costcoProduct._id, {
       matchStatus: "auto_matched",
-      pureBidPrice: bestMatch.product.currentBidPrice,
-      pureBidPricePerOz: bestMatch.product.currentBidPricePerOz,
-      pureBidUpdated: timestamp,
       pureProductId: bestMatch.product.pureProductId,
     });
 
@@ -969,8 +932,6 @@ export const manuallyMatchProduct = internalMutation({
     pureProductId: v.string(),
   },
   handler: async (ctx, args) => {
-    const timestamp = Date.now();
-
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
@@ -983,24 +944,19 @@ export const manuallyMatchProduct = internalMutation({
       throw new Error(`Costco product ${args.costcoProductId} not found`);
     }
 
-    // Get the Pure product to fetch current bid price
+    // Get the Pure product to verify it exists
     const pureProduct = await ctx.db
       .query("pureProducts")
-      .withIndex("by_pure_id", (q) =>
-        q.eq("pureProductId", args.pureProductId),
-      )
+      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
       .first();
 
     if (!pureProduct) {
       throw new Error(`Pure product ${args.pureProductId} not found`);
     }
 
-    // Set the manual match
+    // Set the manual match (only store the pureProductId mapping)
     await ctx.db.patch(costcoProduct._id, {
       matchStatus: "manual_matched",
-      pureBidPrice: pureProduct.currentBidPrice,
-      pureBidPricePerOz: pureProduct.currentBidPricePerOz,
-      pureBidUpdated: timestamp,
       pureProductId: args.pureProductId,
     });
 
@@ -1027,7 +983,15 @@ export const getAllProductsForMatching = internalMutation({
 // Batch match all Costco products (can be called after Pure products are fetched)
 export const matchAllCostcoProducts = internalAction({
   args: {},
-  handler: async (ctx): Promise<{ fallback: number; manualMatches: number; matched: number; needsReview: number; total: number }> => {
+  handler: async (
+    ctx,
+  ): Promise<{
+    fallback: number;
+    manualMatches: number;
+    matched: number;
+    needsReview: number;
+    total: number;
+  }> => {
     const costcoProducts = await ctx.runMutation(
       internal.costco.getAllProductsForMatching,
       {},

@@ -135,9 +135,10 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         : <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
             {sortedProducts.map((product) => (
               <ProductCard
+                calculatorSettings={calculatorSettings}
                 key={product.productId}
+                marketPrices={stats.marketPrices}
                 product={product}
-                totalCashbackPercentage={totalCashbackPercentage}
               />
             ))}
           </div>

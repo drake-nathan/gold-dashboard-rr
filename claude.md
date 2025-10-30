@@ -34,6 +34,7 @@ This project was recently migrated from Next.js to React Router 7 + Vite. Some r
 **Production-Only Setup**: This project uses a single Convex production deployment for both development and production.
 
 **Rationale**:
+
 - Read-only dashboard with public API data
 - Semi-manual product mappings shouldn't be duplicated
 - No user-generated data (yet)
@@ -67,6 +68,7 @@ Main products table tracking Costco precious metals:
 - Product details (name, brand, categories, UPC, etc.)
 - Metal specifics (type, weight, purity)
 - Current state (price, price per ounce, stock status)
+- **Pure product mapping**: Only stores `pureProductId` for JOIN (not bid prices)
 - Timestamps for tracking changes
 
 #### priceHistory
@@ -79,15 +81,19 @@ Tracks stock status changes (in/out of stock).
 
 #### collectPurePrices
 
-Spot prices and bids from Collect Pure API for different metals (gold, silver, platinum, palladium).
+Generic spot prices and bids from Collect Pure API for different metals (gold, silver, platinum, palladium). Used as fallback when no product-specific Pure match exists.
 
-#### collectPureProductBids
+#### pureProducts
 
-Product-specific bids from Collect Pure that can be matched to Costco products.
+**Primary source for Pure bid prices**. Stores all Pure products with current bid prices:
 
-#### costcoPureProductMappings
+- Pure product ID and name
+- Metal type and weight
+- Manufacturer and product type
+- **Current bid price** (total and per oz)
+- Last updated timestamp
 
-Mapping table to link Costco products to Pure products with search criteria.
+This is the single source of truth for Pure bid prices. Dashboard JOINs this table with `costcoProducts` via `pureProductId`.
 
 #### fetchRuns
 
@@ -112,13 +118,25 @@ Historical price data for calculating 24h percentage changes.
 ## Data Flow
 
 1. Fetch products from Costco (via Unwrangle API)
-2. Fetch spot prices and bids from Collect Pure API
+2. Fetch spot prices and bids from Collect Pure API (stored in `pureProducts` table)
 3. Fetch market prices from Gold API (gold, silver, bitcoin) every 5 minutes
 4. Fetch S&P 500 data from FMP API every 5 minutes during market hours (8 AM - 6 PM ET), hourly off-hours
-5. Match Costco products to Pure products via mapping table
+5. Match Costco products to Pure products (only stores `pureProductId` on Costco products)
 6. Track price/stock changes in history tables
 7. Calculate 24h percentage changes from market price history (Gold API) or use API-provided change (FMP)
-8. Display comparison data in dashboard
+8. **Dashboard query JOINs Costco products with Pure products** to get fresh bid prices in real-time
+9. Display comparison data with up-to-date spreads
+
+### Pure Bid Price Architecture
+
+**Important**: Costco products only store the `pureProductId` mapping - they do NOT store Pure bid prices. This ensures bid prices are always fresh:
+
+- **Single source of truth**: Pure bid prices live exclusively in the `pureProducts` table
+- **No data duplication**: Eliminates staleness issues from copied bid prices
+- **Fresh data**: Dashboard query JOINs `costcoProducts` with `pureProducts` to get current bids
+- **Fallback**: Generic spot prices from `collectPurePrices` used when no product-specific match exists
+
+This architecture was implemented in January 2025 to fix stale bid price issues (see `convex/migrations.ts`).
 
 ## Known Issues / Notes
 
@@ -171,6 +189,7 @@ npx convex dev  # Connects to production deployment
 ```
 
 **Important**: Since dev and prod share the same deployment, be cautious with:
+
 - Schema changes (test carefully before deploying)
 - Mutations that modify data
 - Cron jobs (ensure they don't run multiple times)
@@ -196,17 +215,20 @@ Tracks real-time prices for gold, silver, and bitcoin using the free Gold API (h
 **Fetch Frequency**: Every 5 minutes via cron job (`convex/crons.ts`)
 
 **API Endpoint**: `https://api.gold-api.com/price/{symbol}`
+
 - No authentication required for real-time prices
 - No rate limits on free tier
 - Returns current price only (no historical data)
 
 **24h Percentage Change Calculation**:
+
 - We maintain our own price history in `marketPriceHistory` table
 - Every fetch adds a snapshot to history
 - Percentage change calculated by comparing current price to price from ~24 hours ago (±30 min window)
 - History older than 30 days is automatically cleaned up
 
 **Functions**:
+
 - `fetchMarketPrices()`: Internal action called by cron, fetches all 3 assets
 - `upsertMarketPrice()`: Internal mutation that updates current price, adds to history, calculates % change
 - `getMarketPrices()`: Public query returning all current prices (now included in `dashboard.getStats`)
@@ -214,6 +236,7 @@ Tracks real-time prices for gold, silver, and bitcoin using the free Gold API (h
 - `getPriceHistory()`: Debug query to view historical snapshots
 
 **Data Access**:
+
 - Market prices are included in `api.dashboard.getStats` for efficient frontend loading
 - Single query fetches all dashboard data (products, Pure prices, market prices)
 
@@ -222,6 +245,7 @@ Tracks real-time prices for gold, silver, and bitcoin using the free Gold API (h
 #### Relationship with Pure API
 
 Gold API and Pure API serve different purposes:
+
 - **Gold API**: General market prices for dashboard display with 24h trends
 - **Pure API**: Product-specific bid prices for calculating Costco arbitrage opportunities
 - Both track gold/silver spots, but Pure spots are used for spread calculations (more accurate for actual bids)
@@ -242,31 +266,37 @@ Tracks S&P 500 index price using the Financial Modeling Prep API (https://site.f
 #### Implementation Details
 
 **Fetch Frequency**:
+
 - Market hours (8 AM - 6 PM ET): Every 5 minutes via cron job
 - Off-hours: Every hour to maintain last known price
 - API Call Estimate: ~134 calls/day (within 250/day free tier limit)
 
 **API Endpoint**: `https://financialmodelingprep.com/stable/quote?symbol=%5EGSPC`
+
 - Requires API key authentication (`FMP_API_KEY`)
 - Returns current price with percentage change from previous close
 - Free tier: 250 calls per day
 
 **Percentage Change**:
+
 - FMP provides `changePercentage` directly (previous close to current)
 - No manual calculation needed (unlike Gold API)
 - Still adds to `marketPriceHistory` for record-keeping
 
 **Functions**:
+
 - `fetchSP500()`: Internal action called by cron, fetches S&P 500 quote
 - `upsertSP500Price()`: Internal mutation that updates current price and adds to history
 - `getSP500Price()`: Public query returning current S&P 500 data (included in `dashboard.getStats`)
 - `getSP500History()`: Debug query to view historical snapshots
 
 **Market Hours Detection**:
+
 - Automatically adjusts for Standard Time (Nov-Mar) and Daylight Time (Mar-Nov)
 - Cron schedule covers both time zones (12-22 UTC for market hours)
 
 **Data Access**:
+
 - S&P 500 data is included in `api.dashboard.getStats` alongside other market prices
 - Single consolidated query for all dashboard data
 
