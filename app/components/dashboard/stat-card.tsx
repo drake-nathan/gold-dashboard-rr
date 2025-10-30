@@ -24,8 +24,11 @@ const renderTrendBadge = (percentChange: null | number) => {
     : "bg-red-600/10 text-red-600 border-red-600/20 dark:bg-red-400/10 dark:text-red-400 dark:border-red-400/20";
 
   return (
-    <Badge className={colorClass}>
-      <Icon className="h-3 w-3" />
+    <Badge
+      aria-label={`${isPositive ? "Up" : "Down"} ${Math.abs(percentChange).toFixed(2)} percent`}
+      className={colorClass}
+    >
+      <Icon aria-hidden="true" className="h-3 w-3" />
       <span>{Math.abs(percentChange).toFixed(2)}%</span>
     </Badge>
   );
@@ -38,7 +41,8 @@ export const StatCard = ({
   valueColor,
   variant = "market",
 }: StatCardProps) => {
-  const widthClass = variant === "market" ? "w-[180px]" : "w-[140px]";
+  const widthClass =
+    variant === "market" ? "w-full sm:w-[180px]" : "w-full sm:w-[140px]";
 
   return (
     <Card className={`${widthClass} py-4`}>

@@ -2,14 +2,15 @@ import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
 import { useState } from "react";
-
-import type { MetalFilter, SortOption } from "@/components/product-filters";
+import { useSearchParams } from "react-router";
 
 import {
   type CalculatorSettings,
   PRESET_CARDS,
 } from "@/components/calculator-settings";
 import { ProductCard } from "@/components/product-card";
+
+import type { MetalFilter, SortOption } from "./filter-types";
 
 import { Header } from "../header";
 import { Filters } from "./filters";
@@ -24,17 +25,50 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ stats }: DashboardProps) => {
-  // Calculator settings state
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Calculator settings state (not in URL - will be persisted to user settings later)
   const [calculatorSettings, setCalculatorSettings] =
     useState<CalculatorSettings>({
       costcoMembershipEnabled: true,
       creditCard: PRESET_CARDS[0], // Default to Freedom Unlimited
     });
 
-  // Filter and sort state
-  const [metalFilter, setMetalFilter] = useState<MetalFilter>("all");
-  const [sortOption, setSortOption] = useState<SortOption>("spread-asc");
-  const [showOutOfStock, setShowOutOfStock] = useState(false);
+  // Derive filter state directly from URL params
+  const metalFilter = (searchParams.get("metal") as MetalFilter) || "all";
+  const sortOption = (searchParams.get("sort") as SortOption) || "spread-asc";
+  const showOutOfStock = searchParams.get("showOOS") === "true";
+
+  // Update URL params (only set non-default values)
+  const setMetalFilter = (value: MetalFilter) => {
+    const params = new URLSearchParams(searchParams);
+    if (value !== "all") {
+      params.set("metal", value);
+    } else {
+      params.delete("metal");
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  const setSortOption = (value: SortOption) => {
+    const params = new URLSearchParams(searchParams);
+    if (value !== "spread-asc") {
+      params.set("sort", value);
+    } else {
+      params.delete("sort");
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  const setShowOutOfStock = (value: boolean) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set("showOOS", "true");
+    } else {
+      params.delete("showOOS");
+    }
+    setSearchParams(params, { replace: true });
+  };
 
   // Calculate total cashback percentage
   const totalCashbackPercentage =
@@ -132,7 +166,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
               </p>
             </div>
           </div>
-        : <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-4">
+        : <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
             {sortedProducts.map((product) => (
               <ProductCard
                 calculatorSettings={calculatorSettings}

@@ -30,7 +30,13 @@ export const PriceRow = ({
         {tooltip ?
           <Tooltip>
             <TooltipTrigger asChild>
-              <HelpCircle className="ml-1 inline-block h-3 w-3 cursor-help opacity-50" />
+              <button
+                aria-label={`Help: ${tooltip}`}
+                className="ml-1 inline-flex items-center align-middle"
+                type="button"
+              >
+                <HelpCircle className="h-3 w-3 cursor-help opacity-50 hover:opacity-100 focus:opacity-100" />
+              </button>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs">
               <p>{tooltip}</p>

@@ -160,7 +160,14 @@ export const ProductCard = ({
                 label="Net Profit:"
                 labelClassName="text-sm font-semibold"
                 tooltip="Final profit/loss after receiving all cashback"
-                value={`${calc.netProfit >= 0 ? "+" : "-"}${formatCurrency(Math.abs(calc.netProfit))}`}
+                value={
+                  <>
+                    <span className="sr-only">
+                      {calc.netProfit >= 0 ? "Profit" : "Loss"}:
+                    </span>
+                    {`${calc.netProfit >= 0 ? "+" : "-"}${formatCurrency(Math.abs(calc.netProfit))}`}
+                  </>
+                }
                 valueClassName={`text-lg font-bold ${calc.profitColor}`}
               />
               {calc.netProfitPercentage !== null && (
@@ -178,13 +185,23 @@ export const ProductCard = ({
 
       <CardFooter className="flex justify-around gap-1.5">
         <Button asChild size="sm" variant="ghost">
-          <a href={product.url} rel="noopener noreferrer" target="_blank">
-            Costco <ExternalLink className="ml-1 h-3 w-3" />
+          <a
+            aria-label={`View ${product.name} on Costco`}
+            href={product.url}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Costco <ExternalLink aria-hidden="true" className="ml-1 h-3 w-3" />
           </a>
         </Button>
         <Button asChild size="sm" variant="ghost">
-          <a href={collectPureUrl} rel="noopener noreferrer" target="_blank">
-            Pure <ExternalLink className="ml-1 h-3 w-3" />
+          <a
+            aria-label={`Search for ${product.name} on Collect Pure`}
+            href={collectPureUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            Pure <ExternalLink aria-hidden="true" className="ml-1 h-3 w-3" />
           </a>
         </Button>
       </CardFooter>

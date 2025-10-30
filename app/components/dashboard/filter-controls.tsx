@@ -8,54 +8,45 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-export type MetalFilter = "all" | "gold" | "silver";
-export type SortOption =
-  | "price-asc"
-  | "price-desc"
-  | "spread-asc"
-  | "spread-desc";
+import type { MetalFilter, SortOption } from "./filter-types";
 
-interface ProductFiltersProps {
+interface FilterControlsProps {
   metalFilter: MetalFilter;
-  onMetalFilterChange: (filter: MetalFilter) => void;
-  onShowOutOfStockChange: (show: boolean) => void;
-  onSortChange: (sort: SortOption) => void;
+  setMetalFilter: (value: MetalFilter) => void;
+  setShowOutOfStock: (value: boolean) => void;
+  setSortOption: (value: SortOption) => void;
   showOutOfStock: boolean;
   sortOption: SortOption;
 }
 
-export const ProductFilters = ({
+export const FilterControls = ({
   metalFilter,
-  onMetalFilterChange,
-  onShowOutOfStockChange,
-  onSortChange,
+  setMetalFilter,
+  setShowOutOfStock,
+  setSortOption,
   showOutOfStock,
   sortOption,
-}: ProductFiltersProps) => {
+}: FilterControlsProps) => {
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-lg border bg-card p-4">
+    <>
       <div className="flex items-center gap-2">
-        <Label className="text-sm font-medium" htmlFor="show-oos">
-          Show Out of Stock
-        </Label>
+        <Label htmlFor="show-oos">Show Out of Stock</Label>
         <Switch
           checked={showOutOfStock}
           id="show-oos"
-          onCheckedChange={onShowOutOfStockChange}
+          onCheckedChange={setShowOutOfStock}
         />
       </div>
 
       <div className="flex items-center gap-2">
-        <Label className="text-sm font-medium" htmlFor="metal-filter">
-          Metal Type:
-        </Label>
+        <Label htmlFor="metal-filter">Metal Type:</Label>
         <Select
-          onValueChange={(value: string) => {
-            onMetalFilterChange(value as MetalFilter);
+          onValueChange={(value) => {
+            setMetalFilter(value as MetalFilter);
           }}
           value={metalFilter}
         >
-          <SelectTrigger className="w-[120px]" id="metal-filter">
+          <SelectTrigger className="min-w-20" id="metal-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -67,16 +58,14 @@ export const ProductFilters = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <Label className="text-sm font-medium" htmlFor="sort">
-          Sort By:
-        </Label>
+        <Label htmlFor="sort">Sort By:</Label>
         <Select
-          onValueChange={(value: string) => {
-            onSortChange(value as SortOption);
+          onValueChange={(value) => {
+            setSortOption(value as SortOption);
           }}
           value={sortOption}
         >
-          <SelectTrigger className="w-[200px]" id="sort">
+          <SelectTrigger className="min-w-52" id="sort">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -87,6 +76,6 @@ export const ProductFilters = ({
           </SelectContent>
         </Select>
       </div>
-    </div>
+    </>
   );
 };

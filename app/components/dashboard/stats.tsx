@@ -26,9 +26,9 @@ export const Stats = ({
   const sp500 = marketPrices.find((p) => p.assetType === "sp500");
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div className="mb-6 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
       {/* Left Side - Market Prices */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         {gold ?
           <StatCard
             label="Gold (XAU)"
@@ -83,7 +83,7 @@ export const Stats = ({
       </div>
 
       {/* Right Side - Cashback and Timestamp */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         <StatCard
           label="Total Cashback"
           value={`${totalCashbackPercentage.toFixed(1)}%`}
