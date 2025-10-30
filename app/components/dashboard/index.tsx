@@ -34,7 +34,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   // Filter and sort state
   const [metalFilter, setMetalFilter] = useState<MetalFilter>("all");
   const [sortOption, setSortOption] = useState<SortOption>("spread-asc");
-  const [showOutOfStock, setShowOutOfStock] = useState(true);
+  const [showOutOfStock, setShowOutOfStock] = useState(false);
 
   // Calculate total cashback percentage
   const totalCashbackPercentage =
