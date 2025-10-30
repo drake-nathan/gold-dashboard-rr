@@ -23,6 +23,7 @@ export const Stats = ({
   const gold = marketPrices.find((p) => p.assetType === "gold");
   const silver = marketPrices.find((p) => p.assetType === "silver");
   const bitcoin = marketPrices.find((p) => p.assetType === "bitcoin");
+  const sp500 = marketPrices.find((p) => p.assetType === "sp500");
 
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -63,6 +64,19 @@ export const Stats = ({
               minimumFractionDigits: 0,
             })}`}
             valueColor="text-xl font-bold text-orange-600 dark:text-orange-400"
+            variant="market"
+          />
+        : null}
+
+        {sp500 ?
+          <StatCard
+            label="S&P 500"
+            percentChange={sp500.percentChange}
+            value={`$${sp500.currentPrice.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+              minimumFractionDigits: 2,
+            })}`}
+            valueColor="text-xl font-bold text-blue-600 dark:text-blue-400"
             variant="market"
           />
         : null}

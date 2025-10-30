@@ -357,7 +357,21 @@ Priority: 🟢 Low
 
 ## Refactoring Summary (Completed 2025-10-26)
 
-### Latest Updates (Session 2)
+### Latest Updates (Session 3 - 2025-10-30)
+
+#### **S&P 500 Market Data Integration** ✅
+- Added S&P 500 (^GSPC) tracking via Financial Modeling Prep (FMP) API
+- New integration file: `convex/fmp.ts`
+- Schema updated: `marketPrices` table now includes `sp500` asset type
+- Cron jobs:
+  - Market hours (8 AM - 6 PM ET): Every 5 minutes
+  - Off-hours: Every hour
+  - API usage: ~134 calls/day (53% of 250/day free tier limit)
+- FMP provides `changePercentage` directly (no manual calculation needed)
+- UI updated: New S&P 500 StatCard displays after Bitcoin with blue color scheme
+- Environment: `FMP_API_KEY` added to Convex production environment
+
+### Updates (Session 2)
 
 #### **Removed Purity Field** ✅
 - Removed `metalPurity` from `costcoProducts` table

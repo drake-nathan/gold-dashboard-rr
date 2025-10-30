@@ -95,10 +95,10 @@ Monitoring/debugging table tracking fetch operations from both Costco and Collec
 
 #### marketPrices
 
-Current market prices from Gold API for gold (XAU), silver (XAG), and bitcoin (BTC).
+Current market prices from Gold API and FMP for gold (XAU), silver (XAG), bitcoin (BTC), and S&P 500 (^GSPC).
 
 - Current price
-- 24h percentage change (calculated from our historical data)
+- 24h percentage change (calculated from our historical data for Gold API assets, provided directly by FMP for S&P 500)
 - Last updated timestamp
 
 #### marketPriceHistory
@@ -114,10 +114,11 @@ Historical price data for calculating 24h percentage changes.
 1. Fetch products from Costco (via Unwrangle API)
 2. Fetch spot prices and bids from Collect Pure API
 3. Fetch market prices from Gold API (gold, silver, bitcoin) every 5 minutes
-4. Match Costco products to Pure products via mapping table
-5. Track price/stock changes in history tables
-6. Calculate 24h percentage changes from market price history
-7. Display comparison data in dashboard
+4. Fetch S&P 500 data from FMP API every 5 minutes during market hours (8 AM - 6 PM ET), hourly off-hours
+5. Match Costco products to Pure products via mapping table
+6. Track price/stock changes in history tables
+7. Calculate 24h percentage changes from market price history (Gold API) or use API-provided change (FMP)
+8. Display comparison data in dashboard
 
 ## Known Issues / Notes
 
@@ -174,15 +175,17 @@ npx convex dev  # Connects to production deployment
 - Mutations that modify data
 - Cron jobs (ensure they don't run multiple times)
 
-## Market Price Tracking (Gold API)
+## Market Price Tracking
+
+### Gold API Integration
 
 **Integration**: `convex/twelve.ts` (Note: file name is legacy from Twelve Data migration)
 
-### Overview
+#### Overview
 
 Tracks real-time prices for gold, silver, and bitcoin using the free Gold API (https://gold-api.com). These prices are displayed on the dashboard for market context.
 
-### Assets Tracked
+#### Assets Tracked
 
 - **Gold (XAU)**: Spot price in USD per troy ounce
 - **Silver (XAG)**: Spot price in USD per troy ounce
@@ -216,13 +219,56 @@ Tracks real-time prices for gold, silver, and bitcoin using the free Gold API (h
 
 **Note**: The `GOLD_API_KEY` environment variable exists but is NOT used for real-time price fetches (only needed for historical data API which we don't use). We build our own history instead.
 
-### Relationship with Pure API
+#### Relationship with Pure API
 
 Gold API and Pure API serve different purposes:
 - **Gold API**: General market prices for dashboard display with 24h trends
 - **Pure API**: Product-specific bid prices for calculating Costco arbitrage opportunities
 - Both track gold/silver spots, but Pure spots are used for spread calculations (more accurate for actual bids)
 - Gold/Silver overlap is intentional - provides data redundancy and validation
+
+### FMP (Financial Modeling Prep) Integration
+
+**Integration**: `convex/fmp.ts`
+
+#### Overview
+
+Tracks S&P 500 index price using the Financial Modeling Prep API (https://site.financialmodelingprep.com). Provides market context alongside precious metals and bitcoin prices.
+
+#### Asset Tracked
+
+- **S&P 500 (^GSPC)**: US stock market index price
+
+#### Implementation Details
+
+**Fetch Frequency**:
+- Market hours (8 AM - 6 PM ET): Every 5 minutes via cron job
+- Off-hours: Every hour to maintain last known price
+- API Call Estimate: ~134 calls/day (within 250/day free tier limit)
+
+**API Endpoint**: `https://financialmodelingprep.com/stable/quote?symbol=%5EGSPC`
+- Requires API key authentication (`FMP_API_KEY`)
+- Returns current price with percentage change from previous close
+- Free tier: 250 calls per day
+
+**Percentage Change**:
+- FMP provides `changePercentage` directly (previous close to current)
+- No manual calculation needed (unlike Gold API)
+- Still adds to `marketPriceHistory` for record-keeping
+
+**Functions**:
+- `fetchSP500()`: Internal action called by cron, fetches S&P 500 quote
+- `upsertSP500Price()`: Internal mutation that updates current price and adds to history
+- `getSP500Price()`: Public query returning current S&P 500 data (included in `dashboard.getStats`)
+- `getSP500History()`: Debug query to view historical snapshots
+
+**Market Hours Detection**:
+- Automatically adjusts for Standard Time (Nov-Mar) and Daylight Time (Mar-Nov)
+- Cron schedule covers both time zones (12-22 UTC for market hours)
+
+**Data Access**:
+- S&P 500 data is included in `api.dashboard.getStats` alongside other market prices
+- Single consolidated query for all dashboard data
 
 ## UI Implementation
 
@@ -242,10 +288,11 @@ Main dashboard component that orchestrates the entire UI:
     - Gold (XAU) spot price with 24h trend indicator
     - Silver (XAG) spot price with 24h trend indicator
     - Bitcoin (BTC) price with 24h trend indicator
+    - S&P 500 (^GSPC) index price with daily % change indicator
   - **Dashboard Stats** (right side, 140px cards):
     - Total Cashback percentage
     - Last Update timestamp
-  - **Trend Indicators**: Green ↗️ for positive change, Red ↘️ for negative change (appears after 24h of data accumulation)
+  - **Trend Indicators**: Green ↗️ for positive change, Red ↘️ for negative change
 - **Filter/Calculator Bar** (`app/components/dashboard/filters.tsx`): Single row with filters on left, calculator settings on right
 - **Product Grid**: Responsive grid of product cards
 
@@ -313,7 +360,7 @@ This provides optimal performance with instant page loads and real-time reactivi
 2. Data includes:
    - Gold and silver products with spread calculations
    - Collect Pure spot/bid prices
-   - Market prices (gold, silver, bitcoin) with 24h trends
+   - Market prices (gold, silver, bitcoin, S&P 500) with trend indicators
    - Last fetch timestamp
 3. Component transforms data to `ProductCardData` format
 4. Dashboard passes data to stats and product cards

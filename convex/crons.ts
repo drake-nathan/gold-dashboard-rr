@@ -46,4 +46,23 @@ crons.cron(
   internal.twelve.fetchMarketPrices,
 );
 
+// Fetch S&P 500 from FMP API
+// Market hours (8 AM - 6 PM ET = 1 PM - 11 PM UTC, adjusting for DST)
+// Standard Time (Nov-Mar): 8 AM ET = 1 PM UTC, 6 PM ET = 11 PM UTC → 13-22 UTC
+// Daylight Time (Mar-Nov): 8 AM EDT = 12 PM UTC, 6 PM EDT = 10 PM UTC → 12-21 UTC
+// Using 12-22 UTC to cover both scenarios during market hours
+crons.cron(
+  "fetch-sp500-market-hours",
+  "*/5 12-22 * * *", // Every 5 minutes from 12 PM - 10 PM UTC (covers 8 AM - 6 PM ET)
+  internal.fmp.fetchSP500,
+);
+
+// Fetch S&P 500 during off-hours (to show last known price)
+// Every 2 hours outside market hours
+crons.cron(
+  "fetch-sp500-off-hours",
+  "0 23,0-11 * * *", // Every hour at :00 from 11 PM - 11 AM UTC
+  internal.fmp.fetchSP500,
+);
+
 export default crons;

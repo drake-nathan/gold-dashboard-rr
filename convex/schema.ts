@@ -130,16 +130,17 @@ export default defineSchema({
     .index("by_metal_type", ["metalType"])
     .index("by_metal_and_weight", ["metalType", "weight"]),
 
-  // Market prices from Gold API
+  // Market prices from Gold API and FMP
   marketPrices: defineTable({
-    symbol: v.string(), // e.g., "XAU", "XAG", "BTC"
+    symbol: v.string(), // e.g., "XAU", "XAG", "BTC", "^GSPC"
     assetType: v.union(
       v.literal("gold"),
       v.literal("silver"),
       v.literal("bitcoin"),
+      v.literal("sp500"),
     ),
     currentPrice: v.number(),
-    percentChange: v.union(v.number(), v.null()), // 24h percent change (calculated from our history)
+    percentChange: v.union(v.number(), v.null()), // 24h percent change (calculated from our history or from API)
     lastUpdated: v.number(),
   }).index("by_symbol", ["symbol"]),
 
