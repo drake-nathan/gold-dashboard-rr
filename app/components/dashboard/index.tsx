@@ -132,7 +132,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
               </p>
             </div>
           </div>
-        : <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
+        : <div className="grid grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-4">
             {sortedProducts.map((product) => (
               <ProductCard
                 calculatorSettings={calculatorSettings}

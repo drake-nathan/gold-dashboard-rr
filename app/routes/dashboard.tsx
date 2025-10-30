@@ -37,15 +37,14 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   // const stats = useQuery(api.dashboard.getStats);
 
   // Check if there's actually no data
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="text-lg font-medium">No products found</div>
+          <div className="text-lg font-medium">Error</div>
           <div className="text-sm text-muted-foreground">
-            The database appears to be empty. Run the Costco and Collect Pure
-            fetchers to populate data.
+            We&apos;re having an issue connecting to our database, please try
+            again later.
           </div>
         </div>
       </div>

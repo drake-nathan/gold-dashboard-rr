@@ -1,13 +1,68 @@
 # TODO: Future Features & Improvements
 
-## Authentication & User Settings
+> **Last Audit:** October 30, 2025 - See FRONTEND_AUDIT_2025-10-30.md for full details
 
-- [ ] Integrate Clerk for authentication (Sign In / Sign Up)
-- [ ] Add user settings table in Convex
+## 🎯 Priority: IMMEDIATE (Next Sprint)
+
+### Accessibility Fixes (HIGH IMPACT - 2-3 hours)
+
+- [ ] Add `alt` text to product images (app/components/product-card.tsx:73)
+- [ ] Add ARIA labels to filter controls
+- [ ] Add ARIA labels to calculator controls
+- [ ] Improve keyboard navigation for product cards
+- [ ] Add text alternatives for color-only profit/loss indicators
+- [ ] Add `aria-label` to trend badges (green/red indicators)
+
+### Code Cleanup (5 minutes)
+
+- [ ] Remove duplicate `ProductFilters` component (app/components/product-filters.tsx) - unused
+
+## 🚀 Priority: SHORT TERM (1-2 Weeks)
+
+### UI/UX Improvements
+
+- [ ] Add loading skeletons instead of empty states (1-2 hours)
+- [ ] Add URL state for filters (shareable links) (2-3 hours)
+- [ ] Add error boundaries around product grid (1 hour)
+- [ ] Add placeholder images for missing product thumbnails
+- [ ] Add retry mechanism for failed data loads
+
+### Mobile Optimization (4-6 hours)
+
+- [ ] Test on real mobile devices
+- [ ] Fix filter bar wrapping on mobile (app/components/dashboard/filters.tsx:40)
+- [ ] Adjust stat cards for small screens
+- [ ] Adjust product grid min-width for mobile (currently 350px)
+- [ ] Mobile menu for header on small screens
+
+## 📅 Priority: MEDIUM TERM (2-4 Weeks)
+
+### Authentication & User Settings
+
+- [ ] Enable and test Clerk authentication (already integrated in root.tsx) (4-6 hours)
+- [ ] Add user settings table in Convex (3-4 hours)
 - [ ] Persist calculator settings (Costco membership, credit card preferences) per user
+- [ ] Use localStorage for anonymous users as fallback
 - [ ] Add user profile page
 
-## Collect Pure Integration
+### Filters & Sorting Enhancements
+
+- [ ] Add weight range filter
+- [ ] Add brand filter
+- [ ] Add price range filter
+- [ ] Add "only show deals" toggle (negative spreads only)
+- [ ] Save filter preferences (URL params + user settings)
+
+### Data Quality & Error Handling
+
+- [ ] Handle edge cases where pricing data is missing
+- [ ] Show data freshness indicators
+- [ ] Add fallback UI when market prices fail to load
+- [ ] Improve empty states with actionable messages
+
+## 📊 Priority: LONG TERM (1+ Month)
+
+### Collect Pure Integration
 
 - [x] ~~Get actual Collect Pure product URLs~~ - Using Pure product IDs directly
 - [x] ~~Improve product matching logic~~ - Conservative algorithm with phrase matching implemented
@@ -16,52 +71,43 @@
 - [ ] Add UI for viewing match status and manually matching products (currently done via Convex dashboard)
 - [ ] Add Pure product search/browse UI to make manual matching easier
 
-## Data & Analytics
+### Data & Analytics
 
 - [ ] Add price history charts for individual products
 - [ ] Add stock availability notifications/alerts
 - [ ] Show trending products (best spreads over time)
-- [ ] Add last updated timestamp display for prices
 
-## UI/UX Enhancements
+### UI/UX Enhancements
 
 - [ ] Add product image zoom/lightbox
 - [ ] Add favorites/watchlist functionality
 - [ ] Add product comparison tool (side-by-side)
-- [ ] Add loading skeletons instead of simple loading text
 - [ ] Add animations/transitions for better UX
-- [ ] Mobile menu for header on small screens
 
-## Filters & Sorting
-
-- [ ] Add weight range filter
-- [ ] Add brand filter
-- [ ] Add price range filter
-- [ ] Add "only show deals" toggle (negative spreads only)
-- [ ] Save filter preferences
-
-## Performance
+### Performance
 
 - [ ] Implement pagination or virtual scrolling for large product lists
 - [ ] Add caching strategy for Convex queries
 - [ ] Optimize images (lazy loading, srcset)
 
-## Data Quality
-
-- [ ] Handle edge cases where pricing data is missing
-- [ ] Add data validation and error boundaries
-- [ ] Show data freshness indicators
-
-## Testing
+### Testing
 
 - [ ] Add unit tests for calculator logic
 - [ ] Add component tests
 - [ ] Add E2E tests for critical flows
 
-## Nice to Have
+## 💡 Nice to Have (Backlog)
 
 - [ ] Export product data to CSV/Excel
 - [ ] Add email notifications for price drops
 - [ ] Add RSS feed for deals
 - [ ] Multi-currency support
 - [ ] Add product notes/comments per user
+
+---
+
+## 📝 Notes
+
+- **React Compiler:** Manual memoization (useMemo/useCallback) is NOT needed - React Compiler handles optimizations automatically
+- **SSR:** Using optimal Convex `preloadQuery` pattern - no loading states needed
+- **Type Safety:** TypeScript compiles without errors, strong typing throughout
