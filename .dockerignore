@@ -1,4 +1,52 @@
+# Build outputs
 .react-router
 build
 node_modules
+
+# Environment files (sensitive)
+.env
+.env.local
+.env*.local
+
+# Convex local cache
+.convex
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+bun-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in container)
 README.md
+CLAUDE.md
+TODO.md
+.prompts/
+.sessions/
+
+# Deployment
+.vercel
+.netlify
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.tsbuildinfo
