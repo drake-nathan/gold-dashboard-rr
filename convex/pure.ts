@@ -209,42 +209,47 @@ export const fetchNewData = internalAction({
 
           console.info(`Fetched ${products.length} ${material} products`);
 
-          // Process and store each product
-          for (const product of products) {
-            // Only store products with bids
-            if (
-              product.variants.length === 0 ||
-              !product.variants[0]?.highestOffer
-            ) {
-              continue;
-            }
+          // Process products into batch data
+          const productBatch = products
+            .filter(
+              (product) =>
+                product.variants.length > 0 && product.variants[0]?.highestOffer,
+            )
+            .map((product) => {
+              const metalType = product.material.toLowerCase() as
+                | "gold"
+                | "silver";
+              const weightOz = parseWeightToOz(
+                product.weight,
+                product.weightGrams,
+              );
+              const productType = extractProductType(product);
+              const bidPrice = product.variants[0].highestOffer!.price;
+              const bidPricePerOz = bidPrice / weightOz;
 
-            const metalType = product.material.toLowerCase() as
-              | "gold"
-              | "silver";
-            const weightOz = parseWeightToOz(
-              product.weight,
-              product.weightGrams,
-            );
-            const productType = extractProductType(product);
-            const bidPrice = product.variants[0].highestOffer.price;
-            const bidPricePerOz = bidPrice / weightOz;
-
-            await ctx.runMutation(internal.pure.upsertPureProduct, {
-              currentBidPrice: bidPrice,
-              currentBidPricePerOz: bidPricePerOz,
-              lastUpdated: timestamp,
-              manufacturer: product.manufacturer?.title ?? null,
-              metalType,
-              productName: product.title,
-              productType,
-              pureProductId: product.id,
-              weight: weightOz,
-              weightGrams: product.weightGrams || null,
+              return {
+                currentBidPrice: bidPrice,
+                currentBidPricePerOz: bidPricePerOz,
+                lastUpdated: timestamp,
+                manufacturer: product.manufacturer?.title ?? null,
+                metalType,
+                productName: product.title,
+                productType,
+                pureProductId: product.id,
+                weight: weightOz,
+                weightGrams: product.weightGrams || null,
+              };
             });
 
-            totalProductsStored++;
-          }
+          // Batch upsert products (reduces transaction contention)
+          const stored = await ctx.runMutation(
+            internal.pure.batchUpsertPureProducts,
+            {
+              products: productBatch,
+            },
+          );
+
+          totalProductsStored += stored;
         } catch (error) {
           console.warn(`Error fetching ${material} products:`, error);
         }
@@ -289,7 +294,60 @@ export const fetchNewData = internalAction({
   },
 });
 
-// Upsert Pure product into cache
+// Batch upsert Pure products (reduces transaction contention)
+export const batchUpsertPureProducts = internalMutation({
+  args: {
+    products: v.array(
+      v.object({
+        currentBidPrice: v.union(v.number(), v.null()),
+        currentBidPricePerOz: v.union(v.number(), v.null()),
+        lastUpdated: v.number(),
+        manufacturer: v.union(v.string(), v.null()),
+        metalType: v.union(v.literal("gold"), v.literal("silver")),
+        productName: v.string(),
+        productType: v.union(v.string(), v.null()),
+        pureProductId: v.string(),
+        weight: v.number(),
+        weightGrams: v.union(v.number(), v.null()),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    let stored = 0;
+
+    // Process all products in a single transaction
+    for (const product of args.products) {
+      // Check if product already exists
+      const existing = await ctx.db
+        .query("pureProducts")
+        .withIndex("by_pure_id", (q) => q.eq("pureProductId", product.pureProductId))
+        .first();
+
+      if (existing) {
+        // Update existing product
+        await ctx.db.patch(existing._id, {
+          currentBidPrice: product.currentBidPrice,
+          currentBidPricePerOz: product.currentBidPricePerOz,
+          lastUpdated: product.lastUpdated,
+          manufacturer: product.manufacturer,
+          productName: product.productName,
+          productType: product.productType,
+          weight: product.weight,
+          weightGrams: product.weightGrams,
+        });
+      } else {
+        // Insert new product
+        await ctx.db.insert("pureProducts", product);
+      }
+
+      stored++;
+    }
+
+    return stored;
+  },
+});
+
+// Upsert Pure product into cache (kept for backward compatibility)
 export const upsertPureProduct = internalMutation({
   args: {
     currentBidPrice: v.union(v.number(), v.null()),
