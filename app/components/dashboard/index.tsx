@@ -1,7 +1,7 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
 
 import {
@@ -26,6 +26,7 @@ interface DashboardProps {
 
 export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [_, startTransition] = useTransition();
 
   // Calculator settings state (not in URL - will be persisted to user settings later)
   const [calculatorSettings, setCalculatorSettings] =
@@ -41,33 +42,39 @@ export const Dashboard = ({ stats }: DashboardProps) => {
 
   // Update URL params (only set non-default values)
   const setMetalFilter = (value: MetalFilter) => {
-    const params = new URLSearchParams(searchParams);
-    if (value !== "all") {
-      params.set("metal", value);
-    } else {
-      params.delete("metal");
-    }
-    setSearchParams(params, { replace: true });
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      if (value !== "all") {
+        params.set("metal", value);
+      } else {
+        params.delete("metal");
+      }
+      setSearchParams(params, { replace: true });
+    });
   };
 
   const setSortOption = (value: SortOption) => {
-    const params = new URLSearchParams(searchParams);
-    if (value !== "spread-asc") {
-      params.set("sort", value);
-    } else {
-      params.delete("sort");
-    }
-    setSearchParams(params, { replace: true });
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      if (value !== "spread-asc") {
+        params.set("sort", value);
+      } else {
+        params.delete("sort");
+      }
+      setSearchParams(params, { replace: true });
+    });
   };
 
   const setShowOutOfStock = (value: boolean) => {
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set("showOOS", "true");
-    } else {
-      params.delete("showOOS");
-    }
-    setSearchParams(params, { replace: true });
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams);
+      if (value) {
+        params.set("showOOS", "true");
+      } else {
+        params.delete("showOOS");
+      }
+      setSearchParams(params, { replace: true });
+    });
   };
 
   // Calculate total cashback percentage
