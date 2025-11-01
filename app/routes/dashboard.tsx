@@ -6,13 +6,47 @@ import { Dashboard } from "@/components/dashboard";
 
 import type { Route } from "./+types/dashboard";
 
-export const meta = () => [
-  { title: "Gold Dashboard - Costco vs Collect Pure" },
-  {
-    content: "Compare Costco precious metals prices with Collect Pure bids",
-    name: "description",
-  },
-];
+export const meta = () => {
+  const title = "Gold Dashboard - Live Costco vs Collect Pure Price Comparison";
+  const description =
+    "Real-time price comparison for Costco gold and silver products vs Collect Pure bids. Calculate your profit with cashback rewards. Updated every 5 minutes.";
+  const url = "https://gold-dashboard-rr-production.up.railway.app"; // TODO: Replace with your actual domain
+  const imageUrl = `${url}/og-image.png`; // TODO: Create OG image
+
+  return [
+    // Basic meta tags
+    { title },
+    { content: description, name: "description" },
+    {
+      content:
+        "costco gold, costco silver, precious metals, gold price comparison, collect pure, gold arbitrage, costco bullion",
+      name: "keywords",
+    },
+
+    // Open Graph (Facebook, LinkedIn, etc.)
+    { content: "website", property: "og:type" },
+    { content: url, property: "og:url" },
+    { content: title, property: "og:title" },
+    { content: description, property: "og:description" },
+    { content: imageUrl, property: "og:image" },
+    { content: "1200", property: "og:image:width" },
+    { content: "630", property: "og:image:height" },
+    { content: "Gold Dashboard", property: "og:site_name" },
+    { content: "en_US", property: "og:locale" },
+
+    // Twitter Card
+    { content: "summary_large_image", name: "twitter:card" },
+    { content: url, name: "twitter:url" },
+    { content: title, name: "twitter:title" },
+    { content: description, name: "twitter:description" },
+    { content: imageUrl, name: "twitter:image" },
+
+    // Additional SEO
+    { content: "index, follow", name: "robots" },
+    { content: "Gold Dashboard", name: "author" },
+    { content: "#D4AF37", name: "theme-color" }, // Gold color
+  ];
+};
 
 export const loader = async () => {
   const convexUrl = process.env.VITE_CONVEX_URL;
@@ -37,6 +71,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   // const stats = useQuery(api.dashboard.getStats);
 
   // Check if there's actually no data
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center">

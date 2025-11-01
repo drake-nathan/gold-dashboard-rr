@@ -1,0 +1,16 @@
+{
+  "background_color": "#ffffff",
+  "description": "Real-time price comparison for Costco gold and silver products vs Collect Pure bids",
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "48x48",
+      "src": "/favicon.ico",
+      "type": "image/x-icon"
+    }
+  ],
+  "name": "Gold Dashboard - Costco vs Collect Pure",
+  "short_name": "Gold Dashboard",
+  "start_url": "/",
+  "theme_color": "#D4AF37"
+}

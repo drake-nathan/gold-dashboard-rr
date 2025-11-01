@@ -12,6 +12,7 @@ import { ProductCard } from "@/components/product-card";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
+import { Footer } from "../footer";
 import { Header } from "../header";
 import { Filters } from "./filters";
 import { Stats } from "./stats";
@@ -185,6 +186,8 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           </div>
         }
       </main>
+
+      <Footer />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { shadcn } from "@clerk/themes";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { PostHogProvider } from "posthog-js/react";
 
 import "./app.css";
 
@@ -20,6 +21,13 @@ import type { Route } from "./+types/root";
 import { ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
+  // Favicon
+  { href: "/favicon.ico", rel: "icon", sizes: "any" },
+  { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
+  { href: "/apple-touch-icon.png", rel: "apple-touch-icon" },
+  { href: "/manifest.json", rel: "manifest" },
+
+  // Fonts
   { href: "https://fonts.googleapis.com", rel: "preconnect" },
   {
     crossOrigin: "anonymous",
@@ -69,8 +77,10 @@ const App = ({ loaderData }: Route.ComponentProps) => {
   }
 
   const convex = new ConvexReactClient(convexUrl);
+  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 
-  return (
+  const content = (
     <ClerkProvider
       appearance={{ baseTheme: shadcn }}
       loaderData={loaderData}
@@ -81,6 +91,25 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
+
+  // Only wrap with PostHog if configured
+  if (posthogKey && posthogHost) {
+    return (
+      <PostHogProvider
+        apiKey={posthogKey}
+        options={{
+          api_host: posthogHost,
+          capture_exceptions: true,
+          debug: import.meta.env.MODE === "development",
+          defaults: "2025-05-24",
+        }}
+      >
+        {content}
+      </PostHogProvider>
+    );
+  }
+
+  return content;
 };
 
 export default App;

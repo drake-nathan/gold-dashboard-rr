@@ -213,7 +213,8 @@ export const fetchNewData = internalAction({
           const productBatch = products
             .filter(
               (product) =>
-                product.variants.length > 0 && product.variants[0]?.highestOffer,
+                product.variants.length > 0 &&
+                product.variants[0]?.highestOffer,
             )
             .map((product) => {
               const metalType = product.material.toLowerCase() as
@@ -320,7 +321,9 @@ export const batchUpsertPureProducts = internalMutation({
       // Check if product already exists
       const existing = await ctx.db
         .query("pureProducts")
-        .withIndex("by_pure_id", (q) => q.eq("pureProductId", product.pureProductId))
+        .withIndex("by_pure_id", (q) =>
+          q.eq("pureProductId", product.pureProductId),
+        )
         .first();
 
       if (existing) {

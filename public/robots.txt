@@ -1,0 +1,9 @@
+# Allow all search engines to index the site
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://gold-dashboard-rr-production.up.railway.app/sitemap.xml
+
+# Crawl delay (be nice to servers)
+Crawl-delay: 1
