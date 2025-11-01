@@ -45,6 +45,13 @@ CLERK_SECRET_KEY=<your-clerk-key>
 
 # Feature Flags (optional)
 # VITE_ENABLE_AUTH=true  # Uncomment to show auth UI (hidden by default in production)
+
+# Analytics (optional but recommended for production)
+VITE_PUBLIC_POSTHOG_KEY=<your-posthog-key>  # PostHog API key (e.g., phc_xxxx)
+VITE_PUBLIC_POSTHOG_HOST=<your-posthog-host>  # PostHog host (e.g., https://us.i.posthog.com)
+
+# Google AdSense (optional - for displaying ads to monetize traffic)
+VITE_ADSENSE_CLIENT_ID=<your-client-id>  # Google AdSense client ID (e.g., ca-pub-1234567890123456)
 ```
 
 **Important Notes**:

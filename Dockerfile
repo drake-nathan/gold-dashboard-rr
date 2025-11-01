@@ -44,6 +44,6 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-# React Router 7 creates build output in a runtime-specific subdirectory
+# React Router 7 build output
 # Using node (not bun) to run react-router-serve for compatibility
-CMD ["npx", "react-router-serve", "./build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js"]
+CMD ["npx", "react-router-serve", "./build/server/index.js"]

@@ -421,6 +421,85 @@ See `TODO.md` for planned features including:
 - Favorites/watchlist
 - Product comparison tools
 
+## Docker Deployment
+
+### Testing Docker Locally
+
+To test the Docker container before deploying to Railway:
+
+#### 1. Build the Docker Image
+
+```bash
+source .env.local && docker build \
+  --build-arg VITE_CONVEX_URL="$VITE_CONVEX_URL" \
+  --build-arg VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" \
+  -t gold-dashboard:test \
+  .
+```
+
+**Note**: VITE\_ variables must be passed as build args because they're embedded in the client bundle at build time.
+
+#### 2. Run the Container
+
+```bash
+source .env.local && docker run -d \
+  --name gold-dashboard-test \
+  -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e VITE_CONVEX_URL="$VITE_CONVEX_URL" \
+  -e VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" \
+  -e CONVEX_DEPLOYMENT="$CONVEX_DEPLOYMENT" \
+  -e UNWRANGLE_API_KEY="$UNWRANGLE_API_KEY" \
+  -e PURE_API_KEY="$PURE_API_KEY" \
+  -e GOLD_API_KEY="$GOLD_API_KEY" \
+  -e FMP_API_KEY="$FMP_API_KEY" \
+  -e CLERK_SECRET_KEY="$CLERK_SECRET_KEY" \
+  -e VITE_PUBLIC_POSTHOG_KEY="${VITE_PUBLIC_POSTHOG_KEY:-}" \
+  -e VITE_PUBLIC_POSTHOG_HOST="${VITE_PUBLIC_POSTHOG_HOST:-}" \
+  gold-dashboard:test
+```
+
+**Note**: VITE\_ variables need to be passed at BOTH build time (as build args) AND runtime (as env vars) because they're used by both the client bundle and server-side loaders/middleware.
+
+#### 3. Test the Container
+
+```bash
+# Check logs
+docker logs gold-dashboard-test
+
+# Should show: [react-router-serve] http://localhost:3000 (http://172.17.0.2:3000)
+
+# Test HTTP endpoint
+curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:3000
+
+# Should return: HTTP Status: 200
+
+# View in browser
+open http://localhost:3000
+```
+
+#### 4. Clean Up
+
+```bash
+# Stop and remove container
+docker stop gold-dashboard-test && docker rm gold-dashboard-test
+
+# Remove image (optional)
+docker rmi gold-dashboard:test
+```
+
+### Dockerfile Details
+
+**Current build output path**: `./build/server/index.js`
+
+**Important**: React Router 7's build output structure changed. The server bundle is now directly at `build/server/index.js`, not in a runtime-specific subdirectory.
+
+If the container fails to start with "Cannot find module" error, verify the build output path:
+
+```bash
+docker run --rm gold-dashboard:test ls -la /app/build/server/
+```
+
 ## Project Status
 
 - ✅ Dependencies installed
@@ -428,3 +507,4 @@ See `TODO.md` for planned features including:
 - ✅ Type checking passes
 - ✅ Dev server running
 - ✅ UI fully implemented with SSR and real-time updates
+- ✅ Docker container tested and working

@@ -18,6 +18,7 @@ import {
 
 import type { Route } from "./+types/root";
 
+import { AdSense } from "./components/adsense";
 import { ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
@@ -52,6 +53,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <Meta />
         <Links />
+        <AdSense />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

@@ -236,6 +236,7 @@ const productBid = await ctx.db
    - Consider batching mutations
 
 2. **Double query for out-of-stock check** - Lines 395-410:
+
    ```typescript
    const inStockProducts = await ctx.db.query(...gold...).collect();
    const silverInStock = await ctx.db.query(...silver...).collect();

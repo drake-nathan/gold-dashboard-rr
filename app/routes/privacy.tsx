@@ -123,28 +123,26 @@ const Privacy = () => {
             </p>
 
             <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">
-              4.2 Google Ads
+              4.2 Google AdSense
             </h3>
             <p>
-              If you arrive at our site through a Google Ad, we use Google Ads
-              conversion tracking to measure ad effectiveness. This involves:
+              We use Google AdSense to display ads on our site. Google AdSense:
             </p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
-              <li>Tracking which ads led to visits</li>
-              <li>Measuring clicks on Costco or Collect Pure product links</li>
-              <li>
-                No personally identifiable information is shared with Google
-              </li>
+              <li>Uses cookies to serve ads based on your browsing history</li>
+              <li>May collect non-personally identifiable information</li>
+              <li>Allows you to opt out via Google's Ads Settings</li>
+              <li>Is governed by Google's privacy policy</li>
             </ul>
             <p className="mt-2">
               Learn more:{" "}
               <a
                 className="text-primary hover:underline"
-                href="https://policies.google.com/privacy"
+                href="https://policies.google.com/technologies/ads"
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                Google Privacy Policy
+                Google Ads Privacy Policy
               </a>
             </p>
           </section>
@@ -212,7 +210,7 @@ const Privacy = () => {
                 <strong>PostHog:</strong> Analytics and error tracking
               </li>
               <li>
-                <strong>Google Ads:</strong> Advertising and conversion tracking
+                <strong>Google AdSense:</strong> Display advertising
               </li>
               <li>
                 <strong>Railway:</strong> Hosting infrastructure
