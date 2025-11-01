@@ -42,9 +42,13 @@ PURE_API_KEY=<your-key>
 GOLD_API_KEY=<your-key>
 FMP_API_KEY=<your-key>
 CLERK_SECRET_KEY=<your-clerk-key>
+
+# Feature Flags (optional)
+# VITE_ENABLE_AUTH=true  # Uncomment to show auth UI (hidden by default in production)
 ```
 
 **Important Notes**:
+
 - `VITE_*` variables must be set as **both build args AND runtime env vars**:
   - Build time: Embedded into the client JavaScript bundle
   - Runtime: Used by server-side loaders and Clerk middleware
@@ -75,13 +79,15 @@ Railway should auto-detect the Dockerfile, but verify:
 
 ### Which Variables Go Where?
 
-**Build Args (VITE_* prefix)**:
+**Build Args (VITE\_\* prefix)**:
+
 - `VITE_CONVEX_URL` - Convex endpoint URL
 - `VITE_CLERK_PUBLISHABLE_KEY` - Clerk public key
 
 These are **embedded in the client JavaScript bundle** during build time.
 
 **Runtime Env Vars** (all others):
+
 - Server-side API keys (UNWRANGLE_API_KEY, PURE_API_KEY, etc.)
 - CONVEX_DEPLOYMENT
 - CLERK_SECRET_KEY
@@ -93,7 +99,7 @@ These are **available to the server at runtime** only.
 Railway should automatically pass environment variables as Docker build args if they match ARG declarations in your Dockerfile. If not:
 
 1. Go to Settings → Variables
-2. For each VITE_* variable, ensure it's available during build
+2. For each VITE\_\* variable, ensure it's available during build
 3. Railway v2 should handle this automatically
 
 ## Verifying Deployment
@@ -101,11 +107,13 @@ Railway should automatically pass environment variables as Docker build args if 
 ### Health Check
 
 Once deployed, visit your Railway URL:
+
 ```
 https://your-app.up.railway.app
 ```
 
 You should see the dashboard with:
+
 - Market prices loading (Gold, Silver, Bitcoin, S&P 500)
 - Costco products displayed
 - No console errors about missing Convex connection
@@ -113,26 +121,32 @@ You should see the dashboard with:
 ### Troubleshooting
 
 **Issue**: "Convex client not configured"
+
 - **Fix**: Verify `VITE_CONVEX_URL` was passed as build arg
 - **Check**: View build logs in Railway to see if ARG was received
 
 **Issue**: API data not loading
+
 - **Fix**: Check server-side env vars are set (UNWRANGLE_API_KEY, etc.)
 - **Check**: View runtime logs for errors
 
 **Issue**: Build fails with "bun: not found"
+
 - **Fix**: Ensure Railway is using the Dockerfile (not auto-detected buildpack)
 - **Check**: Settings → Build → Builder should be "Dockerfile"
 
 **Issue**: Port mismatch errors
+
 - **Fix**: Railway sets PORT dynamically; our Dockerfile uses 3000
 - **Check**: Ensure you're not overriding PORT or use Railway's PORT variable
 
 **Issue**: "VITE_CONVEX_URL is not set" error
+
 - **Fix**: Add `VITE_CONVEX_URL` as a runtime environment variable (not just build arg)
 - **Reason**: Server-side loaders read from `process.env` at runtime
 
 **Issue**: Clerk publishable key error during SSR
+
 - **Fix**: Add `VITE_CLERK_PUBLISHABLE_KEY` as a runtime environment variable
 - **Reason**: Clerk middleware runs on the server and needs the key at runtime
 
@@ -162,7 +176,7 @@ docker run -p 3000:3000 \
 
 Visit `http://localhost:3000` to test.
 
-**Note**: VITE_* variables need to be passed at BOTH build time (as build args) AND runtime (as env vars) because they're used by both the client bundle and server-side loaders.
+**Note**: VITE\_\* variables need to be passed at BOTH build time (as build args) AND runtime (as env vars) because they're used by both the client bundle and server-side loaders.
 
 ## Railway CLI Alternative
 
@@ -195,6 +209,7 @@ Railway automatically deploys on every push to `main`. To customize:
 ## Monitoring
 
 Railway provides:
+
 - **Logs**: Real-time server logs in the Deployments tab
 - **Metrics**: CPU, memory, network usage
 - **Alerts**: Configure in Settings → Alerts
@@ -202,6 +217,7 @@ Railway provides:
 ## Cost Estimate
 
 Railway pricing (as of 2025):
+
 - **Hobby Plan**: $5/month includes $5 credit
 - **Usage**: Charged for:
   - Memory (GB-hour)
@@ -209,12 +225,14 @@ Railway pricing (as of 2025):
   - Network egress
 
 For a dashboard like this (low traffic, SSR):
+
 - Estimated: ~$1-3/month on Hobby plan
 - Scales automatically with traffic
 
 ## Next Steps
 
 After successful deployment:
+
 1. Test all functionality (price updates, product display, etc.)
 2. Set up custom domain (if needed)
 3. Configure Railway alerts for downtime
@@ -224,6 +242,7 @@ After successful deployment:
 ## Rollback
 
 If deployment fails:
+
 1. Go to Deployments tab
 2. Find previous successful deployment
 3. Click three dots → "Redeploy"

@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 export const AuthButtons = () => {
   const { openSignIn, openSignUp } = useClerk();
 
+  // Hide auth UI in production until subscription feature is ready
+  const isAuthEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_AUTH === "true";
+
+  if (!isAuthEnabled) {
+    return null;
+  }
+
   return (
     <>
       <SignedOut>
