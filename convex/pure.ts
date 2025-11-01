@@ -176,81 +176,106 @@ export const fetchNewData = internalAction({
       }
 
       // Step 2: Fetch all Pure products (gold and silver only for MVP)
+      // Only fetch products with "Stocked by Costco" attribute
       const metals = ["Gold", "Silver"];
       let totalProductsFetched = 0;
       let totalProductsStored = 0;
 
       for (const material of metals) {
-        const searchParams = new URLSearchParams({
-          limit: "100", // Fetch in batches of 100
-          material,
-        });
+        let offset = 0;
+        let hasMore = true;
 
         try {
-          const productsResponse = await fetch(
-            `${PURE_API_BASE_URL}/v1/products?${searchParams.toString()}`,
-            {
-              headers: {
-                Accept: "application/json",
-                "x-api-key": apiKey,
-              },
-            },
-          );
-
-          if (!productsResponse.ok) {
-            console.warn(
-              `Failed to fetch ${material} products: ${productsResponse.status}`,
-            );
-            continue;
-          }
-
-          const products = (await productsResponse.json()) as PureProduct[];
-          totalProductsFetched += products.length;
-
-          console.info(`Fetched ${products.length} ${material} products`);
-
-          // Process products into batch data
-          const productBatch = products
-            .filter(
-              (product) =>
-                product.variants.length > 0 &&
-                product.variants[0]?.highestOffer,
-            )
-            .map((product) => {
-              const metalType = product.material.toLowerCase() as
-                | "gold"
-                | "silver";
-              const weightOz = parseWeightToOz(
-                product.weight,
-                product.weightGrams,
-              );
-              const productType = extractProductType(product);
-              const bidPrice = product.variants[0].highestOffer!.price;
-              const bidPricePerOz = bidPrice / weightOz;
-
-              return {
-                currentBidPrice: bidPrice,
-                currentBidPricePerOz: bidPricePerOz,
-                lastUpdated: timestamp,
-                manufacturer: product.manufacturer?.title ?? null,
-                metalType,
-                productName: product.title,
-                productType,
-                pureProductId: product.id,
-                weight: weightOz,
-                weightGrams: product.weightGrams || null,
-              };
+          while (hasMore) {
+            const searchParams = new URLSearchParams({
+              limit: "100", // Fetch in batches of 100
+              material,
+              offset: offset.toString(),
             });
 
-          // Batch upsert products (reduces transaction contention)
-          const stored = await ctx.runMutation(
-            internal.pure.batchUpsertPureProducts,
-            {
-              products: productBatch,
-            },
-          );
+            const productsResponse = await fetch(
+              `${PURE_API_BASE_URL}/v1/products?${searchParams.toString()}`,
+              {
+                headers: {
+                  Accept: "application/json",
+                  "x-api-key": apiKey,
+                },
+              },
+            );
 
-          totalProductsStored += stored;
+            if (!productsResponse.ok) {
+              console.warn(
+                `Failed to fetch ${material} products at offset ${offset}: ${productsResponse.status}`,
+              );
+              break;
+            }
+
+            const products = (await productsResponse.json()) as PureProduct[];
+            totalProductsFetched += products.length;
+
+            console.info(
+              `Fetched ${products.length} ${material} products at offset ${offset}`,
+            );
+
+            // Process products into batch data - ONLY "Stocked by Costco" products
+            const productBatch = products
+              .filter((product) =>
+                // Only include products with "Stocked by Costco" attribute
+                product.attributes?.some((attr: string) =>
+                  attr.toLowerCase().includes("stocked by costco"),
+                ),
+              )
+              .map((product) => {
+                const metalType = product.material.toLowerCase() as
+                  | "gold"
+                  | "silver";
+                const weightOz = parseWeightToOz(
+                  product.weight,
+                  product.weightGrams,
+                );
+                const productType = extractProductType(product);
+
+                // Get bid price if available, otherwise null
+                const bidPrice =
+                  product.variants[0]?.highestOffer?.price ?? null;
+                const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
+
+                return {
+                  currentBidPrice: bidPrice,
+                  currentBidPricePerOz: bidPricePerOz,
+                  lastUpdated: timestamp,
+                  manufacturer: product.manufacturer?.title ?? null,
+                  metalType,
+                  productName: product.title,
+                  productType,
+                  pureProductId: product.id,
+                  weight: weightOz,
+                  weightGrams: product.weightGrams || null,
+                };
+              });
+
+            // Batch upsert products (reduces transaction contention)
+            if (productBatch.length > 0) {
+              const stored = await ctx.runMutation(
+                internal.pure.batchUpsertPureProducts,
+                {
+                  products: productBatch,
+                },
+              );
+
+              totalProductsStored += stored;
+              console.info(
+                `Stored ${stored} Costco products from this batch (${productBatch.length} filtered)`,
+              );
+            }
+
+            // Check if there are more pages
+            if (products.length < 100) {
+              hasMore = false;
+            } else {
+              offset += 100;
+            }
+          }
         } catch (error) {
           console.warn(`Error fetching ${material} products:`, error);
         }

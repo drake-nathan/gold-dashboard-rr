@@ -56,6 +56,8 @@
 
 ### Data Quality & Error Handling
 
+- [ ] Set a single current price by type
+- [ ] Run a new job to check the stock by product
 - [ ] Handle edge cases where pricing data is missing
 - [ ] Show data freshness indicators
 - [ ] Add fallback UI when market prices fail to load

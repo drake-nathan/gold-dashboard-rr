@@ -87,6 +87,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 const App = ({ loaderData }: Route.ComponentProps) => {
   const convexUrl = import.meta.env.VITE_CONVEX_URL;
   const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 
   if (!convexUrl) {
     throw new Error("VITE_CONVEX_URL environment variable is not set");
@@ -98,40 +100,35 @@ const App = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  const convex = new ConvexReactClient(convexUrl);
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
-
-  const content = (
-    <ClerkProvider
-      appearance={{ baseTheme: shadcn }}
-      loaderData={loaderData}
-      publishableKey={clerkApiKey}
-    >
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <Outlet />
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
-  );
-
-  // Only wrap with PostHog if configured
-  if (posthogKey && posthogHost) {
-    return (
-      <PostHogProvider
-        apiKey={posthogKey}
-        options={{
-          api_host: posthogHost,
-          capture_exceptions: true,
-          debug: import.meta.env.MODE === "development",
-          defaults: "2025-05-24",
-        }}
-      >
-        {content}
-      </PostHogProvider>
+  if (!posthogKey || !posthogHost) {
+    throw new Error(
+      "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
     );
   }
 
-  return content;
+  const convex = new ConvexReactClient(convexUrl);
+
+  return (
+    <PostHogProvider
+      apiKey={posthogKey}
+      options={{
+        api_host: posthogHost,
+        capture_exceptions: true,
+        debug: import.meta.env.MODE === "development",
+        defaults: "2025-05-24",
+      }}
+    >
+      <ClerkProvider
+        appearance={{ baseTheme: shadcn }}
+        loaderData={loaderData}
+        publishableKey={clerkApiKey}
+      >
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <Outlet />
+        </ConvexProviderWithClerk>
+      </ClerkProvider>
+    </PostHogProvider>
+  );
 };
 
 export default App;
