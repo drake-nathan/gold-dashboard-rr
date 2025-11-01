@@ -19,7 +19,7 @@ import {
 import type { Route } from "./+types/root";
 
 import { AdSense } from "./components/adsense";
-import { ThemeProvider } from "./providers/theme-provider";
+import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
   // Favicon
@@ -54,6 +54,26 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <Meta />
         <Links />
         <AdSense />
+        {/* Prevent flash of wrong theme by applying theme before page renders */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const storageKey = '${THEME_STORAGE_KEY}';
+                const theme = localStorage.getItem(storageKey);
+                const root = document.documentElement;
+
+                if (theme === 'dark' || theme === 'light') {
+                  root.classList.add(theme);
+                } else {
+                  // theme is 'system' or not set
+                  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  root.classList.add(systemTheme);
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>

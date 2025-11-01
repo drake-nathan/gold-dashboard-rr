@@ -7,6 +7,8 @@ const themeSchema = z.enum(["dark", "light", "system"]);
 
 type Theme = z.infer<typeof themeSchema>;
 
+export const THEME_STORAGE_KEY = "gold-dashboard-theme";
+
 interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -28,7 +30,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export const ThemeProvider = ({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  storageKey = THEME_STORAGE_KEY,
   ...props
 }: ThemeProviderProps) => {
   const [theme, setTheme] = useState<Theme>(() => {
