@@ -23,38 +23,33 @@ This guide covers deploying the Gold Dashboard to Railway using Docker.
 
 ### 2. Configure Environment Variables
 
-Railway needs your environment variables set in two places:
+Railway needs your environment variables configured. In the Railway dashboard:
 
-#### Build-Time Variables (VITE_* vars - embedded in client bundle)
-
-In Railway dashboard:
 1. Go to your project → Service → Variables
 2. Click "New Variable"
-3. Add these as **build-time variables**:
+3. Add **ALL** of the following variables:
 
 ```
+# Client-side (embedded in bundle at build time AND available at runtime)
 VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud
 VITE_CLERK_PUBLISHABLE_KEY=<your-clerk-key>
-```
 
-**Important**: These need to be passed as Docker build args. Railway should automatically detect ARG declarations in your Dockerfile.
-
-#### Runtime Variables (Server-side only)
-
-Add these as regular environment variables:
-
-```
+# Server-side only (runtime)
 NODE_ENV=production
-PORT=3000
 CONVEX_DEPLOYMENT=prod:effervescent-dog-80
 UNWRANGLE_API_KEY=<your-key>
 PURE_API_KEY=<your-key>
 GOLD_API_KEY=<your-key>
 FMP_API_KEY=<your-key>
-CLERK_SECRET_KEY=<your-key>
+CLERK_SECRET_KEY=<your-clerk-key>
 ```
 
-**Note**: Railway automatically sets `PORT` if you don't, but we expose 3000 in the Dockerfile.
+**Important Notes**:
+- `VITE_*` variables must be set as **both build args AND runtime env vars**:
+  - Build time: Embedded into the client JavaScript bundle
+  - Runtime: Used by server-side loaders and Clerk middleware
+- Railway automatically passes env vars as Docker build args if they match ARG declarations in the Dockerfile
+- Railway sets `PORT` automatically, but our Dockerfile defaults to 3000
 
 ### 3. Configure Build Settings
 
@@ -133,6 +128,14 @@ You should see the dashboard with:
 - **Fix**: Railway sets PORT dynamically; our Dockerfile uses 3000
 - **Check**: Ensure you're not overriding PORT or use Railway's PORT variable
 
+**Issue**: "VITE_CONVEX_URL is not set" error
+- **Fix**: Add `VITE_CONVEX_URL` as a runtime environment variable (not just build arg)
+- **Reason**: Server-side loaders read from `process.env` at runtime
+
+**Issue**: Clerk publishable key error during SSR
+- **Fix**: Add `VITE_CLERK_PUBLISHABLE_KEY` as a runtime environment variable
+- **Reason**: Clerk middleware runs on the server and needs the key at runtime
+
 ## Local Docker Testing (Optional)
 
 Test your Docker build locally before deploying:
@@ -144,18 +147,22 @@ docker build \
   --build-arg VITE_CLERK_PUBLISHABLE_KEY=your-clerk-key \
   -t gold-dashboard .
 
-# Run with runtime env vars
+# Run with ALL required runtime env vars (including VITE_* vars!)
 docker run -p 3000:3000 \
+  -e VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud \
+  -e VITE_CLERK_PUBLISHABLE_KEY=your-clerk-key \
   -e CONVEX_DEPLOYMENT=prod:effervescent-dog-80 \
   -e UNWRANGLE_API_KEY=your-key \
   -e PURE_API_KEY=your-key \
   -e GOLD_API_KEY=your-key \
   -e FMP_API_KEY=your-key \
-  -e CLERK_SECRET_KEY=your-key \
+  -e CLERK_SECRET_KEY=your-clerk-key \
   gold-dashboard
 ```
 
 Visit `http://localhost:3000` to test.
+
+**Note**: VITE_* variables need to be passed at BOTH build time (as build args) AND runtime (as env vars) because they're used by both the client bundle and server-side loaders.
 
 ## Railway CLI Alternative
 

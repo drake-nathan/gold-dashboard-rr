@@ -21,11 +21,17 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
 RUN bun run build
 
-# Production stage
-FROM base AS production
+# Production stage - using Node.js v22 LTS for runtime with Bun for package management
+FROM node:24-alpine AS production
 WORKDIR /app
 
-# Copy only production dependencies
+# Install Bun binary directly for faster package installation
+RUN apk add --no-cache unzip curl bash && \
+    curl -fsSL https://bun.sh/install | bash && \
+    ln -s /root/.bun/bin/bun /usr/local/bin/bun && \
+    apk del bash
+
+# Copy package files and install production dependencies with Bun
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --production
 
@@ -38,4 +44,6 @@ ENV PORT=3000
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+# React Router 7 creates build output in a runtime-specific subdirectory
+# Using node (not bun) to run react-router-serve for compatibility
+CMD ["npx", "react-router-serve", "./build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js"]
