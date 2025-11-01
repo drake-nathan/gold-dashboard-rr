@@ -1,4 +1,4 @@
-# Convex Backend Audit for Gold Dashboard
+# Convex Backend Audit for Dashboard.Gold
 
 Last Updated: 2025-10-26
 **Status**: Major refactoring completed - see Refactoring Summary below

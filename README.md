@@ -1,4 +1,4 @@
-# Gold Dashboard
+# Dashboard.Gold
 
 A real-time precious metals price tracking dashboard that monitors Costco gold/silver products and compares them with Collect Pure bid prices to identify arbitrage opportunities.
 

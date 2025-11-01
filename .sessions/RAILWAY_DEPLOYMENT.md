@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying the Gold Dashboard to Railway using Docker.
+This guide covers deploying Dashboard.Gold to Railway using Docker.
 
 ## Prerequisites
 

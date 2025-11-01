@@ -9,8 +9,8 @@
       "type": "image/x-icon"
     }
   ],
-  "name": "Gold Dashboard - Costco vs Collect Pure",
-  "short_name": "Gold Dashboard",
+  "name": "Dashboard.Gold - Costco vs Collect Pure",
+  "short_name": "Dashboard.Gold",
   "start_url": "/",
   "theme_color": "#D4AF37"
 }

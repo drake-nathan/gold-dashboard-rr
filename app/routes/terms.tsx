@@ -1,9 +1,9 @@
 import { Header } from "@/components/header";
 
 export const meta = () => [
-  { title: "Terms of Service - Gold Dashboard" },
+  { title: "Terms of Service - Dashboard.Gold" },
   {
-    content: "Terms of Service for Gold Dashboard price comparison tool",
+    content: "Terms of Service for Dashboard.Gold price comparison tool",
     name: "description",
   },
   { content: "index, follow", name: "robots" },
@@ -26,7 +26,7 @@ const Terms = () => {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using Gold Dashboard ("the Service"), you agree to
+              By accessing or using Dashboard.Gold ("the Service"), you agree to
               be bound by these Terms of Service ("Terms"). If you do not agree
               to these Terms, please do not use the Service.
             </p>
@@ -36,7 +36,7 @@ const Terms = () => {
             <h2 className="mb-3 text-2xl font-semibold text-foreground">
               2. Description of Service
             </h2>
-            <p>Gold Dashboard is a free price comparison tool that displays:</p>
+            <p>Dashboard.Gold is a free price comparison tool that displays:</p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
               <li>Real-time prices for precious metals products from Costco</li>
               <li>Bid prices from Collect Pure for similar products</li>
@@ -59,7 +59,7 @@ const Terms = () => {
               IMPORTANT DISCLAIMER:
             </p>
             <p className="mt-2">
-              Gold Dashboard is NOT a financial advisor. We do not provide:
+              Dashboard.Gold is NOT a financial advisor. We do not provide:
             </p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
               <li>Investment advice or recommendations</li>
@@ -156,7 +156,7 @@ const Terms = () => {
               7. Affiliate Disclosure
             </h2>
             <p>
-              Gold Dashboard may participate in affiliate programs in the
+              Dashboard.Gold may participate in affiliate programs in the
               future. If we do, we will clearly disclose any affiliate
               relationships. We will only recommend products or services we
               believe provide value, regardless of compensation.
@@ -168,8 +168,8 @@ const Terms = () => {
               8. Intellectual Property
             </h2>
             <p>
-              All content on Gold Dashboard, including text, code, design,
-              logos, and graphics, is owned by Gold Dashboard or its licensors
+              All content on Dashboard.Gold, including text, code, design,
+              logos, and graphics, is owned by Dashboard.Gold or its licensors
               and is protected by copyright and other intellectual property
               laws.
             </p>
@@ -207,7 +207,7 @@ const Terms = () => {
               10. Limitation of Liability
             </h2>
             <p className="uppercase">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, GOLD DASHBOARD SHALL NOT
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, DASHBOARD.GOLD SHALL NOT
               BE LIABLE FOR ANY:
             </p>
             <ul className="mt-2 ml-6 list-disc space-y-1 uppercase">
@@ -239,7 +239,7 @@ const Terms = () => {
               11. Indemnification
             </h2>
             <p>
-              You agree to indemnify and hold harmless Gold Dashboard, its
+              You agree to indemnify and hold harmless Dashboard.Gold, its
               operators, and affiliates from any claims, damages, losses, or
               expenses (including legal fees) arising from:
             </p>
@@ -328,7 +328,7 @@ const Terms = () => {
                   className="text-primary hover:underline"
                   href="https://gold-dashboard-rr-production.up.railway.app"
                 >
-                  Gold Dashboard
+                  Dashboard.Gold
                 </a>
               </li>
               {/* Add email when available */}
@@ -338,7 +338,7 @@ const Terms = () => {
 
           <section className="mt-12 border-t pt-6">
             <p className="text-sm">
-              By using Gold Dashboard, you acknowledge that you have read,
+              By using Dashboard.Gold, you acknowledge that you have read,
               understood, and agree to be bound by these Terms of Service.
             </p>
           </section>

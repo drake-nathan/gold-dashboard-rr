@@ -1,9 +1,9 @@
 import { Header } from "@/components/header";
 
 export const meta = () => [
-  { title: "Privacy Policy - Gold Dashboard" },
+  { title: "Privacy Policy - Dashboard.Gold" },
   {
-    content: "Privacy Policy for Gold Dashboard price comparison tool",
+    content: "Privacy Policy for Dashboard.Gold price comparison tool",
     name: "description",
   },
   { content: "index, follow", name: "robots" },
@@ -26,7 +26,7 @@ const Privacy = () => {
               1. Introduction
             </h2>
             <p>
-              Gold Dashboard ("we," "our," or "us") operates this website to
+              Dashboard.Gold ("we," "our," or "us") operates this website to
               provide real-time price comparisons for precious metals products.
               This Privacy Policy explains how we collect, use, and protect your
               information when you use our service.
@@ -42,7 +42,7 @@ const Privacy = () => {
               2.1 Information You Provide
             </h3>
             <p>
-              Currently, Gold Dashboard does not require user accounts or
+              Currently, Dashboard.Gold does not require user accounts or
               personal information. We do not collect names, email addresses, or
               other personally identifiable information unless you choose to
               contact us directly.
@@ -303,7 +303,7 @@ const Privacy = () => {
                   className="text-primary hover:underline"
                   href="https://gold-dashboard-rr-production.up.railway.app"
                 >
-                  Gold Dashboard
+                  Dashboard.Gold
                 </a>
               </li>
               {/* Add email when available */}
@@ -314,7 +314,7 @@ const Privacy = () => {
           <section className="mt-12 border-t pt-6">
             <p className="text-sm">
               This privacy policy was last updated on October 31, 2025. By using
-              Gold Dashboard, you agree to this Privacy Policy.
+              Dashboard.Gold, you agree to this Privacy Policy.
             </p>
           </section>
         </div>

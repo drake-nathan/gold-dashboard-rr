@@ -6,7 +6,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
           <div className="flex flex-col items-center gap-1 sm:items-start">
-            <p className="font-semibold text-foreground">Gold Dashboard</p>
+            <p className="font-semibold text-foreground">Dashboard.Gold</p>
             <p>Real-time precious metals price comparison</p>
           </div>
 
@@ -26,7 +26,7 @@ export const Footer = () => {
           </div>
 
           <div className="text-center sm:text-right">
-            <p>&copy; {new Date().getFullYear()} Gold Dashboard</p>
+            <p>&copy; {new Date().getFullYear()} Dashboard.Gold</p>
             <p className="mt-1 text-xs">
               Not financial advice. Verify all prices independently.
             </p>

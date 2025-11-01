@@ -137,10 +137,10 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto flex-1 px-4 py-6">
         <Stats
           collectPure={stats.collectPure}
           goldProducts={stats.goldProducts.bestSpread}

@@ -1,4 +1,4 @@
-# Gold Dashboard - Project Documentation
+# Dashboard.Gold - Project Documentation
 
 ## Project Overview
 

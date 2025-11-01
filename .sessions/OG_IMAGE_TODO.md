@@ -11,7 +11,7 @@ An Open Graph (OG) image is displayed when your site is shared on social media (
 ### Option 1: Screenshot-Based
 
 1. Take a screenshot of your dashboard showing:
-   - Header with "Gold Dashboard" title
+   - Header with "Dashboard.Gold" title
    - Market prices (Gold, Silver, Bitcoin, S&P 500)
    - 2-3 product cards with good profit spreads
 2. Add overlay text:
@@ -24,7 +24,7 @@ An Open Graph (OG) image is displayed when your site is shared on social media (
 Create a branded image with:
 
 - **Background**: Dark gradient or gold-themed
-- **Main Text**: "Gold Dashboard"
+- **Main Text**: "Dashboard.Gold"
 - **Subtext**: "Costco vs Collect Pure Price Comparison"
 - **Visual**: Gold/silver bar icons or price chart graphic
 - **Footer**: "Updated Every 5 Minutes"
