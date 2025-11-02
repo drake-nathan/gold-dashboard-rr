@@ -19,6 +19,7 @@ import {
 import type { Route } from "./+types/root";
 
 import { AdSense } from "./components/adsense";
+import { Toaster } from "./components/ui/sonner";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
@@ -76,7 +77,10 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

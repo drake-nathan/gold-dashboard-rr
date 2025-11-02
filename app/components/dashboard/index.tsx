@@ -212,7 +212,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           availableCards={availableCards}
           calculatorSettings={calculatorSettings}
           metalFilter={metalFilter}
-          onOpenCardManager={() => { setCardManagerOpen(true); }}
+          onOpenCardManager={() => {
+            setCardManagerOpen(true);
+          }}
           setCalculatorSettings={setCalculatorSettings}
           setMetalFilter={setMetalFilter}
           setShowOutOfStock={setShowOutOfStock}
@@ -225,7 +227,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         <CardManagerDrawer
           cards={availableCards}
           onCardsChange={handleCardsChange}
-          onClose={() => { setCardManagerOpen(false); }}
+          onClose={() => {
+            setCardManagerOpen(false);
+          }}
           open={cardManagerOpen}
         />
 

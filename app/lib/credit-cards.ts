@@ -40,7 +40,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isCustomizable: true,
     isPreset: true,
     issuer: "Chase",
-    name: "Chase Freedom Unlimited",
+    name: "Freedom Unlimited",
     pointsPerDollar: 1.5,
     valuePerPoint: 0.021, // 2.1 cents per point
   },
@@ -50,6 +50,24 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isPreset: true,
     issuer: "Capital One",
     name: "Capital One Venture X",
+    pointsPerDollar: 2.0,
+    valuePerPoint: 0.0185, // 1.85 cents per point
+  },
+  {
+    id: "strata-premier",
+    isCustomizable: true,
+    isPreset: true,
+    issuer: "Citi",
+    name: "Strata Premier",
+    pointsPerDollar: 1.0,
+    valuePerPoint: 0.019, // 1.9 cents per point
+  },
+  {
+    id: "costco-visa",
+    isCustomizable: true,
+    isPreset: true,
+    issuer: "Costco",
+    name: "Costco Anywhere Visa",
     pointsPerDollar: 2.0,
     valuePerPoint: 0.01, // 1 cent per point
   },
@@ -65,7 +83,8 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
 ];
 
 // Calculate effective cashback percentage
-export const calculateCashbackPercentage = (card: CreditCard): number => card.pointsPerDollar * card.valuePerPoint * 100;
+export const calculateCashbackPercentage = (card: CreditCard): number =>
+  card.pointsPerDollar * card.valuePerPoint * 100;
 
 // Local storage key
 const STORAGE_KEY = "dashboard-gold-credit-cards";
@@ -134,8 +153,22 @@ export const saveCreditCards = (data: CreditCardsStorage): void => {
   }
 };
 
+// Clear all credit card data from local storage (resets to defaults)
+export const clearCreditCards = (): void => {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (error) {
+    console.error("Failed to clear credit cards from localStorage:", error);
+    throw error;
+  }
+};
+
 // Add a new custom card
-export const addCustomCard = (card: Omit<CreditCard, "id" | "isPreset">): CreditCard => {
+export const addCustomCard = (
+  card: Omit<CreditCard, "id" | "isPreset">,
+): CreditCard => {
   const newCard: CreditCard = {
     ...card,
     id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -148,7 +181,12 @@ export const addCustomCard = (card: Omit<CreditCard, "id" | "isPreset">): Credit
 };
 
 // Update a card (custom or preset)
-export const updateCard = (cards: CreditCard[], cardId: string, updates: Partial<Omit<CreditCard, "id" | "isPreset">>): CreditCard[] => cards.map((card) => {
+export const updateCard = (
+  cards: CreditCard[],
+  cardId: string,
+  updates: Partial<Omit<CreditCard, "id" | "isPreset">>,
+): CreditCard[] =>
+  cards.map((card) => {
     if (card.id !== cardId) return card;
 
     const updatedCard = { ...card, ...updates };
@@ -157,7 +195,10 @@ export const updateCard = (cards: CreditCard[], cardId: string, updates: Partial
   });
 
 // Delete a custom card (presets cannot be deleted)
-export const deleteCard = (cards: CreditCard[], cardId: string): CreditCard[] => {
+export const deleteCard = (
+  cards: CreditCard[],
+  cardId: string,
+): CreditCard[] => {
   const card = cards.find((c) => c.id === cardId);
   if (!card || card.isPreset) {
     throw new Error("Cannot delete preset cards");
@@ -166,7 +207,10 @@ export const deleteCard = (cards: CreditCard[], cardId: string): CreditCard[] =>
 };
 
 // Reset a preset card to default values
-export const resetPresetCard = (cards: CreditCard[], cardId: string): CreditCard[] => {
+export const resetPresetCard = (
+  cards: CreditCard[],
+  cardId: string,
+): CreditCard[] => {
   const defaultCard = DEFAULT_PRESET_CARDS.find((c) => c.id === cardId);
   if (!defaultCard) {
     throw new Error("Card is not a preset");

@@ -2,6 +2,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import * as React from "react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const Sheet = ({
@@ -69,9 +70,15 @@ const SheetContent = ({
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <XIcon className="size-4" />
-        <span className="sr-only">Close</span>
+      <SheetPrimitive.Close asChild>
+        <Button
+          className="absolute top-3.5 right-4"
+          size="icon"
+          variant="ghost"
+        >
+          <XIcon className="h-[1.2rem] w-[1.2rem]" />
+          <span className="sr-only">Close</span>
+        </Button>
       </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>
@@ -79,7 +86,7 @@ const SheetContent = ({
 
 const SheetHeader = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
-    className={cn("flex flex-col gap-1.5 p-4", className)}
+    className={cn("flex flex-col gap-2.5 p-4 pr-14", className)}
     data-slot="sheet-header"
     {...props}
   />

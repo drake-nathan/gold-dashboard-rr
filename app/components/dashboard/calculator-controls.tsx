@@ -63,7 +63,7 @@ export const CalculatorControls = ({
           <PopoverTrigger asChild>
             <Button
               aria-expanded={comboboxOpen}
-              className="min-w-80 justify-between"
+              className="min-w-80 justify-between rounded-md"
               id="credit-card"
               role="combobox"
               variant="outline"
@@ -106,9 +106,11 @@ export const CalculatorControls = ({
                         />
                         <div className="flex-1">
                           <div className="font-medium">{card.name}</div>
-                          {card.issuer ? <div className="text-xs text-muted-foreground">
+                          {card.issuer ?
+                            <div className="text-xs text-muted-foreground">
                               {card.issuer}
-                            </div> : null}
+                            </div>
+                          : null}
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {cashback.toFixed(2)}%

@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -34,12 +33,12 @@ export interface LegacyCreditCard {
 
 // Convert new CreditCard to legacy format
 export const toLegacyCard = (card: CreditCard): LegacyCreditCard => ({
-    cashbackPercentage: calculateCashbackPercentage(card),
-    earnRate: card.pointsPerDollar,
-    id: card.id,
-    name: card.name,
-    pointValue: card.valuePerPoint,
-  });
+  cashbackPercentage: calculateCashbackPercentage(card),
+  earnRate: card.pointsPerDollar,
+  id: card.id,
+  name: card.name,
+  pointValue: card.valuePerPoint,
+});
 
 // Export the new type as well
 export type { CreditCard };
@@ -111,14 +110,16 @@ export const CalculatorSettingsDialog = ({
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="credit-card">Credit Card</Label>
-              {onOpenCardManager ? <Button
+              {onOpenCardManager ?
+                <Button
                   onClick={onOpenCardManager}
                   size="sm"
                   type="button"
                   variant="ghost"
                 >
                   Manage Cards
-                </Button> : null}
+                </Button>
+              : null}
             </div>
             <Select
               onValueChange={handleCardChange}

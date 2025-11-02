@@ -377,11 +377,16 @@ Integrated controls for:
 - **Combobox Selector**: Searchable dropdown with card name/issuer filtering
 - **Local Storage**: Zod-validated persistence with auto-save
 - **Last Selected**: Remembers last selected card across sessions
+- **Form Validation**: React Hook Form with Zod resolver for real-time validation
+- **Toast Notifications**: Sonner toast notifications for success/error feedback
+- **Confirmation Dialogs**: Reusable confirmation dialogs for delete/reset actions with danger variants
 
 **Key Files**:
 
 - `app/lib/credit-cards.ts` - Zod schemas, validation, CRUD utilities, storage helpers
-- `app/components/card-manager-drawer.tsx` - Card management UI (drawer/sheet)
+- `app/components/card-manager-drawer.tsx` - Card management UI with React Hook Form and toast notifications
+- `app/components/ui/confirmation-dialog.tsx` - Reusable confirmation dialog component
+- `app/components/ui/sonner.tsx` - Sonner toast component with theme support
 - `app/components/dashboard/calculator-controls.tsx` - Combobox selector with "Manage Cards"
 - `app/components/calculator-settings.tsx` - Legacy type compatibility layer
 
@@ -464,7 +469,9 @@ This provides optimal performance with instant page loads and real-time reactivi
 - `app/components/dashboard/calculator-controls.tsx` - Credit card combobox selector
 - `app/components/dashboard/filter-controls.tsx` - Filter controls (metal type, sort, out of stock)
 - `app/components/product-card.tsx` - Individual product card
-- `app/components/card-manager-drawer.tsx` - Credit card management drawer
+- `app/components/card-manager-drawer.tsx` - Credit card management drawer with React Hook Form
+- `app/components/ui/confirmation-dialog.tsx` - Reusable confirmation dialog
+- `app/components/ui/sonner.tsx` - Sonner toast component
 - `app/components/calculator-settings.tsx` - Legacy credit card compatibility layer
 - `app/components/theme-toggle.tsx` - Dark mode toggle
 - `app/lib/credit-cards.ts` - Credit card schemas, validation, and storage utilities
@@ -636,4 +643,7 @@ For Railway/Docker deployment, ensure:
   - Searchable combobox selector with "Manage Cards" option
   - Responsive drawer UI (Sheet component)
   - Auto-save to local storage with last selected card persistence
+  - React Hook Form integration with real-time validation
+  - Sonner toast notifications for user feedback
+  - Confirmation dialogs for destructive actions (delete/reset)
   - Ready for database migration when auth is enabled
