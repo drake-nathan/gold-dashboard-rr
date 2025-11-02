@@ -221,7 +221,7 @@ export const fetchNewData = internalAction({
             const productBatch = products
               .filter((product) =>
                 // Only include products with "Stocked by Costco" attribute
-                product.attributes?.some((attr: string) =>
+                product.attributes.some((attr: string) =>
                   attr.toLowerCase().includes("stocked by costco"),
                 ),
               )
@@ -475,9 +475,10 @@ export const getLatestPrices = query({
   },
   handler: async (ctx, args) => {
     if (args.metalType) {
+      const metalType = args.metalType; // Narrow the type for TypeScript
       const prices = await ctx.db
         .query("collectPurePrices")
-        .withIndex("by_metal", (q) => q.eq("metalType", args.metalType!))
+        .withIndex("by_metal", (q) => q.eq("metalType", metalType))
         .order("desc")
         .first();
 
@@ -507,9 +508,10 @@ export const getAllPureProducts = query({
   },
   handler: async (ctx, args) => {
     if (args.metalType) {
+      const metalType = args.metalType; // Narrow the type for TypeScript
       return await ctx.db
         .query("pureProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType!))
+        .withIndex("by_metal_type", (q) => q.eq("metalType", metalType))
         .collect();
     }
 

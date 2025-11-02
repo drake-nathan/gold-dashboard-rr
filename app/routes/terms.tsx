@@ -26,9 +26,10 @@ const Terms = () => {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using Dashboard.Gold ("the Service"), you agree to
-              be bound by these Terms of Service ("Terms"). If you do not agree
-              to these Terms, please do not use the Service.
+              By accessing or using Dashboard.Gold (&quot;the Service&quot;),
+              you agree to be bound by these Terms of Service
+              (&quot;Terms&quot;). If you do not agree to these Terms, please do
+              not use the Service.
             </p>
           </section>
 
@@ -47,7 +48,8 @@ const Terms = () => {
               </li>
             </ul>
             <p className="mt-4">
-              The Service is provided "as is" for informational purposes only.
+              The Service is provided &quot;as is&quot; for informational
+              purposes only.
             </p>
           </section>
 
@@ -96,7 +98,9 @@ const Terms = () => {
             <p>While we strive for accuracy, we make NO guarantees that:</p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
               <li>Prices are current or accurate</li>
-              <li>Products are in stock when displayed as "In Stock"</li>
+              <li>
+                Products are in stock when displayed as &quot;In Stock&quot;
+              </li>
               <li>Calculations are error-free</li>
               <li>Third-party APIs will provide correct data</li>
               <li>Profit/loss calculations reflect real-world outcomes</li>
@@ -189,9 +193,9 @@ const Terms = () => {
               9. Disclaimer of Warranties
             </h2>
             <p className="uppercase">
-              THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
-              WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT
-              NOT LIMITED TO:
+              THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS
+              AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+              IMPLIED, INCLUDING BUT NOT LIMITED TO:
             </p>
             <ul className="mt-2 ml-6 list-disc space-y-1 uppercase">
               <li>Warranties of merchantability</li>
@@ -288,9 +292,9 @@ const Terms = () => {
             </h2>
             <p>
               We may update these Terms at any time. Changes will be posted on
-              this page with an updated "Last Updated" date. Your continued use
-              of the Service after changes constitutes acceptance of the new
-              Terms.
+              this page with an updated &quot;Last Updated&quot; date. Your
+              continued use of the Service after changes constitutes acceptance
+              of the new Terms.
             </p>
           </section>
 

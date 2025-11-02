@@ -104,7 +104,7 @@ export const fetchSP500 = internalAction({
       });
 
       console.info(
-        `FMP S&P 500 fetch successful: $${quote.price.toFixed(2)} (${percentChange !== null ? `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(2)}%` : "N/A"})`,
+        `FMP S&P 500 fetch successful: $${quote.price.toFixed(2)} (${percentChange > 0 ? "+" : ""}${percentChange.toFixed(2)}%)`,
       );
 
       return {

@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -105,8 +105,14 @@ export const CardManagerDrawer = ({
   const sortedCards = sortCards(cards);
 
   // Watch form values for real-time cashback calculation
-  const pointsPerDollar = form.watch("pointsPerDollar");
-  const valuePerPointCents = form.watch("valuePerPointCents");
+  const pointsPerDollar = useWatch({
+    control: form.control,
+    name: "pointsPerDollar",
+  });
+  const valuePerPointCents = useWatch({
+    control: form.control,
+    name: "valuePerPointCents",
+  });
   const effectiveCashback = pointsPerDollar * (valuePerPointCents / 100) * 100;
 
   const handleStartCreate = () => {

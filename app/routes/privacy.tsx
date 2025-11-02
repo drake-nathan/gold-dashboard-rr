@@ -26,10 +26,11 @@ const Privacy = () => {
               1. Introduction
             </h2>
             <p>
-              Dashboard.Gold ("we," "our," or "us") operates this website to
-              provide real-time price comparisons for precious metals products.
-              This Privacy Policy explains how we collect, use, and protect your
-              information when you use our service.
+              Dashboard.Gold (&quot;we,&quot; &quot;our,&quot; or
+              &quot;us&quot;) operates this website to provide real-time price
+              comparisons for precious metals products. This Privacy Policy
+              explains how we collect, use, and protect your information when
+              you use our service.
             </p>
           </section>
 
@@ -131,8 +132,8 @@ const Privacy = () => {
             <ul className="mt-2 ml-6 list-disc space-y-1">
               <li>Uses cookies to serve ads based on your browsing history</li>
               <li>May collect non-personally identifiable information</li>
-              <li>Allows you to opt out via Google's Ads Settings</li>
-              <li>Is governed by Google's privacy policy</li>
+              <li>Allows you to opt out via Google&apos;s Ads Settings</li>
+              <li>Is governed by Google&apos;s privacy policy</li>
             </ul>
             <p className="mt-2">
               Learn more:{" "}
@@ -240,7 +241,7 @@ const Privacy = () => {
 
           <section>
             <h2 className="mb-3 text-2xl font-semibold text-foreground">
-              8. Children's Privacy
+              8. Children&apos;s Privacy
             </h2>
             <p>
               Our service is not intended for children under 13. We do not
@@ -283,8 +284,8 @@ const Privacy = () => {
             </h2>
             <p>
               We may update this Privacy Policy from time to time. Changes will
-              be posted on this page with an updated "Last Updated" date. We
-              encourage you to review this policy periodically.
+              be posted on this page with an updated &quot;Last Updated&quot;
+              date. We encourage you to review this policy periodically.
             </p>
           </section>
 

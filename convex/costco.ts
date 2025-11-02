@@ -616,8 +616,6 @@ export const matchCostcoProductToPure = internalMutation({
     costcoProductId: v.string(),
   },
   handler: async (ctx, args) => {
-    const timestamp = Date.now();
-
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")

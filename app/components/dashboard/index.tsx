@@ -40,49 +40,34 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
 
-  // Credit card management state
-  const [availableCards, setAvailableCards] = useState<CreditCard[]>([]);
+  // Credit card management state (lazy initialization from localStorage)
+  const [availableCards, setAvailableCards] = useState<CreditCard[]>(() => {
+    const stored = loadCreditCards();
+    return stored.cards;
+  });
   const [cardManagerOpen, setCardManagerOpen] = useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
-  // Calculator settings state
+  // Calculator settings state (lazy initialization from localStorage)
   const [calculatorSettings, setCalculatorSettings] =
-    useState<CalculatorSettings>({
-      costcoMembershipEnabled: true,
-      creditCard: {
-        id: "loading",
-        isCustomizable: false,
-        isPreset: true,
-        name: "Loading...",
-        pointsPerDollar: 0,
-        valuePerPoint: 0,
-      },
-      pureFeeTier: PURE_FEE_TIERS[0], // Default to Pure Copper
-    });
+    useState<CalculatorSettings>(() => {
+      const stored = loadCreditCards();
+      const savedTierId = loadPureFeeTier();
+      const savedTier =
+        PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
 
-  // Load cards and Pure fee tier from local storage on mount
-  useEffect(() => {
-    const stored = loadCreditCards();
-    const savedTierId = loadPureFeeTier();
-    const savedTier =
-      PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
-
-    setAvailableCards(stored.cards);
-    setCalculatorSettings({
-      costcoMembershipEnabled: true,
-      creditCard:
-        stored.cards.find((c) => c.id === stored.lastSelectedId) ??
-        stored.cards[0],
-      pureFeeTier: savedTier,
+      return {
+        costcoMembershipEnabled: true,
+        creditCard:
+          stored.cards.find((c) => c.id === stored.lastSelectedId) ??
+          stored.cards[0],
+        pureFeeTier: savedTier,
+      };
     });
-  }, []);
 
   // Save selected card to local storage when changed
   useEffect(() => {
-    if (
-      availableCards.length > 0 &&
-      calculatorSettings.creditCard.id !== "loading"
-    ) {
+    if (availableCards.length > 0) {
       saveCreditCards({
         cards: availableCards,
         lastSelectedId: calculatorSettings.creditCard.id,
@@ -92,9 +77,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
 
   // Save selected Pure fee tier to local storage when changed
   useEffect(() => {
-    if (calculatorSettings.pureFeeTier) {
-      savePureFeeTier(calculatorSettings.pureFeeTier.id);
-    }
+    savePureFeeTier(calculatorSettings.pureFeeTier.id);
   }, [calculatorSettings.pureFeeTier]);
 
   // Handle card changes from manager
@@ -114,8 +97,10 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   };
 
   // Derive filter state directly from URL params
-  const metalFilter = (searchParams.get("metal") as MetalFilter) || "all";
-  const sortOption = (searchParams.get("sort") as SortOption) || "spread-asc";
+  const metalFilter =
+    (searchParams.get("metal") as MetalFilter | null) ?? "all";
+  const sortOption =
+    (searchParams.get("sort") as null | SortOption) ?? "spread-asc";
   const showOutOfStock = searchParams.get("showOOS") === "true";
 
   // Update URL params (only set non-default values)

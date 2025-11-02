@@ -124,7 +124,7 @@ export const loadCreditCards = (): CreditCardsStorage => {
       const userModified = userModifiedPresets.find(
         (c) => c.id === defaultCard.id,
       );
-      return userModified || defaultCard;
+      return userModified ?? defaultCard;
     });
 
     return {
@@ -172,7 +172,7 @@ export const addCustomCard = (
 ): CreditCard => {
   const newCard: CreditCard = {
     ...card,
-    id: `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     isCustomizable: false,
     isPreset: false,
   };
