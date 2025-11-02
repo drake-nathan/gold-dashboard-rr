@@ -49,12 +49,16 @@ export const getStats = query({
       // JOIN: Look up Pure product by pureProductId to get FRESH bid price
       let pureBidPrice: null | number = null;
       let pureBidPricePerOz: null | number = null;
+      let pureProductName: null | string = null;
+      let pureProductSku: null | string = null;
 
       if (product.pureProductId) {
         const pureProduct = pureProductsMap.get(product.pureProductId);
         if (pureProduct) {
           pureBidPrice = pureProduct.currentBidPrice;
           pureBidPricePerOz = pureProduct.currentBidPricePerOz;
+          pureProductName = pureProduct.productName;
+          pureProductSku = pureProduct.sku ?? null;
         }
       }
 
@@ -74,6 +78,8 @@ export const getStats = query({
         ...product,
         pureBidPrice,
         pureBidPricePerOz: bidPrice,
+        pureProductName,
+        pureProductSku,
         spread,
         spreadPercentage,
       };

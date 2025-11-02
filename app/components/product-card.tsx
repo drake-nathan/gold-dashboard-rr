@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { formatCurrency, formatPercentage } from "@/utils/format";
 import { calculateProductMetrics } from "@/utils/product-calculations";
+import { generatePureProductUrl } from "@/utils/pure-url";
 
 import type { CalculatorSettings } from "./calculator-settings";
 import type { ProductCardData } from "./dashboard";
@@ -40,10 +41,11 @@ export const ProductCard = ({
     calculatorSettings,
   );
 
-  // Collect Pure URL (placeholder for now)
-  const collectPureUrl = `https://collectpure.com/search?q=${encodeURIComponent(
-    product.name,
-  )}`;
+  // Generate Collect Pure URL if we have the SKU
+  const collectPureUrl =
+    product.pureProductSku
+      ? generatePureProductUrl(product.pureProductSku)
+      : `https://www.collectpure.com/search?q=${encodeURIComponent(product.name)}`;
 
   return (
     <Card className="flex h-full flex-col gap-5">
@@ -183,25 +185,31 @@ export const ProductCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-around gap-1.5">
-        <Button asChild size="sm" variant="ghost">
+      <CardFooter className="flex gap-3">
+        <Button asChild className="flex-1" size="default" variant="outline">
           <a
             aria-label={`View ${product.name} on Costco`}
             href={product.url}
             rel="noopener noreferrer"
             target="_blank"
           >
-            Costco <ExternalLink aria-hidden="true" className="ml-1 h-3 w-3" />
+            View on Costco
+            <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
           </a>
         </Button>
-        <Button asChild size="sm" variant="ghost">
+        <Button asChild className="flex-1" size="default" variant="default">
           <a
-            aria-label={`Search for ${product.name} on Collect Pure`}
+            aria-label={
+              product.pureProductSku
+                ? `View ${product.pureProductName ?? product.name} on Collect Pure`
+                : `Search for ${product.name} on Collect Pure`
+            }
             href={collectPureUrl}
             rel="noopener noreferrer"
             target="_blank"
           >
-            Pure <ExternalLink aria-hidden="true" className="ml-1 h-3 w-3" />
+            {product.pureProductSku ? "View on Pure" : "Search on Pure"}
+            <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
           </a>
         </Button>
       </CardFooter>

@@ -114,6 +114,7 @@ export default defineSchema({
   // Pure products cache - stores all available Pure products for matching
   pureProducts: defineTable({
     pureProductId: v.string(), // Unique Pure product ID
+    sku: v.optional(v.union(v.string(), v.null())), // SKU used in product URLs
     productName: v.string(), // Full product name from Pure
     metalType: v.union(v.literal("gold"), v.literal("silver")),
     weight: v.number(), // Weight in troy ounces

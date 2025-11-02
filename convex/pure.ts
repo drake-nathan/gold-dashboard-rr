@@ -249,6 +249,7 @@ export const fetchNewData = internalAction({
                   productName: product.title,
                   productType,
                   pureProductId: product.id,
+                  sku: product.sku || null,
                   weight: weightOz,
                   weightGrams: product.weightGrams || null,
                 };
@@ -333,6 +334,7 @@ export const batchUpsertPureProducts = internalMutation({
         productName: v.string(),
         productType: v.union(v.string(), v.null()),
         pureProductId: v.string(),
+        sku: v.union(v.string(), v.null()),
         weight: v.number(),
         weightGrams: v.union(v.number(), v.null()),
       }),
@@ -360,6 +362,7 @@ export const batchUpsertPureProducts = internalMutation({
           manufacturer: product.manufacturer,
           productName: product.productName,
           productType: product.productType,
+          sku: product.sku,
           weight: product.weight,
           weightGrams: product.weightGrams,
         });
@@ -386,6 +389,7 @@ export const upsertPureProduct = internalMutation({
     productName: v.string(),
     productType: v.union(v.string(), v.null()),
     pureProductId: v.string(),
+    sku: v.union(v.string(), v.null()),
     weight: v.number(),
     weightGrams: v.union(v.number(), v.null()),
   },
@@ -405,6 +409,7 @@ export const upsertPureProduct = internalMutation({
         manufacturer: args.manufacturer,
         productName: args.productName,
         productType: args.productType,
+        sku: args.sku,
         weight: args.weight,
         weightGrams: args.weightGrams,
       });
