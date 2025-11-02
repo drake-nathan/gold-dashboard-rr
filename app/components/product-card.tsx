@@ -43,16 +43,16 @@ export const ProductCard = ({
 
   // Generate Collect Pure URL if we have the SKU
   const collectPureUrl =
-    product.pureProductSku
-      ? generatePureProductUrl(product.pureProductSku)
-      : `https://www.collectpure.com/search?q=${encodeURIComponent(product.name)}`;
+    product.pureProductSku ?
+      generatePureProductUrl(product.pureProductSku)
+    : `https://www.collectpure.com/search?q=${encodeURIComponent(product.name)}`;
 
   return (
-    <Card className="flex h-full flex-col gap-5">
+    <Card className="flex h-full flex-col gap-2">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col justify-between gap-5">
-            <CardTitle className="line-clamp-2 text-base leading-tight">
+          <div className="flex flex-col gap-3">
+            <CardTitle className="line-clamp-2 min-h-[2.5rem] text-base leading-tight">
               {product.name}
             </CardTitle>
             <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export const ProductCard = ({
         </div>
       </CardContent>
 
-      <CardFooter className="flex gap-3">
+      <CardFooter className="mt-3 flex gap-3">
         <Button asChild className="flex-1" size="default" variant="outline">
           <a
             aria-label={`View ${product.name} on Costco`}
@@ -200,9 +200,9 @@ export const ProductCard = ({
         <Button asChild className="flex-1" size="default" variant="default">
           <a
             aria-label={
-              product.pureProductSku
-                ? `View ${product.pureProductName ?? product.name} on Collect Pure`
-                : `Search for ${product.name} on Collect Pure`
+              product.pureProductSku ?
+                `View ${product.pureProductName ?? product.name} on Collect Pure`
+              : `Search for ${product.name} on Collect Pure`
             }
             href={collectPureUrl}
             rel="noopener noreferrer"

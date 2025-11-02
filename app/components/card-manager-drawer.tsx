@@ -429,7 +429,9 @@ export const CardManagerDrawer = ({
                           <div className="truncate text-sm font-semibold">
                             {card.name}
                           </div>
-                          {card.isPreset ? <Badge variant="secondary">Preset</Badge> : null}
+                          {card.isPreset ?
+                            <Badge variant="secondary">Preset</Badge>
+                          : null}
                         </div>
                         {card.issuer ?
                           <div className="text-xs text-muted-foreground/80">
