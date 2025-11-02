@@ -55,7 +55,7 @@ export const Filters = ({
         <Sheet onOpenChange={setOpen} open={open}>
           <SheetTrigger asChild>
             <Button className="w-full" variant="outline">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              <SlidersHorizontal className="size-4" />
               Filters & Calculator
             </Button>
           </SheetTrigger>

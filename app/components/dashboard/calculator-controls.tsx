@@ -49,6 +49,11 @@ export const CalculatorControls = ({
 
   return (
     <>
+      <Button onClick={onOpenSettings} variant="outline">
+        <Settings className="size-4" />
+        Settings
+      </Button>
+
       <div className="flex items-center gap-2">
         <Label htmlFor="credit-card">Credit Card:</Label>
         <Popover onOpenChange={setComboboxOpen} open={comboboxOpen}>
@@ -94,7 +99,7 @@ export const CalculatorControls = ({
                       >
                         <Check
                           className={cn(
-                            "mr-2 h-4 w-4",
+                            "size-4",
                             calculatorSettings.creditCard.id === card.id ?
                               "opacity-100"
                             : "opacity-0",
@@ -124,7 +129,7 @@ export const CalculatorControls = ({
                       onOpenCardManager();
                     }}
                   >
-                    <CreditCardIcon className="mr-2 h-4 w-4" />
+                    <CreditCardIcon className="size-4" />
                     Manage Cards
                   </CommandItem>
                 </CommandGroup>
@@ -133,11 +138,6 @@ export const CalculatorControls = ({
           </PopoverContent>
         </Popover>
       </div>
-
-      <Button onClick={onOpenSettings} size="sm" variant="outline">
-        <Settings className="mr-2 h-4 w-4" />
-        Settings
-      </Button>
     </>
   );
 };

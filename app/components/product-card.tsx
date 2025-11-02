@@ -90,7 +90,7 @@ export const ProductCard = ({
             value={
               <>
                 {calc.aboveSpotPercentage !== null && (
-                  <span className="mr-2 text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {formatPercentage(calc.aboveSpotPercentage)} above spot
                   </span>
                 )}
@@ -194,7 +194,7 @@ export const ProductCard = ({
             target="_blank"
           >
             View on Costco
-            <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
+            <ExternalLink aria-hidden="true" className="size-4" />
           </a>
         </Button>
         <Button asChild className="flex-1" size="default" variant="default">
@@ -209,7 +209,7 @@ export const ProductCard = ({
             target="_blank"
           >
             {product.pureProductSku ? "View on Pure" : "Search on Pure"}
-            <ExternalLink aria-hidden="true" className="ml-2 h-4 w-4" />
+            <ExternalLink aria-hidden="true" className="size-4" />
           </a>
         </Button>
       </CardFooter>
