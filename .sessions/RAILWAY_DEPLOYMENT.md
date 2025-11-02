@@ -33,6 +33,8 @@ Railway needs your environment variables configured. In the Railway dashboard:
 # Client-side (embedded in bundle at build time AND available at runtime)
 VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud
 VITE_CLERK_PUBLISHABLE_KEY=<your-clerk-key>
+VITE_PUBLIC_POSTHOG_KEY=<your-posthog-key>  # PostHog API key (e.g., phc_xxxx)
+VITE_PUBLIC_POSTHOG_HOST=<your-posthog-host>  # PostHog host (e.g., https://us.i.posthog.com)
 
 # Server-side only (runtime)
 NODE_ENV=production
@@ -45,10 +47,6 @@ CLERK_SECRET_KEY=<your-clerk-key>
 
 # Feature Flags (optional)
 # VITE_ENABLE_AUTH=true  # Uncomment to show auth UI (hidden by default in production)
-
-# Analytics (optional but recommended for production)
-VITE_PUBLIC_POSTHOG_KEY=<your-posthog-key>  # PostHog API key (e.g., phc_xxxx)
-VITE_PUBLIC_POSTHOG_HOST=<your-posthog-host>  # PostHog host (e.g., https://us.i.posthog.com)
 
 # Google AdSense (optional - for displaying ads to monetize traffic)
 VITE_ADSENSE_CLIENT_ID=<your-client-id>  # Google AdSense client ID (e.g., ca-pub-1234567890123456)
@@ -90,6 +88,8 @@ Railway should auto-detect the Dockerfile, but verify:
 
 - `VITE_CONVEX_URL` - Convex endpoint URL
 - `VITE_CLERK_PUBLISHABLE_KEY` - Clerk public key
+- `VITE_PUBLIC_POSTHOG_KEY` - PostHog API key (for analytics)
+- `VITE_PUBLIC_POSTHOG_HOST` - PostHog host URL
 
 These are **embedded in the client JavaScript bundle** during build time.
 
@@ -157,6 +157,12 @@ You should see the dashboard with:
 - **Fix**: Add `VITE_CLERK_PUBLISHABLE_KEY` as a runtime environment variable
 - **Reason**: Clerk middleware runs on the server and needs the key at runtime
 
+**Issue**: PostHog not tracking pageviews in production
+
+- **Fix**: Add `VITE_PUBLIC_POSTHOG_KEY` and `VITE_PUBLIC_POSTHOG_HOST` as both build args AND runtime env vars
+- **Reason**: PostHog is initialized in the client bundle (needs build arg) and checked server-side (needs runtime env var)
+- **Check**: View browser console for PostHog errors or check Railway logs for "VITE_PUBLIC_POSTHOG_KEY is not set"
+
 ## Local Docker Testing (Optional)
 
 Test your Docker build locally before deploying:
@@ -166,12 +172,16 @@ Test your Docker build locally before deploying:
 docker build \
   --build-arg VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud \
   --build-arg VITE_CLERK_PUBLISHABLE_KEY=your-clerk-key \
+  --build-arg VITE_PUBLIC_POSTHOG_KEY=your-posthog-key \
+  --build-arg VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com \
   -t gold-dashboard .
 
 # Run with ALL required runtime env vars (including VITE_* vars!)
 docker run -p 3000:3000 \
   -e VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud \
   -e VITE_CLERK_PUBLISHABLE_KEY=your-clerk-key \
+  -e VITE_PUBLIC_POSTHOG_KEY=your-posthog-key \
+  -e VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com \
   -e CONVEX_DEPLOYMENT=prod:effervescent-dog-80 \
   -e UNWRANGLE_API_KEY=your-key \
   -e PURE_API_KEY=your-key \

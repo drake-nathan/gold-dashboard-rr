@@ -500,6 +500,64 @@ If the container fails to start with "Cannot find module" error, verify the buil
 docker run --rm gold-dashboard:test ls -la /app/build/server/
 ```
 
+## Analytics (PostHog)
+
+### Setup
+
+PostHog is configured for user analytics and pageview tracking:
+
+- **Provider**: `PostHogProvider` wraps the app in `app/root.tsx`
+- **Package**: `posthog-js` with React integration (`posthog-js/react`)
+- **Auto-tracking**: SPA navigation via `defaults: '2025-05-24'` config
+- **Debug mode**: Enabled in development via `debug: import.meta.env.MODE === "development"`
+
+### Environment Variables
+
+PostHog requires two client-side env vars (must be set as both build args AND runtime env vars):
+
+```bash
+VITE_PUBLIC_POSTHOG_KEY=phc_xxxx  # Your PostHog API key
+VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # or eu.i.posthog.com for EU
+```
+
+**Important**: These variables are:
+1. Embedded in the client bundle at build time (via Vite)
+2. Checked server-side in `app/root.tsx` to validate they're set
+3. Must be present in both `.env.local` (dev) and Railway env vars (prod)
+
+### SSR Configuration
+
+PostHog requires special SSR handling in `vite.config.ts`:
+
+```typescript
+ssr: {
+  noExternal: ["posthog-js/react"],
+}
+```
+
+This prevents SSR errors by bundling PostHog with the server code instead of treating it as an external module.
+
+### Production Deployment
+
+For Railway/Docker deployment, ensure:
+
+1. `Dockerfile` includes PostHog env vars as build args (lines 18-19, 23-24)
+2. Railway env vars include both `VITE_PUBLIC_POSTHOG_KEY` and `VITE_PUBLIC_POSTHOG_HOST`
+3. Check browser console for PostHog initialization (should see PostHog debug messages in dev mode)
+
+### Troubleshooting
+
+**Issue**: PostHog not tracking in production but works locally
+
+- **Cause**: Missing env vars in Railway/Docker build
+- **Fix**: Verify Railway env vars include both PostHog variables
+- **Check**: View Railway build logs for "VITE_PUBLIC_POSTHOG_KEY is not set" error
+
+**Issue**: SSR errors with PostHog
+
+- **Cause**: Incorrect `vite.config.ts` SSR externals
+- **Fix**: Use `noExternal: ["posthog-js/react"]` (not `@posthog/react`)
+
 ## Project Status
 
 - ✅ Dependencies installed
@@ -508,3 +566,4 @@ docker run --rm gold-dashboard:test ls -la /app/build/server/
 - ✅ Dev server running
 - ✅ UI fully implemented with SSR and real-time updates
 - ✅ Docker container tested and working
+- ✅ PostHog analytics configured for dev and prod

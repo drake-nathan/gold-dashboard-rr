@@ -20,6 +20,6 @@ export default defineConfig({
     devtoolsJson(),
   ],
   ssr: {
-    noExternal: ["posthog-js", "@posthog/react"],
+    noExternal: ["posthog-js/react"],
   },
 });
