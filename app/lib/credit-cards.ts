@@ -40,7 +40,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     id: "costco-visa",
     isCustomizable: true,
     isPreset: true,
-    issuer: "Costco",
+    issuer: "Citi",
     name: "Costco Anywhere Visa",
     pointsPerDollar: 2.0,
     valuePerPoint: 0.01, // 1 cent per point

@@ -470,7 +470,7 @@ export const CardManagerDrawer = ({
                           </div>
                         </div>
 
-                        <div className="flex flex-shrink-0 gap-1">
+                        <div className="flex shrink-0 gap-1">
                           {card.isCustomizable || !card.isPreset ?
                             <Tooltip>
                               <TooltipTrigger asChild>
