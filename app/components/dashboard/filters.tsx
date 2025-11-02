@@ -24,6 +24,7 @@ interface FiltersProps {
   calculatorSettings: CalculatorSettings;
   metalFilter: MetalFilter;
   onOpenCardManager: () => void;
+  onOpenSettings: () => void;
   setCalculatorSettings: (value: CalculatorSettings) => void;
   setMetalFilter: (value: MetalFilter) => void;
   setShowOutOfStock: (value: boolean) => void;
@@ -37,6 +38,7 @@ export const Filters = ({
   calculatorSettings,
   metalFilter,
   onOpenCardManager,
+  onOpenSettings,
   setCalculatorSettings,
   setMetalFilter,
   setShowOutOfStock,
@@ -82,6 +84,7 @@ export const Filters = ({
                   availableCards={availableCards}
                   calculatorSettings={calculatorSettings}
                   onOpenCardManager={onOpenCardManager}
+                  onOpenSettings={onOpenSettings}
                   setCalculatorSettings={setCalculatorSettings}
                 />
               </div>
@@ -111,6 +114,7 @@ export const Filters = ({
               availableCards={availableCards}
               calculatorSettings={calculatorSettings}
               onOpenCardManager={onOpenCardManager}
+              onOpenSettings={onOpenSettings}
               setCalculatorSettings={setCalculatorSettings}
             />
           </div>

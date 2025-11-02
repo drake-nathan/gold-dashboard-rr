@@ -5,6 +5,7 @@ import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { ProductCardData } from "@/components/dashboard";
 
 import { calculateCashbackPercentage } from "@/lib/credit-cards";
+import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
 
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 type MarketPrices = GetStats["marketPrices"];
@@ -31,12 +32,12 @@ export interface ProductCalculations {
   pureBidPrice: null | number;
 
   pureFee: number;
+  pureFeePercentage: number;
   totalCashback: number;
 
   totalCashbackPercentage: number;
 }
 
-const PURE_FEE_PERCENTAGE = 0.0075; // 0.75%
 const COSTCO_EXECUTIVE_PERCENTAGE = 0.02; // 2%
 
 export const calculateProductMetrics = (
@@ -73,7 +74,13 @@ export const calculateProductMetrics = (
   // === IMMEDIATE CASH FLOW ===
   const costcoPrice = product.currentPrice;
   const pureBidPrice = product.pureBidPrice;
-  const pureFee = pureBidPrice ? pureBidPrice * PURE_FEE_PERCENTAGE : 0;
+
+  // Get the fee rate based on metal type and selected tier
+  const pureFeePercentage = getFeeRateForMetal(
+    calculatorSettings.pureFeeTier,
+    product.metalType,
+  );
+  const pureFee = pureBidPrice ? pureBidPrice * pureFeePercentage : 0;
   const netFromSale = pureBidPrice ? pureBidPrice - pureFee : null;
   const initialCashLoss =
     netFromSale !== null ? costcoPrice - netFromSale : null;
@@ -108,6 +115,7 @@ export const calculateProductMetrics = (
     profitColor,
     pureBidPrice,
     pureFee,
+    pureFeePercentage: pureFeePercentage * 100,
     totalCashback,
     totalCashbackPercentage,
   };

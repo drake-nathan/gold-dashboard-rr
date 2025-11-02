@@ -117,7 +117,7 @@ export const ProductCard = ({
                 value={`+${formatCurrency(calc.pureBidPrice)}`}
               />
               <PriceRow
-                label="Pure Fee (0.75%):"
+                label={`Pure Fee (${formatPercentage(calc.pureFeePercentage)}):`}
                 labelClassName="text-xs text-muted-foreground"
                 tooltip="Fee deducted when selling to Collect Pure"
                 value={`-${formatCurrency(calc.pureFee)}`}

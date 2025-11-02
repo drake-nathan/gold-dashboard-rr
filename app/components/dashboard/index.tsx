@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
+import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
 import { ProductCard } from "@/components/product-card";
 import {
@@ -14,6 +15,11 @@ import {
   loadCreditCards,
   saveCreditCards,
 } from "@/lib/credit-cards";
+import {
+  loadPureFeeTier,
+  PURE_FEE_TIERS,
+  savePureFeeTier,
+} from "@/lib/pure-fee-tiers";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
@@ -37,6 +43,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   // Credit card management state
   const [availableCards, setAvailableCards] = useState<CreditCard[]>([]);
   const [cardManagerOpen, setCardManagerOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
   // Calculator settings state
   const [calculatorSettings, setCalculatorSettings] =
@@ -50,17 +57,23 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         pointsPerDollar: 0,
         valuePerPoint: 0,
       },
+      pureFeeTier: PURE_FEE_TIERS[0], // Default to Pure Copper
     });
 
-  // Load cards from local storage on mount
+  // Load cards and Pure fee tier from local storage on mount
   useEffect(() => {
     const stored = loadCreditCards();
+    const savedTierId = loadPureFeeTier();
+    const savedTier =
+      PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
+
     setAvailableCards(stored.cards);
     setCalculatorSettings({
       costcoMembershipEnabled: true,
       creditCard:
         stored.cards.find((c) => c.id === stored.lastSelectedId) ??
         stored.cards[0],
+      pureFeeTier: savedTier,
     });
   }, []);
 
@@ -76,6 +89,13 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       });
     }
   }, [calculatorSettings.creditCard.id, availableCards]);
+
+  // Save selected Pure fee tier to local storage when changed
+  useEffect(() => {
+    if (calculatorSettings.pureFeeTier) {
+      savePureFeeTier(calculatorSettings.pureFeeTier.id);
+    }
+  }, [calculatorSettings.pureFeeTier]);
 
   // Handle card changes from manager
   const handleCardsChange = (newCards: CreditCard[]) => {
@@ -215,6 +235,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           onOpenCardManager={() => {
             setCardManagerOpen(true);
           }}
+          onOpenSettings={() => {
+            setSettingsDrawerOpen(true);
+          }}
           setCalculatorSettings={setCalculatorSettings}
           setMetalFilter={setMetalFilter}
           setShowOutOfStock={setShowOutOfStock}
@@ -231,6 +254,17 @@ export const Dashboard = ({ stats }: DashboardProps) => {
             setCardManagerOpen(false);
           }}
           open={cardManagerOpen}
+        />
+
+        {/* Calculator Settings Drawer */}
+        <CalculatorSettingsDrawer
+          calculatorSettings={calculatorSettings}
+          onOpenCardManager={() => {
+            setCardManagerOpen(true);
+          }}
+          onOpenChange={setSettingsDrawerOpen}
+          open={settingsDrawerOpen}
+          setCalculatorSettings={setCalculatorSettings}
         />
 
         {/* Product Grid */}

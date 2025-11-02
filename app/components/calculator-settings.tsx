@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import type { CreditCard } from "@/lib/credit-cards";
+import type { PureFeeTier } from "@/lib/pure-fee-tiers";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,7 @@ export type { CreditCard };
 export interface CalculatorSettings {
   costcoMembershipEnabled: boolean;
   creditCard: CreditCard;
+  pureFeeTier: PureFeeTier;
 }
 
 interface CalculatorSettingsDialogProps {

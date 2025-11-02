@@ -25,6 +25,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { SwipeableCard } from "@/components/ui/swipeable-card";
 import {
   Tooltip,
   TooltipContent,
@@ -84,6 +85,7 @@ export const CardManagerDrawer = ({
     title: string;
     variant?: "danger" | "default";
   }>({
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     action: () => {},
     description: "",
     open: false,
@@ -248,13 +250,18 @@ export const CardManagerDrawer = ({
   };
 
   return (
-    <Sheet onOpenChange={(isOpen) => !isOpen && onClose()} open={open}>
+    <Sheet
+      onOpenChange={(isOpen) => {
+        if (!isOpen) onClose();
+      }}
+      open={open}
+    >
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>Manage Credit Cards</SheetTitle>
           <SheetDescription>
-            Add custom cards or customize preset card values. Changes are saved
-            to your browser.
+            Add custom cards or customize preset card values (points per dollar
+            & value per point). Changes are saved to your browser.
           </SheetDescription>
         </SheetHeader>
 
@@ -264,6 +271,7 @@ export const CardManagerDrawer = ({
             <Form {...form}>
               <form
                 className="space-y-4 rounded-lg border border-primary bg-primary/5 p-4"
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onSubmit={form.handleSubmit(onSubmit)}
               >
                 <h3 className="text-sm font-semibold">
@@ -417,90 +425,104 @@ export const CardManagerDrawer = ({
                   editMode?.type === "edit" && editMode.cardId === card.id;
 
                 return (
-                  <div
-                    className={`rounded-lg border p-3 transition-colors ${
-                      isEditing ? "border-primary bg-primary/5" : ""
-                    }`}
+                  <SwipeableCard
                     key={card.id}
+                    onDelete={
+                      !card.isPreset ?
+                        () => {
+                          handleDelete(card.id);
+                        }
+                      : undefined
+                    }
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <div className="truncate text-sm font-semibold">
-                            {card.name}
+                    <div
+                      className={`rounded-lg border bg-card p-3 transition-colors ${
+                        isEditing ? "border-primary bg-primary/5" : ""
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="truncate text-sm font-semibold">
+                              {card.name}
+                            </div>
+                            {card.isPreset ?
+                              <Badge variant="secondary">Preset</Badge>
+                            : null}
                           </div>
-                          {card.isPreset ?
-                            <Badge variant="secondary">Preset</Badge>
+                          {card.issuer ?
+                            <div className="text-xs text-muted-foreground">
+                              {card.issuer}
+                            </div>
                           : null}
-                        </div>
-                        {card.issuer ?
-                          <div className="text-xs text-muted-foreground/80">
-                            {card.issuer}
-                          </div>
-                        : null}
-                        <div className="mt-2 flex items-baseline gap-1.5">
-                          <div className="text-xs text-muted-foreground">
-                            {card.pointsPerDollar}x points @{" "}
-                            {(card.valuePerPoint * 100).toFixed(2)}¢ =
-                          </div>
-                          <div className="text-base font-bold text-primary">
-                            {cashback.toFixed(2)}%
+                          <div className="mt-1.5 text-xs text-muted-foreground">
+                            {card.pointsPerDollar}x @{" "}
+                            {(card.valuePerPoint * 100).toFixed(2)}¢ ={" "}
+                            <span className="font-bold text-primary">
+                              {cashback.toFixed(2)}%
+                            </span>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex flex-shrink-0 gap-1">
-                        {card.isCustomizable || !card.isPreset ?
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  handleStartEdit(card);
-                                }}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Edit card</TooltipContent>
-                          </Tooltip>
-                        : null}
-                        {card.isPreset && card.isCustomizable ?
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  handleReset(card.id);
-                                }}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <RotateCcw className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Reset to default</TooltipContent>
-                          </Tooltip>
-                        : null}
-                        {!card.isPreset && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                onClick={() => {
-                                  handleDelete(card.id);
-                                }}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Delete card</TooltipContent>
-                          </Tooltip>
-                        )}
+                        <div className="flex flex-shrink-0 gap-1">
+                          {card.isCustomizable || !card.isPreset ?
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  aria-label="Edit card"
+                                  className="h-9 w-9"
+                                  onClick={() => {
+                                    handleStartEdit(card);
+                                  }}
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Edit card</TooltipContent>
+                            </Tooltip>
+                          : null}
+                          {card.isPreset && card.isCustomizable ?
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  aria-label="Reset to default"
+                                  className="h-9 w-9"
+                                  onClick={() => {
+                                    handleReset(card.id);
+                                  }}
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  <RotateCcw className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Reset to default</TooltipContent>
+                            </Tooltip>
+                          : null}
+                          {!card.isPreset && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  aria-label="Delete card"
+                                  className="h-9 w-9"
+                                  onClick={() => {
+                                    handleDelete(card.id);
+                                  }}
+                                  size="icon"
+                                  variant="ghost"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Delete card</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </SwipeableCard>
                 );
               })
             }

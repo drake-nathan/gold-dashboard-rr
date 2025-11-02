@@ -1,4 +1,9 @@
-import { Check, ChevronsUpDown, Settings2 } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  CreditCard as CreditCardIcon,
+  Settings,
+} from "lucide-react";
 import { useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
@@ -19,7 +24,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
 import {
   calculateCashbackPercentage,
   type CreditCard,
@@ -30,6 +34,7 @@ interface CalculatorControlsProps {
   availableCards: CreditCard[];
   calculatorSettings: CalculatorSettings;
   onOpenCardManager: () => void;
+  onOpenSettings: () => void;
   setCalculatorSettings: (value: CalculatorSettings) => void;
 }
 
@@ -37,26 +42,13 @@ export const CalculatorControls = ({
   availableCards,
   calculatorSettings,
   onOpenCardManager,
+  onOpenSettings,
   setCalculatorSettings,
 }: CalculatorControlsProps) => {
   const [comboboxOpen, setComboboxOpen] = useState(false);
 
   return (
     <>
-      <div className="flex items-center gap-2">
-        <Label htmlFor="costco-exec">Costco Executive (2%):</Label>
-        <Switch
-          checked={calculatorSettings.costcoMembershipEnabled}
-          id="costco-exec"
-          onCheckedChange={(checked) => {
-            setCalculatorSettings({
-              ...calculatorSettings,
-              costcoMembershipEnabled: checked,
-            });
-          }}
-        />
-      </div>
-
       <div className="flex items-center gap-2">
         <Label htmlFor="credit-card">Credit Card:</Label>
         <Popover onOpenChange={setComboboxOpen} open={comboboxOpen}>
@@ -78,9 +70,13 @@ export const CalculatorControls = ({
           </PopoverTrigger>
           <PopoverContent align="start" className="w-80 p-0">
             <Command>
-              <CommandInput placeholder="Search cards..." />
+              <CommandInput placeholder="Search by name or issuer..." />
               <CommandList>
-                <CommandEmpty>No cards found.</CommandEmpty>
+                <CommandEmpty>
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    No cards found matching your search.
+                  </div>
+                </CommandEmpty>
                 <CommandGroup>
                   {availableCards.map((card) => {
                     const cashback = calculateCashbackPercentage(card);
@@ -122,12 +118,13 @@ export const CalculatorControls = ({
                 <CommandSeparator />
                 <CommandGroup>
                   <CommandItem
+                    className="font-medium"
                     onSelect={() => {
                       setComboboxOpen(false);
                       onOpenCardManager();
                     }}
                   >
-                    <Settings2 className="mr-2 h-4 w-4" />
+                    <CreditCardIcon className="mr-2 h-4 w-4" />
                     Manage Cards
                   </CommandItem>
                 </CommandGroup>
@@ -136,6 +133,11 @@ export const CalculatorControls = ({
           </PopoverContent>
         </Popover>
       </div>
+
+      <Button onClick={onOpenSettings} size="sm" variant="outline">
+        <Settings className="mr-2 h-4 w-4" />
+        Settings
+      </Button>
     </>
   );
 };

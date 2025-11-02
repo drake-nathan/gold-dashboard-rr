@@ -34,7 +34,17 @@ export const creditCardsStorageSchema = z.object({
 export type CreditCardsStorage = z.infer<typeof creditCardsStorageSchema>;
 
 // Default preset cards with the new structure
+// Costco card is first as it's the most relevant default for this dashboard
 export const DEFAULT_PRESET_CARDS: CreditCard[] = [
+  {
+    id: "costco-visa",
+    isCustomizable: true,
+    isPreset: true,
+    issuer: "Costco",
+    name: "Costco Anywhere Visa",
+    pointsPerDollar: 2.0,
+    valuePerPoint: 0.01, // 1 cent per point
+  },
   {
     id: "freedom-unlimited",
     isCustomizable: true,
@@ -61,15 +71,6 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     name: "Strata Premier",
     pointsPerDollar: 1.0,
     valuePerPoint: 0.019, // 1.9 cents per point
-  },
-  {
-    id: "costco-visa",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Costco",
-    name: "Costco Anywhere Visa",
-    pointsPerDollar: 2.0,
-    valuePerPoint: 0.01, // 1 cent per point
   },
   {
     id: "robinhood",
