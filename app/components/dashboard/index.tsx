@@ -1,14 +1,19 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
 
-import {
-  type CalculatorSettings,
-  PRESET_CARDS,
-} from "@/components/calculator-settings";
+import type { CalculatorSettings } from "@/components/calculator-settings";
+
+import { CardManagerDrawer } from "@/components/card-manager-drawer";
 import { ProductCard } from "@/components/product-card";
+import {
+  calculateCashbackPercentage,
+  type CreditCard,
+  loadCreditCards,
+  saveCreditCards,
+} from "@/lib/credit-cards";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
@@ -29,12 +34,64 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
 
-  // Calculator settings state (not in URL - will be persisted to user settings later)
+  // Credit card management state
+  const [availableCards, setAvailableCards] = useState<CreditCard[]>([]);
+  const [cardManagerOpen, setCardManagerOpen] = useState(false);
+
+  // Calculator settings state
   const [calculatorSettings, setCalculatorSettings] =
     useState<CalculatorSettings>({
       costcoMembershipEnabled: true,
-      creditCard: PRESET_CARDS[0], // Default to Freedom Unlimited
+      creditCard: {
+        id: "loading",
+        isCustomizable: false,
+        isPreset: true,
+        name: "Loading...",
+        pointsPerDollar: 0,
+        valuePerPoint: 0,
+      },
     });
+
+  // Load cards from local storage on mount
+  useEffect(() => {
+    const stored = loadCreditCards();
+    setAvailableCards(stored.cards);
+    setCalculatorSettings({
+      costcoMembershipEnabled: true,
+      creditCard:
+        stored.cards.find((c) => c.id === stored.lastSelectedId) ??
+        stored.cards[0],
+    });
+  }, []);
+
+  // Save selected card to local storage when changed
+  useEffect(() => {
+    if (
+      availableCards.length > 0 &&
+      calculatorSettings.creditCard.id !== "loading"
+    ) {
+      saveCreditCards({
+        cards: availableCards,
+        lastSelectedId: calculatorSettings.creditCard.id,
+      });
+    }
+  }, [calculatorSettings.creditCard.id, availableCards]);
+
+  // Handle card changes from manager
+  const handleCardsChange = (newCards: CreditCard[]) => {
+    setAvailableCards(newCards);
+    // If current card was deleted, switch to first available
+    if (!newCards.find((c) => c.id === calculatorSettings.creditCard.id)) {
+      setCalculatorSettings({
+        ...calculatorSettings,
+        creditCard: newCards[0],
+      });
+    }
+    saveCreditCards({
+      cards: newCards,
+      lastSelectedId: calculatorSettings.creditCard.id,
+    });
+  };
 
   // Derive filter state directly from URL params
   const metalFilter = (searchParams.get("metal") as MetalFilter) || "all";
@@ -81,7 +138,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   // Calculate total cashback percentage
   const totalCashbackPercentage =
     (calculatorSettings.costcoMembershipEnabled ? 2 : 0) +
-    calculatorSettings.creditCard.cashbackPercentage;
+    calculateCashbackPercentage(calculatorSettings.creditCard);
 
   // Combine and filter products
   let filteredProducts: ProductCardData[] = [];
@@ -152,14 +209,24 @@ export const Dashboard = ({ stats }: DashboardProps) => {
 
         {/* Filters & Calculator */}
         <Filters
+          availableCards={availableCards}
           calculatorSettings={calculatorSettings}
           metalFilter={metalFilter}
+          onOpenCardManager={() => { setCardManagerOpen(true); }}
           setCalculatorSettings={setCalculatorSettings}
           setMetalFilter={setMetalFilter}
           setShowOutOfStock={setShowOutOfStock}
           setSortOption={setSortOption}
           showOutOfStock={showOutOfStock}
           sortOption={sortOption}
+        />
+
+        {/* Card Manager Drawer */}
+        <CardManagerDrawer
+          cards={availableCards}
+          onCardsChange={handleCardsChange}
+          onClose={() => { setCardManagerOpen(false); }}
+          open={cardManagerOpen}
         />
 
         {/* Product Grid */}

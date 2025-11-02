@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import type { CreditCard } from "@/lib/credit-cards";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,8 +21,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { calculateCashbackPercentage } from "@/lib/credit-cards";
 
-export interface CreditCard {
+// Legacy type for backward compatibility
+export interface LegacyCreditCard {
   cashbackPercentage: number;
   earnRate: number;
   id: string;
@@ -28,36 +32,17 @@ export interface CreditCard {
   pointValue: number;
 }
 
-export const PRESET_CARDS: CreditCard[] = [
-  {
-    cashbackPercentage: 3.15,
-    earnRate: 1.5,
-    id: "freedom-unlimited",
-    name: "Chase Freedom Unlimited",
-    pointValue: 0.021,
-  },
-  {
-    cashbackPercentage: 2.0,
-    earnRate: 2.0,
-    id: "venture-x",
-    name: "Capital One Venture X",
-    pointValue: 0.01,
-  },
-  {
-    cashbackPercentage: 3.0,
-    earnRate: 3.0,
-    id: "robinhood",
-    name: "Robinhood Gold Card",
-    pointValue: 0.01,
-  },
-  {
-    cashbackPercentage: 0,
-    earnRate: 0,
-    id: "custom",
-    name: "Custom",
-    pointValue: 0,
-  },
-];
+// Convert new CreditCard to legacy format
+export const toLegacyCard = (card: CreditCard): LegacyCreditCard => ({
+    cashbackPercentage: calculateCashbackPercentage(card),
+    earnRate: card.pointsPerDollar,
+    id: card.id,
+    name: card.name,
+    pointValue: card.valuePerPoint,
+  });
+
+// Export the new type as well
+export type { CreditCard };
 
 export interface CalculatorSettings {
   costcoMembershipEnabled: boolean;
@@ -65,58 +50,28 @@ export interface CalculatorSettings {
 }
 
 interface CalculatorSettingsDialogProps {
+  availableCards: CreditCard[];
+  onOpenCardManager?: () => void;
   onSettingsChange: (settings: CalculatorSettings) => void;
   settings: CalculatorSettings;
 }
 
 export const CalculatorSettingsDialog = ({
+  availableCards,
+  onOpenCardManager,
   onSettingsChange,
   settings,
 }: CalculatorSettingsDialogProps) => {
   const [localSettings, setLocalSettings] =
     useState<CalculatorSettings>(settings);
-  const [customEarnRate, setCustomEarnRate] = useState(
-    settings.creditCard.id === "custom" ? settings.creditCard.earnRate : 1.5,
-  );
-  const [customPointValue, setCustomPointValue] = useState(
-    settings.creditCard.id === "custom" ? settings.creditCard.pointValue : 0.01,
-  );
 
   const handleCardChange = (cardId: string) => {
-    const card = PRESET_CARDS.find((c) => c.id === cardId);
+    const card = availableCards.find((c) => c.id === cardId);
     if (!card) return;
 
-    const updatedCard =
-      card.id === "custom" ?
-        {
-          ...card,
-          cashbackPercentage: customEarnRate * customPointValue * 100,
-          earnRate: customEarnRate,
-          pointValue: customPointValue,
-        }
-      : card;
-
-    const newSettings = { ...localSettings, creditCard: updatedCard };
+    const newSettings = { ...localSettings, creditCard: card };
     setLocalSettings(newSettings);
     onSettingsChange(newSettings);
-  };
-
-  const handleCustomValuesChange = (earnRate: number, pointValue: number) => {
-    setCustomEarnRate(earnRate);
-    setCustomPointValue(pointValue);
-
-    if (localSettings.creditCard.id === "custom") {
-      const updatedCard: CreditCard = {
-        cashbackPercentage: earnRate * pointValue * 100,
-        earnRate,
-        id: "custom",
-        name: "Custom",
-        pointValue,
-      };
-      const newSettings = { ...localSettings, creditCard: updatedCard };
-      setLocalSettings(newSettings);
-      onSettingsChange(newSettings);
-    }
   };
 
   const handleMembershipToggle = (enabled: boolean) => {
@@ -124,6 +79,10 @@ export const CalculatorSettingsDialog = ({
     setLocalSettings(newSettings);
     onSettingsChange(newSettings);
   };
+
+  const cashbackPercentage = calculateCashbackPercentage(
+    localSettings.creditCard,
+  );
 
   return (
     <Dialog>
@@ -150,7 +109,17 @@ export const CalculatorSettingsDialog = ({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="credit-card">Credit Card</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="credit-card">Credit Card</Label>
+              {onOpenCardManager ? <Button
+                  onClick={onOpenCardManager}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  Manage Cards
+                </Button> : null}
+            </div>
             <Select
               onValueChange={handleCardChange}
               value={localSettings.creditCard.id}
@@ -159,58 +128,17 @@ export const CalculatorSettingsDialog = ({
                 <SelectValue placeholder="Select a credit card" />
               </SelectTrigger>
               <SelectContent>
-                {PRESET_CARDS.map((card) => (
-                  <SelectItem key={card.id} value={card.id}>
-                    {card.name}
-                    {card.id !== "custom" &&
-                      ` (${card.cashbackPercentage.toFixed(2)}%)`}
-                  </SelectItem>
-                ))}
+                {availableCards.map((card) => {
+                  const cardCashback = calculateCashbackPercentage(card);
+                  return (
+                    <SelectItem key={card.id} value={card.id}>
+                      {card.name} ({cardCashback.toFixed(2)}%)
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
-
-          {localSettings.creditCard.id === "custom" && (
-            <>
-              <div className="grid gap-2">
-                <Label htmlFor="earn-rate">Earn Rate (%)</Label>
-                <Input
-                  id="earn-rate"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    handleCustomValuesChange(
-                      parseFloat(e.target.value) || 0,
-                      customPointValue,
-                    );
-                  }}
-                  placeholder="1.5"
-                  type="number"
-                  value={customEarnRate}
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="point-value">Point Value ($)</Label>
-                <Input
-                  id="point-value"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    handleCustomValuesChange(
-                      customEarnRate,
-                      parseFloat(e.target.value) || 0,
-                    );
-                  }}
-                  placeholder="0.01"
-                  step="0.001"
-                  type="number"
-                  value={customPointValue}
-                />
-              </div>
-
-              <div className="text-sm text-muted-foreground">
-                Effective cashback:{" "}
-                {(customEarnRate * customPointValue * 100).toFixed(2)}%
-              </div>
-            </>
-          )}
 
           <div className="rounded-lg bg-muted p-3 text-sm">
             <div className="font-medium">Current Settings:</div>
@@ -219,14 +147,13 @@ export const CalculatorSettingsDialog = ({
               {localSettings.costcoMembershipEnabled ? "2%" : "0%"}
             </div>
             <div className="text-muted-foreground">
-              Credit Card:{" "}
-              {localSettings.creditCard.cashbackPercentage.toFixed(2)}%
+              Credit Card: {cashbackPercentage.toFixed(2)}%
             </div>
             <div className="mt-2 font-medium">
               Total Cashback:{" "}
               {(
                 (localSettings.costcoMembershipEnabled ? 2 : 0) +
-                localSettings.creditCard.cashbackPercentage
+                cashbackPercentage
               ).toFixed(2)}
               %
             </div>

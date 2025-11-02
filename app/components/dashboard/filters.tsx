@@ -2,6 +2,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
+import type { CreditCard } from "@/lib/credit-cards";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +20,10 @@ import { CalculatorControls } from "./calculator-controls";
 import { FilterControls } from "./filter-controls";
 
 interface FiltersProps {
+  availableCards: CreditCard[];
   calculatorSettings: CalculatorSettings;
   metalFilter: MetalFilter;
+  onOpenCardManager: () => void;
   setCalculatorSettings: (value: CalculatorSettings) => void;
   setMetalFilter: (value: MetalFilter) => void;
   setShowOutOfStock: (value: boolean) => void;
@@ -30,8 +33,10 @@ interface FiltersProps {
 }
 
 export const Filters = ({
+  availableCards,
   calculatorSettings,
   metalFilter,
+  onOpenCardManager,
   setCalculatorSettings,
   setMetalFilter,
   setShowOutOfStock,
@@ -74,7 +79,9 @@ export const Filters = ({
               <div className="space-y-4">
                 <h3 className="font-medium">Calculator</h3>
                 <CalculatorControls
+                  availableCards={availableCards}
                   calculatorSettings={calculatorSettings}
+                  onOpenCardManager={onOpenCardManager}
                   setCalculatorSettings={setCalculatorSettings}
                 />
               </div>
@@ -101,7 +108,9 @@ export const Filters = ({
           {/* Right Side - Calculator */}
           <div className="flex flex-wrap items-center gap-4">
             <CalculatorControls
+              availableCards={availableCards}
               calculatorSettings={calculatorSettings}
+              onOpenCardManager={onOpenCardManager}
               setCalculatorSettings={setCalculatorSettings}
             />
           </div>

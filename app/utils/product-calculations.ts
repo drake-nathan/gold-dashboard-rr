@@ -4,6 +4,8 @@ import type { FunctionReturnType } from "convex/server";
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { ProductCardData } from "@/components/dashboard";
 
+import { calculateCashbackPercentage } from "@/lib/credit-cards";
+
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 type MarketPrices = GetStats["marketPrices"];
 
@@ -59,7 +61,7 @@ export const calculateProductMetrics = (
       COSTCO_EXECUTIVE_PERCENTAGE
     : 0;
   const creditCardCashbackPercentage =
-    calculatorSettings.creditCard.cashbackPercentage / 100; // Convert from percentage to decimal
+    calculateCashbackPercentage(calculatorSettings.creditCard) / 100; // Convert from percentage to decimal
 
   const costcoCashback = product.currentPrice * costcoCashbackPercentage;
   const creditCardCashback =

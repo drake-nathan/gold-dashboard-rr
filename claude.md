@@ -353,10 +353,68 @@ Integrated controls for:
   - Sort options (by spread or price, asc/desc)
 - **Calculator** (right side):
   - Costco Executive membership toggle (2% cashback)
-  - Credit card selector with presets:
-    - Chase Freedom Unlimited (3.15%)
-    - Capital One Venture X (2.0%)
-    - Robinhood Gold Card (3.0%)
+  - Credit card combobox selector with searchable dropdown
+  - "Manage Cards" option to open card manager drawer
+
+#### Credit Card Management System (`app/components/card-manager-drawer.tsx`, `app/lib/credit-cards.ts`)
+
+**Implemented**: January 2025 - Full credit card management with local storage persistence
+
+**Features**:
+
+- **Custom Card Structure**: Cards defined by points per dollar and value per point
+  - Points Per Dollar: Earn rate (e.g., 1.5x, 2x, 3x)
+  - Value Per Point: Dollar value per point (e.g., 0.021 = 2.1¢)
+  - Effective Cashback: Auto-calculated as `pointsPerDollar × valuePerPoint × 100`
+- **Preset Cards**: Pre-configured cards with customizable values
+  - Chase Freedom Unlimited: 1.5 pts/$ @ 2.1¢/pt = 3.15%
+  - Capital One Venture X: 2.0 pts/$ @ 1¢/pt = 2.0%
+  - Robinhood Gold Card: 3.0 pts/$ @ 1¢/pt = 3.0%
+- **Custom Cards**: Add unlimited custom cards with your own values
+- **Card Manager Drawer**: Responsive sheet component (full width mobile, max-w-lg desktop)
+- **Add/Edit/Delete**: Full CRUD operations for custom cards
+- **Preset Customization**: Modify preset card values (reset to defaults available)
+- **Combobox Selector**: Searchable dropdown with card name/issuer filtering
+- **Local Storage**: Zod-validated persistence with auto-save
+- **Last Selected**: Remembers last selected card across sessions
+
+**Key Files**:
+
+- `app/lib/credit-cards.ts` - Zod schemas, validation, CRUD utilities, storage helpers
+- `app/components/card-manager-drawer.tsx` - Card management UI (drawer/sheet)
+- `app/components/dashboard/calculator-controls.tsx` - Combobox selector with "Manage Cards"
+- `app/components/calculator-settings.tsx` - Legacy type compatibility layer
+
+**Data Structure** (Zod validated):
+
+```typescript
+{
+  id: string;              // Unique identifier
+  name: string;            // Card name (1-100 chars)
+  issuer?: string;         // Optional issuer (Chase, AmEx, etc.)
+  pointsPerDollar: number; // Earn rate (0-100)
+  valuePerPoint: number;   // Value in dollars (0-1)
+  isPreset: boolean;       // Whether it's a preset card
+  isCustomizable: boolean; // Whether preset can be modified
+}
+```
+
+**Local Storage Schema**:
+
+```typescript
+{
+  cards: CreditCard[];     // All cards (presets + custom)
+  lastSelectedId?: string; // Last selected card ID
+}
+```
+
+**Migration to Database** (when auth is enabled):
+
+- Local storage serves as fallback for anonymous users
+- Create Convex table: `userCreditCards` with userId foreign key
+- Replace `loadCreditCards()` with Convex query
+- Replace `saveCreditCards()` with Convex mutations
+- Keep local storage for offline/anonymous usage
 
 #### Theme Toggle (`app/components/theme-toggle.tsx`)
 
@@ -403,10 +461,14 @@ This provides optimal performance with instant page loads and real-time reactivi
 - `app/components/dashboard/index.tsx` - Main dashboard layout and state
 - `app/components/dashboard/stats.tsx` - Market prices and stats cards with trend indicators
 - `app/components/dashboard/filters.tsx` - Filter and calculator bar
+- `app/components/dashboard/calculator-controls.tsx` - Credit card combobox selector
+- `app/components/dashboard/filter-controls.tsx` - Filter controls (metal type, sort, out of stock)
 - `app/components/product-card.tsx` - Individual product card
-- `app/components/calculator-settings.tsx` - Credit card presets and types
-- `app/components/product-filters.tsx` - Filter types and constants
+- `app/components/card-manager-drawer.tsx` - Credit card management drawer
+- `app/components/calculator-settings.tsx` - Legacy credit card compatibility layer
 - `app/components/theme-toggle.tsx` - Dark mode toggle
+- `app/lib/credit-cards.ts` - Credit card schemas, validation, and storage utilities
+- `app/utils/product-calculations.ts` - Product metric calculations with credit card support
 - `app/providers/theme-provider.tsx` - Theme context with localStorage
 - `app/providers/convex-provider.tsx` - Convex client setup
 - `convex/dashboard.ts` - Consolidated getStats query with all dashboard data
@@ -521,6 +583,7 @@ VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com  # or eu.i.posthog.com for EU
 ```
 
 **Important**: These variables are:
+
 1. Embedded in the client bundle at build time (via Vite)
 2. Checked server-side in `app/root.tsx` to validate they're set
 3. Must be present in both `.env.local` (dev) and Railway env vars (prod)
@@ -567,3 +630,10 @@ For Railway/Docker deployment, ensure:
 - ✅ UI fully implemented with SSR and real-time updates
 - ✅ Docker container tested and working
 - ✅ PostHog analytics configured for dev and prod
+- ✅ Credit card management system with local storage (January 2025)
+  - Custom card creation with Zod validation
+  - Preset card customization (points per dollar & value per point)
+  - Searchable combobox selector with "Manage Cards" option
+  - Responsive drawer UI (Sheet component)
+  - Auto-save to local storage with last selected card persistence
+  - Ready for database migration when auth is enabled
