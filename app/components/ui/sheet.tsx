@@ -70,23 +70,13 @@ const SheetContent = ({
       {...props}
     >
       {children}
-      <SheetPrimitive.Close asChild>
-        <Button
-          className="absolute top-3.5 right-4"
-          size="icon"
-          variant="ghost"
-        >
-          <XIcon className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Close</span>
-        </Button>
-      </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>
 );
 
 const SheetHeader = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
-    className={cn("flex flex-col gap-2.5 p-4 pr-14", className)}
+    className={cn("flex flex-col gap-2 py-2 pr-2 pl-4", className)}
     data-slot="sheet-header"
     {...props}
   />
@@ -104,11 +94,19 @@ const SheetTitle = ({
   className,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Title>) => (
-  <SheetPrimitive.Title
-    className={cn("font-semibold text-foreground", className)}
-    data-slot="sheet-title"
-    {...props}
-  />
+  <div className="flex items-center justify-between gap-4">
+    <SheetPrimitive.Title
+      className={cn("font-semibold text-foreground", className)}
+      data-slot="sheet-title"
+      {...props}
+    />
+    <SheetPrimitive.Close asChild>
+      <Button size="icon" variant="ghost">
+        <XIcon className="h-[1.2rem] w-[1.2rem]" />
+        <span className="sr-only">Close</span>
+      </Button>
+    </SheetPrimitive.Close>
+  </div>
 );
 
 const SheetDescription = ({
