@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import type { MetalFilter, SortOption } from "./filter-types";
 
 interface FilterControlsProps {
+  isMobile?: boolean;
   metalFilter: MetalFilter;
   setMetalFilter: (value: MetalFilter) => void;
   setShowOutOfStock: (value: boolean) => void;
@@ -20,6 +21,7 @@ interface FilterControlsProps {
 }
 
 export const FilterControls = ({
+  isMobile = false,
   metalFilter,
   setMetalFilter,
   setShowOutOfStock,
@@ -27,10 +29,12 @@ export const FilterControls = ({
   showOutOfStock,
   sortOption,
 }: FilterControlsProps) => {
+  const containerClass = isMobile ? "flex flex-col gap-3" : "contents";
+
   return (
-    <>
-      <div className="flex items-center gap-2">
-        <Label htmlFor="show-oos">Show Out of Stock</Label>
+    <div className={containerClass}>
+      <div className={isMobile ? "flex items-center justify-between" : "flex items-center gap-2"}>
+        <Label htmlFor="show-oos" className={isMobile ? "text-sm" : ""}>Show Out of Stock</Label>
         <Switch
           checked={showOutOfStock}
           id="show-oos"
@@ -38,15 +42,15 @@ export const FilterControls = ({
         />
       </div>
 
-      <div className="flex items-center gap-2">
-        <Label htmlFor="metal-filter">Metal Type:</Label>
+      <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
+        <Label htmlFor="metal-filter" className={isMobile ? "text-sm" : ""}>Metal Type:</Label>
         <Select
           onValueChange={(value) => {
             setMetalFilter(value as MetalFilter);
           }}
           value={metalFilter}
         >
-          <SelectTrigger className="min-w-20" id="metal-filter">
+          <SelectTrigger className={isMobile ? "w-full" : "min-w-20"} id="metal-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -57,15 +61,15 @@ export const FilterControls = ({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Label htmlFor="sort">Sort By:</Label>
+      <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
+        <Label htmlFor="sort" className={isMobile ? "text-sm" : ""}>Sort By:</Label>
         <Select
           onValueChange={(value) => {
             setSortOption(value as SortOption);
           }}
           value={sortOption}
         >
-          <SelectTrigger className="min-w-52" id="sort">
+          <SelectTrigger className={isMobile ? "w-full" : "min-w-52"} id="sort">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -76,6 +80,6 @@ export const FilterControls = ({
           </SelectContent>
         </Select>
       </div>
-    </>
+    </div>
   );
 };

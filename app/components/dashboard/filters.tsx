@@ -59,34 +59,40 @@ export const Filters = ({
               Filters & Calculator
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom">
+          <SheetContent side="bottom" className="max-h-[85vh]">
             <SheetHeader>
               <SheetTitle>Filters & Calculator</SheetTitle>
               <SheetDescription>
                 Adjust filters and calculator settings
               </SheetDescription>
             </SheetHeader>
-            <div className="space-y-6 overflow-y-auto px-4 pb-4">
-              <div className="space-y-4">
-                <h3 className="font-medium">Filters</h3>
-                <FilterControls
-                  metalFilter={metalFilter}
-                  setMetalFilter={setMetalFilter}
-                  setShowOutOfStock={setShowOutOfStock}
-                  setSortOption={setSortOption}
-                  showOutOfStock={showOutOfStock}
-                  sortOption={sortOption}
-                />
+            <div className="mt-4 max-h-[calc(85vh-8rem)] space-y-6 overflow-y-auto px-4 pb-4">
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Filters</h3>
+                <div className="space-y-3">
+                  <FilterControls
+                    isMobile={true}
+                    metalFilter={metalFilter}
+                    setMetalFilter={setMetalFilter}
+                    setShowOutOfStock={setShowOutOfStock}
+                    setSortOption={setSortOption}
+                    showOutOfStock={showOutOfStock}
+                    sortOption={sortOption}
+                  />
+                </div>
               </div>
-              <div className="space-y-4">
-                <h3 className="font-medium">Calculator</h3>
-                <CalculatorControls
-                  availableCards={availableCards}
-                  calculatorSettings={calculatorSettings}
-                  onOpenCardManager={onOpenCardManager}
-                  onOpenSettings={onOpenSettings}
-                  setCalculatorSettings={setCalculatorSettings}
-                />
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Calculator</h3>
+                <div className="space-y-3">
+                  <CalculatorControls
+                    availableCards={availableCards}
+                    calculatorSettings={calculatorSettings}
+                    isMobile={true}
+                    onOpenCardManager={onOpenCardManager}
+                    onOpenSettings={onOpenSettings}
+                    setCalculatorSettings={setCalculatorSettings}
+                  />
+                </div>
               </div>
             </div>
           </SheetContent>
