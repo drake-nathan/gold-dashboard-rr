@@ -1,4 +1,5 @@
 # Project Audit Report: Dashboard.Gold
+
 **Date:** November 2, 2025
 **Auditor:** Claude Code
 **Version:** 1.0
@@ -8,6 +9,7 @@
 The Dashboard.Gold project demonstrates **solid architectural foundations** with clear separation of concerns, but has significant gaps in testability and some opportunities for improved organization. The project is production-ready from a functionality standpoint but lacks the testing infrastructure needed for confident refactoring and maintenance.
 
 **Overall Grade: B-**
+
 - File Organization: **A-**
 - Component Architecture: **B+**
 - Function Organization: **A-**
@@ -20,6 +22,7 @@ The Dashboard.Gold project demonstrates **solid architectural foundations** with
 ### ✅ Strengths
 
 **Well-structured directory hierarchy:**
+
 ```
 app/
 ├── components/
@@ -43,6 +46,7 @@ convex/
 ```
 
 **Appropriate separation:**
+
 - UI primitives isolated in `components/ui/`
 - Business logic in `lib/` (credit cards, fee tiers)
 - Pure utilities in `utils/` (formatting, calculations)
@@ -71,12 +75,14 @@ convex/
 ### ✅ Strengths
 
 **1. Smart separation of concerns** (app/components/dashboard/index.tsx:1-283):
+
 - Main Dashboard component orchestrates state and layout
 - Filters, Stats, ProductCard are properly extracted
 - Mobile/desktop variations handled cleanly
 - URL-based state management for filters (excellent for shareability)
 
 **2. Composable UI structure**:
+
 ```
 Dashboard
 ├── Header
@@ -91,6 +97,7 @@ Dashboard
 ```
 
 **3. Good component sizing**:
+
 - Most components 100-300 lines (readable)
 - Single Responsibility Principle followed
 - Props interfaces well-defined with TypeScript
@@ -98,12 +105,14 @@ Dashboard
 ### ⚠️ Issues & Recommendations
 
 **1. State management complexity** (app/components/dashboard/index.tsx:44-97):
+
 ```typescript
 // Multiple useState calls with interdependencies
 const [availableCards, setAvailableCards] = useState(...)
 const [cardManagerOpen, setCardManagerOpen] = useState(...)
 const [calculatorSettings, setCalculatorSettings] = useState(...)
 ```
+
 - **Issue**: 7 different state variables, complex initialization
 - **Recommendation**: Consider `useReducer` or extract to custom hook
 - **Suggested refactor**:
@@ -117,16 +126,19 @@ const [calculatorSettings, setCalculatorSettings] = useState(...)
   ```
 
 **2. Prop drilling** (app/components/dashboard/filters.tsx:22-48):
+
 - Filters component receives 10+ props
 - CalculatorControls passes through many props
 - **Recommendation**: Consider React Context or composition patterns
 
 **3. Missing error boundaries**:
+
 - No error boundaries around ProductCard grid
 - Failed card renders could crash entire dashboard
 - **Recommendation**: Wrap ProductCard map in ErrorBoundary
 
 **4. Product card complexity** (app/components/product-card.tsx:32-219):
+
 - 219-line component with complex pricing logic
 - Mix of presentation and calculation concerns
 - **Recommendation**: Already extracted calculations to utils (good!), but consider breaking card into smaller sub-components:
@@ -145,6 +157,7 @@ const [calculatorSettings, setCalculatorSettings] = useState(...)
 ### ✅ Strengths
 
 **1. Excellent utility separation** (app/utils/product-calculations.ts:43-122):
+
 ```typescript
 export const calculateProductMetrics = (
   product: ProductCardData,
@@ -152,23 +165,27 @@ export const calculateProductMetrics = (
   calculatorSettings: CalculatorSettings,
 ): ProductCalculations => { ... }
 ```
+
 - **Pure function**: No side effects, fully testable
 - Clear input/output types
 - Single responsibility (all product calculations in one place)
 
 **2. Well-organized business logic** (app/lib/credit-cards.ts:1-233):
+
 - Zod schemas for validation
 - CRUD operations properly exported
 - LocalStorage abstraction
 - Pure functions (`calculateCashbackPercentage`, `sortCards`)
 
 **3. Clean backend organization** (convex/dashboard.ts:3-162):
+
 - Single query (`getStats`) for dashboard data
 - Proper JOIN pattern with Pure products
 - Helper functions for calculations
 - No business logic leakage to frontend
 
 **4. Type safety throughout**:
+
 - Convex types properly generated and used
 - `FunctionReturnType` for inferring query shapes
 - Props interfaces for all components
@@ -176,6 +193,7 @@ export const calculateProductMetrics = (
 ### ⚠️ Issues & Recommendations
 
 **1. Large Convex action files** (convex/costco.ts:1-1029):
+
 - 1,029 lines in single file
 - Multiple concerns: API fetching, parsing, matching, updating
 - **Recommendation**: Split into modules:
@@ -189,6 +207,7 @@ export const calculateProductMetrics = (
   ```
 
 **2. Mixed concerns in components** (app/components/card-manager-drawer.tsx:74-100):
+
 - Form logic mixed with UI
 - LocalStorage operations in component
 - **Recommendation**: Extract form logic to custom hook
@@ -202,6 +221,7 @@ export const calculateProductMetrics = (
   ```
 
 **3. Missing validation layers**:
+
 - Convex actions trust API responses after minimal validation (convex/costco.ts:48-65)
 - Could benefit from Zod schemas for external APIs
 - **Recommendation**: Add comprehensive validation for third-party APIs
@@ -213,6 +233,7 @@ export const calculateProductMetrics = (
 ### 🚨 Critical Issues
 
 **Current state:**
+
 - ❌ No tests for business logic (utils, lib)
 - ❌ No tests for React components
 - ❌ No tests for Convex functions
@@ -225,6 +246,7 @@ export const calculateProductMetrics = (
 **Priority 1 - Business Logic (HIGH):**
 
 1. **`app/utils/product-calculations.ts`** (app/utils/product-calculations.ts:43-122)
+
    ```typescript
    // Missing tests for:
    - calculateProductMetrics()
@@ -234,6 +256,7 @@ export const calculateProductMetrics = (
    ```
 
 2. **`app/lib/credit-cards.ts`** (app/lib/credit-cards.ts:1-233)
+
    ```typescript
    // Missing tests for:
    - Zod validation (invalid cards rejected)
@@ -277,6 +300,7 @@ export const calculateProductMetrics = (
 ### Testing Infrastructure Recommendations
 
 **1. Create test structure:**
+
 ```
 app/
 ├── __tests__/
@@ -297,40 +321,43 @@ convex/
 ```
 
 **2. Update package.json:**
+
 ```json
 {
   "scripts": {
     "test": "vitest",
-    "test:watch": "vitest watch",
     "test:coverage": "vitest --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest watch"
   }
 }
 ```
 
 **3. Configure Vitest for app tests:**
+
 ```typescript
 // vitest.config.ts
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./app/__tests__/setup.ts'],
+    environment: "jsdom",
+    setupFiles: ["./app/__tests__/setup.ts"],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './app'),
+      "@": path.resolve(__dirname, "./app"),
     },
   },
-})
+});
 ```
 
 **4. Example test for priority function:**
+
 ```typescript
 // app/__tests__/utils/product-calculations.test.ts
 import { describe, it, expect } from 'vitest'
@@ -361,6 +388,7 @@ describe('calculateProductMetrics', () => {
 ### Code Quality Improvements
 
 **1. Add JSDoc comments for complex functions:**
+
 ```typescript
 /**
  * Calculates all product metrics including profit, cashback, and spread.
@@ -374,6 +402,7 @@ export const calculateProductMetrics = (...)
 ```
 
 **2. Extract magic numbers to constants:**
+
 ```typescript
 // app/utils/product-calculations.ts:41
 const COSTCO_EXECUTIVE_PERCENTAGE = 0.02; // ✅ Good
@@ -383,6 +412,7 @@ const GRAMS_PER_TROY_OUNCE = 31.1035;
 ```
 
 **3. Add runtime validation for critical paths:**
+
 ```typescript
 // convex/dashboard.ts - Add Zod schema validation
 import { z } from "zod";
@@ -397,6 +427,7 @@ const MarketPriceSchema = z.object({
 ### Performance Considerations
 
 **1. Memoize expensive calculations:**
+
 ```typescript
 // app/components/dashboard/index.tsx
 const sortedProducts = useMemo(() => {
@@ -405,16 +436,19 @@ const sortedProducts = useMemo(() => {
 ```
 
 **2. Consider virtualization for product grid:**
+
 - If product count grows beyond 50-100 items
 - Use `react-window` or `@tanstack/react-virtual`
 
 ### Security
 
 **1. Input sanitization:**
+
 - Product names rendered from external API (Costco/Pure)
 - Consider DOMPurify if HTML content ever added
 
 **2. API key exposure:**
+
 - ✅ Good: All API keys in server-side env vars
 - ✅ Good: Convex actions handle external APIs
 
@@ -482,6 +516,7 @@ However, the **lack of tests** is a critical gap that impacts maintainability an
 ## Appendix: File Statistics
 
 ### Key File Sizes
+
 - `convex/costco.ts`: 1,029 lines (needs refactoring)
 - `app/components/dashboard/index.tsx`: 283 lines
 - `app/lib/credit-cards.ts`: 232 lines
@@ -490,10 +525,12 @@ However, the **lack of tests** is a critical gap that impacts maintainability an
 - `app/utils/product-calculations.ts`: 122 lines
 
 ### Test Coverage
+
 - **Current tests**: 1 example test file
 - **Needed tests**: ~15-20 test files covering utils, lib, components, Convex
 
 ### TypeScript Configuration
+
 - Strict mode: ✅ Enabled
 - Path aliases: ✅ Configured (`@/*`)
 - React JSX: ✅ Modern transform

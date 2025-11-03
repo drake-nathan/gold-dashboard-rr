@@ -6,6 +6,9 @@ export default eslintConfig({
   react: {
     framework: "react-router",
   },
+  rules: {
+    "vitest/require-top-level-describe": "off",
+  },
   testing: {
     framework: "vitest",
     itOrTest: "test",

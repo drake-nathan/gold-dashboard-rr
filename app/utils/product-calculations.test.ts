@@ -1,4 +1,7 @@
-import { test, expect } from "vitest";
+import type { api } from "convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+
+import { expect, test } from "vitest";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { ProductCardData } from "@/components/dashboard";
@@ -8,31 +11,39 @@ import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
 import { calculateProductMetrics } from "./product-calculations";
 
-// Test fixtures
+type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
+type MarketPrices = GetStats["marketPrices"];
+
+// Test fixtures - cast to proper types for testing
 const mockMarketPrices = [
   {
+    _creationTime: Date.now(),
+    _id: "market-gold" as MarketPrices[0]["_id"],
     assetType: "gold" as const,
-    changePercentage24h: 1.5,
     currentPrice: 2000,
     lastUpdated: Date.now(),
+    percentChange: 1.5,
+    symbol: "XAU",
   },
   {
+    _creationTime: Date.now(),
+    _id: "market-silver" as MarketPrices[0]["_id"],
     assetType: "silver" as const,
-    changePercentage24h: 0.8,
     currentPrice: 25,
     lastUpdated: Date.now(),
+    percentChange: 0.8,
+    symbol: "XAG",
   },
-];
+] as MarketPrices;
 
-const mockGoldProduct: ProductCardData = {
+const mockGoldProduct = {
   _creationTime: Date.now(),
-  _id: "test-product-1" as any,
+  _id: "test-product-1",
   brand: "Test Brand",
   categories: ["Precious Metals", "Gold"],
   currentInStock: true,
   currentPrice: 4000,
   currentPricePerOunce: 2100, // $100 above spot
-  lastFetch: Date.now(),
   metalType: "gold",
   metalWeight: "2 oz",
   name: "Test Gold Bar 2oz",
@@ -46,7 +57,7 @@ const mockGoldProduct: ProductCardData = {
   spreadPercentage: 7.5,
   thumbnail: "https://example.com/image.jpg",
   url: "https://costco.com/test",
-};
+} as ProductCardData;
 
 const mockCalculatorSettings: CalculatorSettings = {
   costcoMembershipEnabled: true, // 2% cashback
@@ -166,7 +177,7 @@ test("handles missing price per ounce for above spot calculation", () => {
 test("handles missing market price for metal type", () => {
   const platinumProduct: ProductCardData = {
     ...mockGoldProduct,
-    metalType: "platinum" as any, // Not in our mock market prices
+    metalType: "platinum" as ProductCardData["metalType"], // Not in our mock market prices
   };
 
   const result = calculateProductMetrics(
@@ -285,8 +296,8 @@ test("applies correct fee rate for different Pure tiers", () => {
 test("applies correct fee rate for silver products", () => {
   const silverProduct: ProductCardData = {
     ...mockGoldProduct,
-    metalType: "silver",
     currentPrice: 500,
+    metalType: "silver",
     pureBidPrice: 480,
   };
 
@@ -307,13 +318,13 @@ test("applies correct fee rate for silver products", () => {
 
 test("calculates correctly with high-value credit card", () => {
   // Test with Robinhood Gold Card (3% flat cashback)
-  const robinhoodCard = DEFAULT_PRESET_CARDS.find(
-    (c) => c.id === "robinhood",
-  )!;
+  const robinhoodCard = DEFAULT_PRESET_CARDS.find((c) => c.id === "robinhood");
+
+  expect(robinhoodCard).toBeDefined();
 
   const settings: CalculatorSettings = {
     costcoMembershipEnabled: true,
-    creditCard: robinhoodCard, // 3 pts @ 1¢ = 3%
+    creditCard: robinhoodCard!, // 3 pts @ 1¢ = 3%
     pureFeeTier: PURE_FEE_TIERS[0],
   };
 

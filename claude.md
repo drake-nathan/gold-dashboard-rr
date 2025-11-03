@@ -187,8 +187,8 @@ bun run format:check # Check formatting without fixing
 A simple CI script using `concurrently` to run all quality checks in parallel:
 
 - **Command**: `bun run ci`
-- **Checks**: Runs `format:check`, `lint`, and `typecheck` concurrently
-- **Output**: Color-coded prefixes (blue=format, yellow=lint, green=typecheck)
+- **Checks**: Runs `format:check`, `lint`, `typecheck`, and `test` concurrently
+- **Output**: Color-coded prefixes (blue=format, yellow=lint, green=typecheck, magenta=test)
 - **Behavior**: Exits with error code if any check fails
 
 Use this before pushing to main to ensure code quality without the overhead of a full CI/CD pipeline during MVP phase.
@@ -198,11 +198,13 @@ Use this before pushing to main to ensure code quality without the overhead of a
 **Framework**: Vitest (configured via Vite - no separate config needed)
 
 **Test Pattern**:
+
 - Co-located test files with `.test.ts` / `.test.tsx` pattern
 - Simple `test()` function calls (not `describe/it`)
 - Focus on critical paths and edge cases, not 100% coverage
 
 **Current Coverage**:
+
 - ✅ `app/utils/product-calculations.ts` - Core business logic (14 tests)
   - Profit calculations with various cashback combinations
   - Above spot percentage calculations
@@ -210,24 +212,37 @@ Use this before pushing to main to ensure code quality without the overhead of a
   - Color coding for profit/loss
   - Fee tier calculations
   - High-value credit card scenarios
+- ✅ `app/lib/credit-cards.ts` - Credit card management (30 tests)
+  - Zod schema validation (valid/invalid cards, edge cases)
+  - Cashback percentage calculations
+  - CRUD operations (add, update, delete, reset)
+  - Preset card management and merging
+  - Card sorting (presets first, alphabetical)
+  - Default preset card validation
 
 **Test Structure**:
+
 ```
 app/
 ├── utils/
 │   ├── product-calculations.ts
 │   └── product-calculations.test.ts  ✅ 14 tests passing
 ├── lib/
-│   └── credit-cards.ts               🔜 Next up
+│   ├── credit-cards.ts
+│   └── credit-cards.test.ts          ✅ 30 tests passing
 ```
 
+**Total**: 44 tests passing (2 files)
+
 **Running Tests**:
+
 ```bash
 bun run test         # Run once
 bun run test:watch   # Watch mode for TDD
 ```
 
 **Configuration**:
+
 - Vitest uses the main `vite.config.ts`
 - `test.exclude` configured to skip browser-mode tests (`vitest-example/`)
 - Path aliases (`@/*`) work automatically via `vite-tsconfig-paths`
