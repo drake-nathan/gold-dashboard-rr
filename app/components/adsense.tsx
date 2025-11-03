@@ -14,13 +14,10 @@ export const AdSense = () => {
   }
 
   return (
-    <>
-      {/* Google AdSense Auto Ads Script */}
-      <script
-        async
-        crossOrigin="anonymous"
-        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
-      />
-    </>
+    <script
+      async
+      crossOrigin="anonymous"
+      src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`}
+    />
   );
 };
