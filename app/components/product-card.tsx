@@ -91,7 +91,8 @@ export const ProductCard = ({
               <>
                 {calc.aboveSpotPercentage !== null && (
                   <span className="text-xs text-muted-foreground">
-                    {formatPercentage(calc.aboveSpotPercentage)} above spot –{" "}
+                    {formatPercentage(calc.aboveSpotPercentage)} above spot
+                    –{" "}
                   </span>
                 )}
                 {formatCurrency(calc.costcoPrice)}
