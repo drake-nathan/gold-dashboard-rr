@@ -6,5 +6,9 @@ export default eslintConfig({
   react: {
     framework: "react-router",
   },
+  testing: {
+    framework: "vitest",
+    itOrTest: "test",
+  },
   typescript: "tsconfig.eslint.json",
 });

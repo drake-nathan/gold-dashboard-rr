@@ -11,6 +11,9 @@
     "lint": "eslint . --cache --concurrency=auto",
     "lint:fix": "bun run lint --fix",
     "start": "react-router-serve ./build/server/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "vitest --config=vitest.browser.config.ts",
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -52,7 +55,9 @@
     "@types/node": "24.9.2",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.0",
     "@vitejs/plugin-rsc": "0.5.1",
+    "@vitest/browser-playwright": "4.0.6",
     "concurrently": "9.2.1",
     "js-style-kit": "0.8.3",
     "tailwindcss": "4.1.16",
@@ -60,6 +65,8 @@
     "typescript": "5.9.3",
     "vite": "7.1.12",
     "vite-plugin-devtools-json": "1.0.0",
-    "vite-tsconfig-paths": "5.1.4"
+    "vite-tsconfig-paths": "5.1.4",
+    "vitest": "4.0.6",
+    "vitest-browser-react": "2.0.2"
   }
 }

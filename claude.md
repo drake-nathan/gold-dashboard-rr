@@ -171,10 +171,68 @@ In React Router 7 with SSR:
 bun install          # Install dependencies
 bun run dev          # Start dev server
 bun run build        # Production build
+bun run ci           # Run all checks (format, lint, typecheck) in parallel
+bun run test         # Run unit tests (one-off)
+bun run test:watch   # Run tests in watch mode
+bun run test:browser # Run browser-mode tests (vitest-example/)
 bun run typecheck    # Run TypeScript checks
 bun run lint         # Run ESLint
+bun run lint:fix     # Run ESLint with auto-fix
 bun run format       # Format with Prettier
+bun run format:check # Check formatting without fixing
 ```
+
+### CI Script
+
+A simple CI script using `concurrently` to run all quality checks in parallel:
+
+- **Command**: `bun run ci`
+- **Checks**: Runs `format:check`, `lint`, and `typecheck` concurrently
+- **Output**: Color-coded prefixes (blue=format, yellow=lint, green=typecheck)
+- **Behavior**: Exits with error code if any check fails
+
+Use this before pushing to main to ensure code quality without the overhead of a full CI/CD pipeline during MVP phase.
+
+## Testing
+
+**Framework**: Vitest (configured via Vite - no separate config needed)
+
+**Test Pattern**:
+- Co-located test files with `.test.ts` / `.test.tsx` pattern
+- Simple `test()` function calls (not `describe/it`)
+- Focus on critical paths and edge cases, not 100% coverage
+
+**Current Coverage**:
+- ✅ `app/utils/product-calculations.ts` - Core business logic (14 tests)
+  - Profit calculations with various cashback combinations
+  - Above spot percentage calculations
+  - Edge cases (missing bid prices, zero values, null data)
+  - Color coding for profit/loss
+  - Fee tier calculations
+  - High-value credit card scenarios
+
+**Test Structure**:
+```
+app/
+├── utils/
+│   ├── product-calculations.ts
+│   └── product-calculations.test.ts  ✅ 14 tests passing
+├── lib/
+│   └── credit-cards.ts               🔜 Next up
+```
+
+**Running Tests**:
+```bash
+bun run test         # Run once
+bun run test:watch   # Watch mode for TDD
+```
+
+**Configuration**:
+- Vitest uses the main `vite.config.ts`
+- `test.exclude` configured to skip browser-mode tests (`vitest-example/`)
+- Path aliases (`@/*`) work automatically via `vite-tsconfig-paths`
+
+**Philosophy**: Write focused, effective tests that catch real bugs. Avoid testing implementation details or chasing coverage metrics.
 
 ## Convex Setup
 
