@@ -43,7 +43,7 @@ crons.cron(
 crons.cron(
   "fetch-market-prices",
   "*/5 * * * *", // Every 5 minutes, 24/7
-  internal.twelve.fetchMarketPrices,
+  internal.marketPrices.fetchMarketPrices,
 );
 
 // Fetch S&P 500 from FMP API

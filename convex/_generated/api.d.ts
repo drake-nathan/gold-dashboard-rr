@@ -12,8 +12,8 @@ import type * as costco from "../costco.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as fmp from "../fmp.js";
+import type * as marketPrices from "../marketPrices.js";
 import type * as pure from "../pure.js";
-import type * as twelve from "../twelve.js";
 
 import type {
   ApiFromModules,
@@ -34,8 +34,8 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dashboard: typeof dashboard;
   fmp: typeof fmp;
+  marketPrices: typeof marketPrices;
   pure: typeof pure;
-  twelve: typeof twelve;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

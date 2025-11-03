@@ -56,7 +56,7 @@ export const fetchMarketPrices = internalAction({
         }
 
         // Update the database with current price and history
-        await ctx.runMutation(internal.twelve.upsertMarketPrice, {
+        await ctx.runMutation(internal.marketPrices.upsertMarketPrice, {
           assetType: asset.assetType,
           currentPrice: data.price,
           symbol: asset.symbol,
