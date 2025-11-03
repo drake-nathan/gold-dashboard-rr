@@ -1,25 +1,13 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
-
-import type { CalculatorSettings } from "@/components/calculator-settings";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
 import { ProductCard } from "@/components/product-card";
-import {
-  calculateCashbackPercentage,
-  type CreditCard,
-  loadCreditCards,
-  saveCreditCards,
-} from "@/lib/credit-cards";
-import {
-  loadPureFeeTier,
-  PURE_FEE_TIERS,
-  savePureFeeTier,
-} from "@/lib/pure-fee-tiers";
+import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
@@ -40,61 +28,18 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
 
-  // Credit card management state (lazy initialization from localStorage)
-  const [availableCards, setAvailableCards] = useState<CreditCard[]>(() => {
-    const stored = loadCreditCards();
-    return stored.cards;
-  });
+  // Calculator settings (credit cards, membership, fee tier) - managed by custom hook
+  const {
+    availableCards,
+    calculatorSettings,
+    handleCardsChange,
+    totalCashbackPercentage,
+    updateCalculatorSettings,
+  } = useCalculatorSettings();
+
+  // UI drawer state
   const [cardManagerOpen, setCardManagerOpen] = useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
-
-  // Calculator settings state (lazy initialization from localStorage)
-  const [calculatorSettings, setCalculatorSettings] =
-    useState<CalculatorSettings>(() => {
-      const stored = loadCreditCards();
-      const savedTierId = loadPureFeeTier();
-      const savedTier =
-        PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
-
-      return {
-        costcoMembershipEnabled: true,
-        creditCard:
-          stored.cards.find((c) => c.id === stored.lastSelectedId) ??
-          stored.cards[0],
-        pureFeeTier: savedTier,
-      };
-    });
-
-  // Save selected card to local storage when changed
-  useEffect(() => {
-    if (availableCards.length > 0) {
-      saveCreditCards({
-        cards: availableCards,
-        lastSelectedId: calculatorSettings.creditCard.id,
-      });
-    }
-  }, [calculatorSettings.creditCard.id, availableCards]);
-
-  // Save selected Pure fee tier to local storage when changed
-  useEffect(() => {
-    savePureFeeTier(calculatorSettings.pureFeeTier.id);
-  }, [calculatorSettings.pureFeeTier]);
-
-  // Handle card changes from manager
-  const handleCardsChange = (newCards: CreditCard[]) => {
-    setAvailableCards(newCards);
-    // If current card was deleted, switch to first available
-    if (!newCards.find((c) => c.id === calculatorSettings.creditCard.id)) {
-      setCalculatorSettings({
-        ...calculatorSettings,
-        creditCard: newCards[0],
-      });
-    }
-    saveCreditCards({
-      cards: newCards,
-      lastSelectedId: calculatorSettings.creditCard.id,
-    });
-  };
 
   // Derive filter state directly from URL params
   const metalFilter =
@@ -139,11 +84,6 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       setSearchParams(params, { replace: true });
     });
   };
-
-  // Calculate total cashback percentage
-  const totalCashbackPercentage =
-    (calculatorSettings.costcoMembershipEnabled ? 2 : 0) +
-    calculateCashbackPercentage(calculatorSettings.creditCard);
 
   // Combine and filter products
   let filteredProducts: ProductCardData[] = [];
@@ -223,7 +163,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           onOpenSettings={() => {
             setSettingsDrawerOpen(true);
           }}
-          setCalculatorSettings={setCalculatorSettings}
+          setCalculatorSettings={updateCalculatorSettings}
           setMetalFilter={setMetalFilter}
           setShowOutOfStock={setShowOutOfStock}
           setSortOption={setSortOption}
@@ -249,7 +189,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           }}
           onOpenChange={setSettingsDrawerOpen}
           open={settingsDrawerOpen}
-          setCalculatorSettings={setCalculatorSettings}
+          setCalculatorSettings={updateCalculatorSettings}
         />
 
         {/* Product Grid */}

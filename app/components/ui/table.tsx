@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 const Table = ({ className, ...props }: React.ComponentProps<"table">) => (
   <div className="relative w-full overflow-x-auto" data-slot="table-container">

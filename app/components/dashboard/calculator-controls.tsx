@@ -28,7 +28,7 @@ import {
   calculateCashbackPercentage,
   type CreditCard,
 } from "@/lib/credit-cards";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
 
 interface CalculatorControlsProps {
   availableCards: CreditCard[];
