@@ -7,6 +7,7 @@ import { useSearchParams } from "react-router";
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
 import { ProductCard } from "@/components/product-card";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
 
 import type { MetalFilter, SortOption } from "./filter-types";
@@ -143,14 +144,16 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       <Header />
 
       <main className="container mx-auto flex-1 px-4 py-6">
-        <Stats
-          collectPure={stats.collectPure}
-          goldProducts={stats.goldProducts.bestSpread}
-          lastFetch={stats.lastFetch}
-          marketPrices={stats.marketPrices}
-          silverProducts={stats.silverProducts.bestSpread}
-          totalCashbackPercentage={totalCashbackPercentage}
-        />
+        <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
+          <Stats
+            collectPure={stats.collectPure}
+            goldProducts={stats.goldProducts.bestSpread}
+            lastFetch={stats.lastFetch}
+            marketPrices={stats.marketPrices}
+            silverProducts={stats.silverProducts.bestSpread}
+            totalCashbackPercentage={totalCashbackPercentage}
+          />
+        </ErrorBoundary>
 
         {/* Filters & Calculator */}
         <Filters
@@ -204,16 +207,18 @@ export const Dashboard = ({ stats }: DashboardProps) => {
               </p>
             </div>
           </div>
-        : <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
-            {sortedProducts.map((product) => (
-              <ProductCard
-                calculatorSettings={calculatorSettings}
-                key={product.productId}
-                marketPrices={stats.marketPrices}
-                product={product}
-              />
-            ))}
-          </div>
+        : <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
+              {sortedProducts.map((product) => (
+                <ProductCard
+                  calculatorSettings={calculatorSettings}
+                  key={product.productId}
+                  marketPrices={stats.marketPrices}
+                  product={product}
+                />
+              ))}
+            </div>
+          </ErrorBoundary>
         }
       </main>
 
