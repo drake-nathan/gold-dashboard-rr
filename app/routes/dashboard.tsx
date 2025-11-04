@@ -60,9 +60,11 @@ export const meta = () => {
 
 export const loader = async () => {
   const convexUrl = process.env.VITE_CONVEX_URL;
+
   if (!convexUrl) {
     throw new Error("VITE_CONVEX_URL is not set");
   }
+
   // Use Convex's preloadQuery - this creates a payload that includes both the data
   // and the query metadata needed for client-side subscription
   const preloadedStats = await preloadQuery(

@@ -59,7 +59,7 @@ export const Filters = ({
               Filters & Calculator
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[85vh]">
+          <SheetContent className="max-h-[85vh]" side="bottom">
             <SheetHeader>
               <SheetTitle>Filters & Calculator</SheetTitle>
               <SheetDescription>
@@ -71,7 +71,7 @@ export const Filters = ({
                 <h3 className="text-sm font-semibold">Filters</h3>
                 <div className="space-y-3">
                   <FilterControls
-                    isMobile={true}
+                    isMobile
                     metalFilter={metalFilter}
                     setMetalFilter={setMetalFilter}
                     setShowOutOfStock={setShowOutOfStock}
@@ -87,7 +87,7 @@ export const Filters = ({
                   <CalculatorControls
                     availableCards={availableCards}
                     calculatorSettings={calculatorSettings}
-                    isMobile={true}
+                    isMobile
                     onOpenCardManager={onOpenCardManager}
                     onOpenSettings={onOpenSettings}
                     setCalculatorSettings={setCalculatorSettings}

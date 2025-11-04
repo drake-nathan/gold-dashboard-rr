@@ -33,8 +33,16 @@ export const FilterControls = ({
 
   return (
     <div className={containerClass}>
-      <div className={isMobile ? "flex items-center justify-between" : "flex items-center gap-2"}>
-        <Label htmlFor="show-oos" className={isMobile ? "text-sm" : ""}>Show Out of Stock</Label>
+      <div
+        className={
+          isMobile ?
+            "flex items-center justify-between"
+          : "flex items-center gap-2"
+        }
+      >
+        <Label className={isMobile ? "text-sm" : ""} htmlFor="show-oos">
+          Show Out of Stock
+        </Label>
         <Switch
           checked={showOutOfStock}
           id="show-oos"
@@ -43,14 +51,19 @@ export const FilterControls = ({
       </div>
 
       <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
-        <Label htmlFor="metal-filter" className={isMobile ? "text-sm" : ""}>Metal Type:</Label>
+        <Label className={isMobile ? "text-sm" : ""} htmlFor="metal-filter">
+          Metal Type:
+        </Label>
         <Select
           onValueChange={(value) => {
             setMetalFilter(value as MetalFilter);
           }}
           value={metalFilter}
         >
-          <SelectTrigger className={isMobile ? "w-full" : "min-w-20"} id="metal-filter">
+          <SelectTrigger
+            className={isMobile ? "w-full" : "min-w-20"}
+            id="metal-filter"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -62,7 +75,9 @@ export const FilterControls = ({
       </div>
 
       <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
-        <Label htmlFor="sort" className={isMobile ? "text-sm" : ""}>Sort By:</Label>
+        <Label className={isMobile ? "text-sm" : ""} htmlFor="sort">
+          Sort By:
+        </Label>
         <Select
           onValueChange={(value) => {
             setSortOption(value as SortOption);
