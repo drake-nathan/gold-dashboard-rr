@@ -1,7 +1,7 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
@@ -28,6 +28,7 @@ interface DashboardProps {
 export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
+  const hasAutoFlipped = useRef(false);
 
   // Calculator settings (credit cards, membership, fee tier) - managed by custom hook
   const {
@@ -48,6 +49,46 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const sortOption =
     (searchParams.get("sort") as null | SortOption) ?? "spread-asc";
   const showOutOfStock = searchParams.get("showOOS") === "true";
+
+  // Auto-flip logic: On initial page load, if no products are in stock,
+  // enable "Show Out of Stock" and sort by "Last Out of Stock"
+  useEffect(() => {
+    // Only run once on initial mount
+    if (hasAutoFlipped.current) return;
+
+    // Check if URL has any filter params (meaning user is navigating, not initial load)
+    const hasFilterParams =
+      searchParams.has("metal") ||
+      searchParams.has("sort") ||
+      searchParams.has("showOOS");
+
+    // If user already has params set, don't auto-flip
+    if (hasFilterParams) {
+      hasAutoFlipped.current = true;
+      return;
+    }
+
+    // Check if there are any in-stock products
+    const hasInStockProducts =
+      stats.goldProducts.inStock > 0 || stats.silverProducts.inStock > 0;
+
+    // If no in-stock products, auto-flip settings
+    if (!hasInStockProducts) {
+      startTransition(() => {
+        const params = new URLSearchParams();
+        params.set("showOOS", "true");
+        params.set("sort", "last-in-stock");
+        setSearchParams(params, { replace: true });
+      });
+    }
+
+    hasAutoFlipped.current = true;
+  }, [
+    searchParams,
+    setSearchParams,
+    stats.goldProducts.inStock,
+    stats.silverProducts.inStock,
+  ]);
 
   // Update URL params (only set non-default values)
   const setMetalFilter = (value: MetalFilter) => {
@@ -110,6 +151,16 @@ export const Dashboard = ({ stats }: DashboardProps) => {
 
   let sortedProducts: ProductCardData[];
   switch (sortOption) {
+    case "last-in-stock": {
+      sortedProducts = products.sort((a, b) => {
+        // Sort by lastInStockAt descending (most recent first)
+        // Products without lastInStockAt (still in stock or never OOS) go to end
+        const aTime = a.lastInStockAt ?? -Infinity;
+        const bTime = b.lastInStockAt ?? -Infinity;
+        return bTime - aTime;
+      });
+      break;
+    }
     case "price-asc": {
       sortedProducts = products.sort((a, b) => a.currentPrice - b.currentPrice);
       break;

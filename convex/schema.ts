@@ -50,6 +50,7 @@ export default defineSchema({
     lastUpdated: v.number(),
     lastPriceChange: v.union(v.number(), v.null()),
     lastStockChange: v.union(v.number(), v.null()),
+    lastInStockAt: v.optional(v.union(v.number(), v.null())), // Timestamp when product went out of stock (last time inStock=false was recorded)
   })
     .index("by_product_id", ["productId"])
     .index("by_metal_type", ["metalType"])
@@ -123,11 +124,17 @@ export default defineSchema({
     productType: v.union(v.string(), v.null()), // "bar", "coin", etc.
     currentBidPrice: v.union(v.number(), v.null()), // Latest total bid price
     currentBidPricePerOz: v.union(v.number(), v.null()), // Latest bid per oz
+    isGenericFallback: v.optional(v.boolean()), // True for generic products used as fallbacks
     lastUpdated: v.number(),
   })
     .index("by_pure_id", ["pureProductId"])
     .index("by_metal_type", ["metalType"])
-    .index("by_metal_and_weight", ["metalType", "weight"]),
+    .index("by_metal_and_weight", ["metalType", "weight"])
+    .index("by_metal_weight_fallback", [
+      "metalType",
+      "weight",
+      "isGenericFallback",
+    ]),
 
   // Market prices from Gold API and FMP
   marketPrices: defineTable({

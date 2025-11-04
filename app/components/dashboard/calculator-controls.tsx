@@ -111,10 +111,12 @@ export const CalculatorControls = ({
                         <div className="flex items-center justify-between gap-2">
                           <span>
                             {card.name}
-                            {card.issuer ? <span className="text-muted-foreground">
+                            {card.issuer ?
+                              <span className="text-muted-foreground">
                                 {" "}
                                 · {card.issuer}
-                              </span> : null}
+                              </span>
+                            : null}
                           </span>
                           <span className="text-muted-foreground">
                             {cashback.toFixed(2)}%

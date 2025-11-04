@@ -322,6 +322,9 @@ export const upsertProduct = internalMutation({
           lastUpdated: args.timestamp,
           ...(priceChanged && { lastPriceChange: args.timestamp }),
           ...(stockChanged && { lastStockChange: args.timestamp }),
+          // Set lastInStockAt when product goes OUT of stock
+          ...(stockChanged &&
+            !product.in_stock && { lastInStockAt: args.timestamp }),
         });
         updated = true;
       }
@@ -336,6 +339,7 @@ export const upsertProduct = internalMutation({
         firstSeen: args.timestamp,
         isMemberOnly: product.is_member_only ?? null,
         isOnlineOnly: product.is_warehouse_only === false ? true : null,
+        lastInStockAt: product.in_stock ? null : args.timestamp, // If new product is OOS, set timestamp
         lastPriceChange: null,
         lastStockChange: null,
         lastUpdated: args.timestamp,
@@ -413,6 +417,7 @@ export const markUnseenProductsOutOfStock = internalMutation({
         // This product wasn't returned, so it's now out of stock
         await ctx.db.patch(product._id, {
           currentInStock: false,
+          lastInStockAt: args.timestamp, // Set timestamp when marking OOS
           lastStockChange: args.timestamp,
           lastUpdated: args.timestamp,
         });

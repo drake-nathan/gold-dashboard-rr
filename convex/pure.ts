@@ -11,6 +11,14 @@ import {
 // Pure API configuration
 const PURE_API_BASE_URL = "https://public.api.collectpure.com";
 
+// Generic fallback products (not marked "Stocked by Costco" but needed for matching)
+// These are SKUs from Pure API (full URL slugs from product URLs)
+const GENERIC_FALLBACK_SKUS = [
+  "10-oz-silver-bars-999-fine-accredited-brands000092", // 10 oz silver bars - generic
+  "random-brand-1-oz-gold-bar-9999-fine-in-card000087", // 1 oz gold bar - generic
+  "100-gram-gold-bar-9999-fine-accredited-brands000101", // 100 gram gold bar - generic
+];
+
 // Type definitions for Pure API responses
 interface PureSpotPrice {
   ask: number;
@@ -217,15 +225,26 @@ export const fetchNewData = internalAction({
               `Fetched ${products.length} ${material} products at offset ${offset}`,
             );
 
-            // Process products into batch data - ONLY "Stocked by Costco" products
+            // Process products into batch data - "Stocked by Costco" OR generic fallbacks
             const productBatch = products
-              .filter((product) =>
-                // Only include products with "Stocked by Costco" attribute
-                product.attributes.some((attr: string) =>
-                  attr.toLowerCase().includes("stocked by costco"),
-                ),
-              )
+              .filter((product) => {
+                // Include products with "Stocked by Costco" attribute
+                const isStockedByCostco = product.attributes.some(
+                  (attr: string) =>
+                    attr.toLowerCase().includes("stocked by costco"),
+                );
+
+                // Also include generic fallback products (matched by SKU)
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(
+                  product.sku,
+                );
+
+                return isStockedByCostco || isGenericFallback;
+              })
               .map((product) => {
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(
+                  product.sku,
+                );
                 const metalType = product.material.toLowerCase() as
                   | "gold"
                   | "silver";
@@ -243,6 +262,7 @@ export const fetchNewData = internalAction({
                 return {
                   currentBidPrice: bidPrice,
                   currentBidPricePerOz: bidPricePerOz,
+                  isGenericFallback,
                   lastUpdated: timestamp,
                   manufacturer: product.manufacturer?.title ?? null,
                   metalType,
@@ -328,6 +348,7 @@ export const batchUpsertPureProducts = internalMutation({
       v.object({
         currentBidPrice: v.union(v.number(), v.null()),
         currentBidPricePerOz: v.union(v.number(), v.null()),
+        isGenericFallback: v.boolean(),
         lastUpdated: v.number(),
         manufacturer: v.union(v.string(), v.null()),
         metalType: v.union(v.literal("gold"), v.literal("silver")),
@@ -358,6 +379,7 @@ export const batchUpsertPureProducts = internalMutation({
         await ctx.db.patch(existing._id, {
           currentBidPrice: product.currentBidPrice,
           currentBidPricePerOz: product.currentBidPricePerOz,
+          isGenericFallback: product.isGenericFallback,
           lastUpdated: product.lastUpdated,
           manufacturer: product.manufacturer,
           productName: product.productName,

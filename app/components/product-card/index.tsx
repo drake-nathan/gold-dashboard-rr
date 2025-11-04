@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatCurrency, formatPercentage } from "@/utils/format";
+import { formatRelativeTime } from "@/utils/format-time";
 import { calculateProductMetrics } from "@/utils/product-calculations";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
@@ -55,17 +56,28 @@ export const ProductCard = ({
             <CardTitle className="line-clamp-2 min-h-[2.5rem] text-base leading-tight">
               {product.name}
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant={product.currentInStock ? "default" : "secondary"}>
-                {product.currentInStock ? "In Stock" : "Out of Stock"}
-              </Badge>
-              <Badge variant={product.metalType === "gold" ? "gold" : "silver"}>
-                {product.metalType.charAt(0).toUpperCase() +
-                  product.metalType.slice(1)}
-              </Badge>
-              {product.metalWeight ?
-                <span className="text-xs text-muted-foreground">
-                  {product.metalWeight}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant={product.currentInStock ? "default" : "secondary"}
+                >
+                  {product.currentInStock ? "In Stock" : "Out of Stock"}
+                </Badge>
+                <Badge
+                  variant={product.metalType === "gold" ? "gold" : "silver"}
+                >
+                  {product.metalType.charAt(0).toUpperCase() +
+                    product.metalType.slice(1)}
+                </Badge>
+                {product.metalWeight ?
+                  <span className="text-xs text-muted-foreground">
+                    {product.metalWeight}
+                  </span>
+                : null}
+              </div>
+              {!product.currentInStock && product.lastInStockAt ?
+                <span className="text-xs text-muted-foreground italic">
+                  Last in stock {formatRelativeTime(product.lastInStockAt)}
                 </span>
               : null}
             </div>

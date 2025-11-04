@@ -51,6 +51,7 @@ export const getStats = query({
       let pureBidPricePerOz: null | number = null;
       let pureProductName: null | string = null;
       let pureProductSku: null | string = null;
+      let isUsingGenericFallback = false;
 
       if (product.pureProductId) {
         const pureProduct = pureProductsMap.get(product.pureProductId);
@@ -59,10 +60,34 @@ export const getStats = query({
           pureBidPricePerOz = pureProduct.currentBidPricePerOz;
           pureProductName = pureProduct.productName;
           pureProductSku = pureProduct.sku ?? null;
+          isUsingGenericFallback = pureProduct.isGenericFallback ?? false;
         }
       }
 
-      // Fallback to generic spot price if no product-specific match
+      // Weight-based fallback: If no direct match, try to find generic fallback with exact weight
+      if (!pureBidPricePerOz && product.currentPricePerOunce) {
+        // Calculate total weight from price per ounce
+        const totalWeight = product.currentPrice / product.currentPricePerOunce;
+
+        // Look for generic fallback product with matching metal type and weight (±0.1 oz tolerance)
+        const genericFallback = pureProducts.find(
+          (p) =>
+            p.isGenericFallback === true &&
+            p.metalType === product.metalType &&
+            p.weight &&
+            Math.abs(p.weight - totalWeight) < 0.1,
+        );
+
+        if (genericFallback) {
+          pureBidPrice = genericFallback.currentBidPrice;
+          pureBidPricePerOz = genericFallback.currentBidPricePerOz;
+          pureProductName = genericFallback.productName;
+          pureProductSku = genericFallback.sku ?? null;
+          isUsingGenericFallback = true;
+        }
+      }
+
+      // Final fallback to generic spot price if no weight-based match
       const bidPrice = pureBidPricePerOz ?? fallbackBidPrice;
 
       const spread =
@@ -76,6 +101,7 @@ export const getStats = query({
 
       return {
         ...product,
+        isUsingGenericFallback,
         pureBidPrice,
         pureBidPricePerOz: bidPrice,
         pureProductName,
