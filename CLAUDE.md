@@ -235,26 +235,55 @@ bun run format:check # Check formatting without fixing
 
 ### CI Script
 
-A simple CI script using `concurrently` to run all quality checks in parallel:
+A custom TypeScript CI script (`scripts/ci.ts`) with a visual status dashboard:
 
 - **Command**: `bun run ci`
-- **Checks**: Runs `format:check`, `lint`, `typecheck`, and `test` concurrently
-- **Output**: Color-coded prefixes (blue=format, yellow=lint, green=typecheck, magenta=test)
-- **Behavior**: Exits with error code if any check fails
+- **Checks**: Runs `format`, `lint:fix`, `typecheck`, `test`, and `test:browser` sequentially
+- **Features**:
+  - Real-time status updates with color-coded output
+  - Individual timing for each check
+  - Total run time summary
+  - Continues running all checks even if one fails (to see all issues)
+  - Exits with error code if any check fails
+
+**Example Output**:
+
+```
+====== CI CHECKS ======
+
+format       : SUCCESS (1.57s)
+lint         : SUCCESS (3.44s)
+typecheck    : SUCCESS (2.72s)
+test         : SUCCESS (0.95s)
+test:browser : SUCCESS (1.31s)
+
+✓ All checks passed successfully!
+
+Total run time: 10.00s
+```
+
+Sequential execution avoids race conditions with React Router's typegen and provides clear error isolation.
 
 Use this before pushing to main to ensure code quality without the overhead of a full CI/CD pipeline during MVP phase.
 
 ## Testing
 
-**Framework**: Vitest (configured via Vite - no separate config needed)
+**Framework**: Vitest (configured via Vite)
+
+**Test Types**:
+
+- **Unit Tests**: `.test.ts` / `.test.tsx` for pure functions and logic
+- **Browser Tests**: `.browser.test.tsx` for UI components and interactions
 
 **Test Pattern**:
 
-- Co-located test files with `.test.ts` / `.test.tsx` pattern
+- Co-located test files with `.test.ts` / `.test.tsx` pattern (unit) or `.browser.test.tsx` (browser)
 - Simple `test()` function calls (not `describe/it`)
 - Focus on critical paths and edge cases, not 100% coverage
 
 **Current Coverage**:
+
+### Unit Tests (60 tests)
 
 - ✅ `app/utils/product-calculations.ts` - Core business logic (14 tests)
   - Profit calculations with various cashback combinations
@@ -270,6 +299,21 @@ Use this before pushing to main to ensure code quality without the overhead of a
   - Preset card management and merging
   - Card sorting (presets first, alphabetical)
   - Default preset card validation
+- ✅ `app/utils/format.test.ts` - Formatting utilities (16 tests)
+
+### Browser Tests (9 tests)
+
+Powered by Vitest Browser Mode with Playwright (headless Chromium):
+
+- ✅ `app/components/ui/button.browser.test.tsx` - Button component (5 tests)
+  - Rendering with different variants (default, destructive, outline)
+  - Click interactions and event handlers
+  - Disabled state
+  - Different sizes (default, sm, lg, icon)
+- ✅ `app/components/header/theme-toggle.browser.test.tsx` - Theme toggle (4 tests)
+  - Button visibility
+  - Dropdown menu interactions
+  - Light/dark theme selection with DOM verification
 
 **Test Structure**:
 
@@ -277,28 +321,54 @@ Use this before pushing to main to ensure code quality without the overhead of a
 app/
 ├── utils/
 │   ├── product-calculations.ts
-│   └── product-calculations.test.ts  ✅ 14 tests passing
+│   ├── product-calculations.test.ts  ✅ 14 unit tests
+│   ├── format.ts
+│   └── format.test.ts                ✅ 16 unit tests
 ├── lib/
 │   ├── credit-cards.ts
-│   └── credit-cards.test.ts          ✅ 30 tests passing
+│   └── credit-cards.test.ts          ✅ 30 unit tests
+├── components/
+│   ├── ui/
+│   │   ├── button.tsx
+│   │   └── button.browser.test.tsx   ✅ 5 browser tests
+│   └── header/
+│       ├── theme-toggle.tsx
+│       └── theme-toggle.browser.test.tsx  ✅ 4 browser tests
 ```
 
-**Total**: 44 tests passing (2 files)
+**Total**: 69 tests passing (60 unit + 9 browser)
 
 **Running Tests**:
 
 ```bash
+# Unit tests only
 bun run test         # Run once
 bun run test:watch   # Watch mode for TDD
+
+# Browser tests only (headless Chromium)
+bun run test:browser         # Run once
+bun run test:browser:watch   # Watch mode
+
+# All tests
+bun run test && bun run test:browser
 ```
 
 **Configuration**:
 
-- Vitest uses the main `vite.config.ts`
-- `test.exclude` configured to skip browser-mode tests (`vitest-example/`)
+- Unit tests: `vitest.config.ts` (excludes `*.browser.test.{ts,tsx}`)
+- Browser tests: `vitest.browser.config.ts` (includes only `*.browser.test.{ts,tsx}`)
 - Path aliases (`@/*`) work automatically via `vite-tsconfig-paths`
+- Browser tests run in headless mode for CI/CD compatibility
 
 **Philosophy**: Write focused, effective tests that catch real bugs. Avoid testing implementation details or chasing coverage metrics.
+
+**Documentation**: See `docs/browser-testing.md` for detailed browser testing guide including:
+
+- How to write browser tests with vitest-browser-react
+- Key API differences from unit tests (async render, query methods, interactions)
+- Testing with providers (ThemeProvider, etc.)
+- Troubleshooting common issues
+- When to use browser tests vs unit tests
 
 ## Convex Setup
 

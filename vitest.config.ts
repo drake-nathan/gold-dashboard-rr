@@ -13,6 +13,7 @@ export default mergeConfig(
         "**/.{idea,git,cache,output,temp}/**",
         "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*",
         "**/vitest-example/**", // Exclude browser mode tests from regular test runs
+        "**/*.browser.test.{ts,tsx}", // Exclude browser mode tests
       ],
     },
   }),

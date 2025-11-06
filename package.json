@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "ci": "concurrently --names 'format,lint,typecheck,test' --prefix-colors 'blue,yellow,green,magenta' 'bun run format' 'bun run lint:fix' 'bun run typecheck' 'bun run test'",
+    "ci": "bun run scripts/ci.ts",
     "dev": "react-router dev",
     "format": "prettier . --write --cache",
     "format:check": "prettier . --check --cache",
@@ -12,7 +12,8 @@
     "lint:fix": "bun run lint --fix",
     "start": "react-router-serve ./build/server/index.js",
     "test": "vitest run",
-    "test:browser": "vitest --config=vitest.browser.config.ts",
+    "test:browser": "vitest run --config=vitest.browser.config.ts",
+    "test:browser:watch": "vitest --config=vitest.browser.config.ts",
     "test:watch": "vitest",
     "typecheck": "react-router typegen && tsc"
   },
