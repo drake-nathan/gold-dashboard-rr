@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import { z } from "zod";
 
 const themeSchema = z.enum(["dark", "light", "system"]);
@@ -33,13 +34,12 @@ export const ThemeProvider = ({
   storageKey = THEME_STORAGE_KEY,
   ...props
 }: ThemeProviderProps) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window === "undefined") {
-      return defaultTheme;
-    }
-    const storedTheme = localStorage.getItem(storageKey);
-    const result = themeSchema.safeParse(storedTheme);
-    return result.success ? result.data : defaultTheme;
+  const [theme, setTheme] = useLocalStorage<Theme>(storageKey, defaultTheme, {
+    deserializer: (value: string): Theme => {
+      const result = themeSchema.safeParse(value);
+      return result.success ? result.data : defaultTheme;
+    },
+    serializer: (value: Theme): string => value,
   });
 
   useEffect(() => {
@@ -73,12 +73,7 @@ export const ThemeProvider = ({
   }, [theme]);
 
   const value = {
-    setTheme: (theme: Theme) => {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(storageKey, theme);
-      }
-      setTheme(theme);
-    },
+    setTheme, // useLocalStorage handles both state and localStorage
     theme,
   };
 

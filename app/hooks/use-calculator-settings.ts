@@ -3,15 +3,12 @@ import { useEffect, useState } from "react";
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
 import { useCreditCardsStorage } from "@/hooks/use-credit-cards-storage";
+import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
 import {
   calculateCashbackPercentage,
   type CreditCard,
 } from "@/lib/credit-cards";
-import {
-  loadPureFeeTier,
-  PURE_FEE_TIERS,
-  savePureFeeTier,
-} from "@/lib/pure-fee-tiers";
+import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
 export interface CalculatorSettingsState {
   availableCards: CreditCard[];
@@ -36,8 +33,9 @@ export interface CalculatorSettingsActions {
  */
 export const useCalculatorSettings = (): CalculatorSettingsActions &
   CalculatorSettingsState => {
-  // Use the new useLocalStorage hook for credit cards
+  // Use the new useLocalStorage hooks
   const [creditCardsStorage, setCreditCardsStorage] = useCreditCardsStorage();
+  const [pureFeeTierStorage, setPureFeeTierStorage] = usePureFeeTierStorage();
 
   // Derive available cards from storage
   const availableCards = creditCardsStorage.cards;
@@ -45,9 +43,10 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   // Calculator settings state (lazy initialization from localStorage)
   const [calculatorSettings, setCalculatorSettings] =
     useState<CalculatorSettings>(() => {
-      const savedTierId = loadPureFeeTier();
       const savedTier =
-        PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
+        PURE_FEE_TIERS.find(
+          (t) => t.id === pureFeeTierStorage.selectedTierId,
+        ) ?? PURE_FEE_TIERS[0];
 
       return {
         costcoMembershipEnabled: true,
@@ -61,8 +60,15 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
 
   // Save selected Pure fee tier to local storage when changed
   useEffect(() => {
-    savePureFeeTier(calculatorSettings.pureFeeTier.id);
-  }, [calculatorSettings.pureFeeTier]);
+    if (
+      calculatorSettings.pureFeeTier.id !== pureFeeTierStorage.selectedTierId
+    ) {
+      setPureFeeTierStorage({
+        selectedTierId: calculatorSettings.pureFeeTier.id,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calculatorSettings.pureFeeTier.id]);
 
   // Save selected card ID to localStorage when it changes
   // (but only update lastSelectedId, not the cards array)
