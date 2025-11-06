@@ -30,26 +30,32 @@ Railway needs your environment variables configured. In the Railway dashboard:
 3. Add **ALL** of the following variables:
 
 ```
-# Client-side (embedded in bundle at build time AND available at runtime)
-VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud
-VITE_CLERK_PUBLISHABLE_KEY=<your-clerk-key>
-VITE_PUBLIC_POSTHOG_KEY=<your-posthog-key>  # PostHog API key (e.g., phc_xxxx)
-VITE_PUBLIC_POSTHOG_HOST=<your-posthog-host>  # PostHog host (e.g., https://us.i.posthog.com)
-
-# Server-side only (runtime)
-NODE_ENV=production
+# Convex (production deployment)
 CONVEX_DEPLOYMENT=prod:effervescent-dog-80
+VITE_CONVEX_URL=https://effervescent-dog-80.convex.cloud
+
+# API Keys (server-side)
 UNWRANGLE_API_KEY=<your-key>
 PURE_API_KEY=<your-key>
 GOLD_API_KEY=<your-key>
 FMP_API_KEY=<your-key>
+
+# Clerk Auth
+VITE_CLERK_PUBLISHABLE_KEY=<your-clerk-key>
 CLERK_SECRET_KEY=<your-clerk-key>
 
 # Feature Flags (optional)
-# VITE_ENABLE_AUTH=true  # Uncomment to show auth UI (hidden by default in production)
+# VITE_ENABLE_AUTH=true  # Uncomment to enable auth UI in production (disabled by default)
+
+# Analytics (client-side - embedded in bundle AND available at runtime)
+VITE_PUBLIC_POSTHOG_KEY=<your-posthog-key>  # PostHog API key (e.g., phc_xxxx)
+VITE_PUBLIC_POSTHOG_HOST=<your-posthog-host>  # PostHog host (e.g., https://us.i.posthog.com or https://eu.i.posthog.com)
 
 # Google AdSense (optional - for displaying ads to monetize traffic)
 VITE_ADSENSE_CLIENT_ID=<your-client-id>  # Google AdSense client ID (e.g., ca-pub-1234567890123456)
+
+# Runtime Environment
+NODE_ENV=production
 ```
 
 **Important Notes**:

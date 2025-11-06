@@ -122,8 +122,17 @@
 
 ### Testing
 
-- [ ] Add unit tests for calculator logic
-- [ ] Add component tests
+**Framework**: Vitest (configured via Vite - no separate config needed)
+
+**Current Coverage**:
+- ✅ `app/utils/product-calculations.ts` - Core business logic (14 tests)
+- ✅ `app/lib/credit-cards.ts` - Credit card management (30 tests)
+
+**Total**: 44 tests passing (2 files)
+
+**Next Steps**:
+- [ ] Add component tests (ProductCard, Dashboard)
+- [ ] Add Convex function tests
 - [ ] Add E2E tests for critical flows
 
 ## 💡 Nice to Have (Backlog)
