@@ -24,9 +24,11 @@ This directory contains session notes, guides, and historical documentation from
 These documents are still relevant and actively referenced:
 
 ### Deployment & Setup
+
 - **`RAILWAY_DEPLOYMENT.md`** - Comprehensive Railway deployment guide with Docker and environment variable configuration
 
 ### Monetization & Marketing
+
 - **`GOOGLE_ADSENSE_SETUP.md`** - Complete Google AdSense setup guide (not yet implemented, awaiting approval)
 - **`OG_IMAGE_TODO.md`** - Guide for creating Open Graph images for social media sharing (pending creation)
 
@@ -35,16 +37,19 @@ These documents are still relevant and actively referenced:
 These documents provide valuable historical context and audit findings:
 
 ### Backend Architecture
+
 - **`CONVEX.md`** (Oct 26, 2025) - Comprehensive Convex backend audit, refactoring summary, and performance improvements
   - Documents major refactoring: Pure product matching, schema optimization, performance gains
   - Shows evolution from ~300-400 docs/query to ~50-100 docs/query (75% reduction)
 
 ### Frontend & UX
+
 - **`FRONTEND_AUDIT_2025-10-30.md`** (Oct 30, 2025) - Frontend audit with accessibility improvements
   - All action items completed: accessibility fixes, mobile optimization, URL state management
   - Historical record of October 30 accessibility work
 
 ### Project Planning
+
 - **`MVP_LAUNCH_CHECKLIST.md`** (Oct 2025) - MVP launch preparation checklist
   - Most items completed: Analytics (PostHog), SEO, Privacy/Terms pages, Footer
   - Pending items: Google Ads setup (optional), OG image creation
@@ -55,6 +60,7 @@ These documents provide valuable historical context and audit findings:
   - Architecture patterns and recommendations remain valuable
 
 ### Development History
+
 - **`SESSION_SUMMARY.md`** (Oct 26, 2025) - Session-by-session development summary
   - Session 1: Major refactoring (Pure products, matching system)
   - Session 2: Product matching improvements (conservative algorithm, manual match protection)
@@ -73,6 +79,7 @@ These documents provide valuable historical context and audit findings:
 ### Primary Documentation
 
 For comprehensive project documentation, see:
+
 - **`../CLAUDE.md`** - Complete project documentation (tech stack, database schema, API integrations, UI implementation)
 - **`../README.md`** - Getting started guide
 - **`../TODO.md`** - Planned features and improvements
