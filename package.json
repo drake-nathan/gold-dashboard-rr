@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build",
-    "ci": "concurrently --names 'format,lint,typecheck,test' --prefix-colors 'blue,yellow,green,magenta' 'bun run format:check' 'bun run lint' 'bun run typecheck' 'bun run test'",
+    "ci": "concurrently --names 'format,lint,typecheck,test' --prefix-colors 'blue,yellow,green,magenta' 'bun run format' 'bun run lint:fix' 'bun run typecheck' 'bun run test'",
     "dev": "react-router dev",
     "format": "prettier . --write --cache",
     "format:check": "prettier . --check --cache",

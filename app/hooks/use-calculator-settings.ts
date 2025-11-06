@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
@@ -7,6 +7,7 @@ import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
 import {
   calculateCashbackPercentage,
   type CreditCard,
+  DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
@@ -28,8 +29,11 @@ export interface CalculatorSettingsActions {
  * - Local storage persistence for credit cards and fee tier
  * - Credit card CRUD operations
  * - Calculator settings state (membership, selected card, fee tier)
- * - Automatic saving when settings change
  * - Total cashback percentage calculation
+ *
+ * Following React best practices:
+ * - No Effects for localStorage writes (done in event handlers)
+ * - Derived state computed during render (selected card synced with availableCards)
  */
 export const useCalculatorSettings = (): CalculatorSettingsActions &
   CalculatorSettingsState => {
@@ -40,108 +44,96 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   // Derive available cards from storage
   const availableCards = creditCardsStorage.cards;
 
-  // Calculator settings state (lazy initialization from localStorage)
-  const [calculatorSettings, setCalculatorSettings] =
-    useState<CalculatorSettings>(() => {
-      const savedTier =
-        PURE_FEE_TIERS.find(
-          (t) => t.id === pureFeeTierStorage.selectedTierId,
-        ) ?? PURE_FEE_TIERS[0];
+  // Store only IDs and membership setting - derive full objects during render
+  const [selectedCardId, setSelectedCardId] = useState<string>(() => {
+    // Storage hooks guarantee these values are defined (have defaults in deserializers)
+    return creditCardsStorage.lastSelectedId || DEFAULT_PRESET_CARDS[0].id;
+  });
 
-      return {
-        costcoMembershipEnabled: true,
-        creditCard:
-          creditCardsStorage.cards.find(
-            (c) => c.id === creditCardsStorage.lastSelectedId,
-          ) ?? creditCardsStorage.cards[0],
-        pureFeeTier: savedTier,
-      };
-    });
+  const [selectedTierId, setSelectedTierId] = useState<string>(() => {
+    // Storage hooks guarantee these values are defined (have defaults in deserializers)
+    return pureFeeTierStorage.selectedTierId || PURE_FEE_TIERS[0].id;
+  });
 
-  // Save selected Pure fee tier to local storage when changed
-  useEffect(() => {
-    if (
-      calculatorSettings.pureFeeTier.id !== pureFeeTierStorage.selectedTierId
-    ) {
-      setPureFeeTierStorage({
-        selectedTierId: calculatorSettings.pureFeeTier.id,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calculatorSettings.pureFeeTier.id]);
+  const [costcoMembershipEnabled, setCostcoMembershipEnabled] =
+    useState<boolean>(true);
 
-  // Save selected card ID to localStorage when it changes
-  // (but only update lastSelectedId, not the cards array)
-  useEffect(() => {
-    // Only update if the selected card ID differs from what's in storage
-    if (
-      calculatorSettings.creditCard.id !== creditCardsStorage.lastSelectedId
-    ) {
-      setCreditCardsStorage({
-        cards: creditCardsStorage.cards, // Keep existing cards
-        lastSelectedId: calculatorSettings.creditCard.id,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calculatorSettings.creditCard.id]);
+  // Derive selected card from availableCards (always fresh, no stale data)
+  const selectedCard = useMemo(() => {
+    const card = availableCards.find((c) => c.id === selectedCardId);
+    // If selected card was deleted, fallback to first card
+    return card ?? availableCards[0];
+  }, [availableCards, selectedCardId]);
 
-  // Sync selected card with availableCards when cards are updated
-  // This ensures the selected card reflects any edits made in the card manager
-  useEffect(() => {
-    const updatedCard = availableCards.find(
-      (c) => c.id === calculatorSettings.creditCard.id,
-    );
+  // Derive selected tier from PURE_FEE_TIERS
+  const selectedTier = useMemo(() => {
+    const tier = PURE_FEE_TIERS.find((t) => t.id === selectedTierId);
+    return tier ?? PURE_FEE_TIERS[0];
+  }, [selectedTierId]);
 
-    // If the selected card was updated (values changed), update calculator settings
-    if (
-      updatedCard &&
-      (updatedCard.name !== calculatorSettings.creditCard.name ||
-        updatedCard.pointsPerDollar !==
-          calculatorSettings.creditCard.pointsPerDollar ||
-        updatedCard.valuePerPoint !==
-          calculatorSettings.creditCard.valuePerPoint)
-    ) {
-      setCalculatorSettings({
-        ...calculatorSettings,
-        creditCard: updatedCard,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableCards]);
+  // Build calculator settings from derived state
+  const calculatorSettings: CalculatorSettings = useMemo(
+    () => ({
+      costcoMembershipEnabled,
+      creditCard: selectedCard,
+      pureFeeTier: selectedTier,
+    }),
+    [costcoMembershipEnabled, selectedCard, selectedTier],
+  );
 
   // Handle card changes from manager
   const handleCardsChange = (newCards: CreditCard[]) => {
     // If current card was deleted, switch to first available
-    const updatedCreditCard =
-      newCards.find((c) => c.id === calculatorSettings.creditCard.id) ?
-        calculatorSettings.creditCard
-      : newCards[0];
+    const newSelectedCardId =
+      newCards.find((c) => c.id === selectedCardId)?.id ?? newCards[0].id;
 
-    // Update calculator settings if card changed
-    if (updatedCreditCard.id !== calculatorSettings.creditCard.id) {
-      setCalculatorSettings({
-        ...calculatorSettings,
-        creditCard: updatedCreditCard,
+    // Update selected card ID in state
+    if (newSelectedCardId !== selectedCardId) {
+      setSelectedCardId(newSelectedCardId);
+    }
+
+    // Save to localStorage (happens in event handler, not Effect)
+    setCreditCardsStorage({
+      cards: newCards,
+      lastSelectedId: newSelectedCardId,
+    });
+  };
+
+  // Update calculator settings (called from event handlers)
+  const updateCalculatorSettings = (settings: CalculatorSettings) => {
+    // Update membership state
+    if (settings.costcoMembershipEnabled !== costcoMembershipEnabled) {
+      setCostcoMembershipEnabled(settings.costcoMembershipEnabled);
+    }
+
+    // Update selected card ID and save to localStorage
+    if (settings.creditCard.id !== selectedCardId) {
+      setSelectedCardId(settings.creditCard.id);
+      setCreditCardsStorage({
+        cards: availableCards,
+        lastSelectedId: settings.creditCard.id,
       });
     }
 
-    // Save to localStorage (this automatically updates availableCards)
-    setCreditCardsStorage({
-      cards: newCards,
-      lastSelectedId: updatedCreditCard.id,
-    });
+    // Update selected tier ID and save to localStorage
+    if (settings.pureFeeTier.id !== selectedTierId) {
+      setSelectedTierId(settings.pureFeeTier.id);
+      setPureFeeTierStorage({
+        selectedTierId: settings.pureFeeTier.id,
+      });
+    }
   };
 
   // Calculate total cashback percentage
   const totalCashbackPercentage =
-    (calculatorSettings.costcoMembershipEnabled ? 2 : 0) +
-    calculateCashbackPercentage(calculatorSettings.creditCard);
+    (costcoMembershipEnabled ? 2 : 0) +
+    calculateCashbackPercentage(selectedCard);
 
   return {
     availableCards,
     calculatorSettings,
     handleCardsChange,
     totalCashbackPercentage,
-    updateCalculatorSettings: setCalculatorSettings,
+    updateCalculatorSettings,
   };
 };

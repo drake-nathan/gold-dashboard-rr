@@ -17,6 +17,57 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 
 **Note**: RSC (React Server Components) was removed as it's experimental in RR7 and added unnecessary complexity.
 
+## React Best Practices
+
+This project follows [React's "You Might Not Need an Effect" guidelines](https://react.dev/learn/you-might-not-need-an-effect):
+
+### useEffect Usage Policy
+
+**Only use useEffect for synchronizing with external systems:**
+
+- ✅ Browser APIs (DOM, localStorage, matchMedia, history)
+- ✅ Third-party integrations (Convex subscriptions, PostHog analytics)
+- ✅ Non-React widgets or libraries
+
+**Avoid useEffect for:**
+
+- ❌ Transforming data for rendering (calculate during render instead)
+- ❌ Handling user events (use event handlers directly)
+- ❌ Caching expensive calculations (use `useMemo` instead)
+- ❌ Resetting state on prop changes (use `key` prop to force recreation)
+- ❌ Adjusting state when props change (derive state during render)
+- ❌ Chaining Effects together (handle in event handlers or single Effect)
+
+### Current Compliance
+
+All `useEffect` calls in this codebase are compliant with React best practices:
+
+- `app/providers/theme-provider.tsx` - DOM manipulation and matchMedia listener ✅
+- `app/components/dashboard/index.tsx` - Browser history API (URL params) ✅
+- `app/hooks/use-calculator-settings.ts` - **Refactored January 2025** to remove Effects for localStorage writes; now uses derived state with `useMemo` ✅
+
+### Implementation Patterns
+
+**Derived State**: Store minimal IDs, derive full objects during render
+
+```typescript
+const [selectedCardId, setSelectedCardId] = useState(initialId);
+const selectedCard = useMemo(
+  () => cards.find((c) => c.id === selectedCardId) ?? cards[0],
+  [cards, selectedCardId],
+);
+```
+
+**localStorage Writes**: Always in event handlers, never in Effects
+
+```typescript
+const updateSettings = (settings) => {
+  setSelectedCardId(settings.creditCard.id);
+  // Save immediately in handler
+  setCreditCardsStorage({ cards, lastSelectedId: settings.creditCard.id });
+};
+```
+
 ## Migration Notes
 
 This project was recently migrated from Next.js to React Router 7 + Vite. Some remnants from the Next.js setup may still exist.
