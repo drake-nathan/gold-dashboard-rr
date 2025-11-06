@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
+import { useCreditCardsStorage } from "@/hooks/use-credit-cards-storage";
 import {
   calculateCashbackPercentage,
   type CreditCard,
-  loadCreditCards,
-  saveCreditCards,
 } from "@/lib/credit-cards";
 import {
   loadPureFeeTier,
@@ -37,16 +36,15 @@ export interface CalculatorSettingsActions {
  */
 export const useCalculatorSettings = (): CalculatorSettingsActions &
   CalculatorSettingsState => {
-  // Credit card management state (lazy initialization from localStorage)
-  const [availableCards, setAvailableCards] = useState<CreditCard[]>(() => {
-    const stored = loadCreditCards();
-    return stored.cards;
-  });
+  // Use the new useLocalStorage hook for credit cards
+  const [creditCardsStorage, setCreditCardsStorage] = useCreditCardsStorage();
+
+  // Derive available cards from storage
+  const availableCards = creditCardsStorage.cards;
 
   // Calculator settings state (lazy initialization from localStorage)
   const [calculatorSettings, setCalculatorSettings] =
     useState<CalculatorSettings>(() => {
-      const stored = loadCreditCards();
       const savedTierId = loadPureFeeTier();
       const savedTier =
         PURE_FEE_TIERS.find((t) => t.id === savedTierId) ?? PURE_FEE_TIERS[0];
@@ -54,40 +52,77 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
       return {
         costcoMembershipEnabled: true,
         creditCard:
-          stored.cards.find((c) => c.id === stored.lastSelectedId) ??
-          stored.cards[0],
+          creditCardsStorage.cards.find(
+            (c) => c.id === creditCardsStorage.lastSelectedId,
+          ) ?? creditCardsStorage.cards[0],
         pureFeeTier: savedTier,
       };
     });
-
-  // Save selected card to local storage when changed
-  useEffect(() => {
-    if (availableCards.length > 0) {
-      saveCreditCards({
-        cards: availableCards,
-        lastSelectedId: calculatorSettings.creditCard.id,
-      });
-    }
-  }, [calculatorSettings.creditCard.id, availableCards]);
 
   // Save selected Pure fee tier to local storage when changed
   useEffect(() => {
     savePureFeeTier(calculatorSettings.pureFeeTier.id);
   }, [calculatorSettings.pureFeeTier]);
 
-  // Handle card changes from manager
-  const handleCardsChange = (newCards: CreditCard[]) => {
-    setAvailableCards(newCards);
-    // If current card was deleted, switch to first available
-    if (!newCards.find((c) => c.id === calculatorSettings.creditCard.id)) {
-      setCalculatorSettings({
-        ...calculatorSettings,
-        creditCard: newCards[0],
+  // Save selected card ID to localStorage when it changes
+  // (but only update lastSelectedId, not the cards array)
+  useEffect(() => {
+    // Only update if the selected card ID differs from what's in storage
+    if (
+      calculatorSettings.creditCard.id !== creditCardsStorage.lastSelectedId
+    ) {
+      setCreditCardsStorage({
+        cards: creditCardsStorage.cards, // Keep existing cards
+        lastSelectedId: calculatorSettings.creditCard.id,
       });
     }
-    saveCreditCards({
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calculatorSettings.creditCard.id]);
+
+  // Sync selected card with availableCards when cards are updated
+  // This ensures the selected card reflects any edits made in the card manager
+  useEffect(() => {
+    const updatedCard = availableCards.find(
+      (c) => c.id === calculatorSettings.creditCard.id,
+    );
+
+    // If the selected card was updated (values changed), update calculator settings
+    if (
+      updatedCard &&
+      (updatedCard.name !== calculatorSettings.creditCard.name ||
+        updatedCard.pointsPerDollar !==
+          calculatorSettings.creditCard.pointsPerDollar ||
+        updatedCard.valuePerPoint !==
+          calculatorSettings.creditCard.valuePerPoint)
+    ) {
+      setCalculatorSettings({
+        ...calculatorSettings,
+        creditCard: updatedCard,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableCards]);
+
+  // Handle card changes from manager
+  const handleCardsChange = (newCards: CreditCard[]) => {
+    // If current card was deleted, switch to first available
+    const updatedCreditCard =
+      newCards.find((c) => c.id === calculatorSettings.creditCard.id) ?
+        calculatorSettings.creditCard
+      : newCards[0];
+
+    // Update calculator settings if card changed
+    if (updatedCreditCard.id !== calculatorSettings.creditCard.id) {
+      setCalculatorSettings({
+        ...calculatorSettings,
+        creditCard: updatedCreditCard,
+      });
+    }
+
+    // Save to localStorage (this automatically updates availableCards)
+    setCreditCardsStorage({
       cards: newCards,
-      lastSelectedId: calculatorSettings.creditCard.id,
+      lastSelectedId: updatedCreditCard.id,
     });
   };
 

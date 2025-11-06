@@ -87,8 +87,8 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
 export const calculateCashbackPercentage = (card: CreditCard): number =>
   card.pointsPerDollar * card.valuePerPoint * 100;
 
-// Local storage key
-const STORAGE_KEY = "dashboard-gold-credit-cards";
+// Local storage key (exported for use with useLocalStorage hook)
+export const CREDIT_CARDS_STORAGE_KEY = "dashboard-gold-credit-cards";
 
 // Load credit cards from local storage with validation
 export const loadCreditCards = (): CreditCardsStorage => {
@@ -100,7 +100,7 @@ export const loadCreditCards = (): CreditCardsStorage => {
   }
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
     if (!stored) {
       // Return defaults if nothing stored
       return {
@@ -147,7 +147,7 @@ export const saveCreditCards = (data: CreditCardsStorage): void => {
 
   try {
     const validated = creditCardsStorageSchema.parse(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+    localStorage.setItem(CREDIT_CARDS_STORAGE_KEY, JSON.stringify(validated));
   } catch (error) {
     console.error("Failed to save credit cards to localStorage:", error);
     throw error;
@@ -159,7 +159,7 @@ export const clearCreditCards = (): void => {
   if (typeof window === "undefined") return;
 
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
   } catch (error) {
     console.error("Failed to clear credit cards from localStorage:", error);
     throw error;
