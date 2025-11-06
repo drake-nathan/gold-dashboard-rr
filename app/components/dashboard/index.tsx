@@ -3,6 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
+import { useDebounceCallback } from "usehooks-ts";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
@@ -91,7 +92,8 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   ]);
 
   // Update URL params (only set non-default values)
-  const setMetalFilter = (value: MetalFilter) => {
+  // Debounced to prevent rapid URL updates during quick filter changes
+  const setMetalFilter = useDebounceCallback((value: MetalFilter) => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
       if (value !== "all") {
@@ -101,9 +103,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       }
       setSearchParams(params, { replace: true });
     });
-  };
+  }, 150);
 
-  const setSortOption = (value: SortOption) => {
+  const setSortOption = useDebounceCallback((value: SortOption) => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
       if (value !== "spread-asc") {
@@ -113,9 +115,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       }
       setSearchParams(params, { replace: true });
     });
-  };
+  }, 150);
 
-  const setShowOutOfStock = (value: boolean) => {
+  const setShowOutOfStock = useDebounceCallback((value: boolean) => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
       if (value) {
@@ -125,7 +127,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       }
       setSearchParams(params, { replace: true });
     });
-  };
+  }, 150);
 
   // Combine and filter products
   let filteredProducts: ProductCardData[] = [];
