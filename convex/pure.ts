@@ -7,6 +7,7 @@ import {
   internalMutation,
   query,
 } from "./_generated/server";
+import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
 
 // Pure API configuration
 const PURE_API_BASE_URL = "https://public.api.collectpure.com";
@@ -86,43 +87,7 @@ interface PureProduct {
   weightGrams: number;
 }
 
-// Helper to parse weight string and convert to troy ounces
-const parseWeightToOz = (weight: string, weightGrams?: number): number => {
-  if (weightGrams) {
-    // Convert grams to troy ounces (1 troy oz = 31.1035 g)
-    return weightGrams / 31.1035;
-  }
-
-  // Parse weight string
-  const weightMatch =
-    /(?<value>\d+(?:\.\d+)?)\s*(?<unit>troy ounce|ounce|oz|gram|g)/i.exec(
-      weight,
-    );
-  if (weightMatch?.groups?.value && weightMatch.groups.unit) {
-    const value = parseFloat(weightMatch.groups.value);
-    const unit = weightMatch.groups.unit.toLowerCase();
-
-    if (unit.includes("oz") || unit.includes("ounce")) {
-      return value;
-    } else if (unit === "gram" || unit === "g") {
-      return value / 31.1035;
-    }
-  }
-
-  // Default to 1 oz if unable to parse
-  return 1;
-};
-
-// Extract product type from title/category
-const extractProductType = (product: PureProduct): null | string => {
-  const title = product.title.toLowerCase();
-  if (title.includes("bar")) return "bar";
-  if (title.includes("coin")) return "coin";
-  if (product.subCategory?.title) {
-    return product.subCategory.title.toLowerCase();
-  }
-  return null;
-};
+// parseWeightToOz and extractProductType are now imported from ./lib/pureApiParsing
 
 // Fetch all Pure products and update cache
 export const fetchNewData = internalAction({

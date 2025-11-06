@@ -14,11 +14,7 @@ export default defineConfig({
       instances: [{ browser: "chromium" }],
       provider: playwright(),
     },
-    include: ["app/**/*.browser.test.{ts,tsx}"],
     coverage: {
-      provider: "v8",
-      reporter: ["text", "json", "html"],
-      include: ["app/**/*.{ts,tsx}"],
       exclude: [
         "**/*.test.{ts,tsx}",
         "**/*.browser.test.{ts,tsx}",
@@ -29,6 +25,10 @@ export default defineConfig({
         "**/routes/**",
         "**/root.tsx",
       ],
+      include: ["app/**/*.{ts,tsx}"],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
     },
+    include: ["app/**/*.browser.test.{ts,tsx}"],
   },
 });

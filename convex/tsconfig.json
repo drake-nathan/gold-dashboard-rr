@@ -17,6 +17,6 @@
     "strict": true,
     "target": "ESNext"
   },
-  "exclude": ["./_generated"],
+  "exclude": ["./_generated", "./__tests__"],
   "include": ["./**/*"]
 }

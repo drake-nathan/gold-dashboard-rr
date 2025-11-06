@@ -124,29 +124,39 @@
 
 **Framework**: Vitest with `@vitest/coverage-v8` (configured via Vite)
 
-**Current Coverage**: 1.94% overall (January 2025) - See `TESTING_PLAN.md` for detailed roadmap
+**Current Coverage**: 3.1% overall (January 2025) - See `TESTING_PLAN.md` for detailed roadmap
 
 **Coverage by Module**:
 
 - ✅ `app/utils/format.ts` - 100% (16 tests)
+- ✅ `app/utils/format-time.ts` - 100% (28 tests) ✨ NEW
+- ✅ `app/utils/pure-url.ts` - 100% (3 tests) ✨ NEW
 - ✅ `app/utils/product-calculations.ts` - 100% (14 tests)
 - 🟡 `app/lib/credit-cards.ts` - 55.84% (30 tests) - Good foundation
-- 🟡 `app/lib/pure-fee-tiers.ts` - 31.57% - Needs more tests
+- ✅ `app/lib/pure-fee-tiers.ts` - 94.73% (18 tests) ✨ IMPROVED
+- ✅ `convex/lib/metalParsing.ts` - 100% (65 tests) ✨ NEW
+- ✅ `convex/lib/pureApiParsing.ts` - 100% (37 tests) ✨ NEW
 - ✅ `app/components/ui/button.tsx` - Tested (5 browser tests)
 - ✅ `app/components/header/theme-toggle.tsx` - Tested (4 browser tests)
 
-**Total**: 69 tests passing (60 unit + 9 browser)
+**Total**: 211 tests passing (202 unit + 9 browser)
 
 **High Priority** (See `TESTING_PLAN.md` for full details):
 
-- [ ] **Week 1**: Pure utility functions (4-5 hours)
-  - [ ] `app/utils/format-time.ts` - Time formatting with edge cases (10 tests)
-  - [ ] `app/utils/pure-url.ts` - URL generation (3 tests)
-  - [ ] `app/lib/pure-fee-tiers.ts` - Complete coverage (8 tests)
-  - [ ] Extract and test Convex parsing helpers (`extractWeightInOz`, `extractMetalAttributes`, `getFallbackPureId`)
+- [x] **Week 1**: Pure utility functions (~2 hours) ✅ COMPLETED
+  - [x] `app/utils/format-time.ts` - Time formatting with edge cases (28 tests)
+  - [x] `app/utils/pure-url.ts` - URL generation (3 tests)
+  - [x] `app/lib/pure-fee-tiers.ts` - Complete coverage (18 tests)
+  - [x] Extract and test Convex parsing helpers:
+    - [x] `extractWeightInOz` (26 tests)
+    - [x] `extractMetalAttributes` (23 tests)
+    - [x] `getFallbackPureId` (13 tests)
+    - [x] `parseWeightToOz` (25 tests)
+    - [x] `extractProductType` (12 tests)
+    - [x] `PURE_FALLBACK_IDS` constant (3 tests)
 
 - [ ] **Week 2**: Business logic (4-5 hours)
-  - [ ] Extract and test Convex calculation helpers (`calculateSpread`, `parseWeightToOz`, `extractProductType`)
+  - [ ] Extract and test dashboard calculation helpers (`calculateSpread` - complex)
   - [ ] Extract dashboard filter/sort logic to `app/utils/product-filters.ts` and test (12 tests)
 
 - [ ] **Week 3-4**: Critical UI components (6-8 hours)

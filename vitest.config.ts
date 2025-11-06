@@ -6,19 +6,7 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      exclude: [
-        "**/node_modules/**",
-        "**/dist/**",
-        "**/build/**",
-        "**/.{idea,git,cache,output,temp}/**",
-        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*",
-        "**/vitest-example/**", // Exclude browser mode tests from regular test runs
-        "**/*.browser.test.{ts,tsx}", // Exclude browser mode tests
-      ],
       coverage: {
-        provider: "v8",
-        reporter: ["text", "json", "html"],
-        include: ["app/**/*.{ts,tsx}"],
         exclude: [
           "**/*.test.{ts,tsx}",
           "**/*.browser.test.{ts,tsx}",
@@ -29,7 +17,19 @@ export default mergeConfig(
           "**/routes/**",
           "**/root.tsx",
         ],
+        include: ["app/**/*.{ts,tsx}"],
+        provider: "v8",
+        reporter: ["text", "json", "html"],
       },
+      exclude: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/.{idea,git,cache,output,temp}/**",
+        "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*",
+        "**/vitest-example/**", // Exclude browser mode tests from regular test runs
+        "**/*.browser.test.{ts,tsx}", // Exclude browser mode tests
+      ],
     },
   }),
 );
