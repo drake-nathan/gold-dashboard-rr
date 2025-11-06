@@ -15,5 +15,20 @@ export default defineConfig({
       provider: playwright(),
     },
     include: ["app/**/*.browser.test.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      include: ["app/**/*.{ts,tsx}"],
+      exclude: [
+        "**/*.test.{ts,tsx}",
+        "**/*.browser.test.{ts,tsx}",
+        "**/types.ts",
+        "**/*.d.ts",
+        "**/env.*.ts",
+        "**/providers/**",
+        "**/routes/**",
+        "**/root.tsx",
+      ],
+    },
   },
 });

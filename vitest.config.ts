@@ -15,6 +15,21 @@ export default mergeConfig(
         "**/vitest-example/**", // Exclude browser mode tests from regular test runs
         "**/*.browser.test.{ts,tsx}", // Exclude browser mode tests
       ],
+      coverage: {
+        provider: "v8",
+        reporter: ["text", "json", "html"],
+        include: ["app/**/*.{ts,tsx}"],
+        exclude: [
+          "**/*.test.{ts,tsx}",
+          "**/*.browser.test.{ts,tsx}",
+          "**/types.ts",
+          "**/*.d.ts",
+          "**/env.*.ts",
+          "**/providers/**",
+          "**/routes/**",
+          "**/root.tsx",
+        ],
+      },
     },
   }),
 );

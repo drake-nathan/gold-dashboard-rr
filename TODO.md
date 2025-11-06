@@ -122,20 +122,52 @@
 
 ### Testing
 
-**Framework**: Vitest (configured via Vite - no separate config needed)
+**Framework**: Vitest with `@vitest/coverage-v8` (configured via Vite)
 
-**Current Coverage**:
+**Current Coverage**: 1.94% overall (January 2025) - See `TESTING_PLAN.md` for detailed roadmap
 
-- ✅ `app/utils/product-calculations.ts` - Core business logic (14 tests)
-- ✅ `app/lib/credit-cards.ts` - Credit card management (30 tests)
+**Coverage by Module**:
 
-**Total**: 44 tests passing (2 files)
+- ✅ `app/utils/format.ts` - 100% (16 tests)
+- ✅ `app/utils/product-calculations.ts` - 100% (14 tests)
+- 🟡 `app/lib/credit-cards.ts` - 55.84% (30 tests) - Good foundation
+- 🟡 `app/lib/pure-fee-tiers.ts` - 31.57% - Needs more tests
+- ✅ `app/components/ui/button.tsx` - Tested (5 browser tests)
+- ✅ `app/components/header/theme-toggle.tsx` - Tested (4 browser tests)
 
-**Next Steps**:
+**Total**: 69 tests passing (60 unit + 9 browser)
 
-- [ ] Add component tests (ProductCard, Dashboard)
-- [ ] Add Convex function tests
-- [ ] Add E2E tests for critical flows
+**High Priority** (See `TESTING_PLAN.md` for full details):
+
+- [ ] **Week 1**: Pure utility functions (4-5 hours)
+  - [ ] `app/utils/format-time.ts` - Time formatting with edge cases (10 tests)
+  - [ ] `app/utils/pure-url.ts` - URL generation (3 tests)
+  - [ ] `app/lib/pure-fee-tiers.ts` - Complete coverage (8 tests)
+  - [ ] Extract and test Convex parsing helpers (`extractWeightInOz`, `extractMetalAttributes`, `getFallbackPureId`)
+
+- [ ] **Week 2**: Business logic (4-5 hours)
+  - [ ] Extract and test Convex calculation helpers (`calculateSpread`, `parseWeightToOz`, `extractProductType`)
+  - [ ] Extract dashboard filter/sort logic to `app/utils/product-filters.ts` and test (12 tests)
+
+- [ ] **Week 3-4**: Critical UI components (6-8 hours)
+  - [ ] `app/components/card-manager-drawer.tsx` - Form validation, CRUD ops (25 browser tests)
+  - [ ] `app/components/ui/swipeable-card.tsx` - Touch gesture handling (10 browser tests)
+  - [ ] `app/components/dashboard/filters.tsx` - Responsive layout (4 browser tests)
+  - [ ] `app/components/dashboard/calculator-controls.tsx` - Mobile vs desktop (4 browser tests)
+
+**Coverage Goals**:
+
+- Short-term (1 month): 15-20% overall, 70%+ business logic
+- Medium-term (3 months): 30-40% overall, 80%+ Convex helpers
+- Long-term (6 months): 40-50% overall, E2E critical flows
+
+**Commands**:
+
+```bash
+bun run test:coverage          # Unit tests with coverage
+bun run test:coverage:browser  # Browser tests with coverage
+open coverage/index.html       # View detailed HTML report
+```
 
 ## 💡 Nice to Have (Backlog)
 

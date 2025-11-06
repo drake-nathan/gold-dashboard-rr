@@ -13,3 +13,7 @@
 
 # Local Netlify folder
 .netlify
+
+# Test coverage reports
+/coverage/
+coverage-final.json
