@@ -124,7 +124,7 @@
 
 **Framework**: Vitest with `@vitest/coverage-v8` (configured via Vite)
 
-**Current Coverage**: 3.1% overall (January 2025) - See `TESTING_PLAN.md` for detailed roadmap
+**Current Coverage**: 3.86% overall (January 2025) - See `TESTING_PLAN.md` for detailed roadmap
 
 **Coverage by Module**:
 
@@ -134,12 +134,13 @@
 - ✅ `app/utils/product-calculations.ts` - 100% (14 tests)
 - 🟡 `app/lib/credit-cards.ts` - 55.84% (30 tests) - Good foundation
 - ✅ `app/lib/pure-fee-tiers.ts` - 94.73% (18 tests) ✨ IMPROVED
+- ✅ `app/utils/product-filters.ts` - 96.66% (19 tests) ✨ NEW
 - ✅ `convex/lib/metalParsing.ts` - 100% (65 tests) ✨ NEW
 - ✅ `convex/lib/pureApiParsing.ts` - 100% (37 tests) ✨ NEW
 - ✅ `app/components/ui/button.tsx` - Tested (5 browser tests)
 - ✅ `app/components/header/theme-toggle.tsx` - Tested (4 browser tests)
 
-**Total**: 211 tests passing (202 unit + 9 browser)
+**Total**: 230 tests passing (221 unit + 9 browser)
 
 **High Priority** (See `TESTING_PLAN.md` for full details):
 
@@ -155,9 +156,11 @@
     - [x] `extractProductType` (12 tests)
     - [x] `PURE_FALLBACK_IDS` constant (3 tests)
 
-- [ ] **Week 2**: Business logic (4-5 hours)
-  - [ ] Extract and test dashboard calculation helpers (`calculateSpread` - complex)
-  - [ ] Extract dashboard filter/sort logic to `app/utils/product-filters.ts` and test (12 tests)
+- [x] **Week 2**: Dashboard filter/sort logic (~2 hours) ✅ COMPLETED
+  - [x] Extract dashboard filter/sort logic to `app/utils/product-filters.ts` and test (19 tests)
+  - [x] `filterProducts()` - Metal type and stock status filtering
+  - [x] `sortProducts()` - 5 sort options (spread, price, last in stock)
+  - [x] `shouldAutoFlipToOutOfStock()` - Auto-flip logic for empty inventory
 
 - [ ] **Week 3-4**: Critical UI components (6-8 hours)
   - [ ] `app/components/card-manager-drawer.tsx` - Form validation, CRUD ops (25 browser tests)

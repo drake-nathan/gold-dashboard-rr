@@ -1,7 +1,8 @@
 # Testing Plan & Coverage Strategy
 
 > **Coverage Baseline**: 1.94% (January 2025)
-> **Current Tests**: 69 total (60 unit + 9 browser)
+> **Current Coverage**: 3.86% overall (January 2025)
+> **Current Tests**: 230 total (221 unit + 9 browser)
 > **Goal**: Achieve 70%+ coverage on business logic, utilities, and critical UI components
 
 ---
@@ -11,9 +12,10 @@
 ```
 File               | % Stmts | % Branch | % Funcs | % Lines | Status
 -------------------|---------|----------|---------|---------|--------
-All files          |    1.94 |     1.68 |    7.63 |    1.67 | 🔴
-app/utils          |   51.92 |    48.93 |   66.66 |      52 | 🟡
-app/lib            |      47 |    34.37 |   55.17 |   45.36 | 🟡
+All files          |    3.86 |     4.51 |   13.20 |    3.49 | 🔴
+app/utils          |   98.78 |    98.63 |     100 |   98.70 | ✅
+app/lib            |   67.52 |    53.12 |   68.96 |   69.07 | 🟡
+convex/lib         |     100 |      100 |     100 |     100 | ✅
 app/components     |       0 |        0 |       0 |       0 | 🔴
 app/hooks          |       0 |        0 |       0 |       0 | 🔴
 ```
@@ -21,12 +23,17 @@ app/hooks          |       0 |        0 |       0 |       0 | 🔴
 ### Fully Covered Files ✅
 
 - `app/utils/format.ts` - 100% coverage (16 tests)
+- `app/utils/format-time.ts` - 100% coverage (28 tests)
+- `app/utils/pure-url.ts` - 100% coverage (3 tests)
 - `app/utils/product-calculations.ts` - 100% coverage (14 tests)
-- `app/lib/credit-cards.ts` - 55.84% coverage (30 tests) - Good foundation
+- `app/utils/product-filters.ts` - 96.66% coverage (19 tests) ✨ NEW
+- `convex/lib/metalParsing.ts` - 100% coverage (65 tests) ✨ NEW
+- `convex/lib/pureApiParsing.ts` - 100% coverage (37 tests) ✨ NEW
 
 ### Partially Covered Files 🟡
 
-- `app/lib/pure-fee-tiers.ts` - 31.57% coverage - Needs more tests
+- `app/lib/credit-cards.ts` - 55.84% coverage (30 tests) - Good foundation
+- `app/lib/pure-fee-tiers.ts` - 94.73% coverage (18 tests)
 - `app/lib/cn.ts` - 0% (trivial utility, low priority)
 
 ### Uncovered Files 🔴
@@ -346,19 +353,16 @@ See priority sections below for detailed breakdown.
 
 ---
 
-### Week 2: Business Logic (4-5 hours)
+### Week 2: Dashboard Filter/Sort Logic (~2 hours) ✅ COMPLETED
 
-5. 🎯 **Convex calculation helpers** (2 hours)
-   - Extract and test `calculateSpread()`
-   - Extract and test `parseWeightToOz()`
-   - Extract and test `extractProductType()`
+5. ✅ **Dashboard filter/sort logic** (2 hours)
+   - Created `app/utils/product-filters.ts` with extracted logic
+   - Test `filterProducts()` - Metal type and stock filtering (6 tests)
+   - Test `sortProducts()` - 5 sort options (9 tests)
+   - Test `shouldAutoFlipToOutOfStock()` - Auto-flip logic (4 tests)
+   - **Total**: 19 tests, 96.66% coverage
 
-6. 🎯 **Dashboard filter/sort logic** (2 hours)
-   - Extract `app/utils/product-filters.ts`
-   - Test `filterProducts()` - 8 tests
-   - Test `sortProducts()` - 4 tests
-
-7. 📊 **Expected Coverage**: ~15-18%
+6. 📊 **Actual Coverage**: 3.86% overall (utilities at 98.78%)
 
 ---
 

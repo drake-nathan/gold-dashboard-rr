@@ -10,6 +10,11 @@ import { CardManagerDrawer } from "@/components/card-manager-drawer";
 import { ProductCard } from "@/components/product-card";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
+import {
+  filterProducts,
+  shouldAutoFlipToOutOfStock,
+  sortProducts,
+} from "@/utils/product-filters";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
@@ -69,12 +74,14 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       return;
     }
 
-    // Check if there are any in-stock products
-    const hasInStockProducts =
-      stats.goldProducts.inStock > 0 || stats.silverProducts.inStock > 0;
+    // Check if auto-flip should be triggered
+    const shouldAutoFlip = shouldAutoFlipToOutOfStock(
+      stats.goldProducts.inStock,
+      stats.silverProducts.inStock,
+    );
 
     // If no in-stock products, auto-flip settings
-    if (!hasInStockProducts) {
+    if (shouldAutoFlip) {
       startTransition(() => {
         const params = new URLSearchParams();
         params.set("showOOS", "true");
@@ -129,68 +136,14 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     });
   }, 150);
 
-  // Combine and filter products
-  let filteredProducts: ProductCardData[] = [];
+  // Filter and sort products using extracted utilities
+  const filteredProducts = filterProducts(
+    stats.goldProducts.bestSpread,
+    stats.silverProducts.bestSpread,
+    { metalFilter, showOutOfStock },
+  );
 
-  if (metalFilter === "all") {
-    filteredProducts = [
-      ...stats.goldProducts.bestSpread,
-      ...stats.silverProducts.bestSpread,
-    ];
-  } else if (metalFilter === "gold") {
-    filteredProducts = stats.goldProducts.bestSpread;
-  } else {
-    filteredProducts = stats.silverProducts.bestSpread;
-  }
-
-  // Filter out of stock if needed
-  if (!showOutOfStock) {
-    filteredProducts = filteredProducts.filter((p) => p.currentInStock);
-  }
-
-  // Sort products
-  const products = [...filteredProducts];
-
-  let sortedProducts: ProductCardData[];
-  switch (sortOption) {
-    case "last-in-stock": {
-      sortedProducts = products.sort((a, b) => {
-        // Sort by lastInStockAt descending (most recent first)
-        // Products without lastInStockAt (still in stock or never OOS) go to end
-        const aTime = a.lastInStockAt ?? -Infinity;
-        const bTime = b.lastInStockAt ?? -Infinity;
-        return bTime - aTime;
-      });
-      break;
-    }
-    case "price-asc": {
-      sortedProducts = products.sort((a, b) => a.currentPrice - b.currentPrice);
-      break;
-    }
-    case "price-desc": {
-      sortedProducts = products.sort((a, b) => b.currentPrice - a.currentPrice);
-      break;
-    }
-    case "spread-asc": {
-      sortedProducts = products.sort((a, b) => {
-        const aSpread = a.spreadPercentage ?? 999;
-        const bSpread = b.spreadPercentage ?? 999;
-        return aSpread - bSpread;
-      });
-      break;
-    }
-    case "spread-desc": {
-      sortedProducts = products.sort((a, b) => {
-        const aSpread = a.spreadPercentage ?? -999;
-        const bSpread = b.spreadPercentage ?? -999;
-        return bSpread - aSpread;
-      });
-      break;
-    }
-    default: {
-      sortedProducts = products;
-    }
-  }
+  const sortedProducts = sortProducts(filteredProducts, sortOption);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
