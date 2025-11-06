@@ -2,7 +2,7 @@
 
 > **Coverage Baseline**: 1.94% (January 2025)
 > **Current Coverage**: 3.86% overall (January 2025)
-> **Current Tests**: 230 total (221 unit + 9 browser)
+> **Current Tests**: 242 total (221 unit + 21 browser)
 > **Goal**: Achieve 70%+ coverage on business logic, utilities, and critical UI components
 
 ---
@@ -366,23 +366,42 @@ See priority sections below for detailed breakdown.
 
 ---
 
-### Week 3-4: Critical UI Components (6-8 hours)
+### Week 3: Card Manager Drawer (~2 hours) ✅ COMPLETED
 
-8. 🎯 **Card Manager Drawer** (3 hours)
-   - Form validation tests - 8 tests
-   - CRUD operations - 10 tests
-   - Combobox integration - 4 tests
-   - Cashback calculation - 3 tests
+8. ✅ **Card Manager Drawer** (2 hours)
+   - Created `app/components/card-manager-drawer.browser.test.tsx` with 12 browser tests
+   - **Rendering tests** (5 tests):
+     - Drawer opens and displays title
+     - All preset cards render correctly
+     - Cashback percentages display accurately
+     - "Add Custom Card" and "Reset All" buttons visible
+   - **Form interaction tests** (2 tests):
+     - Opens create form on button click
+     - Cancels and hides form properly
+   - **CRUD operations** (4 tests):
+     - Adds custom card with valid data
+     - Deletes custom card with confirmation dialog
+     - Cancels delete when clicking cancel
+     - Resets all cards to defaults
+   - **Real-time calculation** (1 test):
+     - Updates cashback display when form values change
 
-9. 🎯 **Swipeable Card** (1.5 hours)
-   - Touch gesture handling - 6 tests
-   - State management - 4 tests
+9. 📊 **Test Results**: All 21 browser tests passing (5 button + 4 theme-toggle + 12 card-manager-drawer)
 
-10. 🎯 **Responsive Components** (2 hours)
+---
+
+### Week 4+: Additional UI Components (4-6 hours)
+
+10. 🎯 **Swipeable Card** (1.5 hours)
+
+- Touch gesture handling - 6 tests
+- State management - 4 tests
+
+11. 🎯 **Responsive Components** (2 hours)
     - Filter drawer - 4 tests
     - Calculator controls - 4 tests
 
-11. 📊 **Expected Coverage**: ~25-30%
+12. 📊 **Expected Coverage**: ~25-30%
 
 ---
 

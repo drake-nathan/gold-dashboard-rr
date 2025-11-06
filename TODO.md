@@ -139,8 +139,9 @@
 - ✅ `convex/lib/pureApiParsing.ts` - 100% (37 tests) ✨ NEW
 - ✅ `app/components/ui/button.tsx` - Tested (5 browser tests)
 - ✅ `app/components/header/theme-toggle.tsx` - Tested (4 browser tests)
+- ✅ `app/components/card-manager-drawer.tsx` - Tested (12 browser tests) ✨ NEW
 
-**Total**: 230 tests passing (221 unit + 9 browser)
+**Total**: 242 tests passing (221 unit + 21 browser)
 
 **High Priority** (See `TESTING_PLAN.md` for full details):
 
@@ -162,8 +163,15 @@
   - [x] `sortProducts()` - 5 sort options (spread, price, last in stock)
   - [x] `shouldAutoFlipToOutOfStock()` - Auto-flip logic for empty inventory
 
-- [ ] **Week 3-4**: Critical UI components (6-8 hours)
-  - [ ] `app/components/card-manager-drawer.tsx` - Form validation, CRUD ops (25 browser tests)
+- [x] **Week 3**: Card Manager Drawer (~2 hours) ✅ COMPLETED
+  - [x] `app/components/card-manager-drawer.tsx` - Comprehensive browser tests (12 tests)
+  - [x] Rendering tests - Drawer, cards list, cashback display
+  - [x] Form interaction tests - Open/close, cancel
+  - [x] CRUD operations - Add, delete custom cards with confirmations
+  - [x] Reset all cards functionality
+  - [x] Real-time cashback calculation display
+
+- [ ] **Week 4** (Future): Additional UI components
   - [ ] `app/components/ui/swipeable-card.tsx` - Touch gesture handling (10 browser tests)
   - [ ] `app/components/dashboard/filters.tsx` - Responsive layout (4 browser tests)
   - [ ] `app/components/dashboard/calculator-controls.tsx` - Mobile vs desktop (4 browser tests)

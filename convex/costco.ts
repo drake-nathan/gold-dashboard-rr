@@ -7,7 +7,6 @@ import {
   extractWeightInOz,
   getFallbackPureId,
   type ProcessedProduct,
-  PURE_FALLBACK_IDS,
   type RawProduct,
 } from "./lib/metalParsing";
 

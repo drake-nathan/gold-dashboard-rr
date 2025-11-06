@@ -11,9 +11,7 @@
 .env.local
 .env*.local
 
-# Local Netlify folder
-.netlify
-
 # Test coverage reports
 /coverage/
 coverage-final.json
+__screenshots__

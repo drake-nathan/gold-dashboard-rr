@@ -378,11 +378,11 @@ test("extractMetalAttributes: preserves all original product fields", () => {
 
   expect(result).not.toBeNull();
   expect(result?.brand).toBe("Test Brand");
-  expect(result?.categories).toEqual(["metals", "gold"]);
+  expect(result?.categories).toStrictEqual(["metals", "gold"]);
   expect(result?.currency).toBe("USD");
   expect(result?.in_stock).toBe(true);
   expect(result?.is_member_only).toBe(true);
-  expect(result?.marketing_features).toEqual(["Best Value"]);
+  expect(result?.marketing_features).toStrictEqual(["Best Value"]);
   expect(result?.rating).toBe(4.5);
   expect(result?.short_description).toBe("High quality gold");
   expect(result?.thumbnail).toBe("https://example.com/thumb.jpg");

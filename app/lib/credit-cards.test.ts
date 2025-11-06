@@ -162,6 +162,7 @@ test("calculates cashback for Robinhood Gold Card preset", () => {
 
   expect(robinhood).toBeDefined();
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const cashback = calculateCashbackPercentage(robinhood!);
 
   expect(cashback).toBe(3); // 3 pts @ 1¢ = 3%
