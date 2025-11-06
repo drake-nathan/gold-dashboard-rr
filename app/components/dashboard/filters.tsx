@@ -1,5 +1,6 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
+import { useMediaQuery } from "usehooks-ts";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { CreditCard } from "@/lib/credit-cards";
@@ -47,11 +48,13 @@ export const Filters = ({
   sortOption,
 }: FiltersProps) => {
   const [open, setOpen] = useState(false);
+  // Match Tailwind's md breakpoint (768px)
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  return (
-    <>
-      {/* Mobile: Filter Button */}
-      <div className="mb-6 md:hidden">
+  // Mobile view: Sheet with button
+  if (!isDesktop) {
+    return (
+      <div className="mb-6">
         <Sheet onOpenChange={setOpen} open={open}>
           <SheetTrigger asChild>
             <Button className="w-full" variant="outline">
@@ -98,34 +101,36 @@ export const Filters = ({
           </SheetContent>
         </Sheet>
       </div>
+    );
+  }
 
-      {/* Desktop: Inline Filters */}
-      <div className="mb-6 hidden rounded-xl border bg-card p-4 md:block">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {/* Left Side - Filters */}
-          <div className="flex flex-wrap items-center gap-4">
-            <FilterControls
-              metalFilter={metalFilter}
-              setMetalFilter={setMetalFilter}
-              setShowOutOfStock={setShowOutOfStock}
-              setSortOption={setSortOption}
-              showOutOfStock={showOutOfStock}
-              sortOption={sortOption}
-            />
-          </div>
+  // Desktop view: Inline filters
+  return (
+    <div className="mb-6 rounded-xl border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Left Side - Filters */}
+        <div className="flex flex-wrap items-center gap-4">
+          <FilterControls
+            metalFilter={metalFilter}
+            setMetalFilter={setMetalFilter}
+            setShowOutOfStock={setShowOutOfStock}
+            setSortOption={setSortOption}
+            showOutOfStock={showOutOfStock}
+            sortOption={sortOption}
+          />
+        </div>
 
-          {/* Right Side - Calculator */}
-          <div className="flex flex-wrap items-center gap-4">
-            <CalculatorControls
-              availableCards={availableCards}
-              calculatorSettings={calculatorSettings}
-              onOpenCardManager={onOpenCardManager}
-              onOpenSettings={onOpenSettings}
-              setCalculatorSettings={setCalculatorSettings}
-            />
-          </div>
+        {/* Right Side - Calculator */}
+        <div className="flex flex-wrap items-center gap-4">
+          <CalculatorControls
+            availableCards={availableCards}
+            calculatorSettings={calculatorSettings}
+            onOpenCardManager={onOpenCardManager}
+            onOpenSettings={onOpenSettings}
+            setCalculatorSettings={setCalculatorSettings}
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 };
