@@ -33,6 +33,7 @@ export interface ProductCalculations {
 
   pureFee: number;
   pureFeePercentage: number;
+  purePayout: null | number;
   totalCashback: number;
 
   totalCashbackPercentage: number;
@@ -116,6 +117,7 @@ export const calculateProductMetrics = (
     pureBidPrice,
     pureFee,
     pureFeePercentage: pureFeePercentage * 100,
+    purePayout: netFromSale,
     totalCashback,
     totalCashbackPercentage,
   };

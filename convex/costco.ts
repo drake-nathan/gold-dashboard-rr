@@ -238,7 +238,7 @@ export const upsertProduct = internalMutation({
         await ctx.db.patch(existing._id, {
           currentInStock: product.in_stock,
           currentPrice: product.price,
-          currentPricePerOunce: product.pricePerOunce,
+          currentPricePerOunce: product.pricePerOunce ?? null,
           lastUpdated: args.timestamp,
           ...(priceChanged && { lastPriceChange: args.timestamp }),
           ...(stockChanged && { lastStockChange: args.timestamp }),

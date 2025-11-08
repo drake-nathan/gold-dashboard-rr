@@ -34,9 +34,8 @@ import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
   // Favicon
-  { href: "/favicon.ico", rel: "icon", sizes: "any" },
+  { href: "/favicon.ico", rel: "icon", sizes: "48x48" },
   { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
-  { href: "/apple-touch-icon.png", rel: "apple-touch-icon" },
   { href: "/manifest.json", rel: "manifest" },
 
   // Fonts

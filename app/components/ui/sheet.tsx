@@ -101,7 +101,7 @@ const SheetTitle = ({
       {...props}
     />
     <SheetPrimitive.Close asChild>
-      <Button size="icon" variant="ghost">
+      <Button size="icon" variant="outline">
         <XIcon className="h-[1.2rem] w-[1.2rem]" />
         <span className="sr-only">Close</span>
       </Button>

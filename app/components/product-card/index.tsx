@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatCurrency, formatPercentage } from "@/utils/format";
+import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/format-time";
 import { calculateProductMetrics } from "@/utils/product-calculations";
 import { generatePureProductUrl } from "@/utils/pure-url";
@@ -49,15 +49,15 @@ export const ProductCard = ({
     : `https://www.collectpure.com/search?q=${encodeURIComponent(product.name)}`;
 
   return (
-    <Card className="flex h-full flex-col gap-2">
+    <Card className="flex h-full flex-col gap-3">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-3">
-            <CardTitle className="line-clamp-2 min-h-[2.5rem] text-base leading-tight">
+          <div className="flex min-h-24 flex-col justify-between">
+            <CardTitle className="line-clamp-2 text-base leading-tight">
               {product.name}
             </CardTitle>
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-2">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-muted/30">
                 <Badge
                   variant={product.currentInStock ? "default" : "secondary"}
                 >
@@ -71,7 +71,7 @@ export const ProductCard = ({
                 </Badge>
                 {product.metalWeight ?
                   <span className="text-xs text-muted-foreground">
-                    {product.metalWeight}
+                    {formatWeight(product.metalWeight)}
                   </span>
                 : null}
               </div>
@@ -85,16 +85,16 @@ export const ProductCard = ({
           {product.thumbnail ?
             <img
               alt={product.name}
-              className="h-20 w-20 shrink-0 rounded object-cover"
+              className="size-24 shrink-0 rounded object-cover"
               src={product.thumbnail}
             />
           : null}
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 space-y-2.5 text-sm">
+      <CardContent className="flex-1 space-y-2 text-sm">
         {/* Pricing Breakdown */}
-        <div className="space-y-2 rounded-lg border bg-muted/50 p-3">
+        <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
           {/* === SECTION 1: Purchase Details === */}
           <PriceRow
             label="Costco Price:"
@@ -104,30 +104,22 @@ export const ProductCard = ({
                 {calc.aboveSpotPercentage !== null && (
                   <span className="text-xs text-muted-foreground">
                     {formatPercentage(calc.aboveSpotPercentage)} above spot
-                    –{" "}
                   </span>
-                )}
-                {formatCurrency(calc.costcoPrice)}
+                )}{" "}
+                -{formatCurrency(calc.costcoPrice)}
               </>
             }
           />
-          {calc.initialCashLoss !== null && (
-            <PriceRow
-              label="Initial Cash Loss:"
-              labelClassName="text-xs text-muted-foreground"
-              tooltip="Money you're down immediately after buying and selling (before any cashback)"
-              value={`-${formatCurrency(calc.initialCashLoss)}`}
-              valueClassName="text-xs font-medium text-red-600 dark:text-red-400"
-            />
-          )}
 
           {calc.pureBidPrice !== null ?
             <>
               <div className="my-1.5 border-t border-border/50" />
               <PriceRow
                 label="Pure Bid:"
+                labelClassName="text-xs text-muted-foreground"
                 tooltip="Amount Collect Pure will pay for this item"
                 value={`+${formatCurrency(calc.pureBidPrice)}`}
+                valueClassName="text-xs font-medium"
               />
               <PriceRow
                 label={`Pure Fee (${formatPercentage(calc.pureFeePercentage)}):`}
@@ -136,44 +128,50 @@ export const ProductCard = ({
                 value={`-${formatCurrency(calc.pureFee)}`}
                 valueClassName="text-xs font-medium"
               />
+              {calc.purePayout !== null && (
+                <PriceRow
+                  label="Pure Payout:"
+                  tooltip="Actual cash you'll receive from Collect Pure after fees"
+                  value={`+${formatCurrency(calc.purePayout)}`}
+                  valueClassName="font-semibold"
+                />
+              )}
+              {calc.initialCashLoss !== null && (
+                <PriceRow
+                  label="Initial Cash Loss:"
+                  labelClassName="text-xs text-muted-foreground"
+                  tooltip="Money you're down immediately after buying and selling (before any cashback)"
+                  value={`-${formatCurrency(calc.initialCashLoss)}`}
+                  valueClassName="text-xs font-medium text-amber-600 dark:text-amber-400"
+                />
+              )}
             </>
           : <div className="text-center text-xs text-muted-foreground italic">
               No Pure bid available
             </div>
           }
 
-          {/* === SECTION 2: Cashback (if any) === */}
+          {/* === SECTION 3: Cashback (if any) === */}
           {calc.totalCashback > 0 && (
             <>
               <div className="my-1.5 border-t border-border/50" />
-              {calc.costcoCashbackPercentage > 0 && (
-                <PriceRow
-                  label={`Costco (${formatPercentage(calc.costcoCashbackPercentage, 1)}):`}
-                  labelClassName="text-xs text-muted-foreground"
-                  tooltip="2% cashback from Costco Executive membership (paid annually)"
-                  value={`+${formatCurrency(calc.costcoCashback)}`}
-                  valueClassName="text-xs font-medium"
-                />
-              )}
-              {calc.creditCardCashbackPercentage > 0 && (
-                <PriceRow
-                  label={`CC (${formatPercentage(calc.creditCardCashbackPercentage)}):`}
-                  labelClassName="text-xs text-muted-foreground"
-                  tooltip="Credit card cashback/points (paid monthly or as points)"
-                  value={`+${formatCurrency(calc.creditCardCashback)}`}
-                  valueClassName="text-xs font-medium"
-                />
-              )}
+              <PriceRow
+                label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                labelClassName="text-xs text-muted-foreground"
+                tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
+                value={`+${formatCurrency(calc.totalCashback)}`}
+                valueClassName="text-xs font-medium"
+              />
             </>
           )}
 
-          {/* === SECTION 3: Net Profit === */}
+          {/* === SECTION 4: Net Profit === */}
           {calc.netProfit !== null && (
             <>
               <div className="my-2 border-t" />
               <PriceRow
                 label="Net Profit:"
-                labelClassName="text-sm font-semibold"
+                labelClassName="text-base font-semibold"
                 tooltip="Final profit/loss after receiving all cashback"
                 value={
                   <>
@@ -183,14 +181,14 @@ export const ProductCard = ({
                     {`${calc.netProfit >= 0 ? "+" : "-"}${formatCurrency(Math.abs(calc.netProfit))}`}
                   </>
                 }
-                valueClassName={`text-lg font-bold ${calc.profitColor}`}
+                valueClassName={`text-2xl font-bold ${calc.profitColor}`}
               />
               {calc.netProfitPercentage !== null && (
                 <PriceRow
                   label="Return:"
                   labelClassName="text-xs text-muted-foreground"
                   value={`${calc.netProfitPercentage >= 0 ? "+" : ""}${formatPercentage(calc.netProfitPercentage)}`}
-                  valueClassName={`text-sm font-semibold ${calc.profitColor}`}
+                  valueClassName={`text-base font-bold ${calc.profitColor}`}
                 />
               )}
             </>

@@ -9,7 +9,7 @@
   },
   "iconLibrary": "lucide",
   "registries": {},
-  "rsc": false,
+  "rsc": true,
   "style": "new-york",
   "tailwind": {
     "baseColor": "gray",

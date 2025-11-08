@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { formatCurrency, formatPercentage } from "./format";
+import { formatCurrency, formatPercentage, formatWeight } from "./format";
 
 // formatCurrency tests
 
@@ -107,4 +107,73 @@ test("formatPercentage formats very large percentages", () => {
   expect(formatPercentage(1000)).toBe("1000.00%");
   expect(formatPercentage(9999.99)).toBe("9999.99%");
   expect(formatPercentage(12345.6789, 3)).toBe("12345.679%");
+});
+
+// formatWeight tests
+
+test("formatWeight formats troy ounce singular", () => {
+  expect(formatWeight("1 Troy Ounce")).toBe("1oz");
+  expect(formatWeight("1 troy ounce")).toBe("1oz");
+  expect(formatWeight("1 TROY OUNCE")).toBe("1oz");
+});
+
+test("formatWeight formats troy ounce plural", () => {
+  expect(formatWeight("10 Troy Ounces")).toBe("10oz");
+  expect(formatWeight("10 troy ounces")).toBe("10oz");
+  expect(formatWeight("2 Troy Ounces")).toBe("2oz");
+});
+
+test("formatWeight formats troy ounce with decimals", () => {
+  expect(formatWeight("0.5 Troy Ounce")).toBe("0.5oz");
+  expect(formatWeight("1.5 Troy Ounces")).toBe("1.5oz");
+  expect(formatWeight("10.25 troy ounce")).toBe("10.25oz");
+});
+
+test("formatWeight formats troy ounce with various spacing", () => {
+  expect(formatWeight("1  Troy  Ounce")).toBe("1oz");
+  expect(formatWeight("10   troy   ounces")).toBe("10oz");
+});
+
+test("formatWeight formats grams singular", () => {
+  expect(formatWeight("100 Gram")).toBe("100g");
+  expect(formatWeight("100 gram")).toBe("100g");
+  expect(formatWeight("1 GRAM")).toBe("1g");
+});
+
+test("formatWeight formats grams plural", () => {
+  expect(formatWeight("100 Grams")).toBe("100g");
+  expect(formatWeight("50 grams")).toBe("50g");
+  expect(formatWeight("200 GRAMS")).toBe("200g");
+});
+
+test("formatWeight formats grams with weight suffix", () => {
+  expect(formatWeight("100 Gram Weight")).toBe("100g");
+  expect(formatWeight("100 grams weight")).toBe("100g");
+  expect(formatWeight("50 GRAMS WEIGHT")).toBe("50g");
+});
+
+test("formatWeight formats grams with decimals", () => {
+  expect(formatWeight("31.1 Gram")).toBe("31.1g");
+  expect(formatWeight("99.99 Grams")).toBe("99.99g");
+  expect(formatWeight("0.5 gram weight")).toBe("0.5g");
+});
+
+test("formatWeight formats generic oz format", () => {
+  expect(formatWeight("1 oz")).toBe("1oz");
+  expect(formatWeight("10 oz")).toBe("10oz");
+  expect(formatWeight("1.5 OZ")).toBe("1.5oz");
+});
+
+test("formatWeight returns original for unrecognized formats", () => {
+  expect(formatWeight("1 pound")).toBe("1 pound");
+  expect(formatWeight("100 kilograms")).toBe("100 kilograms");
+  expect(formatWeight("random text")).toBe("random text");
+  expect(formatWeight("")).toBe("");
+});
+
+test("formatWeight handles edge cases", () => {
+  expect(formatWeight("0 Troy Ounce")).toBe("0oz");
+  expect(formatWeight("0 Gram")).toBe("0g");
+  expect(formatWeight("1000 troy ounces")).toBe("1000oz");
+  expect(formatWeight("9999.99 grams")).toBe("9999.99g");
 });

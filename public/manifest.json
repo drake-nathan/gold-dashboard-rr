@@ -4,6 +4,11 @@
   "display": "standalone",
   "icons": [
     {
+      "sizes": "any",
+      "src": "/favicon.svg",
+      "type": "image/svg+xml"
+    },
+    {
       "sizes": "48x48",
       "src": "/favicon.ico",
       "type": "image/x-icon"
