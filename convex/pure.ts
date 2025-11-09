@@ -17,6 +17,8 @@ const PURE_API_BASE_URL = "https://public.api.collectpure.com";
 const GENERIC_FALLBACK_SKUS = [
   "10-oz-silver-bars-999-fine-accredited-brands000092", // 10 oz silver bars - generic
   "random-brand-1-oz-gold-bar-9999-fine-in-card000087", // 1 oz gold bar - generic
+  "10-gram-gold-bar-9999-fine-accredited-brands000098", // 10 gram gold bar - generic
+  "50-gram-gold-bar-9999-fine-accredited-brands000100", // 50 gram gold bar - generic
   "100-gram-gold-bar-9999-fine-accredited-brands000101", // 100 gram gold bar - generic
 ];
 

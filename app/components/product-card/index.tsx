@@ -57,7 +57,7 @@ export const ProductCard = ({
               {product.name}
             </CardTitle>
             <div className="flex flex-col gap-1.5">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-muted/30">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full">
                 <Badge
                   variant={product.currentInStock ? "default" : "secondary"}
                 >
