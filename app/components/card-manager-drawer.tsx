@@ -423,7 +423,7 @@ export const CardManagerDrawer = ({
                           <Input
                             min="0"
                             placeholder="1.5"
-                            step="0.1"
+                            step="0.01"
                             type="number"
                             {...field}
                             onChange={(e) => {
