@@ -17,6 +17,20 @@ export const Footer = () => {
             >
               Privacy Policy
             </Link>
+            <a
+              className="transition-colors hover:text-foreground"
+              href="mailto:nathan@nathandrake.dev"
+            >
+              Contact
+            </a>
+            <a
+              className="transition-colors hover:text-foreground"
+              href="https://buymeacoffee.com/thenathandrake"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Buy Me a Coffee
+            </a>
             <Link
               className="transition-colors hover:text-foreground"
               to="/terms"
