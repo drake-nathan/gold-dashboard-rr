@@ -4,7 +4,11 @@ import type { FunctionReturnType } from "convex/server";
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { ProductCardData } from "@/components/dashboard";
 
-import { calculateCashbackPercentage } from "@/lib/credit-cards";
+import {
+  calculateCashbackPercentage,
+  calculateSubBonusPercentage,
+  calculateTotalCashbackPercentage,
+} from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
 
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
@@ -21,6 +25,8 @@ export interface ProductCalculations {
   costcoPrice: number;
   creditCardCashback: number;
   creditCardCashbackPercentage: number;
+  // Signup bonus
+  hasSignupBonus: boolean;
   initialCashLoss: null | number;
 
   netCostAfterCostcoCashback: null | number;
@@ -40,6 +46,11 @@ export interface ProductCalculations {
   pureFeePercentage: number;
 
   purePayout: null | number;
+  signupBonusCashback: number;
+  signupBonusCashbackPercentage: number;
+  // SUB spend progress
+  spendProgress: null | number;
+  spendProgressPercentage: null | number;
   totalCashback: number;
   totalCashbackPercentage: number;
 }
@@ -67,15 +78,39 @@ export const calculateProductMetrics = (
     calculatorSettings.costcoMembershipEnabled ?
       COSTCO_EXECUTIVE_PERCENTAGE
     : 0;
-  const creditCardCashbackPercentage =
+
+  // Base credit card cashback
+  const baseCreditCardCashbackPercentage =
     calculateCashbackPercentage(calculatorSettings.creditCard) / 100; // Convert from percentage to decimal
+
+  // SUB bonus cashback
+  const signupBonusCashbackPercentage =
+    calculateSubBonusPercentage(calculatorSettings.creditCard) / 100; // Convert from percentage to decimal
+
+  // Total credit card cashback (base + SUB)
+  const creditCardCashbackPercentage =
+    baseCreditCardCashbackPercentage + signupBonusCashbackPercentage;
 
   const costcoCashback = product.currentPrice * costcoCashbackPercentage;
   const creditCardCashback =
-    product.currentPrice * creditCardCashbackPercentage;
-  const totalCashback = costcoCashback + creditCardCashback;
+    product.currentPrice * baseCreditCardCashbackPercentage;
+  const signupBonusCashback =
+    product.currentPrice * signupBonusCashbackPercentage;
+  const totalCashback = costcoCashback + creditCardCashback + signupBonusCashback;
   const totalCashbackPercentage =
     (costcoCashbackPercentage + creditCardCashbackPercentage) * 100;
+
+  // SUB details
+  const hasSignupBonus =
+    calculatorSettings.creditCard.signupBonus?.enabled ?? false;
+  const spendRequirement =
+    calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0;
+  const spendProgress =
+    hasSignupBonus && spendRequirement > 0 ? product.currentPrice : null;
+  const spendProgressPercentage =
+    spendProgress !== null && spendRequirement > 0 ?
+      (spendProgress / spendRequirement) * 100
+    : null;
 
   // === IMMEDIATE CASH FLOW ===
   const costcoPrice = product.currentPrice;
@@ -123,7 +158,8 @@ export const calculateProductMetrics = (
     costcoCashbackPercentage: costcoCashbackPercentage * 100,
     costcoPrice,
     creditCardCashback,
-    creditCardCashbackPercentage: creditCardCashbackPercentage * 100,
+    creditCardCashbackPercentage: baseCreditCardCashbackPercentage * 100,
+    hasSignupBonus,
     initialCashLoss,
     netCostAfterCostcoCashback,
     netFromSale,
@@ -136,6 +172,10 @@ export const calculateProductMetrics = (
     pureFee,
     pureFeePercentage: pureFeePercentage * 100,
     purePayout: netFromSale,
+    signupBonusCashback,
+    signupBonusCashbackPercentage: signupBonusCashbackPercentage * 100,
+    spendProgress,
+    spendProgressPercentage,
     totalCashback,
     totalCashbackPercentage,
   };

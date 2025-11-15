@@ -2,6 +2,7 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard as CreditCardIcon,
+  Gift,
   Settings,
 } from "lucide-react";
 import { useState } from "react";
@@ -31,9 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,
+  calculateTotalCashbackPercentage,
   type CreditCard,
 } from "@/lib/credit-cards";
 
@@ -56,6 +59,9 @@ export const CalculatorControls = ({
 }: CalculatorControlsProps) => {
   const [comboboxOpen, setComboboxOpen] = useState(false);
 
+  const hasSignupBonus =
+    calculatorSettings.creditCard.signupBonus?.enabled ?? false;
+
   return (
     <>
       <Button
@@ -74,9 +80,17 @@ export const CalculatorControls = ({
           isMobile && "flex-col items-stretch",
         )}
       >
-        <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
-          Credit Card:
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
+            Credit Card:
+          </Label>
+          {hasSignupBonus && (
+            <Badge className="gap-1" variant="default">
+              <Gift className="size-3" />
+              SUB Active
+            </Badge>
+          )}
+        </div>
 
         {
           isMobile ?
@@ -97,10 +111,10 @@ export const CalculatorControls = ({
                 <SelectTrigger className="w-full" id="credit-card">
                   <SelectValue>
                     {calculatorSettings.creditCard.name} (
-                    {calculateCashbackPercentage(
-                      calculatorSettings.creditCard,
-                    ).toFixed(2)}
-                    %)
+                    {hasSignupBonus ?
+                      `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
+                    )
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -147,11 +161,13 @@ export const CalculatorControls = ({
                   role="combobox"
                   variant="outline"
                 >
-                  {calculatorSettings.creditCard.name} (
-                  {calculateCashbackPercentage(
-                    calculatorSettings.creditCard,
-                  ).toFixed(2)}
-                  %)
+                  <span className="flex items-center gap-2">
+                    {calculatorSettings.creditCard.name} (
+                    {hasSignupBonus ?
+                      `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
+                    )
+                  </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>

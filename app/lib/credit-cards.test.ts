@@ -3,6 +3,8 @@ import { expect, test } from "vitest";
 import {
   addCustomCard,
   calculateCashbackPercentage,
+  calculateSubBonusPercentage,
+  calculateTotalCashbackPercentage,
   type CreditCard,
   creditCardSchema,
   DEFAULT_PRESET_CARDS,
@@ -576,4 +578,185 @@ test("default preset cards are all marked as presets", () => {
 
 test("costco Visa is first in default presets", () => {
   expect(DEFAULT_PRESET_CARDS[0].id).toBe("costco-visa");
+});
+
+// ============================================================================
+// SIGNUP BONUS CALCULATION TESTS
+// ============================================================================
+
+test("calculates SUB bonus percentage correctly", () => {
+  const card: CreditCard = {
+    cardType: "travel" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 60000,
+      spendRequirement: 4000,
+    },
+    valuePerPoint: 0.021, // 2.1 cents per point
+  };
+
+  const subBonus = calculateSubBonusPercentage(card);
+
+  // 60000 points / $4000 = 15 points per dollar
+  // 15 points * 0.021 value = 0.315 = 31.5%
+  expect(subBonus).toBeCloseTo(31.5, 2);
+});
+
+test("returns 0 when SUB is not enabled", () => {
+  const card: CreditCard = {
+    cardType: "cashback" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    signupBonus: {
+      enabled: false,
+      pointsBonus: 60000,
+      spendRequirement: 4000,
+    },
+    valuePerPoint: 0.02,
+  };
+
+  const subBonus = calculateSubBonusPercentage(card);
+
+  expect(subBonus).toBe(0);
+});
+
+test("returns 0 when SUB is not defined", () => {
+  const card: CreditCard = {
+    cardType: "cashback" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    valuePerPoint: 0.02,
+  };
+
+  const subBonus = calculateSubBonusPercentage(card);
+
+  expect(subBonus).toBe(0);
+});
+
+test("returns 0 when SUB has zero points bonus", () => {
+  const card: CreditCard = {
+    cardType: "cashback" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 0,
+      spendRequirement: 4000,
+    },
+    valuePerPoint: 0.02,
+  };
+
+  const subBonus = calculateSubBonusPercentage(card);
+
+  expect(subBonus).toBe(0);
+});
+
+test("returns 0 when SUB has zero spend requirement", () => {
+  const card: CreditCard = {
+    cardType: "cashback" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 60000,
+      spendRequirement: 0,
+    },
+    valuePerPoint: 0.02,
+  };
+
+  const subBonus = calculateSubBonusPercentage(card);
+
+  expect(subBonus).toBe(0);
+});
+
+test("calculates total cashback percentage correctly with SUB", () => {
+  const card: CreditCard = {
+    cardType: "travel" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 1.5,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 60000,
+      spendRequirement: 4000,
+    },
+    valuePerPoint: 0.021, // 2.1 cents per point
+  };
+
+  const baseCashback = calculateCashbackPercentage(card);
+  const totalCashback = calculateTotalCashbackPercentage(card);
+
+  // Base: 1.5 * 0.021 * 100 = 3.15%
+  expect(baseCashback).toBeCloseTo(3.15, 2);
+
+  // SUB: (60000 / 4000) * 0.021 * 100 = 31.5%
+  // Total: 3.15% + 31.5% = 34.65%
+  expect(totalCashback).toBeCloseTo(34.65, 2);
+});
+
+test("total cashback equals base cashback when no SUB", () => {
+  const card: CreditCard = {
+    cardType: "cashback" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 2.0,
+    valuePerPoint: 0.01, // 1 cent per point = 2% cashback
+  };
+
+  const baseCashback = calculateCashbackPercentage(card);
+  const totalCashback = calculateTotalCashbackPercentage(card);
+
+  expect(baseCashback).toBe(2.0);
+  expect(totalCashback).toBe(2.0);
+});
+
+test("calculates SUB bonus with high-value card", () => {
+  const card: CreditCard = {
+    cardType: "travel" as const,
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Premium Card",
+    pointsPerDollar: 3.0,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 100000,
+      spendRequirement: 5000,
+    },
+    valuePerPoint: 0.02, // 2 cents per point
+  };
+
+  const baseCashback = calculateCashbackPercentage(card);
+  const subBonus = calculateSubBonusPercentage(card);
+  const totalCashback = calculateTotalCashbackPercentage(card);
+
+  // Base: 3.0 * 0.02 * 100 = 6%
+  expect(baseCashback).toBeCloseTo(6.0, 2);
+
+  // SUB: (100000 / 5000) * 0.02 * 100 = 40%
+  expect(subBonus).toBeCloseTo(40.0, 2);
+
+  // Total: 6% + 40% = 46%
+  expect(totalCashback).toBeCloseTo(46.0, 2);
 });
