@@ -194,13 +194,58 @@ export const ProductCard = ({
             : calc.totalCashback > 0 && (
                 <>
                   <div className="my-1.5 border-t border-border/50" />
-                  <PriceRow
-                    label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
-                    labelClassName="text-xs text-muted-foreground"
-                    tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
-                    value={`+${formatCurrency(calc.totalCashback)}`}
-                    valueClassName="text-xs font-medium"
-                  />
+                  {calc.hasSignupBonus && calc.signupBonusCashback > 0 ?
+                    // Show breakdown when SUB is active
+                    <>
+                      {calc.costcoCashback > 0 && (
+                        <PriceRow
+                          label={`Costco Cashback (${formatPercentage(calc.costcoCashbackPercentage)}):`}
+                          labelClassName="text-xs text-muted-foreground"
+                          tooltip="Costco Executive membership 2% cashback"
+                          value={`+${formatCurrency(calc.costcoCashback)}`}
+                          valueClassName="text-xs font-medium"
+                        />
+                      )}
+                      <PriceRow
+                        label={`Card Cashback (${formatPercentage(calc.creditCardCashbackPercentage)}):`}
+                        labelClassName="text-xs text-muted-foreground"
+                        tooltip="Base credit card cashback (without SUB)"
+                        value={`+${formatCurrency(calc.creditCardCashback)}`}
+                        valueClassName="text-xs font-medium"
+                      />
+                      <PriceRow
+                        label={`SUB Bonus (${formatPercentage(calc.signupBonusCashbackPercentage)}):`}
+                        labelClassName="text-xs font-medium text-primary"
+                        tooltip="Signup bonus cashback on this purchase"
+                        value={`+${formatCurrency(calc.signupBonusCashback)}`}
+                        valueClassName="text-xs font-semibold text-primary"
+                      />
+                      {calc.spendProgress !== null &&
+                        calc.spendProgressPercentage !== null && (
+                          <PriceRow
+                            label="SUB Progress:"
+                            labelClassName="text-xs text-muted-foreground italic"
+                            tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
+                            value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
+                            valueClassName="text-xs italic text-muted-foreground"
+                          />
+                        )}
+                      <PriceRow
+                        label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                        tooltip="Combined cashback from all sources"
+                        value={`+${formatCurrency(calc.totalCashback)}`}
+                        valueClassName="font-semibold"
+                      />
+                    </>
+                    // Show combined total when no SUB
+                  : <PriceRow
+                      label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                      labelClassName="text-xs text-muted-foreground"
+                      tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
+                      value={`+${formatCurrency(calc.totalCashback)}`}
+                      valueClassName="text-xs font-medium"
+                    />
+                  }
                 </>
               )
 

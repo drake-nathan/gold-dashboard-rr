@@ -32,6 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
 import {
   Tooltip,
@@ -41,6 +42,8 @@ import {
 import {
   addCustomCard,
   calculateCashbackPercentage,
+  calculateSubBonusPercentage,
+  calculateTotalCashbackPercentage,
   clearCreditCards,
   type CreditCard,
   DEFAULT_PRESET_CARDS,
@@ -62,6 +65,15 @@ const cardFormSchema = z.object({
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
     .max(100, "Must be 100 or less"),
+  signupBonusEnabled: z.boolean().default(false),
+  signupBonusPoints: z
+    .number({ message: "Must be a number" })
+    .min(0, "Must be 0 or greater")
+    .default(0),
+  signupBonusSpend: z
+    .number({ message: "Must be a number" })
+    .min(0, "Must be 0 or greater")
+    .default(0),
   valuePerPointCents: z
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
@@ -106,6 +118,9 @@ export const CardManagerDrawer = ({
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
+      signupBonusEnabled: false,
+      signupBonusPoints: 0,
+      signupBonusSpend: 0,
       valuePerPointCents: 1.0,
     },
     resolver: zodResolver(cardFormSchema),
@@ -122,7 +137,25 @@ export const CardManagerDrawer = ({
     control: form.control,
     name: "valuePerPointCents",
   });
-  const effectiveCashback = pointsPerDollar * (valuePerPointCents / 100) * 100;
+  const signupBonusEnabled = useWatch({
+    control: form.control,
+    name: "signupBonusEnabled",
+  });
+  const signupBonusPoints = useWatch({
+    control: form.control,
+    name: "signupBonusPoints",
+  });
+  const signupBonusSpend = useWatch({
+    control: form.control,
+    name: "signupBonusSpend",
+  });
+
+  const baseCashback = pointsPerDollar * (valuePerPointCents / 100) * 100;
+  const subBonus =
+    signupBonusEnabled && signupBonusSpend > 0 ?
+      (signupBonusPoints / signupBonusSpend) * (valuePerPointCents / 100) * 100
+    : 0;
+  const totalCashback = baseCashback + subBonus;
 
   const handleStartCreate = () => {
     form.reset({
@@ -130,6 +163,9 @@ export const CardManagerDrawer = ({
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
+      signupBonusEnabled: false,
+      signupBonusPoints: 0,
+      signupBonusSpend: 0,
       valuePerPointCents: 1.0,
     });
     setEditMode({ type: "create" });
@@ -141,6 +177,9 @@ export const CardManagerDrawer = ({
       issuer: card.issuer || "",
       name: card.name,
       pointsPerDollar: card.pointsPerDollar,
+      signupBonusEnabled: card.signupBonus?.enabled ?? false,
+      signupBonusPoints: card.signupBonus?.pointsBonus ?? 0,
+      signupBonusSpend: card.signupBonus?.spendRequirement ?? 0,
       valuePerPointCents: parseFloat((card.valuePerPoint * 100).toFixed(2)), // Convert dollars to cents and round to 2 decimals
     });
     setEditMode({ cardId: card.id, type: "edit" });
@@ -153,6 +192,15 @@ export const CardManagerDrawer = ({
 
   const onSubmit = (values: CardFormValues) => {
     try {
+      const signupBonus =
+        values.signupBonusEnabled ?
+          {
+            enabled: true,
+            pointsBonus: values.signupBonusPoints,
+            spendRequirement: values.signupBonusSpend,
+          }
+        : undefined;
+
       if (editMode?.type === "create") {
         const newCard = addCustomCard({
           cardType: values.cardType,
@@ -160,6 +208,7 @@ export const CardManagerDrawer = ({
           issuer: values.issuer || undefined,
           name: values.name,
           pointsPerDollar: values.pointsPerDollar,
+          signupBonus,
           valuePerPoint: values.valuePerPointCents / 100, // Convert cents to dollars
         });
         onCardsChange([...cards, newCard]);
@@ -172,6 +221,7 @@ export const CardManagerDrawer = ({
           issuer: values.issuer || undefined,
           name: values.name,
           pointsPerDollar: values.pointsPerDollar,
+          signupBonus,
           valuePerPoint: values.valuePerPointCents / 100, // Convert cents to dollars
         });
         onCardsChange(updatedCards);
@@ -417,10 +467,107 @@ export const CardManagerDrawer = ({
                     )}
                   />
 
-                  {!isNaN(effectiveCashback) && (
-                    <div className="rounded bg-muted p-2 text-sm">
-                      <strong>Effective Cashback:</strong>{" "}
-                      {effectiveCashback.toFixed(2)}%
+                  {/* Signup Bonus Section */}
+                  <div className="space-y-3 rounded-lg border border-muted bg-muted/30 p-3">
+                    <FormField
+                      control={form.control}
+                      name="signupBonusEnabled"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between space-y-0">
+                          <div className="space-y-0.5">
+                            <FormLabel>Signup Bonus (Optional)</FormLabel>
+                            <FormDescription>
+                              Enable to add SUB bonus to cashback calculation
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {signupBonusEnabled && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="signupBonusPoints"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bonus Points</FormLabel>
+                              <FormControl>
+                                <Input
+                                  min="0"
+                                  placeholder="60000"
+                                  step="1000"
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value));
+                                  }}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Total bonus points to earn (e.g., 60,000)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="signupBonusSpend"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Spend Requirement ($)</FormLabel>
+                              <FormControl>
+                                <Input
+                                  min="0"
+                                  placeholder="4000"
+                                  step="100"
+                                  type="number"
+                                  {...field}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value));
+                                  }}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                Required spend to earn bonus (e.g., $4,000)
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
+                  </div>
+
+                  {/* Cashback Summary */}
+                  {!isNaN(baseCashback) && (
+                    <div className="space-y-1 rounded bg-muted p-3 text-sm">
+                      <div className="flex justify-between">
+                        <span>Base Cashback:</span>
+                        <strong>{baseCashback.toFixed(2)}%</strong>
+                      </div>
+                      {signupBonusEnabled && subBonus > 0 && (
+                        <>
+                          <div className="flex justify-between text-primary">
+                            <span>SUB Bonus:</span>
+                            <strong>+{subBonus.toFixed(2)}%</strong>
+                          </div>
+                          <div className="flex justify-between border-t border-border pt-1 text-base font-bold">
+                            <span>Total with SUB:</span>
+                            <span className="text-primary">
+                              {totalCashback.toFixed(2)}%
+                            </span>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -513,6 +660,16 @@ export const CardManagerDrawer = ({
                             <span className="font-bold text-primary">
                               {cashback.toFixed(2)}%
                             </span>
+                            {card.signupBonus?.enabled && (
+                              <span className="ml-1 text-primary">
+                                (SUB: +
+                                {calculateSubBonusPercentage(card).toFixed(2)}% ={" "}
+                                {calculateTotalCashbackPercentage(card).toFixed(
+                                  2,
+                                )}
+                                %)
+                              </span>
+                            )}
                           </div>
                         </div>
 

@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+// Zod schema for signup bonus
+export const signupBonusSchema = z.object({
+  enabled: z.boolean().default(false),
+  pointsBonus: z
+    .number()
+    .min(0, "Points bonus must be 0 or greater")
+    .default(0),
+  spendRequirement: z
+    .number()
+    .min(0, "Spend requirement must be 0 or greater")
+    .default(0),
+});
+
+export type SignupBonus = z.infer<typeof signupBonusSchema>;
+
 // Zod schema for credit card validation
 export const creditCardSchema = z.object({
   cardType: z.enum(["cashback", "travel"]).default("cashback"), // Type of rewards
@@ -15,6 +30,7 @@ export const creditCardSchema = z.object({
     .number()
     .min(0)
     .max(100, "Points per dollar must be between 0 and 100"),
+  signupBonus: signupBonusSchema.optional(),
   valuePerPoint: z
     .number()
     .min(0)
@@ -89,9 +105,31 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
   },
 ];
 
-// Calculate effective cashback percentage
+// Calculate base cashback percentage (without SUB)
 export const calculateCashbackPercentage = (card: CreditCard): number =>
   card.pointsPerDollar * card.valuePerPoint * 100;
+
+// Calculate SUB bonus cashback percentage
+export const calculateSubBonusPercentage = (card: CreditCard): number => {
+  if (
+    !card.signupBonus?.enabled ||
+    !card.signupBonus.pointsBonus ||
+    !card.signupBonus.spendRequirement
+  ) {
+    return 0;
+  }
+
+  const bonusPointsPerDollar =
+    card.signupBonus.pointsBonus / card.signupBonus.spendRequirement;
+  return bonusPointsPerDollar * card.valuePerPoint * 100;
+};
+
+// Calculate total effective cashback percentage (base + SUB bonus)
+export const calculateTotalCashbackPercentage = (card: CreditCard): number => {
+  const baseCashback = calculateCashbackPercentage(card);
+  const subBonus = calculateSubBonusPercentage(card);
+  return baseCashback + subBonus;
+};
 
 // Local storage key (exported for use with useLocalStorage hook)
 export const CREDIT_CARDS_STORAGE_KEY = "dashboard-gold-credit-cards";
