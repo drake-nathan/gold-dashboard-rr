@@ -2,6 +2,7 @@ import { z } from "zod";
 
 // Zod schema for credit card validation
 export const creditCardSchema = z.object({
+  cardType: z.enum(["cashback", "travel"]).default("cashback"), // Type of rewards
   id: z.string().min(1, "Card ID is required"),
   isCustomizable: z.boolean().default(false), // Whether preset values can be customized
   isPreset: z.boolean().default(false),
@@ -37,6 +38,7 @@ export type CreditCardsStorage = z.infer<typeof creditCardsStorageSchema>;
 // Costco card is first as it's the most relevant default for this dashboard
 export const DEFAULT_PRESET_CARDS: CreditCard[] = [
   {
+    cardType: "cashback",
     id: "costco-visa",
     isCustomizable: true,
     isPreset: true,
@@ -46,6 +48,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     valuePerPoint: 0.01, // 1 cent per point
   },
   {
+    cardType: "travel",
     id: "freedom-unlimited",
     isCustomizable: true,
     isPreset: true,
@@ -55,6 +58,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     valuePerPoint: 0.021, // 2.1 cents per point
   },
   {
+    cardType: "travel",
     id: "venture-x",
     isCustomizable: true,
     isPreset: true,
@@ -64,6 +68,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     valuePerPoint: 0.0185, // 1.85 cents per point
   },
   {
+    cardType: "travel",
     id: "strata-premier",
     isCustomizable: true,
     isPreset: true,
@@ -73,6 +78,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     valuePerPoint: 0.019, // 1.9 cents per point
   },
   {
+    cardType: "cashback",
     id: "robinhood",
     isCustomizable: true,
     isPreset: true,
@@ -168,10 +174,13 @@ export const clearCreditCards = (): void => {
 
 // Add a new custom card
 export const addCustomCard = (
-  card: Omit<CreditCard, "id" | "isPreset">,
+  card: Omit<CreditCard, "cardType" | "id" | "isPreset"> & {
+    cardType?: "cashback" | "travel";
+  },
 ): CreditCard => {
   const newCard: CreditCard = {
     ...card,
+    cardType: card.cardType ?? "cashback", // Default to cashback if not specified
     id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
     isCustomizable: false,
     isPreset: false,

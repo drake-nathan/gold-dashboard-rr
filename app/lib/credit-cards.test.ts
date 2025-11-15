@@ -18,6 +18,7 @@ import {
 
 test("validates valid credit card", () => {
   const validCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -34,6 +35,7 @@ test("validates valid credit card", () => {
 
 test("rejects card with missing name", () => {
   const invalidCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -49,6 +51,7 @@ test("rejects card with missing name", () => {
 
 test("rejects card with name too long", () => {
   const invalidCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -64,6 +67,7 @@ test("rejects card with name too long", () => {
 
 test("rejects card with points per dollar out of range", () => {
   const invalidCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -79,6 +83,7 @@ test("rejects card with points per dollar out of range", () => {
 
 test("rejects card with negative points per dollar", () => {
   const invalidCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -94,6 +99,7 @@ test("rejects card with negative points per dollar", () => {
 
 test("rejects card with value per point out of range", () => {
   const invalidCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -109,6 +115,7 @@ test("rejects card with value per point out of range", () => {
 
 test("accepts card with optional issuer", () => {
   const validCard = {
+    cardType: "cashback" as const,
     id: "test-card",
     isCustomizable: false,
     isPreset: false,
@@ -129,6 +136,7 @@ test("accepts card with optional issuer", () => {
 
 test("calculates cashback percentage correctly for 2% flat card", () => {
   const card: CreditCard = {
+    cardType: "cashback" as const,
     id: "test",
     isCustomizable: false,
     isPreset: false,
@@ -144,6 +152,7 @@ test("calculates cashback percentage correctly for 2% flat card", () => {
 
 test("calculates cashback percentage correctly for points card", () => {
   const card: CreditCard = {
+    cardType: "cashback" as const,
     id: "test",
     isCustomizable: false,
     isPreset: false,
@@ -170,6 +179,7 @@ test("calculates cashback for Robinhood Gold Card preset", () => {
 
 test("handles zero cashback card", () => {
   const card: CreditCard = {
+    cardType: "cashback" as const,
     id: "test",
     isCustomizable: false,
     isPreset: false,
@@ -233,6 +243,7 @@ test("validates custom card on creation", () => {
 test("updates card name", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "test-1",
       isCustomizable: false,
       isPreset: false,
@@ -251,6 +262,7 @@ test("updates card name", () => {
 test("updates card points and value", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "test-1",
       isCustomizable: false,
       isPreset: false,
@@ -272,6 +284,7 @@ test("updates card points and value", () => {
 test("does not modify other cards when updating one", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "test-1",
       isCustomizable: false,
       isPreset: false,
@@ -280,6 +293,7 @@ test("does not modify other cards when updating one", () => {
       valuePerPoint: 0.02,
     },
     {
+      cardType: "cashback" as const,
       id: "test-2",
       isCustomizable: false,
       isPreset: false,
@@ -298,6 +312,7 @@ test("does not modify other cards when updating one", () => {
 test("validates updated card data", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "test-1",
       isCustomizable: false,
       isPreset: false,
@@ -321,6 +336,7 @@ test("validates updated card data", () => {
 test("deletes custom card", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "custom-1",
       isCustomizable: false,
       isPreset: false,
@@ -338,6 +354,7 @@ test("deletes custom card", () => {
 test("prevents deletion of preset cards", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "costco-visa",
       isCustomizable: true,
       isPreset: true,
@@ -356,6 +373,7 @@ test("prevents deletion of preset cards", () => {
 test("only deletes specified card", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "custom-1",
       isCustomizable: false,
       isPreset: false,
@@ -364,6 +382,7 @@ test("only deletes specified card", () => {
       valuePerPoint: 0.02,
     },
     {
+      cardType: "cashback" as const,
       id: "custom-2",
       isCustomizable: false,
       isPreset: false,
@@ -385,6 +404,7 @@ test("only deletes specified card", () => {
 
 test("resets modified preset card to defaults", () => {
   const modifiedPreset: CreditCard = {
+    cardType: "cashback" as const,
     id: "costco-visa",
     isCustomizable: true,
     isPreset: true,
@@ -410,6 +430,7 @@ test("resets modified preset card to defaults", () => {
 
 test("throws error when resetting non-preset card", () => {
   const customCard: CreditCard = {
+    cardType: "cashback" as const,
     id: "custom-123",
     isCustomizable: false,
     isPreset: false,
@@ -432,6 +453,7 @@ test("throws error when resetting non-preset card", () => {
 test("sorts cards with presets first, then custom", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "custom-1",
       isCustomizable: false,
       isPreset: false,
@@ -440,6 +462,7 @@ test("sorts cards with presets first, then custom", () => {
       valuePerPoint: 0.01,
     },
     {
+      cardType: "cashback" as const,
       id: "preset-1",
       isCustomizable: true,
       isPreset: true,
@@ -448,6 +471,7 @@ test("sorts cards with presets first, then custom", () => {
       valuePerPoint: 0.01,
     },
     {
+      cardType: "cashback" as const,
       id: "custom-2",
       isCustomizable: false,
       isPreset: false,
@@ -456,6 +480,7 @@ test("sorts cards with presets first, then custom", () => {
       valuePerPoint: 0.01,
     },
     {
+      cardType: "cashback" as const,
       id: "preset-2",
       isCustomizable: true,
       isPreset: true,
@@ -489,6 +514,7 @@ test("sorts empty array", () => {
 test("sorts cards alphabetically within each group", () => {
   const cards: CreditCard[] = [
     {
+      cardType: "cashback" as const,
       id: "p-3",
       isCustomizable: true,
       isPreset: true,
@@ -497,6 +523,7 @@ test("sorts cards alphabetically within each group", () => {
       valuePerPoint: 0.01,
     },
     {
+      cardType: "cashback" as const,
       id: "p-1",
       isCustomizable: true,
       isPreset: true,
@@ -505,6 +532,7 @@ test("sorts cards alphabetically within each group", () => {
       valuePerPoint: 0.01,
     },
     {
+      cardType: "cashback" as const,
       id: "p-2",
       isCustomizable: true,
       isPreset: true,

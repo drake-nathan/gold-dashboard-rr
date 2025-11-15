@@ -151,19 +151,60 @@ export const ProductCard = ({
             </div>
           }
 
-          {/* === SECTION 3: Cashback (if any) === */}
-          {calc.totalCashback > 0 && (
-            <>
-              <div className="my-1.5 border-t border-border/50" />
-              <PriceRow
-                label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
-                labelClassName="text-xs text-muted-foreground"
-                tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
-                value={`+${formatCurrency(calc.totalCashback)}`}
-                valueClassName="text-xs font-medium"
-              />
-            </>
-          )}
+          {/* === SECTION 3: Cashback or Points === */}
+          {
+            calculatorSettings.creditCard.cardType === "travel" ?
+              // Travel points display
+              calc.pointsEarned > 0 && (
+                <>
+                  <div className="my-1.5 border-t border-border/50" />
+                  <PriceRow
+                    label="Points Earned:"
+                    labelClassName="text-xs text-muted-foreground"
+                    tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x points on ${formatCurrency(calc.costcoPrice)}`}
+                    value={calc.pointsEarned.toLocaleString("en-US", {
+                      maximumFractionDigits: 0,
+                    })}
+                    valueClassName="text-xs font-medium"
+                  />
+                  {calc.netCostAfterCostcoCashback !== null && (
+                    <PriceRow
+                      label="Net Cost (after Costco 2%):"
+                      labelClassName="text-xs text-muted-foreground"
+                      tooltip="Out-of-pocket cost after selling to Pure and receiving Costco Executive cashback"
+                      value={
+                        calc.netCostAfterCostcoCashback >= 0 ?
+                          `-${formatCurrency(calc.netCostAfterCostcoCashback)}`
+                        : `+${formatCurrency(Math.abs(calc.netCostAfterCostcoCashback))}`
+                      }
+                      valueClassName="text-xs font-medium"
+                    />
+                  )}
+                  {calc.pricePerPoint !== null && (
+                    <PriceRow
+                      label="Price per Point:"
+                      tooltip="Effective cost per point earned (net cost / points earned)"
+                      value={`${(calc.pricePerPoint * 100).toFixed(2)}¢`}
+                      valueClassName="font-semibold"
+                    />
+                  )}
+                </>
+              )
+              // Cashback display
+            : calc.totalCashback > 0 && (
+                <>
+                  <div className="my-1.5 border-t border-border/50" />
+                  <PriceRow
+                    label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                    labelClassName="text-xs text-muted-foreground"
+                    tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
+                    value={`+${formatCurrency(calc.totalCashback)}`}
+                    valueClassName="text-xs font-medium"
+                  />
+                </>
+              )
+
+          }
 
           {/* === SECTION 4: Net Profit === */}
           {calc.netProfit !== null && (

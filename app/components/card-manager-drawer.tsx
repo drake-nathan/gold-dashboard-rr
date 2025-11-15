@@ -19,6 +19,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -45,6 +52,7 @@ import {
 
 // Form schema - valuePerPointCents accepts cents (not dollars)
 const cardFormSchema = z.object({
+  cardType: z.enum(["cashback", "travel"]),
   issuer: z.string().optional(),
   name: z
     .string()
@@ -94,6 +102,7 @@ export const CardManagerDrawer = ({
 
   const form = useForm<CardFormValues>({
     defaultValues: {
+      cardType: "cashback",
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
@@ -117,6 +126,7 @@ export const CardManagerDrawer = ({
 
   const handleStartCreate = () => {
     form.reset({
+      cardType: "cashback",
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
@@ -127,10 +137,11 @@ export const CardManagerDrawer = ({
 
   const handleStartEdit = (card: CreditCard) => {
     form.reset({
+      cardType: card.cardType,
       issuer: card.issuer || "",
       name: card.name,
       pointsPerDollar: card.pointsPerDollar,
-      valuePerPointCents: card.valuePerPoint * 100, // Convert dollars to cents
+      valuePerPointCents: parseFloat((card.valuePerPoint * 100).toFixed(2)), // Convert dollars to cents and round to 2 decimals
     });
     setEditMode({ cardId: card.id, type: "edit" });
   };
@@ -144,6 +155,7 @@ export const CardManagerDrawer = ({
     try {
       if (editMode?.type === "create") {
         const newCard = addCustomCard({
+          cardType: values.cardType,
           isCustomizable: false,
           issuer: values.issuer || undefined,
           name: values.name,
@@ -156,6 +168,7 @@ export const CardManagerDrawer = ({
         });
       } else if (editMode?.type === "edit") {
         const updatedCards = updateCard(cards, editMode.cardId, {
+          cardType: values.cardType,
           issuer: values.issuer || undefined,
           name: values.name,
           pointsPerDollar: values.pointsPerDollar,
@@ -297,6 +310,39 @@ export const CardManagerDrawer = ({
                             {...field}
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cardType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reward Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select reward type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="cashback">
+                              Cashback (flat percentage back)
+                            </SelectItem>
+                            <SelectItem value="travel">
+                              Travel Points (earn points for travel)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          How rewards are calculated: cashback shows total cash
+                          back, travel shows points earned and cost per point
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

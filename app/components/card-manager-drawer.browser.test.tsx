@@ -163,6 +163,7 @@ test("adds a custom card with valid data", async () => {
 
 test("deletes a custom card with confirmation", async () => {
   const customCard: CreditCard = {
+    cardType: "cashback" as const,
     id: "custom-1",
     isCustomizable: false,
     isPreset: false,
@@ -202,6 +203,7 @@ test("deletes a custom card with confirmation", async () => {
 
 test("cancels delete when clicking cancel in confirmation dialog", async () => {
   const customCard: CreditCard = {
+    cardType: "cashback" as const,
     id: "custom-1",
     isCustomizable: false,
     isPreset: false,
@@ -231,6 +233,7 @@ test("cancels delete when clicking cancel in confirmation dialog", async () => {
 
 test("resets all cards to defaults", async () => {
   const customCard: CreditCard = {
+    cardType: "cashback" as const,
     id: "custom-1",
     isCustomizable: false,
     isPreset: false,
