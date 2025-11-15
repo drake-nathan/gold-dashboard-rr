@@ -7,7 +7,6 @@ import type { ProductCardData } from "@/components/dashboard";
 import {
   calculateCashbackPercentage,
   calculateSubBonusPercentage,
-  calculateTotalCashbackPercentage,
 } from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
 
@@ -96,7 +95,8 @@ export const calculateProductMetrics = (
     product.currentPrice * baseCreditCardCashbackPercentage;
   const signupBonusCashback =
     product.currentPrice * signupBonusCashbackPercentage;
-  const totalCashback = costcoCashback + creditCardCashback + signupBonusCashback;
+  const totalCashback =
+    costcoCashback + creditCardCashback + signupBonusCashback;
   const totalCashbackPercentage =
     (costcoCashbackPercentage + creditCardCashbackPercentage) * 100;
 

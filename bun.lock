@@ -26,7 +26,7 @@
         "isbot": "5.1.32",
         "lucide-react": "0.553.0",
         "next-themes": "0.4.6",
-        "posthog-js": "1.292.0",
+        "posthog-js": "1.293.0",
         "radix-ui": "1.4.3",
         "react": "19.2.0",
         "react-dom": "19.2.0",
@@ -1367,7 +1367,7 @@
 
     "postcss-scss": ["postcss-scss@4.0.9", "", { "peerDependencies": { "postcss": "^8.4.29" } }, "sha512-AjKOeiwAitL/MXxQW2DliT28EKukvvbEWx3LBmJIRN8KfBGZbRTxNYW0kSqi1COiTZ57nZ9NW06S6ux//N1c9A=="],
 
-    "posthog-js": ["posthog-js@1.292.0", "", { "dependencies": { "@posthog/core": "1.5.2", "core-js": "^3.38.1", "fflate": "^0.4.8", "preact": "^10.19.3", "web-vitals": "^4.2.4" } }, "sha512-sKBwrVT0vMqai8pAknmzK86vSQ5t36TDpQJyrLDj30ImkaiGuG4cVyI2wQ6l8vqdzk+rGAFUSP6Rqc2dMSQWWQ=="],
+    "posthog-js": ["posthog-js@1.293.0", "", { "dependencies": { "@posthog/core": "1.5.2", "core-js": "^3.38.1", "fflate": "^0.4.8", "preact": "^10.19.3", "web-vitals": "^4.2.4" } }, "sha512-0KN3gVNbZPwEEWe5w6VH5Ql/+y113mwsl5TTEpOlAtN1ae6Ok18mQ6cS2K0X56GpF/dtdSoXQtnex6ZqUcdAcA=="],
 
     "preact": ["preact@10.27.2", "", {}, "sha512-5SYSgFKSyhCbk6SrXyMpqjb5+MQBgfvEKE/OC+PujcY34sOpqtr+0AZQtPYx5IA6VxynQ7rUPCtKzyovpj9Bpg=="],
 

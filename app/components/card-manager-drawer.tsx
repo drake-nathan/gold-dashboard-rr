@@ -32,8 +32,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -65,15 +65,13 @@ const cardFormSchema = z.object({
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
     .max(100, "Must be 100 or less"),
-  signupBonusEnabled: z.boolean().default(false),
+  signupBonusEnabled: z.boolean(),
   signupBonusPoints: z
     .number({ message: "Must be a number" })
-    .min(0, "Must be 0 or greater")
-    .default(0),
+    .min(0, "Must be 0 or greater"),
   signupBonusSpend: z
     .number({ message: "Must be a number" })
-    .min(0, "Must be 0 or greater")
-    .default(0),
+    .min(0, "Must be 0 or greater"),
   valuePerPointCents: z
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
@@ -114,7 +112,7 @@ export const CardManagerDrawer = ({
 
   const form = useForm<CardFormValues>({
     defaultValues: {
-      cardType: "cashback",
+      cardType: "travel",
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
@@ -159,7 +157,7 @@ export const CardManagerDrawer = ({
 
   const handleStartCreate = () => {
     form.reset({
-      cardType: "cashback",
+      cardType: "travel",
       issuer: "",
       name: "",
       pointsPerDollar: 1.5,
@@ -490,7 +488,7 @@ export const CardManagerDrawer = ({
                       )}
                     />
 
-                    {signupBonusEnabled && (
+                    {signupBonusEnabled ?
                       <>
                         <FormField
                           control={form.control}
@@ -544,7 +542,7 @@ export const CardManagerDrawer = ({
                           )}
                         />
                       </>
-                    )}
+                    : null}
                   </div>
 
                   {/* Cashback Summary */}
@@ -554,7 +552,7 @@ export const CardManagerDrawer = ({
                         <span>Base Cashback:</span>
                         <strong>{baseCashback.toFixed(2)}%</strong>
                       </div>
-                      {signupBonusEnabled && subBonus > 0 && (
+                      {signupBonusEnabled && subBonus > 0 ?
                         <>
                           <div className="flex justify-between text-primary">
                             <span>SUB Bonus:</span>
@@ -567,7 +565,7 @@ export const CardManagerDrawer = ({
                             </span>
                           </div>
                         </>
-                      )}
+                      : null}
                     </div>
                   )}
                 </div>
@@ -660,16 +658,17 @@ export const CardManagerDrawer = ({
                             <span className="font-bold text-primary">
                               {cashback.toFixed(2)}%
                             </span>
-                            {card.signupBonus?.enabled && (
+                            {card.signupBonus?.enabled ?
                               <span className="ml-1 text-primary">
                                 (SUB: +
-                                {calculateSubBonusPercentage(card).toFixed(2)}% ={" "}
+                                {calculateSubBonusPercentage(card).toFixed(2)}%
+                                ={" "}
                                 {calculateTotalCashbackPercentage(card).toFixed(
                                   2,
                                 )}
                                 %)
                               </span>
-                            )}
+                            : null}
                           </div>
                         </div>
 

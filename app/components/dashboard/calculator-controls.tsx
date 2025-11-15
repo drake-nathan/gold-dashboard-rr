@@ -9,6 +9,7 @@ import { useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -32,7 +33,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,
@@ -84,12 +84,12 @@ export const CalculatorControls = ({
           <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
             Credit Card:
           </Label>
-          {hasSignupBonus && (
+          {hasSignupBonus ?
             <Badge className="gap-1" variant="default">
               <Gift className="size-3" />
               SUB Active
             </Badge>
-          )}
+          : null}
         </div>
 
         {
@@ -113,7 +113,8 @@ export const CalculatorControls = ({
                     {calculatorSettings.creditCard.name} (
                     {hasSignupBonus ?
                       `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
-                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`
+                    }
                     )
                   </SelectValue>
                 </SelectTrigger>
@@ -165,7 +166,8 @@ export const CalculatorControls = ({
                     {calculatorSettings.creditCard.name} (
                     {hasSignupBonus ?
                       `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
-                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`
+                    }
                     )
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

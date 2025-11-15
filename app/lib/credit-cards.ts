@@ -17,7 +17,7 @@ export type SignupBonus = z.infer<typeof signupBonusSchema>;
 
 // Zod schema for credit card validation
 export const creditCardSchema = z.object({
-  cardType: z.enum(["cashback", "travel"]).default("cashback"), // Type of rewards
+  cardType: z.enum(["cashback", "travel"]).default("travel"), // Type of rewards
   id: z.string().min(1, "Card ID is required"),
   isCustomizable: z.boolean().default(false), // Whether preset values can be customized
   isPreset: z.boolean().default(false),
