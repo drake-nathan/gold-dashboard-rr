@@ -158,15 +158,59 @@ export const ProductCard = ({
               calc.pointsEarned > 0 && (
                 <>
                   <div className="my-1.5 border-t border-border/50" />
-                  <PriceRow
-                    label="Points Earned:"
-                    labelClassName="text-xs text-muted-foreground"
-                    tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x points on ${formatCurrency(calc.costcoPrice)}`}
-                    value={calc.pointsEarned.toLocaleString("en-US", {
-                      maximumFractionDigits: 0,
-                    })}
-                    valueClassName="text-xs font-medium"
-                  />
+                  {
+                    calc.hasSignupBonus && calc.signupBonusPoints > 0 ?
+                      // Show breakdown when SUB is active
+                      <>
+                        <PriceRow
+                          label="Base Points Earned:"
+                          labelClassName="text-xs text-muted-foreground"
+                          tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x base points on ${formatCurrency(calc.costcoPrice)}`}
+                          value={calc.basePointsEarned.toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}
+                          valueClassName="text-xs font-medium"
+                        />
+                        <PriceRow
+                          label="SUB Bonus Points:"
+                          labelClassName="text-xs font-medium text-primary"
+                          tooltip={`Proportional signup bonus points for this purchase (${calculatorSettings.creditCard.signupBonus?.pointsBonus?.toLocaleString("en-US")} points ÷ ${formatCurrency(calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0)} spend × ${formatCurrency(calc.costcoPrice)})`}
+                          value={`+${calc.signupBonusPoints.toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`}
+                          valueClassName="text-xs font-semibold text-primary"
+                        />
+                        {calc.spendProgress !== null &&
+                          calc.spendProgressPercentage !== null && (
+                            <PriceRow
+                              label="SUB Progress:"
+                              labelClassName="text-xs text-muted-foreground italic"
+                              tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
+                              value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
+                              valueClassName="text-xs italic text-muted-foreground"
+                            />
+                          )}
+                        <PriceRow
+                          label="Total Points:"
+                          tooltip="Total points earned (base + SUB bonus)"
+                          value={calc.pointsEarned.toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}
+                          valueClassName="font-semibold"
+                        />
+                      </>
+                      // Show simple total when no SUB
+                    : <PriceRow
+                        label="Points Earned:"
+                        labelClassName="text-xs text-muted-foreground"
+                        tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x points on ${formatCurrency(calc.costcoPrice)}`}
+                        value={calc.pointsEarned.toLocaleString("en-US", {
+                          maximumFractionDigits: 0,
+                        })}
+                        valueClassName="text-xs font-medium"
+                      />
+
+                  }
                   {calc.netCostAfterCostcoCashback !== null && (
                     <PriceRow
                       label="Net Cost (after Costco 2%):"

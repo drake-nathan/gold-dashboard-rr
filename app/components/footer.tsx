@@ -12,19 +12,19 @@ export const Footer = () => {
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <Link
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-foreground hover:underline"
               to="/privacy"
             >
               Privacy Policy
             </Link>
             <a
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-foreground hover:underline"
               href="mailto:nathan@nathandrake.dev"
             >
               Contact
             </a>
             <a
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-foreground hover:underline"
               href="https://buymeacoffee.com/thenathandrake"
               rel="noopener noreferrer"
               target="_blank"
@@ -32,7 +32,7 @@ export const Footer = () => {
               Buy Me a Coffee
             </a>
             <Link
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-foreground hover:underline"
               to="/terms"
             >
               Terms of Service

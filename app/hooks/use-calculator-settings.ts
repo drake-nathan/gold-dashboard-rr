@@ -18,7 +18,7 @@ export interface CalculatorSettingsState {
 }
 
 export interface CalculatorSettingsActions {
-  handleCardsChange: (newCards: CreditCard[]) => void;
+  handleCardsChange: (newCards: CreditCard[], selectCardId?: string) => void;
   updateCalculatorSettings: (settings: CalculatorSettings) => void;
 }
 
@@ -82,10 +82,18 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   );
 
   // Handle card changes from manager
-  const handleCardsChange = (newCards: CreditCard[]) => {
-    // If current card was deleted, switch to first available
+  const handleCardsChange = (
+    newCards: CreditCard[],
+    selectCardId?: string,
+  ) => {
+    // Determine which card to select:
+    // 1. If selectCardId is provided (e.g., newly created card), use it
+    // 2. If current card still exists, keep it selected
+    // 3. Otherwise, fallback to first available card
     const newSelectedCardId =
-      newCards.find((c) => c.id === selectedCardId)?.id ?? newCards[0].id;
+      selectCardId ??
+      newCards.find((c) => c.id === selectedCardId)?.id ??
+      newCards[0].id;
 
     // Update selected card ID in state
     if (newSelectedCardId !== selectedCardId) {

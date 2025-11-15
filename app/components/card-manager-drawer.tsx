@@ -82,7 +82,7 @@ type CardFormValues = z.infer<typeof cardFormSchema>;
 
 interface CardManagerDrawerProps {
   cards: CreditCard[];
-  onCardsChange: (cards: CreditCard[]) => void;
+  onCardsChange: (cards: CreditCard[], selectCardId?: string) => void;
   onClose: () => void;
   open: boolean;
 }
@@ -209,7 +209,7 @@ export const CardManagerDrawer = ({
           signupBonus,
           valuePerPoint: values.valuePerPointCents / 100, // Convert cents to dollars
         });
-        onCardsChange([...cards, newCard]);
+        onCardsChange([...cards, newCard], newCard.id);
         toast.success("Card added", {
           description: `${values.name} has been added successfully.`,
         });
@@ -354,6 +354,7 @@ export const CardManagerDrawer = ({
                         <FormLabel>Card Name</FormLabel>
                         <FormControl>
                           <Input
+                            autoComplete="off"
                             placeholder="e.g., Chase Sapphire Reserve"
                             {...field}
                           />
@@ -404,6 +405,7 @@ export const CardManagerDrawer = ({
                         <FormLabel>Issuer (Optional)</FormLabel>
                         <FormControl>
                           <Input
+                            autoComplete="off"
                             placeholder="e.g., Chase, AmEx, Capital One"
                             {...field}
                           />

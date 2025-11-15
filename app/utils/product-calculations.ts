@@ -34,7 +34,9 @@ export interface ProductCalculations {
   netProfit: null | number;
   netProfitPercentage: null | number;
   // Points analysis (for travel cards)
+  basePointsEarned: number;
   pointsEarned: number;
+  signupBonusPoints: number;
 
   pricePerPoint: null | number;
   // Color coding
@@ -143,8 +145,19 @@ export const calculateProductMetrics = (
     : positiveColor;
 
   // === POINTS ANALYSIS (for travel cards) ===
-  const pointsEarned =
+  const basePointsEarned =
     product.currentPrice * calculatorSettings.creditCard.pointsPerDollar;
+
+  // SUB bonus points (proportional to this purchase)
+  const signupBonusPointsTotal =
+    calculatorSettings.creditCard.signupBonus?.pointsBonus ?? 0;
+  const signupBonusPoints =
+    hasSignupBonus && spendRequirement > 0 ?
+      (signupBonusPointsTotal / spendRequirement) * product.currentPrice
+    : 0;
+
+  const pointsEarned = basePointsEarned + signupBonusPoints;
+
   const netCostAfterCostcoCashback =
     initialCashLoss !== null ? initialCashLoss - costcoCashback : null;
   const pricePerPoint =
@@ -154,6 +167,7 @@ export const calculateProductMetrics = (
 
   return {
     aboveSpotPercentage,
+    basePointsEarned,
     costcoCashback,
     costcoCashbackPercentage: costcoCashbackPercentage * 100,
     costcoPrice,
@@ -174,6 +188,7 @@ export const calculateProductMetrics = (
     purePayout: netFromSale,
     signupBonusCashback,
     signupBonusCashbackPercentage: signupBonusCashbackPercentage * 100,
+    signupBonusPoints,
     spendProgress,
     spendProgressPercentage,
     totalCashback,

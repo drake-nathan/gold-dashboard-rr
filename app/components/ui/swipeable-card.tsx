@@ -50,7 +50,7 @@ export const SwipeableCard = ({
   };
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("relative overflow-hidden rounded-lg", className)}>
       {/* Delete background - shows when swiping */}
       {onDelete ?
         <div className="absolute inset-0 flex items-center justify-end bg-destructive px-4">

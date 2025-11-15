@@ -2,14 +2,12 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard as CreditCardIcon,
-  Gift,
   Settings,
 } from "lucide-react";
 import { useState } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -18,7 +16,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
 import {
@@ -80,17 +77,9 @@ export const CalculatorControls = ({
           isMobile && "flex-col items-stretch",
         )}
       >
-        <div className="flex items-center gap-2">
-          <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
-            Credit Card:
-          </Label>
-          {hasSignupBonus ?
-            <Badge className="gap-1" variant="default">
-              <Gift className="size-3" />
-              SUB Active
-            </Badge>
-          : null}
-        </div>
+        <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
+          Credit Card:
+        </Label>
 
         {
           isMobile ?
@@ -176,7 +165,7 @@ export const CalculatorControls = ({
               <PopoverContent align="start" className="w-80 p-0">
                 <Command>
                   <CommandInput placeholder="Search by name or issuer..." />
-                  <CommandList>
+                  <CommandList className="max-h-80">
                     <CommandEmpty>
                       <div className="py-6 text-center text-sm text-muted-foreground">
                         No cards found matching your search.
@@ -220,20 +209,19 @@ export const CalculatorControls = ({
                         );
                       })}
                     </CommandGroup>
-                    <CommandSeparator />
-                    <CommandGroup>
-                      <CommandItem
-                        className="font-medium"
-                        onSelect={() => {
-                          setComboboxOpen(false);
-                          onOpenCardManager();
-                        }}
-                      >
-                        <CreditCardIcon className="size-4" />
-                        Manage Cards
-                      </CommandItem>
-                    </CommandGroup>
                   </CommandList>
+                  <div className="border-t p-1">
+                    <CommandItem
+                      className="font-medium"
+                      onSelect={() => {
+                        setComboboxOpen(false);
+                        onOpenCardManager();
+                      }}
+                    >
+                      <CreditCardIcon className="size-4" />
+                      Manage Cards
+                    </CommandItem>
+                  </div>
                 </Command>
               </PopoverContent>
             </Popover>
