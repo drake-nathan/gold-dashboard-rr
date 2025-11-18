@@ -32,7 +32,7 @@ export const PriceRow = ({
             <TooltipTrigger asChild>
               <button
                 aria-label={`Help: ${tooltip}`}
-                className="ml-1 inline-flex items-center align-middle"
+                className="ml-1 hidden items-center align-middle sm:inline-flex"
                 type="button"
               >
                 <HelpCircle className="h-3 w-3 cursor-help opacity-50 hover:opacity-100 focus:opacity-100" />

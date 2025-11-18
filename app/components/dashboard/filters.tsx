@@ -1,6 +1,6 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
+import { useIsClient, useMediaQuery } from "usehooks-ts";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { CreditCard } from "@/lib/credit-cards";
@@ -48,8 +48,13 @@ export const Filters = ({
   sortOption,
 }: FiltersProps) => {
   const [open, setOpen] = useState(false);
+  const isClient = useIsClient();
+
   // Match Tailwind's md breakpoint (768px)
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const mediaQueryResult = useMediaQuery("(min-width: 768px)");
+
+  // Only use media query result after client hydration to prevent SSR mismatch
+  const isDesktop = isClient ? mediaQueryResult : true; // Default to desktop during SSR
 
   // Mobile view: Sheet with button
   if (!isDesktop) {

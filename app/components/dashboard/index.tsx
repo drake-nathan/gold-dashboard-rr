@@ -54,7 +54,15 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     (searchParams.get("metal") as MetalFilter | null) ?? "all";
   const sortOption =
     (searchParams.get("sort") as null | SortOption) ?? "spread-asc";
-  const showOutOfStock = searchParams.get("showOOS") === "true";
+  const urlShowOutOfStock = searchParams.get("showOOS") === "true";
+
+  // Local state for instant UI updates (synced with URL)
+  const [showOutOfStock, setShowOutOfStockLocal] = useState(urlShowOutOfStock);
+
+  // Sync local state with URL params (for browser back/forward)
+  useEffect(() => {
+    setShowOutOfStockLocal(urlShowOutOfStock);
+  }, [urlShowOutOfStock]);
 
   // Auto-flip logic: On initial page load, if no products are in stock,
   // enable "Show Out of Stock" and sort by "Last Out of Stock"
@@ -124,17 +132,19 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     });
   }, 150);
 
-  const setShowOutOfStock = useDebounceCallback((value: boolean) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams);
-      if (value) {
-        params.set("showOOS", "true");
-      } else {
-        params.delete("showOOS");
-      }
-      setSearchParams(params, { replace: true });
-    });
-  }, 150);
+  const setShowOutOfStock = (value: boolean) => {
+    // Immediately update local state for instant UI feedback
+    setShowOutOfStockLocal(value);
+
+    // Then update URL params
+    const params = new URLSearchParams(searchParams);
+    if (value) {
+      params.set("showOOS", "true");
+    } else {
+      params.delete("showOOS");
+    }
+    setSearchParams(params, { replace: true });
+  };
 
   // Filter and sort products using extracted utilities
   const filteredProducts = filterProducts(

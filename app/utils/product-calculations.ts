@@ -17,6 +17,8 @@ export interface ProductCalculations {
   // Above spot calculation
   aboveSpotPercentage: null | number;
 
+  // Points analysis (for travel cards)
+  basePointsEarned: number;
   // Cashback breakdown
   costcoCashback: number;
   costcoCashbackPercentage: number;
@@ -26,29 +28,27 @@ export interface ProductCalculations {
   creditCardCashbackPercentage: number;
   // Signup bonus
   hasSignupBonus: boolean;
-  initialCashLoss: null | number;
 
+  initialCashLoss: null | number;
   netCostAfterCostcoCashback: null | number;
   netFromSale: null | number;
   // Final profit
   netProfit: null | number;
   netProfitPercentage: null | number;
-  // Points analysis (for travel cards)
-  basePointsEarned: number;
   pointsEarned: number;
-  signupBonusPoints: number;
-
   pricePerPoint: null | number;
+
   // Color coding
   profitColor: string;
   pureBidPrice: null | number;
   pureFee: number;
-
   pureFeePercentage: number;
 
   purePayout: null | number;
+
   signupBonusCashback: number;
   signupBonusCashbackPercentage: number;
+  signupBonusPoints: number;
   // SUB spend progress
   spendProgress: null | number;
   spendProgressPercentage: null | number;
