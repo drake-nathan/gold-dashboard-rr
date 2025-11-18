@@ -50,8 +50,8 @@ export const Filters = ({
   const [open, setOpen] = useState(false);
   const isClient = useIsClient();
 
-  // Match Tailwind's md breakpoint (768px)
-  const mediaQueryResult = useMediaQuery("(min-width: 768px)");
+  // Match Tailwind's lg breakpoint (1024px) - switch to mobile earlier to prevent cramped layout
+  const mediaQueryResult = useMediaQuery("(min-width: 1024px)");
 
   // Only use media query result after client hydration to prevent SSR mismatch
   const isDesktop = isClient ? mediaQueryResult : true; // Default to desktop during SSR
