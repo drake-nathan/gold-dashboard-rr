@@ -7,6 +7,12 @@ app = 'gold-dashboard-rr'
 primary_region = 'dfw'
 
 [build]
+  [build.args]
+    VITE_CONVEX_URL = "https://effervescent-dog-80.convex.cloud"
+    VITE_CLERK_PUBLISHABLE_KEY = "pk_test_b3JnYW5pYy1naWJib24tNTUuY2xlcmsuYWNjb3VudHMuZGV2JA"
+    VITE_PUBLIC_POSTHOG_KEY = "phc_BQIZGPvbW91VjOqFdywgPw0eZbWmcJcQBgX71Yv6m8a"
+    VITE_PUBLIC_POSTHOG_HOST = "https://us.i.posthog.com"
+    VITE_ADSENSE_CLIENT_ID = "ca-pub-4115758248018732"
 
 [http_service]
   internal_port = 3000
