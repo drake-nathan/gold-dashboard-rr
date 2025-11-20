@@ -17,7 +17,7 @@ import {
 import type { Route } from "./+types/dashboard";
 
 export const meta = () => {
-  const title = "Dashboard.Gold - Live Costco vs Collect Pure Price Comparison";
+  const title = "Dashboard.Gold - Precious Metals Price Comparison";
   const description =
     "Real-time price comparison for Costco gold and silver products vs Collect Pure bids. Calculate your profit with cashback rewards. Updated every 5 minutes.";
   const url = "https://gold-dashboard-rr-production.up.railway.app"; // TODO: Replace with your actual domain
