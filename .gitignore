@@ -15,3 +15,11 @@
 /coverage/
 coverage-final.json
 __screenshots__
+
+# Turborepo
+.turbo
+apps/*/node_modules
+packages/*/node_modules
+apps/*/.env.local
+apps/*/build
+apps/*/dist

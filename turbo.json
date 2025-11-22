@@ -1,0 +1,124 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "//#format": {
+      "cache": false,
+      "inputs": ["*.js", "*.ts", "*.json", "*.md", "prettier.config.js"],
+      "outputs": []
+    },
+    "//#format:check": {
+      "inputs": ["*.js", "*.ts", "*.json", "*.md", "prettier.config.js"],
+      "outputs": []
+    },
+    "//#lint": {
+      "inputs": ["*.js", "*.ts", "*.json", "eslint.config.js"],
+      "outputs": []
+    },
+    "//#lint:fix": {
+      "cache": false,
+      "inputs": ["*.js", "*.ts", "*.json", "eslint.config.js"],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["build/**", "dist/**", ".next/**", "convex/_generated/**"]
+    },
+    "ci": {
+      "dependsOn": ["format:check", "lint", "typecheck", "test", "test:browser"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "format": {
+      "cache": false,
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "prettier.config.js",
+        "package.json"
+      ],
+      "outputs": []
+    },
+    "format:check": {
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "prettier.config.js",
+        "package.json"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "eslint.config.js",
+        "package.json"
+      ],
+      "outputs": []
+    },
+    "lint:fix": {
+      "cache": false,
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "eslint.config.js",
+        "package.json"
+      ],
+      "outputs": []
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "vitest.config.ts",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"]
+    },
+    "test:browser": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "app/**",
+        "vitest.browser.config.ts",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"]
+    },
+    "test:coverage": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "vitest.config.ts",
+        "package.json"
+      ],
+      "outputs": ["coverage/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**",
+        "app/**",
+        "convex/**",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "outputs": []
+    }
+  },
+  "ui": "tui"
+}
