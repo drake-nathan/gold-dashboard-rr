@@ -1,5 +1,7 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 
+import { env } from "@gold-dashboard/env/client";
+
 import { Button } from "@/components/ui/button";
 
 export const AuthButtons = () => {
@@ -7,7 +9,7 @@ export const AuthButtons = () => {
 
   // Hide auth UI in production until subscription feature is ready
   const isAuthEnabled =
-    import.meta.env.DEV || import.meta.env.VITE_ENABLE_AUTH === "true";
+    import.meta.env.DEV || env.VITE_ENABLE_AUTH === "true";
 
   if (!isAuthEnabled) {
     return null;

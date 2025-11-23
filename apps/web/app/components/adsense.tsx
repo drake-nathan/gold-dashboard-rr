@@ -1,3 +1,5 @@
+import { env } from "@gold-dashboard/env/client";
+
 /**
  * Google AdSense Integration
  *
@@ -6,7 +8,7 @@
  */
 
 export const AdSense = () => {
-  const clientId = import.meta.env.VITE_ADSENSE_CLIENT_ID;
+  const clientId = env.VITE_ADSENSE_CLIENT_ID;
 
   // Don't render if AdSense is not configured
   if (!clientId) {

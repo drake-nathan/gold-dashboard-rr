@@ -6,6 +6,8 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
 import { PostHogProvider } from "posthog-js/react";
 
+import { env } from "@gold-dashboard/env/client";
+
 import "./app.css";
 
 import {
@@ -98,34 +100,13 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = ({ loaderData }: Route.ComponentProps) => {
-  const convexUrl = import.meta.env.VITE_CONVEX_URL;
-  const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
-
-  if (!convexUrl) {
-    throw new Error("VITE_CONVEX_URL environment variable is not set");
-  }
-
-  if (!clerkApiKey) {
-    throw new Error(
-      "VITE_CLERK_PUBLISHABLE_KEY environment variable is not set",
-    );
-  }
-
-  if (!posthogKey || !posthogHost) {
-    throw new Error(
-      "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
-    );
-  }
-
-  const convex = new ConvexReactClient(convexUrl);
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 
   return (
     <PostHogProvider
-      apiKey={posthogKey}
+      apiKey={env.VITE_PUBLIC_POSTHOG_KEY!}
       options={{
-        api_host: posthogHost,
+        api_host: env.VITE_PUBLIC_POSTHOG_HOST!,
         capture_exceptions: true,
         debug: import.meta.env.MODE === "development",
         defaults: "2025-05-24",
@@ -134,7 +115,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       <ClerkProvider
         appearance={{ baseTheme: shadcn }}
         loaderData={loaderData}
-        publishableKey={clerkApiKey}
+        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY!}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <Outlet />

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@gold-dashboard/convex-backend": "workspace:*",
+    "@gold-dashboard/env": "workspace:*",
     "@gold-dashboard/shared": "workspace:*",
     "@clerk/react-router": "2.2.4",
     "@clerk/themes": "2.4.39",

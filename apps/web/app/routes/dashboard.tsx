@@ -4,6 +4,8 @@ import { usePreloadedQuery } from "convex/react";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
 import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
+import { env } from "@gold-dashboard/env/server";
+
 import { Dashboard } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,19 +61,13 @@ export const meta = () => {
 };
 
 export const loader = async () => {
-  const convexUrl = process.env.VITE_CONVEX_URL;
-
-  if (!convexUrl) {
-    throw new Error("VITE_CONVEX_URL is not set");
-  }
-
   // Use Convex's preloadQuery - this creates a payload that includes both the data
   // and the query metadata needed for client-side subscription
   const preloadedStats = await preloadQuery(
     api.dashboard.getStats,
     {},
     {
-      url: convexUrl,
+      url: env.VITE_CONVEX_URL,
     },
   );
 
