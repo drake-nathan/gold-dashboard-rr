@@ -12,9 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
-import { formatRelativeTime } from "@/utils/format-time";
-import { calculateProductMetrics } from "@/utils/product-calculations";
+import { formatCurrency, formatPercentage, formatWeight } from "@gold-dashboard/shared/utils";
+import { formatRelativeTime } from "@gold-dashboard/shared/utils";
+import { calculateProductMetrics } from "@gold-dashboard/shared/utils";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
 import type { CalculatorSettings } from "../calculator-settings";

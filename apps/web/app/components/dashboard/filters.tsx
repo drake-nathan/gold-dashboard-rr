@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { CreditCard } from "@/lib/credit-cards";
+import type { CreditCard } from "@gold-dashboard/shared/lib";
 
 import { Button } from "@/components/ui/button";
 import {

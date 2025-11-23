@@ -3,11 +3,9 @@ import type { FunctionReturnType } from "convex/server";
 
 import { expect, test } from "vitest";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { ProductCardData } from "@/components/dashboard";
-
-import { DEFAULT_PRESET_CARDS } from "@gold-dashboard/shared/lib";
-import { PURE_FEE_TIERS } from "@gold-dashboard/shared/lib";
+import { DEFAULT_PRESET_CARDS } from "../lib/credit-cards";
+import { PURE_FEE_TIERS } from "../lib/pure-fee-tiers";
+import type { CalculatorSettings, ProductCardData } from "../types/calculator";
 
 import { calculateProductMetrics } from "./product-calculations";
 

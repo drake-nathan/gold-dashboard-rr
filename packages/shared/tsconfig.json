@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "paths": {
+      "convex/_generated/api": ["../convex-backend/convex/_generated/api"],
+      "convex/_generated/dataModel": ["../convex-backend/convex/_generated/dataModel"]
+    }
+  },
+  "exclude": ["node_modules", "**/*.test.ts"],
+  "include": ["src/**/*"]
+}

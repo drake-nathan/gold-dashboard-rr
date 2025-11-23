@@ -8,8 +8,8 @@ import {
   calculateCashbackPercentage,
   type CreditCard,
   DEFAULT_PRESET_CARDS,
-} from "@/lib/credit-cards";
-import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+} from "@gold-dashboard/shared/lib";
+import { PURE_FEE_TIERS } from "@gold-dashboard/shared/lib";
 
 export interface CalculatorSettingsState {
   availableCards: CreditCard[];

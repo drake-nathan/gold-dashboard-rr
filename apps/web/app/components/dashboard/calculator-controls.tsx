@@ -35,7 +35,7 @@ import {
   calculateCashbackPercentage,
   calculateTotalCashbackPercentage,
   type CreditCard,
-} from "@/lib/credit-cards";
+} from "@gold-dashboard/shared/lib";
 
 interface CalculatorControlsProps {
   availableCards: CreditCard[];

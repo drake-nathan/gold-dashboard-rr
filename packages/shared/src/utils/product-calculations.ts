@@ -1,14 +1,12 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { ProductCardData } from "@/components/dashboard";
-
 import {
   calculateCashbackPercentage,
   calculateSubBonusPercentage,
-} from "@gold-dashboard/shared/lib";
-import { getFeeRateForMetal } from "@gold-dashboard/shared/lib";
+} from "../lib/credit-cards";
+import { getFeeRateForMetal } from "../lib/pure-fee-tiers";
+import type { CalculatorSettings, ProductCardData } from "../types/calculator";
 
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 type MarketPrices = GetStats["marketPrices"];

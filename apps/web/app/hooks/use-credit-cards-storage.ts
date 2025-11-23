@@ -5,7 +5,7 @@ import {
   type CreditCardsStorage,
   creditCardsStorageSchema,
   DEFAULT_PRESET_CARDS,
-} from "@/lib/credit-cards";
+} from "@gold-dashboard/shared/lib";
 
 /**
  * Hook for managing credit cards in localStorage using usehooks-ts

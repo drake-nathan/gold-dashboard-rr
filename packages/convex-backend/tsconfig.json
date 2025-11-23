@@ -1,0 +1,11 @@
+{
+  "extends": "./convex/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@gold-dashboard/convex-backend": ["./convex/_generated/api.js"],
+      "@gold-dashboard/convex-backend/api": ["./convex/_generated/api.js"],
+      "@gold-dashboard/convex-backend/types": ["./convex/_generated/dataModel.d.ts"]
+    }
+  }
+}

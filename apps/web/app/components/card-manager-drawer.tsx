@@ -51,7 +51,7 @@ import {
   resetPresetCard,
   sortCards,
   updateCard,
-} from "@/lib/credit-cards";
+} from "@gold-dashboard/shared/lib";
 
 // Form schema - valuePerPointCents accepts cents (not dollars)
 const cardFormSchema = z.object({

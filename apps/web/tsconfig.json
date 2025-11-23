@@ -9,7 +9,8 @@
     "noEmit": true,
     "paths": {
       "@/*": ["./app/*"],
-      "convex/*": ["../../convex/*"]
+      "convex/_generated/api": ["../../packages/convex-backend/convex/_generated/api"],
+      "convex/_generated/dataModel": ["../../packages/convex-backend/convex/_generated/dataModel"]
     },
     "resolveJsonModule": true,
     "rootDirs": [".", "./.react-router/types"],

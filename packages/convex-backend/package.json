@@ -1,0 +1,25 @@
+{
+  "name": "@gold-dashboard/convex-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./convex/_generated/api.js",
+  "types": "./convex/_generated/api.d.ts",
+  "exports": {
+    ".": "./convex/_generated/api.js",
+    "./api": "./convex/_generated/api.js",
+    "./types": "./convex/_generated/dataModel.d.ts"
+  },
+  "scripts": {
+    "build": "echo 'Convex backend - no build needed'",
+    "dev": "echo 'WARNING: Do not run convex dev - use production deployment'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "convex": "1.29.3"
+  },
+  "devDependencies": {
+    "@clerk/backend": "^1.x",
+    "typescript": "5.9.3"
+  }
+}
