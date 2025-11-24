@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@gold-dashboard/convex-backend/api": ["../../packages/convex-backend/convex/_generated/api"],
+      "@gold-dashboard/convex-backend": ["../../packages/convex-backend/convex/_generated/api"],
+      "@gold-dashboard/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
+}
