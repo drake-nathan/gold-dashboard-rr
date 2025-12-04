@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import {
@@ -7,6 +8,47 @@ import {
 } from "@/lib/pure-fee-tiers";
 
 const STORAGE_KEY = "dashboard-gold-pure-fee-tier";
+
+const defaultValue: PureFeeTierStorage = {
+  selectedTierId: PURE_FEE_TIERS[0].id,
+};
+
+// Custom deserializer with Zod validation and tier existence check
+// Defined outside component to maintain stable reference
+const deserializer = (value: string): PureFeeTierStorage => {
+  try {
+    const parsed = JSON.parse(value);
+    const validated = pureFeeTierStorageSchema.parse(parsed);
+
+    // Verify the tier still exists
+    const tierExists = PURE_FEE_TIERS.some(
+      (t) => t.id === validated.selectedTierId,
+    );
+    if (!tierExists) {
+      console.warn(
+        `Pure fee tier "${validated.selectedTierId}" no longer exists, using default`,
+      );
+      return defaultValue;
+    }
+
+    return validated;
+  } catch (error) {
+    console.error("Failed to load Pure fee tier from localStorage:", error);
+    return defaultValue;
+  }
+};
+
+// Custom serializer with Zod validation
+// Defined outside component to maintain stable reference
+const serializer = (value: PureFeeTierStorage): string => {
+  try {
+    const validated = pureFeeTierStorageSchema.parse(value);
+    return JSON.stringify(validated);
+  } catch (error) {
+    console.error("Failed to save Pure fee tier to localStorage:", error);
+    throw error;
+  }
+};
 
 /**
  * Hook for managing Pure fee tier selection in localStorage using usehooks-ts
@@ -18,51 +60,19 @@ const STORAGE_KEY = "dashboard-gold-pure-fee-tier";
  * - Validation that selected tier exists in PURE_FEE_TIERS
  */
 export const usePureFeeTierStorage = () => {
-  const defaultValue: PureFeeTierStorage = {
-    selectedTierId: PURE_FEE_TIERS[0].id,
-  };
+  // Memoize options to prevent useLocalStorage internal useCallback issues
+  const options = useMemo(
+    () => ({
+      deserializer,
+      serializer,
+    }),
+    [],
+  );
 
   const [storage, setStorage] = useLocalStorage<PureFeeTierStorage>(
     STORAGE_KEY,
     defaultValue,
-    {
-      // Custom deserializer with Zod validation and tier existence check
-      deserializer: (value: string): PureFeeTierStorage => {
-        try {
-          const parsed = JSON.parse(value);
-          const validated = pureFeeTierStorageSchema.parse(parsed);
-
-          // Verify the tier still exists
-          const tierExists = PURE_FEE_TIERS.some(
-            (t) => t.id === validated.selectedTierId,
-          );
-          if (!tierExists) {
-            console.warn(
-              `Pure fee tier "${validated.selectedTierId}" no longer exists, using default`,
-            );
-            return defaultValue;
-          }
-
-          return validated;
-        } catch (error) {
-          console.error(
-            "Failed to load Pure fee tier from localStorage:",
-            error,
-          );
-          return defaultValue;
-        }
-      },
-      // Custom serializer with Zod validation
-      serializer: (value: PureFeeTierStorage): string => {
-        try {
-          const validated = pureFeeTierStorageSchema.parse(value);
-          return JSON.stringify(validated);
-        } catch (error) {
-          console.error("Failed to save Pure fee tier to localStorage:", error);
-          throw error;
-        }
-      },
-    },
+    options,
   );
 
   return [storage, setStorage] as const;
