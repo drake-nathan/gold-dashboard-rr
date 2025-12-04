@@ -429,7 +429,8 @@ export const CardManagerDrawer = ({
                             type="number"
                             {...field}
                             onChange={(e) => {
-                              field.onChange(parseFloat(e.target.value));
+                              const value = parseFloat(e.target.value);
+                              field.onChange(isNaN(value) ? 0 : value);
                             }}
                           />
                         </FormControl>
@@ -455,7 +456,8 @@ export const CardManagerDrawer = ({
                             type="number"
                             {...field}
                             onChange={(e) => {
-                              field.onChange(parseFloat(e.target.value));
+                              const value = parseFloat(e.target.value);
+                              field.onChange(isNaN(value) ? 0 : value);
                             }}
                           />
                         </FormControl>
@@ -506,7 +508,8 @@ export const CardManagerDrawer = ({
                                   type="number"
                                   {...field}
                                   onChange={(e) => {
-                                    field.onChange(parseFloat(e.target.value));
+                                    const value = parseFloat(e.target.value);
+                                    field.onChange(isNaN(value) ? 0 : value);
                                   }}
                                 />
                               </FormControl>
@@ -532,7 +535,8 @@ export const CardManagerDrawer = ({
                                   type="number"
                                   {...field}
                                   onChange={(e) => {
-                                    field.onChange(parseFloat(e.target.value));
+                                    const value = parseFloat(e.target.value);
+                                    field.onChange(isNaN(value) ? 0 : value);
                                   }}
                                 />
                               </FormControl>

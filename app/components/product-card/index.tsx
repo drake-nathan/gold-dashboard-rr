@@ -174,7 +174,7 @@ export const ProductCard = ({
                         <PriceRow
                           label="SUB Bonus Points:"
                           labelClassName="text-xs font-medium text-primary"
-                          tooltip={`Proportional signup bonus points for this purchase (${calculatorSettings.creditCard.signupBonus?.pointsBonus?.toLocaleString("en-US")} points ÷ ${formatCurrency(calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0)} spend × ${formatCurrency(calc.costcoPrice)})`}
+                          tooltip={`Proportional signup bonus points for this purchase (${calculatorSettings.creditCard.signupBonus?.pointsBonus.toLocaleString("en-US")} points ÷ ${formatCurrency(calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0)} spend × ${formatCurrency(calc.costcoPrice)})`}
                           value={`+${calc.signupBonusPoints.toLocaleString(
                             "en-US",
                             {

@@ -20,7 +20,6 @@ import {
 
 import type { Route } from "./+types/root";
 
-import { AdSense } from "./components/adsense";
 import { Button } from "./components/ui/button";
 import {
   Card,
@@ -63,7 +62,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <meta content="width=device-width, initial-scale=1" name="viewport" />
         <Meta />
         <Links />
-        <AdSense />
         {/* Prevent flash of wrong theme by applying theme before page renders */}
         <script
           dangerouslySetInnerHTML={{
