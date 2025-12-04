@@ -43,48 +43,62 @@ export const filterProducts = (
 
 /**
  * Sorts products by the selected sort option
+ * Products without Pure bids are always placed at the bottom
  */
 export const sortProducts = (
   products: ProductCardData[],
   sortOption: SortOption,
 ): ProductCardData[] => {
-  // Create a copy to avoid mutating the input array
-  const sorted = [...products];
+  // Separate products with and without Pure bids
+  const withBids = products.filter((p) => p.pureBidPrice !== null);
+  const withoutBids = products.filter((p) => p.pureBidPrice === null);
+
+  // Sort products with bids according to the selected option
+  let sorted: ProductCardData[] = [];
 
   switch (sortOption) {
     case "last-in-stock": {
-      return sorted.sort((a, b) => {
+      sorted = withBids.sort((a, b) => {
         // Sort by lastInStockAt descending (most recent first)
         // Products without lastInStockAt (still in stock or never OOS) go to end
         const aTime = a.lastInStockAt ?? -Infinity;
         const bTime = b.lastInStockAt ?? -Infinity;
         return bTime - aTime;
       });
+      break;
     }
     case "price-asc": {
-      return sorted.sort((a, b) => a.currentPrice - b.currentPrice);
+      sorted = withBids.sort((a, b) => a.currentPrice - b.currentPrice);
+      break;
     }
     case "price-desc": {
-      return sorted.sort((a, b) => b.currentPrice - a.currentPrice);
+      sorted = withBids.sort((a, b) => b.currentPrice - a.currentPrice);
+      break;
     }
     case "spread-asc": {
-      return sorted.sort((a, b) => {
+      sorted = withBids.sort((a, b) => {
         const aSpread = a.spreadPercentage ?? 999;
         const bSpread = b.spreadPercentage ?? 999;
         return aSpread - bSpread;
       });
+      break;
     }
     case "spread-desc": {
-      return sorted.sort((a, b) => {
+      sorted = withBids.sort((a, b) => {
         const aSpread = a.spreadPercentage ?? -999;
         const bSpread = b.spreadPercentage ?? -999;
         return bSpread - aSpread;
       });
+      break;
     }
     default: {
-      return sorted;
+      sorted = [...withBids];
+      break;
     }
   }
+
+  // Always append products without bids at the end
+  return [...sorted, ...withoutBids];
 };
 
 /**

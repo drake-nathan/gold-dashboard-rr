@@ -284,6 +284,104 @@ test("sortProducts: does not mutate original array", ({ expect }) => {
   expect(products).toEqual(original); // Original unchanged
 });
 
+// === PRODUCTS WITHOUT BIDS TESTS ===
+
+test("sortProducts: places products without bids at bottom (spread-asc)", ({
+  expect,
+}) => {
+  const products = [
+    createMockProduct({ pureBidPrice: 95, spreadPercentage: 10 }),
+    createMockProduct({ pureBidPrice: null, spreadPercentage: null }), // No bid
+    createMockProduct({ pureBidPrice: 90, spreadPercentage: 5 }),
+  ];
+
+  const result = sortProducts(products, "spread-asc");
+
+  expect(result[0]?.spreadPercentage).toBe(5);
+  expect(result[1]?.spreadPercentage).toBe(10);
+  expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
+});
+
+test("sortProducts: places products without bids at bottom (spread-desc)", ({
+  expect,
+}) => {
+  const products = [
+    createMockProduct({ pureBidPrice: 95, spreadPercentage: 10 }),
+    createMockProduct({ pureBidPrice: null, spreadPercentage: null }), // No bid
+    createMockProduct({ pureBidPrice: 90, spreadPercentage: 15 }),
+  ];
+
+  const result = sortProducts(products, "spread-desc");
+
+  expect(result[0]?.spreadPercentage).toBe(15);
+  expect(result[1]?.spreadPercentage).toBe(10);
+  expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
+});
+
+test("sortProducts: places products without bids at bottom (price-asc)", ({
+  expect,
+}) => {
+  const products = [
+    createMockProduct({ currentPrice: 100, pureBidPrice: 95 }),
+    createMockProduct({ currentPrice: 50, pureBidPrice: null }), // No bid
+    createMockProduct({ currentPrice: 150, pureBidPrice: 140 }),
+  ];
+
+  const result = sortProducts(products, "price-asc");
+
+  expect(result[0]?.currentPrice).toBe(100);
+  expect(result[1]?.currentPrice).toBe(150);
+  expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom (even though price is lower)
+});
+
+test("sortProducts: places products without bids at bottom (price-desc)", ({
+  expect,
+}) => {
+  const products = [
+    createMockProduct({ currentPrice: 100, pureBidPrice: 95 }),
+    createMockProduct({ currentPrice: 200, pureBidPrice: null }), // No bid
+    createMockProduct({ currentPrice: 150, pureBidPrice: 140 }),
+  ];
+
+  const result = sortProducts(products, "price-desc");
+
+  expect(result[0]?.currentPrice).toBe(150);
+  expect(result[1]?.currentPrice).toBe(100);
+  expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom (even though price is higher)
+});
+
+test("sortProducts: places products without bids at bottom (last-in-stock)", ({
+  expect,
+}) => {
+  const products = [
+    createMockProduct({ lastInStockAt: 1000, pureBidPrice: 95 }),
+    createMockProduct({ lastInStockAt: 3000, pureBidPrice: null }), // No bid
+    createMockProduct({ lastInStockAt: 2000, pureBidPrice: 190 }),
+  ];
+
+  const result = sortProducts(products, "last-in-stock");
+
+  expect(result[0]?.lastInStockAt).toBe(2000);
+  expect(result[1]?.lastInStockAt).toBe(1000);
+  expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom (even though timestamp is most recent)
+});
+
+test("sortProducts: handles multiple products without bids", ({ expect }) => {
+  const products = [
+    createMockProduct({ currentPrice: 100, pureBidPrice: 95 }),
+    createMockProduct({ currentPrice: 50, pureBidPrice: null }), // No bid #1
+    createMockProduct({ currentPrice: 150, pureBidPrice: 140 }),
+    createMockProduct({ currentPrice: 75, pureBidPrice: null }), // No bid #2
+  ];
+
+  const result = sortProducts(products, "price-asc");
+
+  expect(result[0]?.pureBidPrice).toBe(95);
+  expect(result[1]?.pureBidPrice).toBe(140);
+  expect(result[2]?.pureBidPrice).toBe(null); // First without bid
+  expect(result[3]?.pureBidPrice).toBe(null); // Second without bid
+});
+
 // === AUTO-FLIP LOGIC TESTS ===
 
 test("shouldAutoFlipToOutOfStock: returns true when both counts are zero", ({
