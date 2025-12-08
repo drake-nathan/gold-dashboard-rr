@@ -44,6 +44,9 @@ export default defineSchema({
         v.null(),
       ),
     ),
+    // Approval tracking - separate from matchStatus for audit trail
+    matchApprovedAt: v.optional(v.union(v.number(), v.null())),
+    matchApprovedBy: v.optional(v.union(v.string(), v.null())), // Clerk user ID
 
     // Timestamps
     firstSeen: v.number(),
@@ -56,7 +59,8 @@ export default defineSchema({
     .index("by_metal_type", ["metalType"])
     .index("by_metal_and_stock", ["metalType", "currentInStock"])
     .index("by_metal_and_price", ["metalType", "currentPricePerOunce"])
-    .index("by_price_per_oz", ["currentPricePerOunce"]),
+    .index("by_price_per_oz", ["currentPricePerOunce"])
+    .index("by_match_status", ["matchStatus"]),
 
   // Price history table - tracks all price changes
   priceHistory: defineTable({
@@ -128,6 +132,7 @@ export default defineSchema({
     lastUpdated: v.number(),
   })
     .index("by_pure_id", ["pureProductId"])
+    .index("by_sku", ["sku"])
     .index("by_metal_type", ["metalType"])
     .index("by_metal_and_weight", ["metalType", "weight"])
     .index("by_metal_weight_fallback", [

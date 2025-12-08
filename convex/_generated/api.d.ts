@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as costco from "../costco.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
@@ -24,6 +25,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   costco: typeof costco;
   crons: typeof crons;
   dashboard: typeof dashboard;
