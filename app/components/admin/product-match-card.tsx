@@ -95,10 +95,19 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
 
       <CardContent className="space-y-3">
         {/* Current Match */}
-        <div className="flex items-center justify-between rounded-md border bg-muted/50 p-3">
+        <div className={`flex items-center justify-between rounded-md border p-3 ${
+          product.matchStatus === "pending_approval"
+            ? "border-purple-500/50 bg-purple-500/10"
+            : "bg-muted/50"
+        }`}>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-2">
               Current Match
+              {product.matchStatus === "pending_approval" && (
+                <Badge className="bg-purple-500/20 text-purple-600 border-purple-500/30 text-[10px] px-1.5 py-0">
+                  Pending Confirmation
+                </Badge>
+              )}
             </p>
             {product.pureProduct ? (
               <div>
@@ -174,7 +183,7 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                 <ApproveButton
                   costcoProductId={product.productId}
                   currentPureProductId={product.pureProductId}
-                  isApproved={product.matchStatus === "manual_matched"}
+                  matchStatus={product.matchStatus}
                 />
                 <RematchButton _costcoProductId={product.productId} />
                 <Button asChild size="sm" variant="outline">
@@ -206,6 +215,9 @@ const StatusBadge = ({ status }: { status: null | string | undefined }) => {
     case "manual_matched": {
       return <Badge className="bg-green-500/10 text-green-600 border-green-500/30">Approved</Badge>;
     }
+    case "pending_approval": {
+      return <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">Pending</Badge>;
+    }
     case "needs_review": {
       return <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/30">Review</Badge>;
     }
@@ -227,7 +239,7 @@ const TopMatchesList = ({
     limit: 5,
   });
 
-  const approveMatch = useMutation(api.admin.approveMatch);
+  const selectMatch = useMutation(api.admin.selectMatch);
 
   if (!topMatches) {
     return (
@@ -240,10 +252,10 @@ const TopMatchesList = ({
 
   const handleSelectMatch = async (pureProductId: string) => {
     try {
-      await approveMatch({ costcoProductId, pureProductId });
-      toast.success("Match updated successfully");
+      await selectMatch({ costcoProductId, pureProductId });
+      toast.success("Match selected - confirm when ready");
     } catch (error) {
-      toast.error("Failed to update match");
+      toast.error("Failed to select match");
       console.error(error);
     }
   };
@@ -355,7 +367,7 @@ const MatchSelector = ({
   const [pureUrl, setPureUrl] = useState("");
   const [parsedSku, setParsedSku] = useState<null | string>(null);
 
-  const approveMatch = useMutation(api.admin.approveMatch);
+  const selectMatch = useMutation(api.admin.selectMatch);
 
   // Search results
   const searchResults = useQuery(
@@ -384,11 +396,11 @@ const MatchSelector = ({
 
   const handleSelectMatch = async (pureProductId: string) => {
     try {
-      await approveMatch({ costcoProductId, pureProductId });
-      toast.success("Match updated successfully");
+      await selectMatch({ costcoProductId, pureProductId });
+      toast.success("Match selected - confirm when ready");
       onSelect();
     } catch (error) {
-      toast.error("Failed to update match");
+      toast.error("Failed to select match");
       console.error(error);
     }
   };
@@ -471,14 +483,31 @@ const MatchSelector = ({
 const ApproveButton = ({
   costcoProductId,
   currentPureProductId,
-  isApproved,
+  matchStatus,
 }: {
   costcoProductId: string;
   currentPureProductId: null | string | undefined;
-  isApproved: boolean;
+  matchStatus: null | string | undefined;
 }) => {
-  const approveMatch = useMutation(api.admin.approveMatch);
+  const selectMatch = useMutation(api.admin.selectMatch);
+  const confirmMatch = useMutation(api.admin.confirmMatch);
   const [loading, setLoading] = useState(false);
+
+  const isPending = matchStatus === "pending_approval";
+  const isApproved = matchStatus === "manual_matched";
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    try {
+      await confirmMatch({ costcoProductId });
+      toast.success("Match confirmed and approved");
+    } catch (error) {
+      toast.error("Failed to confirm match");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (!currentPureProductId) {
@@ -488,10 +517,10 @@ const ApproveButton = ({
 
     setLoading(true);
     try {
-      await approveMatch({ costcoProductId, pureProductId: currentPureProductId });
-      toast.success("Match approved");
+      await selectMatch({ costcoProductId, pureProductId: currentPureProductId });
+      toast.success("Match selected - click Confirm to finalize");
     } catch (error) {
-      toast.error("Failed to approve match");
+      toast.error("Failed to select match");
       console.error(error);
     } finally {
       setLoading(false);
@@ -503,6 +532,24 @@ const ApproveButton = ({
       <Button disabled size="sm" variant="outline">
         <Check className="mr-1 h-3 w-3" />
         Approved
+      </Button>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <Button
+        disabled={loading}
+        onClick={handleConfirm}
+        size="sm"
+        className="bg-purple-600 hover:bg-purple-700"
+      >
+        {loading ? (
+          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+        ) : (
+          <Check className="mr-1 h-3 w-3" />
+        )}
+        Confirm Match
       </Button>
     );
   }

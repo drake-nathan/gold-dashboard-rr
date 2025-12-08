@@ -233,13 +233,18 @@ export const upsertProduct = internalMutation({
         });
       }
 
+      // Check if metalWeight changed (e.g., count multiplier fix)
+      const weightChanged = existing.metalWeight !== (product.metalWeight ?? null);
+
       // Update product if anything changed
-      if (priceChanged || stockChanged) {
+      if (priceChanged || stockChanged || weightChanged) {
         await ctx.db.patch(existing._id, {
           currentInStock: product.in_stock,
           currentPrice: product.price,
           currentPricePerOunce: product.pricePerOunce ?? null,
           lastUpdated: args.timestamp,
+          // Update metalWeight if it changed
+          ...(weightChanged && { metalWeight: product.metalWeight ?? null }),
           ...(priceChanged && { lastPriceChange: args.timestamp }),
           ...(stockChanged && { lastStockChange: args.timestamp }),
           // Set lastInStockAt when product goes OUT of stock

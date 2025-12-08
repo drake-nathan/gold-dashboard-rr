@@ -39,6 +39,7 @@ export default defineSchema({
       v.union(
         v.literal("auto_matched"),
         v.literal("manual_matched"),
+        v.literal("pending_approval"),
         v.literal("fallback"),
         v.literal("needs_review"),
         v.null(),

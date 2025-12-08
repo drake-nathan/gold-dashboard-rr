@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 
 import {
+  extractCountMultiplier,
   extractWeightInOz,
   getFallbackPureId,
   PURE_FALLBACK_IDS,
@@ -256,4 +257,93 @@ test("pURE_FALLBACK_IDS: all IDs are valid UUIDs", () => {
   Object.values(PURE_FALLBACK_IDS.silver).forEach((id) => {
     expect(id).toMatch(uuidRegex);
   });
+});
+
+// ============================================================================
+// extractCountMultiplier TESTS
+// ============================================================================
+
+// Standard count formats
+test("extractCountMultiplier: parses '20-count' format", () => {
+  expect(
+    extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count"),
+  ).toBe(20);
+});
+
+test("extractCountMultiplier: parses '20 count' format with space", () => {
+  expect(extractCountMultiplier("Silver Coin 20 count")).toBe(20);
+});
+
+test("extractCountMultiplier: parses '5-pack' format", () => {
+  expect(extractCountMultiplier("Gold Bar 5-pack")).toBe(5);
+});
+
+test("extractCountMultiplier: parses '10 pack' format with space", () => {
+  expect(extractCountMultiplier("Silver Round 10 pack")).toBe(10);
+});
+
+test("extractCountMultiplier: parses '3-piece' format", () => {
+  expect(extractCountMultiplier("Coin Set 3-piece")).toBe(3);
+});
+
+test("extractCountMultiplier: parses '12 pc' format", () => {
+  expect(extractCountMultiplier("Silver Bars 12 pc")).toBe(12);
+});
+
+// Box/set formats
+test("extractCountMultiplier: parses 'box of 20' format", () => {
+  expect(extractCountMultiplier("Silver Eagles box of 20")).toBe(20);
+});
+
+test("extractCountMultiplier: parses 'set of 5' format", () => {
+  expect(extractCountMultiplier("Gold Coins set of 5")).toBe(5);
+});
+
+test("extractCountMultiplier: parses 'pack of 10' format", () => {
+  expect(extractCountMultiplier("Silver Rounds pack of 10")).toBe(10);
+});
+
+// Case insensitivity
+test("extractCountMultiplier: handles uppercase COUNT", () => {
+  expect(extractCountMultiplier("Bars 20-COUNT")).toBe(20);
+});
+
+test("extractCountMultiplier: handles mixed case Pack", () => {
+  expect(extractCountMultiplier("Coins 5-Pack")).toBe(5);
+});
+
+test("extractCountMultiplier: handles uppercase BOX OF", () => {
+  expect(extractCountMultiplier("Coins BOX OF 25")).toBe(25);
+});
+
+// No multiplier (should return 1)
+test("extractCountMultiplier: returns 1 for single items", () => {
+  expect(extractCountMultiplier("1 oz Gold Bar")).toBe(1);
+});
+
+test("extractCountMultiplier: returns 1 for products without count", () => {
+  expect(extractCountMultiplier("PAMP Suisse Lady Fortuna Gold Bar")).toBe(1);
+});
+
+test("extractCountMultiplier: returns 1 for weight-only names", () => {
+  expect(extractCountMultiplier("10 oz Silver Bar")).toBe(1);
+});
+
+// Edge cases
+test("extractCountMultiplier: handles empty string", () => {
+  expect(extractCountMultiplier("")).toBe(1);
+});
+
+test("extractCountMultiplier: doesn't confuse weight with count", () => {
+  // "10 oz" should not be parsed as count
+  expect(extractCountMultiplier("10 oz Silver Bar")).toBe(1);
+});
+
+test("extractCountMultiplier: handles real Costco product names", () => {
+  expect(
+    extractCountMultiplier("2025 1 oz American Eagle Silver Coin, 20-count"),
+  ).toBe(20);
+  expect(
+    extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count"),
+  ).toBe(20);
 });

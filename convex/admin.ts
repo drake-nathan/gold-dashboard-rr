@@ -10,6 +10,7 @@ import {
   query,
 } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
+import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
 
 // Helper to check if a user is an admin
 const isAdmin = (userId: null | string): boolean => {
@@ -60,6 +61,7 @@ export const getProductsForReview = query({
       fallback: [] as typeof products,
       manual_matched: [] as typeof products,
       needs_review: [] as typeof products,
+      pending_approval: [] as typeof products,
       unmatched: [] as typeof products,
     };
 
@@ -73,6 +75,8 @@ export const getProductsForReview = query({
         grouped.fallback.push(product);
       } else if (status === "manual_matched") {
         grouped.manual_matched.push(product);
+      } else if (status === "pending_approval") {
+        grouped.pending_approval.push(product);
       } else {
         grouped.unmatched.push(product);
       }
@@ -120,12 +124,14 @@ export const getProductsForReview = query({
         fallback: grouped.fallback.length,
         manual_matched: grouped.manual_matched.length,
         needs_review: grouped.needs_review.length,
+        pending_approval: grouped.pending_approval.length,
         total: products.length,
         unmatched: grouped.unmatched.length,
       },
       fallback: grouped.fallback.map(enrichProduct),
       manual_matched: grouped.manual_matched.map(enrichProduct),
       needs_review: grouped.needs_review.map(enrichProduct),
+      pending_approval: grouped.pending_approval.map(enrichProduct),
       unmatched: grouped.unmatched.map(enrichProduct),
     };
   },
@@ -447,8 +453,97 @@ export const searchPureProducts = query({
 });
 
 /**
- * Approve or change a product match
+ * Select a product match (sets pending_approval status)
+ * Use confirmMatch to finalize the selection
+ */
+export const selectMatch = mutation({
+  args: {
+    costcoProductId: v.string(),
+    pureProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    // Get the Costco product
+    const costcoProduct = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_product_id", (q) =>
+        q.eq("productId", args.costcoProductId),
+      )
+      .first();
+
+    if (!costcoProduct) {
+      throw new Error(`Costco product ${args.costcoProductId} not found`);
+    }
+
+    // Get the Pure product to verify it exists
+    const pureProduct = await ctx.db
+      .query("pureProducts")
+      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
+      .first();
+
+    if (!pureProduct) {
+      throw new Error(`Pure product ${args.pureProductId} not found`);
+    }
+
+    // Set pending match (not yet approved)
+    await ctx.db.patch(costcoProduct._id, {
+      matchStatus: "pending_approval",
+      pureProductId: args.pureProductId,
+    });
+
+    return {
+      costcoProduct: costcoProduct.name,
+      pureProduct: pureProduct.productName,
+      success: true,
+    };
+  },
+});
+
+/**
+ * Confirm a pending match - moves from pending_approval to manual_matched
+ */
+export const confirmMatch = mutation({
+  args: {
+    costcoProductId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAdmin(ctx);
+
+    // Get the Costco product
+    const costcoProduct = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_product_id", (q) =>
+        q.eq("productId", args.costcoProductId),
+      )
+      .first();
+
+    if (!costcoProduct) {
+      throw new Error(`Costco product ${args.costcoProductId} not found`);
+    }
+
+    if (!costcoProduct.pureProductId) {
+      throw new Error("No match selected to confirm");
+    }
+
+    // Confirm the match with approval metadata
+    await ctx.db.patch(costcoProduct._id, {
+      matchApprovedAt: Date.now(),
+      matchApprovedBy: userId,
+      matchStatus: "manual_matched",
+    });
+
+    return {
+      costcoProduct: costcoProduct.name,
+      success: true,
+    };
+  },
+});
+
+/**
+ * Legacy: Approve or change a product match directly
  * Sets matchStatus to manual_matched and records approval metadata
+ * @deprecated Use selectMatch + confirmMatch for two-step workflow
  */
 export const approveMatch = mutation({
   args: {
@@ -666,5 +761,206 @@ export const checkIsAdmin = query({
       isAdmin: isAdmin(userId),
       userId,
     };
+  },
+});
+
+// Pure API configuration
+const PURE_API_BASE_URL = "https://public.api.collectpure.com";
+
+// Type for Pure API product response
+interface PureApiProduct {
+  attributes: string[];
+  id: string;
+  manufacturer?: {
+    title: string;
+  };
+  material: string;
+  sku: string;
+  subCategory?: {
+    title: string;
+  };
+  title: string;
+  variants: {
+    highestOffer?: {
+      price: number;
+    };
+  }[];
+  weight: string;
+  weightGrams: number;
+}
+
+/**
+ * Fetch a Pure product by SKU from the API and add it to the database
+ */
+export const fetchAndAddPureProduct = action({
+  args: {
+    sku: v.string(),
+  },
+  handler: async (ctx, args): Promise<{
+    error?: string;
+    product?: {
+      currentBidPrice: null | number;
+      manufacturer: null | string;
+      metalType: "gold" | "silver";
+      productName: string;
+      pureProductId: string;
+      sku: string;
+      weight: number;
+    };
+    success: boolean;
+  }> => {
+    // Check admin access
+    await ctx.runMutation(internal.admin.checkAdminAccess, {});
+
+    const apiKey = process.env.PURE_API_KEY;
+    if (!apiKey) {
+      return { error: "PURE_API_KEY not configured", success: false };
+    }
+
+    try {
+      // Try to fetch the product by SKU
+      // The Pure API uses SKU as a query parameter
+      const searchParams = new URLSearchParams({
+        limit: "100",
+        offset: "0",
+      });
+
+      // Search through gold and silver products to find the SKU
+      const metals = ["Gold", "Silver"];
+      let foundProduct: PureApiProduct | null = null;
+
+      for (const material of metals) {
+        if (foundProduct) break;
+
+        let offset = 0;
+        let hasMore = true;
+
+        while (hasMore && !foundProduct) {
+          searchParams.set("material", material);
+          searchParams.set("offset", offset.toString());
+
+          const response = await fetch(
+            `${PURE_API_BASE_URL}/v1/products?${searchParams.toString()}`,
+            {
+              headers: {
+                Accept: "application/json",
+                "x-api-key": apiKey,
+              },
+            },
+          );
+
+          if (!response.ok) {
+            console.warn(`Failed to fetch ${material} products: ${response.status}`);
+            break;
+          }
+
+          const products = (await response.json()) as PureApiProduct[];
+
+          // Look for the matching SKU
+          foundProduct = products.find((p) => p.sku === args.sku) ?? null;
+
+          if (products.length < 100) {
+            hasMore = false;
+          } else {
+            offset += 100;
+          }
+        }
+      }
+
+      if (!foundProduct) {
+        return { error: "Product not found in Pure API", success: false };
+      }
+
+      // Transform the product data
+      const metalType = foundProduct.material.toLowerCase() as "gold" | "silver";
+      const weightOz = parseWeightToOz(foundProduct.weight, foundProduct.weightGrams);
+      const productType = extractProductType(foundProduct);
+      const bidPrice = foundProduct.variants[0]?.highestOffer?.price ?? null;
+      const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
+
+      const productData = {
+        currentBidPrice: bidPrice,
+        currentBidPricePerOz: bidPricePerOz,
+        isGenericFallback: false,
+        lastUpdated: Date.now(),
+        manufacturer: foundProduct.manufacturer?.title ?? null,
+        metalType,
+        productName: foundProduct.title,
+        productType,
+        pureProductId: foundProduct.id,
+        sku: foundProduct.sku,
+        weight: weightOz,
+        weightGrams: foundProduct.weightGrams || null,
+      };
+
+      // Add to database
+      await ctx.runMutation(internal.admin.insertPureProduct, productData);
+
+      return {
+        product: {
+          currentBidPrice: productData.currentBidPrice,
+          manufacturer: productData.manufacturer,
+          metalType: productData.metalType,
+          productName: productData.productName,
+          pureProductId: productData.pureProductId,
+          sku: productData.sku,
+          weight: productData.weight,
+        },
+        success: true,
+      };
+    } catch (error) {
+      console.error("Error fetching Pure product:", error);
+      return {
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false,
+      };
+    }
+  },
+});
+
+/**
+ * Internal mutation to insert a Pure product
+ */
+export const insertPureProduct = internalMutation({
+  args: {
+    currentBidPrice: v.union(v.number(), v.null()),
+    currentBidPricePerOz: v.union(v.number(), v.null()),
+    isGenericFallback: v.boolean(),
+    lastUpdated: v.number(),
+    manufacturer: v.union(v.string(), v.null()),
+    metalType: v.union(v.literal("gold"), v.literal("silver")),
+    productName: v.string(),
+    productType: v.union(v.string(), v.null()),
+    pureProductId: v.string(),
+    sku: v.union(v.string(), v.null()),
+    weight: v.number(),
+    weightGrams: v.union(v.number(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    // Check if product already exists
+    const existing = await ctx.db
+      .query("pureProducts")
+      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
+      .first();
+
+    if (existing) {
+      // Update existing product
+      await ctx.db.patch(existing._id, {
+        currentBidPrice: args.currentBidPrice,
+        currentBidPricePerOz: args.currentBidPricePerOz,
+        lastUpdated: args.lastUpdated,
+        manufacturer: args.manufacturer,
+        productName: args.productName,
+        productType: args.productType,
+        sku: args.sku,
+        weight: args.weight,
+        weightGrams: args.weightGrams,
+      });
+      return { inserted: false, updated: true };
+    }
+
+    // Insert new product
+    await ctx.db.insert("pureProducts", args);
+    return { inserted: true, updated: false };
   },
 });

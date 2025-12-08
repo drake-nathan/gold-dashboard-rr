@@ -16,6 +16,7 @@ import type * as fmp from "../fmp.js";
 import type * as lib_metalParsing from "../lib/metalParsing.js";
 import type * as lib_pureApiParsing from "../lib/pureApiParsing.js";
 import type * as marketPrices from "../marketPrices.js";
+import type * as migrations from "../migrations.js";
 import type * as pure from "../pure.js";
 
 import type {
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   "lib/metalParsing": typeof lib_metalParsing;
   "lib/pureApiParsing": typeof lib_pureApiParsing;
   marketPrices: typeof marketPrices;
+  migrations: typeof migrations;
   pure: typeof pure;
 }>;
 

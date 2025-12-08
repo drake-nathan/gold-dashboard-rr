@@ -127,11 +127,40 @@ export const getFallbackPureId = (
 };
 
 /**
+ * Extract count multiplier from product name
+ *
+ * Handles formats like:
+ * - "20-count", "20 count"
+ * - "20-pack", "20 pack"
+ * - "box of 20", "set of 20"
+ *
+ * @param name - Product name
+ * @returns Count multiplier (defaults to 1 if not found)
+ */
+export const extractCountMultiplier = (name: string): number => {
+  const lowerName = name.toLowerCase();
+
+  // Match patterns like "20-count", "20 count", "20-pack", "20 pack"
+  const countMatch = /(\d+)[\s-]*(count|pack|piece|pc)/i.exec(lowerName);
+  if (countMatch) {
+    return parseInt(countMatch[1], 10);
+  }
+
+  // Match patterns like "box of 20", "set of 20"
+  const ofMatch = /(box|set|pack)\s+of\s+(\d+)/i.exec(lowerName);
+  if (ofMatch) {
+    return parseInt(ofMatch[2], 10);
+  }
+
+  return 1;
+};
+
+/**
  * Extract metal attributes from a raw product
  *
  * Filters and enriches product data to include:
  * - Metal type (gold or silver)
- * - Metal weight string
+ * - Metal weight string (adjusted for count multipliers)
  * - Calculated price per ounce
  *
  * Returns null if product is not a valid metal product
@@ -166,10 +195,23 @@ export const extractMetalAttributes = (
   if (!isMetalProduct) return null;
 
   // Extract weight string from attributes
-  const metalWeight = product.attributes.find(
+  const rawMetalWeight = product.attributes.find(
     (attr) =>
       attr.key === "Metal Weight" || attr.key.toLowerCase().includes("weight"),
   )?.value;
+
+  // Extract count multiplier from product name (e.g., "20-count" -> 20)
+  const countMultiplier = extractCountMultiplier(product.name);
+
+  // Adjust metal weight string if there's a count multiplier
+  let metalWeight = rawMetalWeight;
+  if (rawMetalWeight && countMultiplier > 1) {
+    const weightInOz = extractWeightInOz(rawMetalWeight);
+    if (weightInOz) {
+      const totalOz = weightInOz * countMultiplier;
+      metalWeight = `${totalOz} Troy Ounce`;
+    }
+  }
 
   // Calculate price per ounce using helper function
   let pricePerOunce: number | undefined;

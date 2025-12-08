@@ -47,7 +47,7 @@ const AdminPage = () => {
   if (!isSignedIn) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-md">
+        <div className="flex flex-col items-center">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold">Admin Access</h1>
             <p className="text-sm text-muted-foreground">

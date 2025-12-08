@@ -5,6 +5,7 @@ import {
   action,
   internalAction,
   internalMutation,
+  internalQuery,
   query,
 } from "./_generated/server";
 import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
@@ -150,8 +151,14 @@ export const fetchNewData = internalAction({
         }
       }
 
-      // Step 2: Fetch all Pure products (gold and silver only for MVP)
-      // Only fetch products with "Stocked by Costco" attribute
+      // Step 2: Get existing product IDs from our database
+      // This allows us to update manually added products even if they don't have "Stocked by Costco"
+      const existingProductIds = await ctx.runQuery(
+        internal.pure.getExistingPureProductIds,
+      );
+      const existingIdsSet = new Set(existingProductIds);
+
+      // Step 3: Fetch all Pure products (gold and silver only for MVP)
       const metals = ["Gold", "Silver"];
       let totalProductsFetched = 0;
       let totalProductsStored = 0;
@@ -192,7 +199,10 @@ export const fetchNewData = internalAction({
               `Fetched ${products.length} ${material} products at offset ${offset}`,
             );
 
-            // Process products into batch data - "Stocked by Costco" OR generic fallbacks
+            // Process products into batch data:
+            // - "Stocked by Costco" attribute
+            // - Generic fallback SKUs
+            // - Products already in our database (manually added)
             const productBatch = products
               .filter((product) => {
                 // Include products with "Stocked by Costco" attribute
@@ -206,7 +216,10 @@ export const fetchNewData = internalAction({
                   product.sku,
                 );
 
-                return isStockedByCostco || isGenericFallback;
+                // Also include products already in our database (e.g., manually added)
+                const existsInDb = existingIdsSet.has(product.id);
+
+                return isStockedByCostco || isGenericFallback || existsInDb;
               })
               .map((product) => {
                 const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(
@@ -505,6 +518,15 @@ export const getAllPureProducts = query({
     }
 
     return await ctx.db.query("pureProducts").collect();
+  },
+});
+
+// Internal query to get all existing Pure product IDs (for cron update filtering)
+export const getExistingPureProductIds = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const products = await ctx.db.query("pureProducts").collect();
+    return products.map((p) => p.pureProductId);
   },
 });
 
