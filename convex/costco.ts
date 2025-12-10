@@ -12,6 +12,39 @@ import {
 
 const UNWRANGLE_API_URL = "https://data.unwrangle.com/api/getter/";
 
+// Product API response type
+interface ProductApiResponse {
+  credits_used: number;
+  detail: {
+    availability?: null | string;
+    brand?: string;
+    description?: string;
+    images?: string[];
+    in_stock: boolean | null; // Top-level can be null
+    listing_price?: null | number;
+    model_number?: string;
+    name: string;
+    price: null | number;
+    product_id?: string;
+    returns?: null | string;
+    shipping?: string;
+    sku?: string;
+    specifications?: { name: string; value: string }[];
+    // Stock info is often in variants for Costco products
+    variants?: {
+      in_stock: boolean;
+      max_quantity?: number;
+      options?: unknown[];
+      part_number?: string;
+      product_url?: string;
+    }[];
+  };
+  platform: string;
+  remaining_credits: number;
+  result_count?: number;
+  success: boolean;
+}
+
 // RawProduct and ProcessedProduct types are now imported from ./lib/metalParsing
 
 interface ApiResponse {
@@ -234,7 +267,8 @@ export const upsertProduct = internalMutation({
       }
 
       // Check if metalWeight changed (e.g., count multiplier fix)
-      const weightChanged = existing.metalWeight !== (product.metalWeight ?? null);
+      const weightChanged =
+        existing.metalWeight !== (product.metalWeight ?? null);
 
       // Update product if anything changed
       if (priceChanged || stockChanged || weightChanged) {
@@ -895,5 +929,296 @@ export const matchAllCostcoProducts = internalAction({
       needsReview,
       total: costcoProducts.length,
     };
+  },
+});
+
+// Fetch single product details using Product API (10 credits per call)
+export const fetchProductDetails = internalAction({
+  args: {
+    productId: v.string(),
+    productUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const apiKey = process.env.UNWRANGLE_API_KEY;
+    if (!apiKey) {
+      throw new Error("UNWRANGLE_API_KEY environment variable is required");
+    }
+
+    const params = new URLSearchParams({
+      api_key: apiKey,
+      platform: "costco_detail",
+      url: args.productUrl,
+    });
+
+    const url = `${UNWRANGLE_API_URL}?${params.toString()}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; Gold-Dashboard/1.0)",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Product API responded with status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as ProductApiResponse;
+
+    if (!data.success) {
+      throw new Error(
+        `Product API request failed. Credits remaining: ${data.remaining_credits}`,
+      );
+    }
+
+    // Stock status: prefer variants[0].in_stock, fall back to detail.in_stock
+    // Costco products often have null in_stock at top level but accurate variant data
+    const variantInStock = data.detail.variants?.[0]?.in_stock;
+    const inStock = variantInStock ?? data.detail.in_stock ?? false;
+
+    return {
+      brand: data.detail.brand ?? null,
+      creditsRemaining: data.remaining_credits,
+      creditsUsed: data.credits_used,
+      inStock,
+      name: data.detail.name,
+      price: data.detail.price,
+      productId: args.productId,
+      success: true,
+    };
+  },
+});
+
+// Get in-stock products for verification
+export const getInStockProductsForVerification = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const goldInStock = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_metal_and_stock", (q) =>
+        q.eq("metalType", "gold").eq("currentInStock", true),
+      )
+      .collect();
+
+    const silverInStock = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_metal_and_stock", (q) =>
+        q.eq("metalType", "silver").eq("currentInStock", true),
+      )
+      .collect();
+
+    return [...goldInStock, ...silverInStock].map((p) => ({
+      _id: p._id,
+      currentPrice: p.currentPrice,
+      name: p.name,
+      productId: p.productId,
+      url: p.url,
+    }));
+  },
+});
+
+// Update product from Product API verification
+export const updateProductFromVerification = internalMutation({
+  args: {
+    inStock: v.boolean(),
+    price: v.union(v.number(), v.null()),
+    productId: v.string(),
+    timestamp: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const product = await ctx.db
+      .query("costcoProducts")
+      .withIndex("by_product_id", (q) => q.eq("productId", args.productId))
+      .first();
+
+    if (!product) {
+      console.warn(`Product ${args.productId} not found for verification`);
+      return { priceChanged: false, stockChanged: false, updated: false };
+    }
+
+    let priceChanged = false;
+    let stockChanged = false;
+    let updated = false;
+
+    // Check for price changes (only if we got a valid price)
+    if (args.price !== null && product.currentPrice !== args.price) {
+      priceChanged = true;
+
+      // Calculate new price per ounce
+      const weightInOz = extractWeightInOz(product.metalWeight);
+      const newPricePerOunce = weightInOz ? args.price / weightInOz : null;
+
+      await ctx.db.insert("priceHistory", {
+        price: args.price,
+        pricePerOunce: newPricePerOunce,
+        priceReduced: null,
+        productId: args.productId,
+        timestamp: args.timestamp,
+      });
+
+      console.info(
+        `[Product API] Price changed for ${product.name}: $${product.currentPrice} → $${args.price}`,
+      );
+    }
+
+    // Check for stock changes
+    if (product.currentInStock !== args.inStock) {
+      stockChanged = true;
+
+      await ctx.db.insert("stockHistory", {
+        inStock: args.inStock,
+        productId: args.productId,
+        timestamp: args.timestamp,
+      });
+
+      console.info(
+        `[Product API] Stock changed for ${product.name}: ${product.currentInStock} → ${args.inStock}`,
+      );
+    }
+
+    // Update product if anything changed
+    if (priceChanged || stockChanged) {
+      const weightInOz = extractWeightInOz(product.metalWeight);
+      const newPricePerOunce =
+        args.price !== null && weightInOz ? args.price / weightInOz : null;
+
+      await ctx.db.patch(product._id, {
+        ...(args.price !== null && { currentPrice: args.price }),
+        ...(newPricePerOunce !== null && {
+          currentPricePerOunce: newPricePerOunce,
+        }),
+        currentInStock: args.inStock,
+        lastUpdated: args.timestamp,
+        ...(priceChanged && { lastPriceChange: args.timestamp }),
+        ...(stockChanged && { lastStockChange: args.timestamp }),
+        // Set lastInStockAt when product goes OUT of stock
+        ...(stockChanged && !args.inStock && { lastInStockAt: args.timestamp }),
+      });
+      updated = true;
+    }
+
+    return { priceChanged, stockChanged, updated };
+  },
+});
+
+// Verify in-stock products using Product API (called by cron)
+export const verifyInStockProducts = internalAction({
+  args: {},
+  handler: async (
+    ctx,
+  ): Promise<{
+    creditsRemaining?: number;
+    priceChanges: number;
+    productsVerified: number;
+    stockChanges: number;
+    success: boolean;
+  }> => {
+    const timestamp = Date.now();
+    let fetchRunId: string | undefined;
+
+    try {
+      // Get all products currently marked as in-stock
+      const inStockProducts: {
+        _id: string;
+        currentPrice: number;
+        name: string;
+        productId: string;
+        url: string;
+      }[] = await ctx.runMutation(
+        internal.costco.getInStockProductsForVerification,
+        {},
+      );
+
+      if (inStockProducts.length === 0) {
+        console.info("[Product API] No in-stock products to verify");
+        return {
+          priceChanges: 0,
+          productsVerified: 0,
+          stockChanges: 0,
+          success: true,
+        };
+      }
+
+      console.info(
+        `[Product API] Verifying ${inStockProducts.length} in-stock products`,
+      );
+
+      let priceChanges = 0;
+      let stockChanges = 0;
+      let creditsRemaining = 0;
+
+      // Fetch each product's details
+      for (const product of inStockProducts) {
+        try {
+          const details = await ctx.runAction(
+            internal.costco.fetchProductDetails,
+            {
+              productId: product.productId,
+              productUrl: product.url,
+            },
+          );
+
+          creditsRemaining = details.creditsRemaining;
+
+          // Update product with verified data
+          const result = await ctx.runMutation(
+            internal.costco.updateProductFromVerification,
+            {
+              inStock: details.inStock,
+              price: details.price,
+              productId: product.productId,
+              timestamp,
+            },
+          );
+
+          if (result.priceChanged) priceChanges++;
+          if (result.stockChanged) stockChanges++;
+        } catch (error) {
+          console.error(
+            `[Product API] Error verifying ${product.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          );
+          // Continue with other products even if one fails
+        }
+      }
+
+      // Log fetch run
+      fetchRunId = await ctx.runMutation(internal.costco.logFetchRun, {
+        creditsRemaining,
+        priceChanges,
+        productsFound: inStockProducts.length,
+        productsUpdated: priceChanges + stockChanges,
+        source: "costco",
+        stockChanges,
+        timestamp,
+      });
+
+      console.info(
+        `[Product API] Verification complete: ${inStockProducts.length} verified, ${priceChanges} price changes, ${stockChanges} stock changes. Credits remaining: ${creditsRemaining}`,
+      );
+
+      return {
+        creditsRemaining,
+        priceChanges,
+        productsVerified: inStockProducts.length,
+        stockChanges,
+        success: true,
+      };
+    } catch (error) {
+      console.error("[Product API] Verification failed:", error);
+
+      if (!fetchRunId) {
+        await ctx.runMutation(internal.costco.logFetchRun, {
+          error: error instanceof Error ? error.message : "Unknown error",
+          priceChanges: 0,
+          productsFound: 0,
+          productsUpdated: 0,
+          source: "costco",
+          stockChanges: 0,
+          timestamp,
+        });
+      }
+
+      throw error;
+    }
   },
 });

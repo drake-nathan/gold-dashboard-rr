@@ -168,15 +168,47 @@ Historical price data for calculating 24h percentage changes.
 
 ## Data Flow
 
-1. Fetch products from Costco (via Unwrangle API)
-2. Fetch spot prices and bids from Collect Pure API (stored in `pureProducts` table)
-3. Fetch market prices from Gold API (gold, silver, bitcoin) every 5 minutes
-4. Fetch S&P 500 data from FMP API every 5 minutes during market hours (8 AM - 6 PM ET), hourly off-hours
-5. Match Costco products to Pure products (only stores `pureProductId` on Costco products)
-6. Track price/stock changes in history tables
-7. Calculate 24h percentage changes from market price history (Gold API) or use API-provided change (FMP)
-8. **Dashboard query JOINs Costco products with Pure products** to get fresh bid prices in real-time
-9. Display comparison data with up-to-date spreads
+1. Fetch products from Costco (via Unwrangle Search API - discovers new products)
+2. Verify in-stock products with Unwrangle Product API (accurate stock/price)
+3. Fetch spot prices and bids from Collect Pure API (stored in `pureProducts` table)
+4. Fetch market prices from Gold API (gold, silver, bitcoin) every 5 minutes
+5. Fetch S&P 500 data from FMP API every 5 minutes during market hours (8 AM - 6 PM ET), hourly off-hours
+6. Match Costco products to Pure products (only stores `pureProductId` on Costco products)
+7. Track price/stock changes in history tables
+8. Calculate 24h percentage changes from market price history (Gold API) or use API-provided change (FMP)
+9. **Dashboard query JOINs Costco products with Pure products** to get fresh bid prices in real-time
+10. Display comparison data with up-to-date spreads
+
+### Unwrangle API Strategy (Costco Data)
+
+**Dual API Approach** (implemented December 2024): Uses both Search API and Product API for optimal accuracy and credit efficiency.
+
+| API                               | Purpose                                      | Cost               | Schedule                           |
+| --------------------------------- | -------------------------------------------- | ------------------ | ---------------------------------- |
+| **Search API** (`costco_search`)  | New product discovery, bulk stock/price data | ~1 credit/call     | Every 10 min during business hours |
+| **Product API** (`costco_detail`) | Accurate stock/price verification            | 10 credits/product | Every hour during business hours   |
+
+**Business Hours**: 9 AM - 6 PM CT (15:00 - 01:00 UTC)
+
+**Credit Budget**: 100k/month, using ~30k/month with current setup
+
+**Why Two APIs**:
+
+- Search API is efficient for discovering new products and getting bulk data
+- Search API stock/price can be stale or inaccurate
+- Product API provides real-time accurate data but costs 10x per product
+- Hybrid approach: Search for discovery, Product API for verification
+
+**Functions** (`convex/costco.ts`):
+
+- `fetchNewData()`: Search API - discovers products, updates DB, marks unseen as OOS
+- `verifyInStockProducts()`: Product API - verifies all in-stock products
+- `fetchProductDetails()`: Single product fetch via Product API
+
+**Cron Jobs** (`convex/crons.ts`):
+
+- `fetch-costco-search`: Every 10 min during business hours
+- `verify-costco-products`: Every hour during business hours
 
 ### Pure Bid Price Architecture
 

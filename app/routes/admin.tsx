@@ -26,10 +26,7 @@ const AdminPage = () => {
   const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
 
   // Check if user is admin (only query when signed in)
-  const adminCheck = useQuery(
-    api.admin.checkIsAdmin,
-    isSignedIn ? {} : "skip",
-  );
+  const adminCheck = useQuery(api.admin.checkIsAdmin, isSignedIn ? {} : "skip");
 
   // Loading state while Clerk initializes
   if (!isUserLoaded) {

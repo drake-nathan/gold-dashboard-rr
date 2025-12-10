@@ -3,12 +3,7 @@ import { v } from "convex/values";
 import type { QueryCtx } from "./_generated/server";
 
 import { internal } from "./_generated/api";
-import {
-  action,
-  internalMutation,
-  mutation,
-  query,
-} from "./_generated/server";
+import { action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
 import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
 
@@ -24,7 +19,9 @@ const isAdmin = (userId: null | string): boolean => {
 };
 
 // Helper to get authenticated user ID from context
-const getAuthenticatedUserId = async (ctx: QueryCtx): Promise<null | string> => {
+const getAuthenticatedUserId = async (
+  ctx: QueryCtx,
+): Promise<null | string> => {
   const identity = await ctx.auth.getUserIdentity();
   return identity?.subject ?? null;
 };
@@ -84,8 +81,9 @@ export const getProductsForReview = query({
 
     // Enrich with Pure product info
     const enrichProduct = (product: (typeof products)[0]) => {
-      const pureProduct = product.pureProductId
-        ? pureProductsMap.get(product.pureProductId)
+      const pureProduct =
+        product.pureProductId ?
+          pureProductsMap.get(product.pureProductId)
         : null;
 
       return {
@@ -100,8 +98,9 @@ export const getProductsForReview = query({
         metalWeight: product.metalWeight,
         name: product.name,
         productId: product.productId,
-        pureProduct: pureProduct
-          ? {
+        pureProduct:
+          pureProduct ?
+            {
               currentBidPrice: pureProduct.currentBidPrice,
               isGenericFallback: pureProduct.isGenericFallback,
               manufacturer: pureProduct.manufacturer,
@@ -166,8 +165,9 @@ export const getTopMatches = query({
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
 
     // Get fallback Pure product info
-    const fallbackPureId = weightInOz
-      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
+    const fallbackPureId =
+      weightInOz ?
+        getFallbackPureId(costcoProduct.metalType, weightInOz)
       : null;
 
     let fallbackPureProduct = null;
@@ -195,8 +195,9 @@ export const getTopMatches = query({
           productId: costcoProduct.productId,
           weightInOz,
         },
-        fallback: fallbackPureProduct
-          ? {
+        fallback:
+          fallbackPureProduct ?
+            {
               currentBidPrice: fallbackPureProduct.currentBidPrice,
               isGenericFallback: fallbackPureProduct.isGenericFallback,
               manufacturer: fallbackPureProduct.manufacturer,
@@ -293,9 +294,9 @@ export const getTopMatches = query({
       for (let i = 0; i < pureWords.length - 1; i++) {
         const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
         const threeWord =
-          i < pureWords.length - 2
-            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
-            : null;
+          i < pureWords.length - 2 ?
+            `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
+          : null;
 
         if (
           threeWord &&
@@ -349,8 +350,9 @@ export const getTopMatches = query({
         productId: costcoProduct.productId,
         weightInOz,
       },
-      fallback: fallbackPureProduct
-        ? {
+      fallback:
+        fallbackPureProduct ?
+          {
             currentBidPrice: fallbackPureProduct.currentBidPrice,
             isGenericFallback: fallbackPureProduct.isGenericFallback,
             manufacturer: fallbackPureProduct.manufacturer,
@@ -543,6 +545,7 @@ export const confirmMatch = mutation({
 /**
  * Legacy: Approve or change a product match directly
  * Sets matchStatus to manual_matched and records approval metadata
+ *
  * @deprecated Use selectMatch + confirmMatch for two-step workflow
  */
 export const approveMatch = mutation({
@@ -615,8 +618,9 @@ export const useFallback = mutation({
 
     // Get weight-specific fallback if available
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-    const fallbackPureId = weightInOz
-      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
+    const fallbackPureId =
+      weightInOz ?
+        getFallbackPureId(costcoProduct.metalType, weightInOz)
       : null;
 
     // Update to use fallback
@@ -644,7 +648,10 @@ export const rematchProduct = action({
     costcoProductId: v.string(),
     force: v.optional(v.boolean()), // If true, override even manual matches
   },
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     candidates?: {
       details: string;
       productName: string;
@@ -796,7 +803,10 @@ export const fetchAndAddPureProduct = action({
   args: {
     sku: v.string(),
   },
-  handler: async (ctx, args): Promise<{
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
     error?: string;
     product?: {
       currentBidPrice: null | number;
@@ -827,7 +837,7 @@ export const fetchAndAddPureProduct = action({
 
       // Search through gold and silver products to find the SKU
       const metals = ["Gold", "Silver"];
-      let foundProduct: PureApiProduct | null = null;
+      let foundProduct: null | PureApiProduct = null;
 
       for (const material of metals) {
         if (foundProduct) break;
@@ -850,7 +860,9 @@ export const fetchAndAddPureProduct = action({
           );
 
           if (!response.ok) {
-            console.warn(`Failed to fetch ${material} products: ${response.status}`);
+            console.warn(
+              `Failed to fetch ${material} products: ${response.status}`,
+            );
             break;
           }
 
@@ -872,8 +884,13 @@ export const fetchAndAddPureProduct = action({
       }
 
       // Transform the product data
-      const metalType = foundProduct.material.toLowerCase() as "gold" | "silver";
-      const weightOz = parseWeightToOz(foundProduct.weight, foundProduct.weightGrams);
+      const metalType = foundProduct.material.toLowerCase() as
+        | "gold"
+        | "silver";
+      const weightOz = parseWeightToOz(
+        foundProduct.weight,
+        foundProduct.weightGrams,
+      );
       const productType = extractProductType(foundProduct);
       const bidPrice = foundProduct.variants[0]?.highestOffer?.price ?? null;
       const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;

@@ -53,14 +53,14 @@ export const AuthButtons = () => {
         </Button>
       </SignedOut>
       <SignedIn>
-        {isAdmin && (
+        {isAdmin ?
           <Button asChild size="sm" variant="ghost">
             <Link to="/admin">
               <Settings className="h-4 w-4" />
               <span className="ml-1.5">Admin</span>
             </Link>
           </Button>
-        )}
+        : null}
         <UserButton />
       </SignedIn>
     </>

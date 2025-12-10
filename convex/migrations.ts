@@ -5,10 +5,7 @@
  */
 
 import { mutation } from "./_generated/server";
-import {
-  extractCountMultiplier,
-  extractWeightInOz,
-} from "./lib/metalParsing";
+import { extractCountMultiplier, extractWeightInOz } from "./lib/metalParsing";
 
 /**
  * COMPLETED: 2025-01-XX - Remove Pure bid prices from Costco products

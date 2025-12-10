@@ -50,7 +50,11 @@ interface ProductForReview {
   url: string;
 }
 
-export const ProductMatchCard = ({ product }: { product: ProductForReview }) => {
+export const ProductMatchCard = ({
+  product,
+}: {
+  product: ProductForReview;
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [showChangeDialog, setShowChangeDialog] = useState(false);
 
@@ -59,25 +63,35 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
           {/* Product Image */}
-          {product.thumbnail ? <img
+          {product.thumbnail ?
+            <img
               alt={product.name}
-              className="h-16 w-16 rounded-md border object-contain bg-white"
+              className="h-16 w-16 rounded-md border bg-white object-contain"
               src={product.thumbnail}
-            /> : null}
+            />
+          : null}
 
           {/* Product Info */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h3 className="font-medium leading-tight">{product.name}</h3>
+                <h3 className="leading-tight font-medium">{product.name}</h3>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <Badge variant={product.metalType === "gold" ? "default" : "secondary"}>
+                  <Badge
+                    variant={
+                      product.metalType === "gold" ? "default" : "secondary"
+                    }
+                  >
                     {product.metalType}
                   </Badge>
-                  {product.metalWeight ? <span className="text-sm text-muted-foreground">
+                  {product.metalWeight ?
+                    <span className="text-sm text-muted-foreground">
                       {product.metalWeight}
-                    </span> : null}
-                  <Badge variant={product.currentInStock ? "outline" : "destructive"}>
+                    </span>
+                  : null}
+                  <Badge
+                    variant={product.currentInStock ? "outline" : "destructive"}
+                  >
                     {product.currentInStock ? "In Stock" : "Out of Stock"}
                   </Badge>
                   <span className="text-sm font-medium">
@@ -95,37 +109,45 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
 
       <CardContent className="space-y-3">
         {/* Current Match */}
-        <div className={`flex items-center justify-between rounded-md border p-3 ${
-          product.matchStatus === "pending_approval"
-            ? "border-purple-500/50 bg-purple-500/10"
+        <div
+          className={`flex items-center justify-between rounded-md border p-3 ${
+            product.matchStatus === "pending_approval" ?
+              "border-purple-500/50 bg-purple-500/10"
             : "bg-muted/50"
-        }`}>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1 flex items-center gap-2">
+          }`}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 flex items-center gap-2 text-xs tracking-wide text-muted-foreground uppercase">
               Current Match
               {product.matchStatus === "pending_approval" && (
-                <Badge className="bg-purple-500/20 text-purple-600 border-purple-500/30 text-[10px] px-1.5 py-0">
+                <Badge className="border-purple-500/30 bg-purple-500/20 px-1.5 py-0 text-[10px] text-purple-600">
                   Pending Confirmation
                 </Badge>
               )}
             </p>
-            {product.pureProduct ? (
+            {product.pureProduct ?
               <div>
-                <p className="font-medium text-sm">{product.pureProduct.productName}</p>
+                <p className="text-sm font-medium">
+                  {product.pureProduct.productName}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {product.pureProduct.weight} oz •{" "}
                   {product.pureProduct.manufacturer ?? "Generic"}
                   {product.pureProduct.isGenericFallback ? " (Fallback)" : null}
-                  {product.pureProduct.currentBidPrice ? ` • Bid: ${formatCurrency(product.pureProduct.currentBidPrice)}` : null}
+                  {product.pureProduct.currentBidPrice ?
+                    ` • Bid: ${formatCurrency(product.pureProduct.currentBidPrice)}`
+                  : null}
                 </p>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">No match assigned</p>
-            )}
+            : <p className="text-sm text-muted-foreground italic">
+                No match assigned
+              </p>
+            }
           </div>
 
           <div className="flex items-center gap-2">
-            {product.pureProduct?.sku ? <Button asChild size="sm" variant="ghost">
+            {product.pureProduct?.sku ?
+              <Button asChild size="sm" variant="ghost">
                 <a
                   href={`https://www.collectpure.com/marketplace/product/${product.pureProduct.sku}`}
                   rel="noopener noreferrer"
@@ -133,14 +155,15 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
-              </Button> : null}
+              </Button>
+            : null}
             <Dialog onOpenChange={setShowChangeDialog} open={showChangeDialog}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
                   Change
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Change Match for: {product.name}</DialogTitle>
                   <DialogDescription>
@@ -150,7 +173,9 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                 <MatchSelector
                   costcoProductId={product.productId}
                   metalType={product.metalType}
-                  onSelect={() => { setShowChangeDialog(false); }}
+                  onSelect={() => {
+                    setShowChangeDialog(false);
+                  }}
                 />
               </DialogContent>
             </Dialog>
@@ -161,25 +186,26 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
         <div>
           <Button
             className="w-full justify-between"
-            onClick={() => { setExpanded(!expanded); }}
+            onClick={() => {
+              setExpanded(!expanded);
+            }}
             size="sm"
             variant="ghost"
           >
             <span>View Top Matches & Actions</span>
-            {expanded ? (
+            {expanded ?
               <ChevronUp className="h-4 w-4" />
-            ) : (
-              <ChevronDown className="h-4 w-4" />
-            )}
+            : <ChevronDown className="h-4 w-4" />}
           </Button>
 
-          {expanded ? <div className="mt-3 space-y-3">
+          {expanded ?
+            <div className="mt-3 space-y-3">
               <TopMatchesList
                 costcoProductId={product.productId}
                 currentPureProductId={product.pureProductId}
               />
 
-              <div className="flex items-center gap-2 pt-2 border-t">
+              <div className="flex items-center gap-2 border-t pt-2">
                 <ApproveButton
                   costcoProductId={product.productId}
                   currentPureProductId={product.pureProductId}
@@ -197,7 +223,8 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                   </a>
                 </Button>
               </div>
-            </div> : null}
+            </div>
+          : null}
         </div>
       </CardContent>
     </Card>
@@ -207,19 +234,39 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
 const StatusBadge = ({ status }: { status: null | string | undefined }) => {
   switch (status) {
     case "auto_matched": {
-      return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30">Auto</Badge>;
+      return (
+        <Badge className="border-blue-500/30 bg-blue-500/10 text-blue-600">
+          Auto
+        </Badge>
+      );
     }
     case "fallback": {
-      return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/30">Fallback</Badge>;
+      return (
+        <Badge className="border-yellow-500/30 bg-yellow-500/10 text-yellow-600">
+          Fallback
+        </Badge>
+      );
     }
     case "manual_matched": {
-      return <Badge className="bg-green-500/10 text-green-600 border-green-500/30">Approved</Badge>;
-    }
-    case "pending_approval": {
-      return <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">Pending</Badge>;
+      return (
+        <Badge className="border-green-500/30 bg-green-500/10 text-green-600">
+          Approved
+        </Badge>
+      );
     }
     case "needs_review": {
-      return <Badge className="bg-orange-500/10 text-orange-600 border-orange-500/30">Review</Badge>;
+      return (
+        <Badge className="border-orange-500/30 bg-orange-500/10 text-orange-600">
+          Review
+        </Badge>
+      );
+    }
+    case "pending_approval": {
+      return (
+        <Badge className="border-purple-500/30 bg-purple-500/10 text-purple-600">
+          Pending
+        </Badge>
+      );
     }
     default: {
       return <Badge variant="outline">Unmatched</Badge>;
@@ -262,32 +309,35 @@ const TopMatchesList = ({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground uppercase tracking-wide">
+      <p className="text-xs tracking-wide text-muted-foreground uppercase">
         Top Matches (Score-based)
       </p>
 
-      {topMatches.matches.length === 0 ? (
+      {topMatches.matches.length === 0 ?
         <p className="text-sm text-muted-foreground italic">No matches found</p>
-      ) : (
-        <div className="space-y-1">
+      : <div className="space-y-1">
           {topMatches.matches.map((match, index) => (
             <div
               className={`flex items-center justify-between rounded-md border p-2 text-sm ${
-                match.pureProductId === currentPureProductId
-                  ? "border-green-500/50 bg-green-500/10"
-                  : "hover:bg-muted/50"
+                match.pureProductId === currentPureProductId ?
+                  "border-green-500/50 bg-green-500/10"
+                : "hover:bg-muted/50"
               }`}
               key={match.pureProductId}
             >
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">#{index + 1}</span>
-                  <span className="font-medium truncate">{match.productName}</span>
+                  <span className="truncate font-medium">
+                    {match.productName}
+                  </span>
                   {match.pureProductId === currentPureProductId && (
-                    <Badge className="text-xs" variant="outline">Current</Badge>
+                    <Badge className="text-xs" variant="outline">
+                      Current
+                    </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="mt-0.5 flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">
                     Score: {match.score} • {match.weight} oz •{" "}
                     {match.manufacturer ?? "Unknown"}
@@ -295,7 +345,7 @@ const TopMatchesList = ({
                   </span>
                 </div>
                 {match.details.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     Matched: {match.details.join(", ")}
                   </p>
                 )}
@@ -306,50 +356,54 @@ const TopMatchesList = ({
                 size="sm"
                 variant="ghost"
               >
-                {match.pureProductId === currentPureProductId ? (
+                {match.pureProductId === currentPureProductId ?
                   <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  "Select"
-                )}
+                : "Select"}
               </Button>
             </div>
           ))}
         </div>
-      )}
+      }
 
       {/* Fallback Option */}
-      {topMatches.fallback ? <div className="mt-3 pt-3 border-t">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+      {topMatches.fallback ?
+        <div className="mt-3 border-t pt-3">
+          <p className="mb-2 text-xs tracking-wide text-muted-foreground uppercase">
             Weight-based Fallback
           </p>
           <div
             className={`flex items-center justify-between rounded-md border p-2 text-sm ${
-              topMatches.fallback.pureProductId === currentPureProductId
-                ? "border-green-500/50 bg-green-500/10"
-                : "hover:bg-muted/50"
+              topMatches.fallback.pureProductId === currentPureProductId ?
+                "border-green-500/50 bg-green-500/10"
+              : "hover:bg-muted/50"
             }`}
           >
             <div>
-              <span className="font-medium">{topMatches.fallback.productName}</span>
+              <span className="font-medium">
+                {topMatches.fallback.productName}
+              </span>
               <p className="text-xs text-muted-foreground">
                 {topMatches.fallback.weight} oz •{" "}
                 {topMatches.fallback.manufacturer ?? "Generic"}
               </p>
             </div>
             <Button
-              disabled={topMatches.fallback.pureProductId === currentPureProductId}
-              onClick={() => handleSelectMatch(topMatches.fallback!.pureProductId)}
+              disabled={
+                topMatches.fallback.pureProductId === currentPureProductId
+              }
+              onClick={() =>
+                handleSelectMatch(topMatches.fallback!.pureProductId)
+              }
               size="sm"
               variant="ghost"
             >
-              {topMatches.fallback.pureProductId === currentPureProductId ? (
+              {topMatches.fallback.pureProductId === currentPureProductId ?
                 <Check className="h-4 w-4 text-green-600" />
-              ) : (
-                "Use Fallback"
-              )}
+              : "Use Fallback"}
             </Button>
           </div>
-        </div> : null}
+        </div>
+      : null}
     </div>
   );
 };
@@ -372,7 +426,9 @@ const MatchSelector = ({
   // Search results
   const searchResults = useQuery(
     api.admin.searchPureProducts,
-    searchQuery.length >= 2 ? { limit: 10, metalType, query: searchQuery } : "skip",
+    searchQuery.length >= 2 ?
+      { limit: 10, metalType, query: searchQuery }
+    : "skip",
   );
 
   // URL lookup
@@ -410,9 +466,9 @@ const MatchSelector = ({
       {/* URL Paste Section */}
       <div>
         <label className="text-sm font-medium">Paste Pure URL</label>
-        <div className="flex gap-2 mt-1">
+        <div className="mt-1 flex gap-2">
           <input
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             onChange={(e) => {
               setPureUrl(e.target.value);
               setParsedSku(null);
@@ -424,41 +480,60 @@ const MatchSelector = ({
             Find
           </Button>
         </div>
-        {pureProductFromUrl ? <div className="mt-2 flex items-center justify-between rounded-md border bg-green-500/10 p-2">
+        {pureProductFromUrl ?
+          <div className="mt-2 flex items-center justify-between rounded-md border bg-green-500/10 p-2">
             <div>
-              <p className="font-medium text-sm">{pureProductFromUrl.productName}</p>
+              <p className="text-sm font-medium">
+                {pureProductFromUrl.productName}
+              </p>
               <p className="text-xs text-muted-foreground">
-                {pureProductFromUrl.weight} oz • {pureProductFromUrl.manufacturer ?? "Generic"}
+                {pureProductFromUrl.weight} oz •{" "}
+                {pureProductFromUrl.manufacturer ?? "Generic"}
               </p>
             </div>
-            <Button onClick={() => handleSelectMatch(pureProductFromUrl.pureProductId)} size="sm">
+            <Button
+              onClick={() =>
+                handleSelectMatch(pureProductFromUrl.pureProductId)
+              }
+              size="sm"
+            >
               Use This
             </Button>
-          </div> : null}
-        {parsedSku && pureProductFromUrl === null ? <p className="mt-2 text-sm text-destructive">Product not found in database</p> : null}
+          </div>
+        : null}
+        {parsedSku && pureProductFromUrl === null ?
+          <p className="mt-2 text-sm text-destructive">
+            Product not found in database
+          </p>
+        : null}
       </div>
 
       {/* Search Section */}
       <div>
         <label className="text-sm font-medium">Search Pure Products</label>
         <input
-          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring mt-1"
-          onChange={(e) => { setSearchQuery(e.target.value); }}
+          className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+          }}
           placeholder="Search by name, SKU, or manufacturer..."
           value={searchQuery}
         />
 
-        {searchResults && searchResults.length > 0 ? <div className="mt-2 max-h-60 overflow-y-auto space-y-1">
+        {searchResults && searchResults.length > 0 ?
+          <div className="mt-2 max-h-60 space-y-1 overflow-y-auto">
             {searchResults.map((product) => (
               <div
                 className="flex items-center justify-between rounded-md border p-2 hover:bg-muted/50"
                 key={product.pureProductId}
               >
                 <div>
-                  <p className="font-medium text-sm">{product.productName}</p>
+                  <p className="text-sm font-medium">{product.productName}</p>
                   <p className="text-xs text-muted-foreground">
                     {product.weight} oz • {product.manufacturer ?? "Generic"}
-                    {product.currentBidPrice ? ` • Bid: ${formatCurrency(product.currentBidPrice)}` : null}
+                    {product.currentBidPrice ?
+                      ` • Bid: ${formatCurrency(product.currentBidPrice)}`
+                    : null}
                   </p>
                 </div>
                 <Button
@@ -470,10 +545,13 @@ const MatchSelector = ({
                 </Button>
               </div>
             ))}
-          </div> : null}
+          </div>
+        : null}
 
         {searchQuery.length >= 2 && searchResults?.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No products found</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            No products found
+          </p>
         )}
       </div>
     </div>
@@ -517,7 +595,10 @@ const ApproveButton = ({
 
     setLoading(true);
     try {
-      await selectMatch({ costcoProductId, pureProductId: currentPureProductId });
+      await selectMatch({
+        costcoProductId,
+        pureProductId: currentPureProductId,
+      });
       toast.success("Match selected - click Confirm to finalize");
     } catch (error) {
       toast.error("Failed to select match");
@@ -539,16 +620,14 @@ const ApproveButton = ({
   if (isPending) {
     return (
       <Button
+        className="bg-purple-600 hover:bg-purple-700"
         disabled={loading}
         onClick={handleConfirm}
         size="sm"
-        className="bg-purple-600 hover:bg-purple-700"
       >
-        {loading ? (
+        {loading ?
           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-        ) : (
-          <Check className="mr-1 h-3 w-3" />
-        )}
+        : <Check className="mr-1 h-3 w-3" />}
         Confirm Match
       </Button>
     );
@@ -560,11 +639,9 @@ const ApproveButton = ({
       onClick={handleApprove}
       size="sm"
     >
-      {loading ? (
+      {loading ?
         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-      ) : (
-        <Check className="mr-1 h-3 w-3" />
-      )}
+      : <Check className="mr-1 h-3 w-3" />}
       Approve Match
     </Button>
   );

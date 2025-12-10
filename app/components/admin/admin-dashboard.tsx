@@ -152,9 +152,15 @@ export const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent className="mt-6 space-y-4" value="needs_review">
-            {productsData.needs_review.length === 0 && productsData.pending_approval.length === 0 ?
+            {(
+              productsData.needs_review.length === 0 &&
+              productsData.pending_approval.length === 0
+            ) ?
               <EmptyState message="No products need action" />
-            : [...productsData.pending_approval, ...productsData.needs_review].map((product) => (
+            : [
+                ...productsData.pending_approval,
+                ...productsData.needs_review,
+              ].map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
             }
@@ -244,7 +250,7 @@ const UrlParserCard = () => {
   const [parsedSku, setParsedSku] = useState<null | string>(null);
   const [error, setError] = useState<null | string>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [addedProduct, setAddedProduct] = useState<{
+  const [addedProduct, setAddedProduct] = useState<null | {
     currentBidPrice: null | number;
     manufacturer: null | string;
     metalType: "gold" | "silver";
@@ -252,7 +258,7 @@ const UrlParserCard = () => {
     pureProductId: string;
     sku: string;
     weight: number;
-  } | null>(null);
+  }>(null);
 
   // Query for the Pure product when we have a SKU
   const pureProduct = useQuery(
@@ -358,14 +364,12 @@ const UrlParserCard = () => {
                   size="sm"
                   variant="secondary"
                 >
-                  {isAdding ? (
+                  {isAdding ?
                     <>
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       Fetching from Pure...
                     </>
-                  ) : (
-                    "Add from Pure API"
-                  )}
+                  : "Add from Pure API"}
                 </Button>
               </div>
             )}
@@ -374,11 +378,11 @@ const UrlParserCard = () => {
               if (!product) return null;
               return (
                 <div className="mt-2 space-y-1">
-                  {addedProduct && !pureProduct && (
-                    <Badge className="mb-1 bg-green-500/10 text-green-600 border-green-500/30">
+                  {addedProduct && !pureProduct ?
+                    <Badge className="mb-1 border-green-500/30 bg-green-500/10 text-green-600">
                       Added from Pure API
                     </Badge>
-                  )}
+                  : null}
                   <p className="text-sm font-medium">{product.productName}</p>
                   <p className="text-sm">
                     <span className="text-muted-foreground">UUID:</span>{" "}
@@ -388,7 +392,9 @@ const UrlParserCard = () => {
                     <Button
                       className="ml-2"
                       onClick={() => {
-                        void navigator.clipboard.writeText(product.pureProductId);
+                        void navigator.clipboard.writeText(
+                          product.pureProductId,
+                        );
                       }}
                       size="sm"
                       variant="ghost"

@@ -6,21 +6,23 @@ import { internal } from "./_generated/api";
 const crons = cronJobs();
 
 // Business hours: 9 AM - 6 PM CT
-// CT to UTC: UTC is 7 hours ahead of CT
-// 9 AM CT = 3 PM UTC (15:00), 6 PM CT = 1 AM UTC next day (01:00)
+// CT to UTC: UTC is 6 hours ahead of CT (standard time) or 5 hours (daylight time)
+// Using 15-23,0 UTC to cover 9 AM - 6 PM CT across both time zones
 
-// Fetch Costco prices every 20 minutes during business hours
+// Search API: Fetch Costco search results every 10 minutes during business hours
+// Used for new product discovery and initial stock/price data
 crons.cron(
-  "fetch-costco-business-hours",
-  "*/20 15-23,0 * * *", // Every 20 minutes from 3 PM - 1 AM UTC (9 AM - 6 PM CT)
+  "fetch-costco-search",
+  "*/10 15-23,0 * * *", // Every 10 minutes from 3 PM - 1 AM UTC (9 AM - 6 PM CT)
   internal.costco.fetchNewData,
 );
 
-// Fetch Costco prices every hour during off-hours (to catch any overnight changes)
+// Product API: Verify in-stock products every hour during business hours
+// More accurate stock/price verification (10 credits per product)
 crons.cron(
-  "fetch-metals-off-hours",
-  "0 2-14 * * *", // Every hour from 2 AM - 2 PM UTC (7 PM - 7 AM CT)
-  internal.costco.fetchNewData,
+  "verify-costco-products",
+  "0 15-23,0 * * *", // Every hour at :00 from 3 PM - 1 AM UTC (9 AM - 6 PM CT)
+  internal.costco.verifyInStockProducts,
 );
 
 // Fetch Collect Pure prices every 15 minutes during business hours
