@@ -20,8 +20,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@clerk/react-router": "2.3.2",
-    "@clerk/themes": "2.4.42",
+    "@clerk/react-router": "2.3.4",
+    "@clerk/themes": "2.4.43",
     "@hookform/resolvers": "5.2.2",
     "@radix-ui/react-alert-dialog": "1.1.15",
     "@radix-ui/react-dialog": "1.1.15",
@@ -39,9 +39,9 @@
     "cmdk": "1.1.1",
     "convex": "1.30.0",
     "isbot": "5.1.32",
-    "lucide-react": "0.556.0",
+    "lucide-react": "0.559.0",
     "next-themes": "0.4.6",
-    "posthog-js": "1.302.2",
+    "posthog-js": "1.303.1",
     "radix-ui": "1.4.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -56,7 +56,7 @@
   "devDependencies": {
     "@react-router/dev": "7.10.1",
     "@tailwindcss/vite": "4.1.17",
-    "@types/node": "24.10.1",
+    "@types/node": "24.10.2",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.2",

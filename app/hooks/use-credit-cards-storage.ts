@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import {
@@ -67,19 +66,15 @@ const serializer = (value: CreditCardsStorage): string => {
  * - Preset card merging (ensures presets are always available)
  */
 export const useCreditCardsStorage = () => {
-  // Memoize options to prevent useLocalStorage internal useCallback issues
-  const options = useMemo(
-    () => ({
-      deserializer,
-      serializer,
-    }),
-    [],
-  );
-
   const [storage, setStorage] = useLocalStorage<CreditCardsStorage>(
     CREDIT_CARDS_STORAGE_KEY,
     defaultValue,
-    options,
+    {
+      deserializer,
+      // Defer localStorage read until after hydration to prevent SSR mismatch
+      initializeWithValue: false,
+      serializer,
+    },
   );
 
   return [storage, setStorage] as const;

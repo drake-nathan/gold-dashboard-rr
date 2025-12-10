@@ -39,6 +39,8 @@ export const ThemeProvider = ({
       const result = themeSchema.safeParse(value);
       return result.success ? result.data : defaultTheme;
     },
+    // Defer localStorage read until after hydration to prevent SSR mismatch
+    initializeWithValue: false,
     serializer: (value: Theme): string => value,
   });
 

@@ -424,14 +424,24 @@ export const CardManagerDrawer = ({
                         <FormControl>
                           <Input
                             min="0"
+                            name={field.name}
+                            onBlur={(e) => {
+                              if (
+                                e.target.value === "" ||
+                                Number.isNaN(field.value)
+                              ) {
+                                field.onChange(0);
+                              }
+                              field.onBlur();
+                            }}
+                            onChange={(e) => {
+                              field.onChange(parseFloat(e.target.value));
+                            }}
                             placeholder="1.5"
+                            ref={field.ref}
                             step="0.01"
                             type="number"
-                            {...field}
-                            onChange={(e) => {
-                              const value = parseFloat(e.target.value);
-                              field.onChange(isNaN(value) ? 0 : value);
-                            }}
+                            value={Number.isNaN(field.value) ? "" : field.value}
                           />
                         </FormControl>
                         <FormDescription>
@@ -451,14 +461,24 @@ export const CardManagerDrawer = ({
                         <FormControl>
                           <Input
                             min="0"
+                            name={field.name}
+                            onBlur={(e) => {
+                              if (
+                                e.target.value === "" ||
+                                Number.isNaN(field.value)
+                              ) {
+                                field.onChange(0);
+                              }
+                              field.onBlur();
+                            }}
+                            onChange={(e) => {
+                              field.onChange(parseFloat(e.target.value));
+                            }}
                             placeholder="2.1"
+                            ref={field.ref}
                             step="0.01"
                             type="number"
-                            {...field}
-                            onChange={(e) => {
-                              const value = parseFloat(e.target.value);
-                              field.onChange(isNaN(value) ? 0 : value);
-                            }}
+                            value={Number.isNaN(field.value) ? "" : field.value}
                           />
                         </FormControl>
                         <FormDescription>
@@ -503,14 +523,26 @@ export const CardManagerDrawer = ({
                               <FormControl>
                                 <Input
                                   min="0"
+                                  name={field.name}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      Number.isNaN(field.value)
+                                    ) {
+                                      field.onChange(0);
+                                    }
+                                    field.onBlur();
+                                  }}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value));
+                                  }}
                                   placeholder="60000"
+                                  ref={field.ref}
                                   step="1000"
                                   type="number"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const value = parseFloat(e.target.value);
-                                    field.onChange(isNaN(value) ? 0 : value);
-                                  }}
+                                  value={
+                                    Number.isNaN(field.value) ? "" : field.value
+                                  }
                                 />
                               </FormControl>
                               <FormDescription>
@@ -530,14 +562,26 @@ export const CardManagerDrawer = ({
                               <FormControl>
                                 <Input
                                   min="0"
+                                  name={field.name}
+                                  onBlur={(e) => {
+                                    if (
+                                      e.target.value === "" ||
+                                      Number.isNaN(field.value)
+                                    ) {
+                                      field.onChange(0);
+                                    }
+                                    field.onBlur();
+                                  }}
+                                  onChange={(e) => {
+                                    field.onChange(parseFloat(e.target.value));
+                                  }}
                                   placeholder="4000"
+                                  ref={field.ref}
                                   step="100"
                                   type="number"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const value = parseFloat(e.target.value);
-                                    field.onChange(isNaN(value) ? 0 : value);
-                                  }}
+                                  value={
+                                    Number.isNaN(field.value) ? "" : field.value
+                                  }
                                 />
                               </FormControl>
                               <FormDescription>
