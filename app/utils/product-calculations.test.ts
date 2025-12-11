@@ -63,6 +63,7 @@ const mockCalculatorSettings: CalculatorSettings = {
   costcoMembershipEnabled: true, // 2% cashback
   creditCard: DEFAULT_PRESET_CARDS[0], // Costco Visa: 2% (2 pts @ 1¢)
   pureFeeTier: PURE_FEE_TIERS[0], // Pure Copper: 0.75% gold fee
+  quantity: 1,
 };
 
 // ============================================================================
@@ -327,6 +328,7 @@ test("calculates correctly with high-value credit card", () => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     creditCard: robinhoodCard!, // 3 pts @ 1¢ = 3%
     pureFeeTier: PURE_FEE_TIERS[0],
+    quantity: 1,
   };
 
   const result = calculateProductMetrics(

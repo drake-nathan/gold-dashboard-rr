@@ -5,6 +5,10 @@ import type { CalculatorSettings } from "@/components/calculator-settings";
 import { useCreditCardsStorage } from "@/hooks/use-credit-cards-storage";
 import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
 import {
+  DEFAULT_QUANTITY,
+  useQuantityStorage,
+} from "@/hooks/use-quantity-storage";
+import {
   calculateCashbackPercentage,
   type CreditCard,
   DEFAULT_PRESET_CARDS,
@@ -40,6 +44,7 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   // Use the new useLocalStorage hooks
   const [creditCardsStorage, setCreditCardsStorage] = useCreditCardsStorage();
   const [pureFeeTierStorage, setPureFeeTierStorage] = usePureFeeTierStorage();
+  const [quantityStorage, setQuantityStorage] = useQuantityStorage();
 
   // Derive available cards from storage
   const availableCards = creditCardsStorage.cards;
@@ -53,6 +58,10 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   const [selectedTierId, setSelectedTierId] = useState<string>(() => {
     // Storage hooks guarantee these values are defined (have defaults in deserializers)
     return pureFeeTierStorage.selectedTierId || PURE_FEE_TIERS[0].id;
+  });
+
+  const [quantity, setQuantity] = useState<number>(() => {
+    return quantityStorage.quantity || DEFAULT_QUANTITY;
   });
 
   const [costcoMembershipEnabled, setCostcoMembershipEnabled] =
@@ -77,8 +86,9 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
       costcoMembershipEnabled,
       creditCard: selectedCard,
       pureFeeTier: selectedTier,
+      quantity,
     }),
-    [costcoMembershipEnabled, selectedCard, selectedTier],
+    [costcoMembershipEnabled, selectedCard, selectedTier, quantity],
   );
 
   // Handle card changes from manager
@@ -125,6 +135,14 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
       setSelectedTierId(settings.pureFeeTier.id);
       setPureFeeTierStorage({
         selectedTierId: settings.pureFeeTier.id,
+      });
+    }
+
+    // Update quantity and save to localStorage
+    if (settings.quantity !== quantity) {
+      setQuantity(settings.quantity);
+      setQuantityStorage({
+        quantity: settings.quantity,
       });
     }
   };

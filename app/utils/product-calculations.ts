@@ -19,10 +19,10 @@ export interface ProductCalculations {
 
   // Points analysis (for travel cards)
   basePointsEarned: number;
-  // Cashback breakdown
+  // Cashback breakdown (totals for quantity)
   costcoCashback: number;
   costcoCashbackPercentage: number;
-  // Immediate cash flow
+  // Immediate cash flow (totals for quantity)
   costcoPrice: number;
   creditCardCashback: number;
   creditCardCashbackPercentage: number;
@@ -46,6 +46,9 @@ export interface ProductCalculations {
 
   purePayout: null | number;
 
+  // Quantity
+  quantity: number;
+
   signupBonusCashback: number;
   signupBonusCashbackPercentage: number;
   signupBonusPoints: number;
@@ -54,6 +57,10 @@ export interface ProductCalculations {
   spendProgressPercentage: null | number;
   totalCashback: number;
   totalCashbackPercentage: number;
+
+  // Unit prices (single item, for display when quantity > 1)
+  unitCostcoPrice: number;
+  unitPureBidPrice: null | number;
 }
 
 const COSTCO_EXECUTIVE_PERCENTAGE = 0.02; // 2%
@@ -63,7 +70,10 @@ export const calculateProductMetrics = (
   marketPrices: MarketPrices,
   calculatorSettings: CalculatorSettings,
 ): ProductCalculations => {
+  const quantity = calculatorSettings.quantity;
+
   // === ABOVE SPOT CALCULATION ===
+  // (Percentage stays the same regardless of quantity)
   const marketPrice = marketPrices.find(
     (p) => p.assetType === product.metalType,
   );
@@ -75,6 +85,7 @@ export const calculateProductMetrics = (
     : null;
 
   // === CASHBACK BREAKDOWN ===
+  // (Percentages stay the same, dollar amounts scale with quantity)
   const costcoCashbackPercentage =
     calculatorSettings.costcoMembershipEnabled ?
       COSTCO_EXECUTIVE_PERCENTAGE
@@ -92,11 +103,13 @@ export const calculateProductMetrics = (
   const creditCardCashbackPercentage =
     baseCreditCardCashbackPercentage + signupBonusCashbackPercentage;
 
-  const costcoCashback = product.currentPrice * costcoCashbackPercentage;
+  // Dollar amounts scale with quantity
+  const unitPrice = product.currentPrice;
+  const costcoCashback = unitPrice * quantity * costcoCashbackPercentage;
   const creditCardCashback =
-    product.currentPrice * baseCreditCardCashbackPercentage;
+    unitPrice * quantity * baseCreditCardCashbackPercentage;
   const signupBonusCashback =
-    product.currentPrice * signupBonusCashbackPercentage;
+    unitPrice * quantity * signupBonusCashbackPercentage;
   const totalCashback =
     costcoCashback + creditCardCashback + signupBonusCashback;
   const totalCashbackPercentage =
@@ -108,15 +121,18 @@ export const calculateProductMetrics = (
   const spendRequirement =
     calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0;
   const spendProgress =
-    hasSignupBonus && spendRequirement > 0 ? product.currentPrice : null;
+    hasSignupBonus && spendRequirement > 0 ? unitPrice * quantity : null;
   const spendProgressPercentage =
     spendProgress !== null && spendRequirement > 0 ?
       (spendProgress / spendRequirement) * 100
     : null;
 
   // === IMMEDIATE CASH FLOW ===
-  const costcoPrice = product.currentPrice;
-  const pureBidPrice = product.pureBidPrice;
+  // All dollar amounts scale with quantity
+  const costcoPrice = unitPrice * quantity;
+  const unitPureBidPrice = product.pureBidPrice;
+  const pureBidPrice =
+    unitPureBidPrice !== null ? unitPureBidPrice * quantity : null;
 
   // Get the fee rate based on metal type and selected tier
   const pureFeePercentage = getFeeRateForMetal(
@@ -131,6 +147,7 @@ export const calculateProductMetrics = (
   // === FINAL PROFIT ===
   const netProfit =
     initialCashLoss !== null ? totalCashback - initialCashLoss : null;
+  // Percentage stays the same regardless of quantity
   const netProfitPercentage =
     netProfit !== null && costcoPrice > 0 ?
       (netProfit / costcoPrice) * 100
@@ -145,21 +162,23 @@ export const calculateProductMetrics = (
     : positiveColor;
 
   // === POINTS ANALYSIS (for travel cards) ===
+  // Points scale with quantity
   const basePointsEarned =
-    product.currentPrice * calculatorSettings.creditCard.pointsPerDollar;
+    unitPrice * quantity * calculatorSettings.creditCard.pointsPerDollar;
 
   // SUB bonus points (proportional to this purchase)
   const signupBonusPointsTotal =
     calculatorSettings.creditCard.signupBonus?.pointsBonus ?? 0;
   const signupBonusPoints =
     hasSignupBonus && spendRequirement > 0 ?
-      (signupBonusPointsTotal / spendRequirement) * product.currentPrice
+      (signupBonusPointsTotal / spendRequirement) * unitPrice * quantity
     : 0;
 
   const pointsEarned = basePointsEarned + signupBonusPoints;
 
   const netCostAfterCostcoCashback =
     initialCashLoss !== null ? initialCashLoss - costcoCashback : null;
+  // Price per point stays the same regardless of quantity (linear scaling)
   const pricePerPoint =
     netCostAfterCostcoCashback !== null && pointsEarned > 0 ?
       netCostAfterCostcoCashback / pointsEarned
@@ -186,6 +205,7 @@ export const calculateProductMetrics = (
     pureFee,
     pureFeePercentage: pureFeePercentage * 100,
     purePayout: netFromSale,
+    quantity,
     signupBonusCashback,
     signupBonusCashbackPercentage: signupBonusCashbackPercentage * 100,
     signupBonusPoints,
@@ -193,5 +213,8 @@ export const calculateProductMetrics = (
     spendProgressPercentage,
     totalCashback,
     totalCashbackPercentage,
+    // Unit prices for display when quantity > 1
+    unitCostcoPrice: unitPrice,
+    unitPureBidPrice,
   };
 };

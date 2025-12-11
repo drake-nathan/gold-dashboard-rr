@@ -159,7 +159,7 @@ test("sortProducts: sorts by spread ascending (default)", ({ expect }) => {
     createMockProduct({ spreadPercentage: 15 }),
   ];
 
-  const result = sortProducts(products, "spread-asc");
+  const result = sortProducts(products, "profit-desc");
 
   expect(result[0]?.spreadPercentage).toBe(5);
   expect(result[1]?.spreadPercentage).toBe(10);
@@ -173,14 +173,14 @@ test("sortProducts: sorts by spread descending", ({ expect }) => {
     createMockProduct({ spreadPercentage: 15 }),
   ];
 
-  const result = sortProducts(products, "spread-desc");
+  const result = sortProducts(products, "profit-asc");
 
   expect(result[0]?.spreadPercentage).toBe(15);
   expect(result[1]?.spreadPercentage).toBe(10);
   expect(result[2]?.spreadPercentage).toBe(5);
 });
 
-test("sortProducts: handles null spread percentages (spread-asc)", ({
+test("sortProducts: handles null spread percentages (profit-desc)", ({
   expect,
 }) => {
   const products = [
@@ -189,14 +189,14 @@ test("sortProducts: handles null spread percentages (spread-asc)", ({
     createMockProduct({ spreadPercentage: 5 }),
   ];
 
-  const result = sortProducts(products, "spread-asc");
+  const result = sortProducts(products, "profit-desc");
 
   expect(result[0]?.spreadPercentage).toBe(5);
   expect(result[1]?.spreadPercentage).toBe(10);
   expect(result[2]?.spreadPercentage).toBe(null); // null should be last (treated as 999)
 });
 
-test("sortProducts: handles null spread percentages (spread-desc)", ({
+test("sortProducts: handles null spread percentages (profit-asc)", ({
   expect,
 }) => {
   const products = [
@@ -205,7 +205,7 @@ test("sortProducts: handles null spread percentages (spread-desc)", ({
     createMockProduct({ spreadPercentage: 5 }),
   ];
 
-  const result = sortProducts(products, "spread-desc");
+  const result = sortProducts(products, "profit-asc");
 
   expect(result[0]?.spreadPercentage).toBe(10);
   expect(result[1]?.spreadPercentage).toBe(5);
@@ -279,14 +279,14 @@ test("sortProducts: does not mutate original array", ({ expect }) => {
   ];
 
   const original = [...products];
-  sortProducts(products, "spread-asc");
+  sortProducts(products, "profit-desc");
 
   expect(products).toEqual(original); // Original unchanged
 });
 
 // === PRODUCTS WITHOUT BIDS TESTS ===
 
-test("sortProducts: places products without bids at bottom (spread-asc)", ({
+test("sortProducts: places products without bids at bottom (profit-desc)", ({
   expect,
 }) => {
   const products = [
@@ -295,14 +295,14 @@ test("sortProducts: places products without bids at bottom (spread-asc)", ({
     createMockProduct({ pureBidPrice: 90, spreadPercentage: 5 }),
   ];
 
-  const result = sortProducts(products, "spread-asc");
+  const result = sortProducts(products, "profit-desc");
 
   expect(result[0]?.spreadPercentage).toBe(5);
   expect(result[1]?.spreadPercentage).toBe(10);
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
 });
 
-test("sortProducts: places products without bids at bottom (spread-desc)", ({
+test("sortProducts: places products without bids at bottom (profit-asc)", ({
   expect,
 }) => {
   const products = [
@@ -311,7 +311,7 @@ test("sortProducts: places products without bids at bottom (spread-desc)", ({
     createMockProduct({ pureBidPrice: 90, spreadPercentage: 15 }),
   ];
 
-  const result = sortProducts(products, "spread-desc");
+  const result = sortProducts(products, "profit-asc");
 
   expect(result[0]?.spreadPercentage).toBe(15);
   expect(result[1]?.spreadPercentage).toBe(10);

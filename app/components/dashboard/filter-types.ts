@@ -4,5 +4,5 @@ export type SortOption =
   | "last-in-stock"
   | "price-asc"
   | "price-desc"
-  | "spread-asc"
-  | "spread-desc";
+  | "profit-asc"
+  | "profit-desc";

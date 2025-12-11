@@ -88,8 +88,8 @@ export const FilterControls = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="spread-asc">Spread (Low to High)</SelectItem>
-            <SelectItem value="spread-desc">Spread (High to Low)</SelectItem>
+            <SelectItem value="profit-desc">Profit (High to Low)</SelectItem>
+            <SelectItem value="profit-asc">Profit (Low to High)</SelectItem>
             <SelectItem value="price-asc">Price (Low to High)</SelectItem>
             <SelectItem value="price-desc">Price (High to Low)</SelectItem>
             <SelectItem value="last-in-stock">Last Out of Stock</SelectItem>

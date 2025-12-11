@@ -75,19 +75,19 @@ export const sortProducts = (
       sorted = withBids.sort((a, b) => b.currentPrice - a.currentPrice);
       break;
     }
-    case "spread-asc": {
-      sorted = withBids.sort((a, b) => {
-        const aSpread = a.spreadPercentage ?? 999;
-        const bSpread = b.spreadPercentage ?? 999;
-        return aSpread - bSpread;
-      });
-      break;
-    }
-    case "spread-desc": {
+    case "profit-asc": {
       sorted = withBids.sort((a, b) => {
         const aSpread = a.spreadPercentage ?? -999;
         const bSpread = b.spreadPercentage ?? -999;
         return bSpread - aSpread;
+      });
+      break;
+    }
+    case "profit-desc": {
+      sorted = withBids.sort((a, b) => {
+        const aSpread = a.spreadPercentage ?? 999;
+        const bSpread = b.spreadPercentage ?? 999;
+        return aSpread - bSpread;
       });
       break;
     }

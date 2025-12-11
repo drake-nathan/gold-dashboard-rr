@@ -2,6 +2,8 @@ import {
   Check,
   ChevronsUpDown,
   CreditCard as CreditCardIcon,
+  Minus,
+  Plus,
   Settings,
 } from "lucide-react";
 import { useState } from "react";
@@ -30,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MAX_QUANTITY } from "@/hooks/use-quantity-storage";
 import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,
@@ -61,6 +64,55 @@ export const CalculatorControls = ({
 
   return (
     <>
+      {/* Quantity Selector */}
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          isMobile && "flex-col items-stretch",
+        )}
+      >
+        <Label className={isMobile ? "text-sm" : ""} htmlFor="quantity">
+          Quantity:
+        </Label>
+        <div className="flex items-center gap-1">
+          <Button
+            className="size-8"
+            disabled={calculatorSettings.quantity <= 1}
+            onClick={() => {
+              if (calculatorSettings.quantity > 1) {
+                setCalculatorSettings({
+                  ...calculatorSettings,
+                  quantity: calculatorSettings.quantity - 1,
+                });
+              }
+            }}
+            size="icon"
+            variant="outline"
+          >
+            <Minus className="size-4" />
+          </Button>
+          <span className="w-8 text-center font-medium tabular-nums">
+            {calculatorSettings.quantity}
+          </span>
+          <Button
+            className="size-8"
+            disabled={calculatorSettings.quantity >= MAX_QUANTITY}
+            onClick={() => {
+              if (calculatorSettings.quantity < MAX_QUANTITY) {
+                setCalculatorSettings({
+                  ...calculatorSettings,
+                  quantity: calculatorSettings.quantity + 1,
+                });
+              }
+            }}
+            size="icon"
+            variant="outline"
+          >
+            <Plus className="size-4" />
+          </Button>
+        </div>
+      </div>
+
       <Button
         className={isMobile ? "w-full" : ""}
         onClick={onOpenSettings}

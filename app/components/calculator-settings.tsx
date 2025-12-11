@@ -48,6 +48,7 @@ export interface CalculatorSettings {
   costcoMembershipEnabled: boolean;
   creditCard: CreditCard;
   pureFeeTier: PureFeeTier;
+  quantity: number;
 }
 
 interface CalculatorSettingsDialogProps {

@@ -971,10 +971,30 @@ export const fetchProductDetails = internalAction({
       );
     }
 
-    // Stock status: prefer variants[0].in_stock, fall back to detail.in_stock
-    // Costco products often have null in_stock at top level but accurate variant data
+    // Stock status: Check top-level in_stock and availability first
+    // When both are null, the product shows "Delivery Out of Stock" on Costco's website
+    // even if variants[0].in_stock is true (which can be misleading)
+    const topLevelInStock = data.detail.in_stock;
+    const availability = data.detail.availability;
+
+    // If top-level in_stock is explicitly null AND availability is null, treat as out of stock
+    // This catches the "Delivery Out of Stock" case that variants don't reflect
+    const isDeliveryOutOfStock =
+      topLevelInStock === null && availability === null;
+
+    // Only fall back to variant stock if top-level fields are populated
     const variantInStock = data.detail.variants?.[0]?.in_stock;
-    const inStock = variantInStock ?? data.detail.in_stock ?? false;
+    const inStock =
+      isDeliveryOutOfStock ? false : (
+        (topLevelInStock ?? variantInStock ?? false)
+      );
+
+    // Log stock detection for debugging
+    if (isDeliveryOutOfStock) {
+      console.info(
+        `[Product API] Detected "Delivery Out of Stock" for ${data.detail.name}: in_stock=${topLevelInStock}, availability=${availability}`,
+      );
+    }
 
     return {
       brand: data.detail.brand ?? null,

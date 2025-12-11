@@ -53,7 +53,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const metalFilter =
     (searchParams.get("metal") as MetalFilter | null) ?? "all";
   const sortOption =
-    (searchParams.get("sort") as null | SortOption) ?? "spread-asc";
+    (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
   const urlShowOutOfStock = searchParams.get("showOOS") === "true";
 
   // Local state for instant UI updates (synced with URL)
@@ -123,7 +123,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const setSortOption = useDebounceCallback((value: SortOption) => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams);
-      if (value !== "spread-asc") {
+      if (value !== "profit-desc") {
         params.set("sort", value);
       } else {
         params.delete("sort");

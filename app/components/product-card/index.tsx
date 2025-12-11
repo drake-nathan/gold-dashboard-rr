@@ -95,10 +95,23 @@ export const ProductCard = ({
       <CardContent className="flex-1 space-y-2 text-sm">
         {/* Pricing Breakdown */}
         <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
+          {/* === Quantity Display === */}
+          {calc.quantity > 1 && (
+            <>
+              <PriceRow
+                label="Quantity:"
+                labelClassName="text-xs font-semibold text-primary"
+                value={`${calc.quantity} units`}
+                valueClassName="text-xs font-semibold text-primary"
+              />
+              <div className="my-1.5 border-t border-border/50" />
+            </>
+          )}
+
           {/* === SECTION 1: Purchase Details === */}
           <PriceRow
             label="Costco Price:"
-            tooltip="Purchase price from Costco"
+            tooltip="Purchase price from Costco per unit"
             value={
               <>
                 {calc.aboveSpotPercentage !== null && (
@@ -106,7 +119,12 @@ export const ProductCard = ({
                     {formatPercentage(calc.aboveSpotPercentage)} above spot
                   </span>
                 )}{" "}
-                -{formatCurrency(calc.costcoPrice)}
+                -{formatCurrency(calc.unitCostcoPrice)}
+                {calc.quantity > 1 && (
+                  <span className="block text-right text-xs font-normal text-muted-foreground italic">
+                    {calc.quantity} units = {formatCurrency(calc.costcoPrice)}
+                  </span>
+                )}
               </>
             }
           />
@@ -117,21 +135,31 @@ export const ProductCard = ({
               <PriceRow
                 label="Pure Bid:"
                 labelClassName="text-xs text-muted-foreground"
-                tooltip="Amount Collect Pure will pay for this item"
-                value={`+${formatCurrency(calc.pureBidPrice)}`}
+                tooltip="Amount Collect Pure will pay per unit"
+                value={
+                  <>
+                    +{formatCurrency(calc.unitPureBidPrice ?? 0)}
+                    {calc.quantity > 1 && (
+                      <span className="block text-right text-xs font-normal text-muted-foreground italic">
+                        {calc.quantity} units ={" "}
+                        {formatCurrency(calc.pureBidPrice)}
+                      </span>
+                    )}
+                  </>
+                }
                 valueClassName="text-xs font-medium"
               />
               <PriceRow
                 label={`Pure Fee (${formatPercentage(calc.pureFeePercentage)}):`}
                 labelClassName="text-xs text-muted-foreground"
-                tooltip="Fee deducted when selling to Collect Pure"
+                tooltip="Fee deducted when selling to Collect Pure (total for all units)"
                 value={`-${formatCurrency(calc.pureFee)}`}
                 valueClassName="text-xs font-medium"
               />
               {calc.purePayout !== null && (
                 <PriceRow
                   label="Pure Payout:"
-                  tooltip="Actual cash you'll receive from Collect Pure after fees"
+                  tooltip="Total cash you'll receive from Collect Pure after fees (all units)"
                   value={`+${formatCurrency(calc.purePayout)}`}
                   valueClassName="font-semibold"
                 />
