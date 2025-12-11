@@ -55,6 +55,11 @@ export default defineSchema({
     lastPriceChange: v.union(v.number(), v.null()),
     lastStockChange: v.union(v.number(), v.null()),
     lastInStockAt: v.optional(v.union(v.number(), v.null())), // Timestamp when product went out of stock (last time inStock=false was recorded)
+
+    // Product API verification - more accurate than Search API for stock status
+    // Search API won't override stock status if Product API verified recently
+    lastVerifiedAt: v.optional(v.union(v.number(), v.null())), // When Product API last verified this product
+    verifiedInStock: v.optional(v.union(v.boolean(), v.null())), // What Product API reported for stock status
   })
     .index("by_product_id", ["productId"])
     .index("by_metal_type", ["metalType"])

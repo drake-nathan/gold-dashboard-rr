@@ -220,6 +220,9 @@ export const fetchNewData = internalAction({
   },
 });
 
+// How long Product API verification takes precedence over Search API (90 minutes)
+const VERIFICATION_WINDOW_MS = 90 * 60 * 1000;
+
 // Upsert product with history tracking
 export const upsertProduct = internalMutation({
   args: {
@@ -254,13 +257,42 @@ export const upsertProduct = internalMutation({
         });
       }
 
-      // Check for stock changes
-      if (existing.currentInStock !== product.in_stock) {
+      // Determine effective stock status
+      // Product API verification takes precedence if:
+      // 1. Product was verified recently (within VERIFICATION_WINDOW_MS)
+      // 2. Product API said it's OUT of stock (verifiedInStock === false)
+      // 3. Search API is trying to say it's IN stock
+      // This prevents Search API from incorrectly marking "Delivery Out of Stock" products as available
+      const verificationAge =
+        existing.lastVerifiedAt ?
+          args.timestamp - existing.lastVerifiedAt
+        : Infinity;
+      const isWithinVerificationWindow =
+        verificationAge < VERIFICATION_WINDOW_MS;
+      const productApiSaysOutOfStock = existing.verifiedInStock === false;
+      const searchApiSaysInStock = product.in_stock;
+
+      const shouldTrustProductApi =
+        isWithinVerificationWindow &&
+        productApiSaysOutOfStock &&
+        searchApiSaysInStock;
+
+      // Use Product API's stock status if it should be trusted, otherwise use Search API
+      const effectiveInStock = shouldTrustProductApi ? false : product.in_stock;
+
+      if (shouldTrustProductApi) {
+        console.info(
+          `[Search API] Ignoring in_stock=true for ${product.name} - Product API verified as OOS ${Math.round(verificationAge / 60000)} min ago`,
+        );
+      }
+
+      // Check for stock changes using effective stock status
+      if (existing.currentInStock !== effectiveInStock) {
         stockChanged = true;
 
         // Record stock history
         await ctx.db.insert("stockHistory", {
-          inStock: product.in_stock,
+          inStock: effectiveInStock,
           productId: product.id,
           timestamp: args.timestamp,
         });
@@ -273,7 +305,7 @@ export const upsertProduct = internalMutation({
       // Update product if anything changed
       if (priceChanged || stockChanged || weightChanged) {
         await ctx.db.patch(existing._id, {
-          currentInStock: product.in_stock,
+          currentInStock: effectiveInStock,
           currentPrice: product.price,
           currentPricePerOunce: product.pricePerOunce ?? null,
           lastUpdated: args.timestamp,
@@ -283,7 +315,7 @@ export const upsertProduct = internalMutation({
           ...(stockChanged && { lastStockChange: args.timestamp }),
           // Set lastInStockAt when product goes OUT of stock
           ...(stockChanged &&
-            !product.in_stock && { lastInStockAt: args.timestamp }),
+            !effectiveInStock && { lastInStockAt: args.timestamp }),
         });
         updated = true;
       }
@@ -1096,24 +1128,29 @@ export const updateProductFromVerification = internalMutation({
       );
     }
 
-    // Update product if anything changed
-    if (priceChanged || stockChanged) {
-      const weightInOz = extractWeightInOz(product.metalWeight);
-      const newPricePerOunce =
-        args.price !== null && weightInOz ? args.price / weightInOz : null;
+    // Always update verification fields, plus any changes
+    const weightInOz = extractWeightInOz(product.metalWeight);
+    const newPricePerOunce =
+      args.price !== null && weightInOz ? args.price / weightInOz : null;
 
-      await ctx.db.patch(product._id, {
-        ...(args.price !== null && { currentPrice: args.price }),
-        ...(newPricePerOunce !== null && {
-          currentPricePerOunce: newPricePerOunce,
-        }),
-        currentInStock: args.inStock,
-        lastUpdated: args.timestamp,
-        ...(priceChanged && { lastPriceChange: args.timestamp }),
-        ...(stockChanged && { lastStockChange: args.timestamp }),
-        // Set lastInStockAt when product goes OUT of stock
-        ...(stockChanged && !args.inStock && { lastInStockAt: args.timestamp }),
-      });
+    await ctx.db.patch(product._id, {
+      // Always set verification fields - Product API is authoritative for stock status
+      lastVerifiedAt: args.timestamp,
+      verifiedInStock: args.inStock,
+      // Update stock and other fields
+      ...(args.price !== null && { currentPrice: args.price }),
+      ...(newPricePerOunce !== null && {
+        currentPricePerOunce: newPricePerOunce,
+      }),
+      currentInStock: args.inStock,
+      lastUpdated: args.timestamp,
+      ...(priceChanged && { lastPriceChange: args.timestamp }),
+      ...(stockChanged && { lastStockChange: args.timestamp }),
+      // Set lastInStockAt when product goes OUT of stock
+      ...(stockChanged && !args.inStock && { lastInStockAt: args.timestamp }),
+    });
+
+    if (priceChanged || stockChanged) {
       updated = true;
     }
 
