@@ -3,7 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
-import { useDebounceCallback } from "usehooks-ts";
+import { useDebounceCallback, useIsClient } from "usehooks-ts";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
@@ -36,7 +36,11 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const [_, startTransition] = useTransition();
   const hasAutoFlipped = useRef(false);
 
+  // Track if we're on the client (for localStorage-dependent state)
+  const isClient = useIsClient();
+
   // Calculator settings (credit cards, membership, fee tier) - managed by custom hook
+  // Only renders real values on client to avoid SSR hydration mismatch with localStorage
   const {
     availableCards,
     calculatorSettings,
@@ -175,6 +179,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         <Filters
           availableCards={availableCards}
           calculatorSettings={calculatorSettings}
+          isClientReady={isClient}
           metalFilter={metalFilter}
           onOpenCardManager={() => {
             setCardManagerOpen(true);

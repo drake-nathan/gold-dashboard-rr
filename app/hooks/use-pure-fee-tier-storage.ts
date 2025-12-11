@@ -64,8 +64,10 @@ export const usePureFeeTierStorage = () => {
     defaultValue,
     {
       deserializer,
-      // Defer localStorage read until after hydration to prevent SSR mismatch
-      initializeWithValue: false,
+      // Read localStorage immediately on mount.
+      // Components using this hook should be wrapped with client-only
+      // rendering (e.g., useIsClient check) to prevent SSR mismatch.
+      initializeWithValue: true,
       serializer,
     },
   );

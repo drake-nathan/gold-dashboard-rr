@@ -14,15 +14,25 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
 import { CalculatorControls } from "./calculator-controls";
 import { FilterControls } from "./filter-controls";
 
+/** Skeleton placeholder for calculator controls during SSR */
+const CalculatorControlsSkeleton = () => (
+  <div className="flex items-center gap-4">
+    <Skeleton className="h-9 w-80" />
+  </div>
+);
+
 interface FiltersProps {
   availableCards: CreditCard[];
   calculatorSettings: CalculatorSettings;
+  /** Whether we're on the client (for localStorage-dependent calculator controls) */
+  isClientReady: boolean;
   metalFilter: MetalFilter;
   onOpenCardManager: () => void;
   onOpenSettings: () => void;
@@ -37,6 +47,7 @@ interface FiltersProps {
 export const Filters = ({
   availableCards,
   calculatorSettings,
+  isClientReady,
   metalFilter,
   onOpenCardManager,
   onOpenSettings,
@@ -92,14 +103,16 @@ export const Filters = ({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Calculator</h3>
                 <div className="space-y-3">
-                  <CalculatorControls
-                    availableCards={availableCards}
-                    calculatorSettings={calculatorSettings}
-                    isMobile
-                    onOpenCardManager={onOpenCardManager}
-                    onOpenSettings={onOpenSettings}
-                    setCalculatorSettings={setCalculatorSettings}
-                  />
+                  {isClientReady ?
+                    <CalculatorControls
+                      availableCards={availableCards}
+                      calculatorSettings={calculatorSettings}
+                      isMobile
+                      onOpenCardManager={onOpenCardManager}
+                      onOpenSettings={onOpenSettings}
+                      setCalculatorSettings={setCalculatorSettings}
+                    />
+                  : <CalculatorControlsSkeleton />}
                 </div>
               </div>
             </div>
@@ -125,15 +138,17 @@ export const Filters = ({
           />
         </div>
 
-        {/* Right Side - Calculator */}
+        {/* Right Side - Calculator (skeleton during SSR, real controls on client) */}
         <div className="flex flex-wrap items-center gap-4">
-          <CalculatorControls
-            availableCards={availableCards}
-            calculatorSettings={calculatorSettings}
-            onOpenCardManager={onOpenCardManager}
-            onOpenSettings={onOpenSettings}
-            setCalculatorSettings={setCalculatorSettings}
-          />
+          {isClientReady ?
+            <CalculatorControls
+              availableCards={availableCards}
+              calculatorSettings={calculatorSettings}
+              onOpenCardManager={onOpenCardManager}
+              onOpenSettings={onOpenSettings}
+              setCalculatorSettings={setCalculatorSettings}
+            />
+          : <CalculatorControlsSkeleton />}
         </div>
       </div>
     </div>
