@@ -44,7 +44,9 @@ export const PriceRow = ({
           </Tooltip>
         : null}
       </span>
-      <span className={valueClassName ?? "font-medium"}>{value}</span>
+      <span className={`text-right ${valueClassName ?? "font-medium"}`}>
+        {value}
+      </span>
     </div>
   );
 };

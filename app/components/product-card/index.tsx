@@ -95,19 +95,6 @@ export const ProductCard = ({
       <CardContent className="flex-1 space-y-2 text-sm">
         {/* Pricing Breakdown */}
         <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
-          {/* === Quantity Display === */}
-          {calc.quantity > 1 && (
-            <>
-              <PriceRow
-                label="Quantity:"
-                labelClassName="text-xs font-semibold text-primary"
-                value={`${calc.quantity} units`}
-                valueClassName="text-xs font-semibold text-primary"
-              />
-              <div className="my-1.5 border-t border-border/50" />
-            </>
-          )}
-
           {/* === SECTION 1: Purchase Details === */}
           <PriceRow
             label="Costco Price:"
@@ -115,14 +102,14 @@ export const ProductCard = ({
             value={
               <>
                 {calc.aboveSpotPercentage !== null && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="mr-1.5 text-xs font-light text-muted-foreground">
                     {formatPercentage(calc.aboveSpotPercentage)} above spot
                   </span>
-                )}{" "}
+                )}
                 -{formatCurrency(calc.unitCostcoPrice)}
                 {calc.quantity > 1 && (
-                  <span className="block text-right text-xs font-normal text-muted-foreground italic">
-                    {calc.quantity} units = {formatCurrency(calc.costcoPrice)}
+                  <span className="mt-0.5 block text-right text-xs font-light text-muted-foreground italic">
+                    {calc.quantity}x = {formatCurrency(calc.costcoPrice)}
                   </span>
                 )}
               </>
@@ -140,9 +127,8 @@ export const ProductCard = ({
                   <>
                     +{formatCurrency(calc.unitPureBidPrice ?? 0)}
                     {calc.quantity > 1 && (
-                      <span className="block text-right text-xs font-normal text-muted-foreground italic">
-                        {calc.quantity} units ={" "}
-                        {formatCurrency(calc.pureBidPrice)}
+                      <span className="mt-0.5 block text-right text-xs font-light text-muted-foreground italic">
+                        {calc.quantity}x = {formatCurrency(calc.pureBidPrice)}
                       </span>
                     )}
                   </>
