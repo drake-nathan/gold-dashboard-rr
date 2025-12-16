@@ -4,7 +4,6 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  // @ts-expect-error - vite version mismatch between root (7.2.7) and vitest's bundled vite (7.2.6)
   plugins: [react(), tsconfigPaths()],
   test: {
     browser: {
