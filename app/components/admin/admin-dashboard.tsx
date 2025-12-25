@@ -14,13 +14,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ProductMatchCard } from "./product-match-card";
@@ -46,7 +40,7 @@ export const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <a className="flex items-center gap-2" href="/">
@@ -360,7 +354,9 @@ const UrlParserCard = () => {
                 </p>
                 <Button
                   disabled={isAdding}
-                  onClick={handleAddFromPure}
+                  onClick={() => {
+                    void handleAddFromPure();
+                  }}
                   size="sm"
                   variant="secondary"
                 >

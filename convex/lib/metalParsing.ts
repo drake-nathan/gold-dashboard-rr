@@ -141,15 +141,19 @@ export const extractCountMultiplier = (name: string): number => {
   const lowerName = name.toLowerCase();
 
   // Match patterns like "20-count", "20 count", "20-pack", "20 pack"
-  const countMatch = /(\d+)[\s-]*(count|pack|piece|pc)/i.exec(lowerName);
-  if (countMatch) {
-    return parseInt(countMatch[1], 10);
+  const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/i.exec(
+    lowerName,
+  );
+  if (countMatch?.groups?.count) {
+    return parseInt(countMatch.groups.count, 10);
   }
 
   // Match patterns like "box of 20", "set of 20"
-  const ofMatch = /(box|set|pack)\s+of\s+(\d+)/i.exec(lowerName);
-  if (ofMatch) {
-    return parseInt(ofMatch[2], 10);
+  const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/i.exec(
+    lowerName,
+  );
+  if (ofMatch?.groups?.count) {
+    return parseInt(ofMatch.groups.count, 10);
   }
 
   return 1;

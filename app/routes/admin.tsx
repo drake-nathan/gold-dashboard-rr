@@ -90,7 +90,7 @@ const AdminPage = () => {
           <CardContent className="space-y-4">
             <div className="rounded-md bg-muted p-4">
               <p className="text-sm text-muted-foreground">
-                Signed in as: {user?.primaryEmailAddress?.emailAddress}
+                Signed in as: {user.primaryEmailAddress?.emailAddress}
               </p>
               <p className="mt-1 font-mono text-xs text-muted-foreground">
                 User ID: {adminCheck.userId}

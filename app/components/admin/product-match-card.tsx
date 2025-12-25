@@ -352,7 +352,7 @@ const TopMatchesList = ({
               </div>
               <Button
                 disabled={match.pureProductId === currentPureProductId}
-                onClick={() => handleSelectMatch(match.pureProductId)}
+                onClick={() => void handleSelectMatch(match.pureProductId)}
                 size="sm"
                 variant="ghost"
               >
@@ -392,7 +392,7 @@ const TopMatchesList = ({
                 topMatches.fallback.pureProductId === currentPureProductId
               }
               onClick={() =>
-                handleSelectMatch(topMatches.fallback!.pureProductId)
+                void handleSelectMatch(topMatches.fallback?.pureProductId ?? "")
               }
               size="sm"
               variant="ghost"
@@ -493,7 +493,7 @@ const MatchSelector = ({
             </div>
             <Button
               onClick={() =>
-                handleSelectMatch(pureProductFromUrl.pureProductId)
+                void handleSelectMatch(pureProductFromUrl.pureProductId)
               }
               size="sm"
             >
@@ -537,7 +537,7 @@ const MatchSelector = ({
                   </p>
                 </div>
                 <Button
-                  onClick={() => handleSelectMatch(product.pureProductId)}
+                  onClick={() => void handleSelectMatch(product.pureProductId)}
                   size="sm"
                   variant="ghost"
                 >
@@ -622,7 +622,7 @@ const ApproveButton = ({
       <Button
         className="bg-purple-600 hover:bg-purple-700"
         disabled={loading}
-        onClick={handleConfirm}
+        onClick={() => void handleConfirm()}
         size="sm"
       >
         {loading ?
@@ -636,7 +636,7 @@ const ApproveButton = ({
   return (
     <Button
       disabled={!currentPureProductId || loading}
-      onClick={handleApprove}
+      onClick={() => void handleApprove()}
       size="sm"
     >
       {loading ?

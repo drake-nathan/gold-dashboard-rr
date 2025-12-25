@@ -32,7 +32,7 @@ const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
   if (!isAdmin(userId)) {
     throw new Error("Unauthorized: Admin access required");
   }
-  return userId!;
+  return userId ?? "";
 };
 
 /**
@@ -421,7 +421,9 @@ export const searchPureProducts = query({
     if (args.metalType) {
       pureProducts = await ctx.db
         .query("pureProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType!))
+        .withIndex("by_metal_type", (q) =>
+          q.eq("metalType", args.metalType ?? "gold"),
+        )
         .collect();
     } else {
       pureProducts = await ctx.db.query("pureProducts").collect();
@@ -738,7 +740,9 @@ export const getAllPureProducts = query({
     if (args.metalType) {
       pureProducts = await ctx.db
         .query("pureProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType!))
+        .withIndex("by_metal_type", (q) =>
+          q.eq("metalType", args.metalType ?? "gold"),
+        )
         .collect();
     } else {
       pureProducts = await ctx.db.query("pureProducts").collect();
