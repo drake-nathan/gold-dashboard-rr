@@ -17,7 +17,10 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:browser": "vitest run --config=vitest.browser.config.ts --coverage",
     "test:watch": "vitest",
-    "typecheck": "react-router typegen && tsc"
+    "typecheck": "react-router typegen && tsc",
+    "snapshot:export": "bun run scripts/snapshot.ts export",
+    "snapshot:import": "bun run scripts/snapshot.ts import",
+    "snapshot:sync": "bun run scripts/snapshot.ts sync"
   },
   "dependencies": {
     "@clerk/react-router": "2.3.7",
