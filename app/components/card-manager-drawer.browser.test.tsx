@@ -10,12 +10,14 @@ const renderCardManagerDrawer = async (
   cards: CreditCard[] = [...DEFAULT_PRESET_CARDS],
   onCardsChange = () => undefined,
   open = true,
+  onResetAll = async () => undefined,
 ) => {
   return render(
     <CardManagerDrawer
       cards={cards}
       onCardsChange={onCardsChange}
       onClose={() => undefined}
+      onResetAll={onResetAll}
       open={open}
     />,
   );
@@ -243,10 +245,12 @@ test("resets all cards to defaults", async () => {
     valuePerPoint: 0.01,
   };
 
-  const onCardsChange = vi.fn();
+  const onResetAll = vi.fn().mockResolvedValue(undefined);
   const screen = await renderCardManagerDrawer(
     [...DEFAULT_PRESET_CARDS, customCard],
-    onCardsChange,
+    () => undefined,
+    true,
+    onResetAll,
   );
 
   // Click "Reset All" button
@@ -264,12 +268,8 @@ test("resets all cards to defaults", async () => {
   const confirmButton = screen.getByRole("button", { name: "Delete" });
   await confirmButton.click();
 
-  // Verify onCardsChange was called with only default preset cards
-  await expect.poll(() => onCardsChange).toHaveBeenCalled();
-
-  const updatedCards = onCardsChange.mock.calls[0]?.[0] as CreditCard[];
-
-  expect(updatedCards).toStrictEqual(DEFAULT_PRESET_CARDS);
+  // Verify onResetAll was called
+  await expect.poll(() => onResetAll).toHaveBeenCalled();
 });
 
 // === REAL-TIME CASHBACK CALCULATION TESTS ===

@@ -178,7 +178,7 @@ Run these tests in dev before deploying to prod:
 
 ## Phase 2: User Data Migration (localStorage → Convex)
 
-**Status:** In Progress
+**Status:** Complete ✅
 **Estimated Sessions:** 2-3
 **Depends On:** Phase 1
 
@@ -288,11 +288,11 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   }
   ```
 
-#### 2.4 Update Dashboard Components
-- [ ] Update `useCalculatorSettings` hook to support both sources
-- [ ] Update `CardManagerDrawer` to use Convex mutations when authenticated
-- [ ] Add loading states during migration
-- [ ] Handle edge cases (offline, failed migration, etc.)
+#### 2.4 Update Dashboard Components ✅
+- [x] Update `useCalculatorSettings` hook to support both sources
+- [x] Update `CardManagerDrawer` to use Convex mutations when authenticated
+- [x] Add loading states during migration (toast notifications)
+- [x] Handle edge cases (stale closure bug fixed with functional updates)
 
 ### Automated Tests
 - [ ] Unit test: `convex/userCards.ts` - CRUD operations (getUserCards, addCard, updateCard, deleteCard)

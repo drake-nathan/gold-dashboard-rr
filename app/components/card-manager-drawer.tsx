@@ -44,9 +44,7 @@ import {
   calculateCashbackPercentage,
   calculateSubBonusPercentage,
   calculateTotalCashbackPercentage,
-  clearCreditCards,
   type CreditCard,
-  DEFAULT_PRESET_CARDS,
   deleteCard,
   resetPresetCard,
   sortCards,
@@ -84,6 +82,7 @@ interface CardManagerDrawerProps {
   cards: CreditCard[];
   onCardsChange: (cards: CreditCard[], selectCardId?: string) => void;
   onClose: () => void;
+  onResetAll: () => Promise<void>;
   open: boolean;
 }
 
@@ -93,6 +92,7 @@ export const CardManagerDrawer = ({
   cards,
   onCardsChange,
   onClose,
+  onResetAll,
   open,
 }: CardManagerDrawerProps) => {
   const [editMode, setEditMode] = useState<EditMode>(null);
@@ -292,10 +292,9 @@ export const CardManagerDrawer = ({
 
   const handleResetAll = () => {
     setConfirmDialog({
-      action: () => {
+      action: async () => {
         try {
-          clearCreditCards();
-          onCardsChange(DEFAULT_PRESET_CARDS);
+          await onResetAll();
           toast.success("All cards reset", {
             description:
               "All custom cards have been deleted and preset cards have been reset to default values.",

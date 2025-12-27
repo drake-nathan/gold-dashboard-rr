@@ -214,6 +214,28 @@ export const resetPresetCard = mutation({
 });
 
 /**
+ * Reset all cards to defaults
+ * Deletes all user cards (custom and customized presets) so defaults take over
+ */
+export const resetAllCards = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+
+    const cards = await ctx.db
+      .query("userCreditCards")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    for (const card of cards) {
+      await ctx.db.delete(card._id);
+    }
+
+    return { deleted: cards.length, success: true };
+  },
+});
+
+/**
  * Bulk import cards from localStorage migration
  * Only imports cards that don't already exist
  */

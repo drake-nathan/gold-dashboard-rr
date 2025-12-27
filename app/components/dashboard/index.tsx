@@ -3,6 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
+import { toast } from "sonner";
 import { useDebounceCallback, useIsClient } from "usehooks-ts";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
@@ -45,6 +46,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     availableCards,
     calculatorSettings,
     handleCardsChange,
+    handleResetAll,
+    isLoading: isSettingsLoading,
+    isMigrating,
     totalCashbackPercentage,
     updateCalculatorSettings,
   } = useCalculatorSettings();
@@ -52,6 +56,17 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   // UI drawer state
   const [cardManagerOpen, setCardManagerOpen] = useState(false);
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+
+  // Show toast during migration (external system - Sonner toast)
+  const migrationToastId = useRef<string | number | undefined>(undefined);
+  useEffect(() => {
+    if (isMigrating && !migrationToastId.current) {
+      migrationToastId.current = toast.loading("Syncing your card settings...");
+    } else if (!isMigrating && migrationToastId.current) {
+      toast.success("Settings synced!", { id: migrationToastId.current });
+      migrationToastId.current = undefined;
+    }
+  }, [isMigrating]);
 
   // Derive filter state directly from URL params
   const metalFilter =
@@ -202,6 +217,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           onClose={() => {
             setCardManagerOpen(false);
           }}
+          onResetAll={handleResetAll}
           open={cardManagerOpen}
         />
 

@@ -55,6 +55,11 @@ interface UseUserCreditCardsReturn {
   lastSelectedId: string;
 
   /**
+   * Reset all cards to defaults (delete custom, reset presets)
+   */
+  resetAllCards: () => Promise<void>;
+
+  /**
    * Reset a preset card to defaults
    */
   resetPresetCard: (cardId: string) => Promise<void>;
@@ -378,6 +383,20 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     [isSignedIn, updateSettingsMutation, setLocalStorageData],
   );
 
+  const resetAllCardsMutation = useMutation(api.userCards.resetAllCards);
+
+  const resetAllCards = useCallback(async () => {
+    if (isSignedIn) {
+      await resetAllCardsMutation({});
+    } else {
+      // Reset to default preset cards
+      setLocalStorageData({
+        cards: DEFAULT_PRESET_CARDS,
+        lastSelectedId: DEFAULT_PRESET_CARDS[0].id,
+      });
+    }
+  }, [isSignedIn, resetAllCardsMutation, setLocalStorageData]);
+
   return {
     addCard,
     cards,
@@ -385,6 +404,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     isLoading,
     isMigrating,
     lastSelectedId,
+    resetAllCards,
     resetPresetCard,
     setLastSelectedId,
     updateCard,

@@ -6,7 +6,11 @@ import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
 import { useQuantityStorage } from "@/hooks/use-quantity-storage";
 import { useUserCreditCards } from "@/hooks/use-user-credit-cards";
 import { useUserSettings } from "@/hooks/use-user-settings";
-import { calculateCashbackPercentage, type CreditCard } from "@/lib/credit-cards";
+import {
+  calculateCashbackPercentage,
+  type CreditCard,
+  DEFAULT_PRESET_CARDS,
+} from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
 export interface CalculatorSettingsState {
@@ -19,6 +23,7 @@ export interface CalculatorSettingsState {
 
 export interface CalculatorSettingsActions {
   handleCardsChange: (newCards: CreditCard[], selectCardId?: string) => void;
+  handleResetAll: () => Promise<void>;
   updateCalculatorSettings: (settings: CalculatorSettings) => void;
 }
 
@@ -48,6 +53,7 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
     addCard,
     updateCard: updateCardData,
     deleteCard: deleteCardData,
+    resetAllCards,
     resetPresetCard,
   } = useUserCreditCards();
 
@@ -169,10 +175,18 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
 
   const isLoading = isCardsLoading || isSettingsLoading;
 
+  // Handle reset all cards (delete custom, reset presets to defaults)
+  const handleResetAll = async () => {
+    await resetAllCards();
+    // Also reset last selected to first default card
+    await setLastSelectedId(DEFAULT_PRESET_CARDS[0].id);
+  };
+
   return {
     availableCards,
     calculatorSettings,
     handleCardsChange,
+    handleResetAll,
     isLoading,
     isMigrating,
     totalCashbackPercentage,
