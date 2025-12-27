@@ -170,4 +170,42 @@ export default defineSchema({
     .index("by_symbol", ["symbol"])
     .index("by_timestamp", ["timestamp"])
     .index("by_symbol_and_time", ["symbol", "timestamp"]),
+
+  // ============================================================================
+  // User Data Tables (Phase 2: localStorage → Convex migration)
+  // ============================================================================
+
+  // User credit cards - stores custom cards and modified presets
+  userCreditCards: defineTable({
+    userId: v.string(), // Clerk user ID
+    cardId: v.string(), // Original card ID (e.g., "freedom-unlimited" or "custom-xxx")
+    name: v.string(),
+    issuer: v.optional(v.string()),
+    cardType: v.union(v.literal("cashback"), v.literal("travel")),
+    pointsPerDollar: v.number(),
+    valuePerPoint: v.number(),
+    isPreset: v.boolean(), // Whether this is a preset card
+    isCustomizable: v.boolean(), // Whether preset values can be customized
+    signupBonus: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        pointsBonus: v.number(),
+        spendRequirement: v.number(),
+      }),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_and_card", ["userId", "cardId"]),
+
+  // User settings - calculator preferences and migration tracking
+  userSettings: defineTable({
+    userId: v.string(), // Clerk user ID
+    lastSelectedCardId: v.optional(v.string()), // Last selected credit card
+    costcoMembershipEnabled: v.boolean(), // Executive membership toggle
+    localStorageMigrated: v.boolean(), // Track if migration from localStorage is complete
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 });

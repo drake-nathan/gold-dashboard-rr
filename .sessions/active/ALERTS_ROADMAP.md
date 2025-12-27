@@ -178,7 +178,7 @@ Run these tests in dev before deploying to prod:
 
 ## Phase 2: User Data Migration (localStorage → Convex)
 
-**Status:** Not Started
+**Status:** In Progress
 **Estimated Sessions:** 2-3
 **Depends On:** Phase 1
 
@@ -190,8 +190,8 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 
 ### Tasks
 
-#### 2.1 Create Convex Schema
-- [ ] Add `userCreditCards` table to `convex/schema.ts`:
+#### 2.1 Create Convex Schema ✅
+- [x] Add `userCreditCards` table to `convex/schema.ts`:
   ```typescript
   userCreditCards: defineTable({
     userId: v.string(),           // Clerk user ID
@@ -215,7 +215,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
     .index("by_user_and_card", ["userId", "cardId"]),
   ```
 
-- [ ] Add `userSettings` table:
+- [x] Add `userSettings` table:
   ```typescript
   userSettings: defineTable({
     userId: v.string(),
@@ -230,8 +230,8 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
     .index("by_user", ["userId"]),
   ```
 
-#### 2.2 Create Convex Functions
-- [ ] Create `convex/userCards.ts`:
+#### 2.2 Create Convex Functions ✅
+- [x] Create `convex/userCards.ts`:
   - `getUserCards` query - fetch user's cards
   - `addCard` mutation - add custom card
   - `updateCard` mutation - update card values
@@ -239,19 +239,29 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   - `resetPresetCard` mutation - reset to defaults
   - `migrateFromLocalStorage` mutation - bulk import cards
 
-- [ ] Create `convex/userSettings.ts`:
+- [x] Create `convex/userSettings.ts`:
   - `getSettings` query - fetch user settings
   - `updateSettings` mutation - update any setting
   - `markMigrationComplete` mutation - set flag after migration
+  - `needsMigration` query - check if migration is needed
 
-#### 2.3 Implement Migration Logic
-- [ ] Update `app/hooks/use-calculator-settings.ts`:
+#### 2.3 Implement Migration Logic ✅
+- [x] Update `app/hooks/use-calculator-settings.ts`:
   - Check if user is authenticated
   - If authenticated: use Convex queries/mutations
   - If anonymous: use localStorage (existing behavior)
   - On first auth: trigger one-time migration
 
-- [ ] Create migration helper:
+- [x] Created `app/hooks/use-user-credit-cards.ts`:
+  - Abstracts data source (Convex vs localStorage) based on auth
+  - Handles automatic migration on first auth
+  - CRUD operations work for both authenticated and anonymous users
+
+- [x] Created `app/hooks/use-user-settings.ts`:
+  - Manages costcoMembershipEnabled setting
+  - Uses Convex when authenticated, React state when anonymous
+
+- [x] Migration helper integrated into `use-user-credit-cards.ts`:
   ```typescript
   async function migrateLocalStorageToConvex(userId: string) {
     const localData = loadCreditCards();

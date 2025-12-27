@@ -31,10 +31,13 @@ const MAX_SNAPSHOTS = 3;
 
 // Tables to export/import with their Convex query functions
 const TABLES = [
-  { name: "costcoProducts", exportFn: "snapshotExport:exportCostcoProducts" },
-  { name: "pureProducts", exportFn: "snapshotExport:exportPureProducts" },
-  { name: "collectPurePrices", exportFn: "snapshotExport:exportCollectPurePrices" },
-  { name: "marketPrices", exportFn: "snapshotExport:exportMarketPrices" },
+  { exportFn: "snapshotExport:exportCostcoProducts", name: "costcoProducts" },
+  { exportFn: "snapshotExport:exportPureProducts", name: "pureProducts" },
+  {
+    exportFn: "snapshotExport:exportCollectPurePrices",
+    name: "collectPurePrices",
+  },
+  { exportFn: "snapshotExport:exportMarketPrices", name: "marketPrices" },
 ];
 
 // ============================================================================
@@ -42,34 +45,34 @@ const TABLES = [
 // ============================================================================
 
 const colors = {
-  reset: "\x1b[0m",
-  bold: "\x1b[1m",
-  dim: "\x1b[2m",
-  red: "\x1b[31m",
-  green: "\x1b[32m",
-  yellow: "\x1b[33m",
   blue: "\x1b[34m",
-  magenta: "\x1b[35m",
+  bold: "\x1b[1m",
   cyan: "\x1b[36m",
+  dim: "\x1b[2m",
   gray: "\x1b[90m",
+  green: "\x1b[32m",
+  magenta: "\x1b[35m",
+  red: "\x1b[31m",
+  reset: "\x1b[0m",
+  yellow: "\x1b[33m",
 };
 
 const symbols = {
-  success: "✓",
-  error: "✗",
-  warning: "⚠",
-  info: "ℹ",
   arrow: "→",
   bullet: "•",
+  error: "✗",
+  info: "ℹ",
+  success: "✓",
+  warning: "⚠",
 };
 
-type StepStatus = "pending" | "running" | "success" | "error" | "skipped";
+type StepStatus = "error" | "pending" | "running" | "skipped" | "success";
 
 interface Step {
+  duration?: number;
+  message?: string;
   name: string;
   status: StepStatus;
-  message?: string;
-  duration?: number;
 }
 
 let steps: Step[] = [];
@@ -99,37 +102,42 @@ const printSteps = () => {
     let statusText: string;
 
     switch (step.status) {
-      case "pending":
-        icon = symbols.bullet;
-        color = colors.gray;
-        statusText = "pending";
-        break;
-      case "running":
-        icon = symbols.arrow;
-        color = colors.yellow;
-        statusText = "running...";
-        break;
-      case "success":
-        icon = symbols.success;
-        color = colors.green;
-        statusText = step.duration ? `done (${step.duration.toFixed(1)}s)` : "done";
-        break;
-      case "error":
+      case "error": {
         icon = symbols.error;
         color = colors.red;
         statusText = "failed";
         break;
-      case "skipped":
+      }
+      case "pending": {
+        icon = symbols.bullet;
+        color = colors.gray;
+        statusText = "pending";
+        break;
+      }
+      case "running": {
+        icon = symbols.arrow;
+        color = colors.yellow;
+        statusText = "running...";
+        break;
+      }
+      case "skipped": {
         icon = symbols.warning;
         color = colors.yellow;
         statusText = "skipped";
         break;
+      }
+      case "success": {
+        icon = symbols.success;
+        color = colors.green;
+        statusText =
+          step.duration ? `done (${step.duration.toFixed(1)}s)` : "done";
+        break;
+      }
     }
 
     const name = step.name.padEnd(maxNameLen);
-    const msg = step.message
-      ? ` ${colors.dim}${step.message}${colors.reset}`
-      : "";
+    const msg =
+      step.message ? ` ${colors.dim}${step.message}${colors.reset}` : "";
 
     console.log(
       `  ${color}${icon}${colors.reset} ${name} ${color}${statusText}${colors.reset}${msg}`,
@@ -159,7 +167,7 @@ const runCommand = (
   command: string,
   args: string[],
   options?: { silent?: boolean },
-): Promise<{ success: boolean; output: string }> => {
+): Promise<{ output: string; success: boolean }> => {
   return new Promise((resolve) => {
     const proc = spawn(command, args, {
       shell: true,
@@ -183,7 +191,7 @@ const runCommand = (
     });
 
     proc.on("close", (code) => {
-      resolve({ success: code === 0, output });
+      resolve({ output, success: code === 0 });
     });
   });
 };
@@ -226,7 +234,7 @@ const cleanOldSnapshots = (): number => {
   return deleted;
 };
 
-const getLatestSnapshot = (): string | null => {
+const getLatestSnapshot = (): null | string => {
   const snapshots = getSnapshots();
   return snapshots[0] || null;
 };
@@ -248,7 +256,10 @@ const exportSnapshot = async (): Promise<boolean> => {
 
   steps = [
     { name: "Create seed directory", status: "pending" },
-    ...TABLES.map((t) => ({ name: `Export ${t.name}`, status: "pending" as StepStatus })),
+    ...TABLES.map((t) => ({
+      name: `Export ${t.name}`,
+      status: "pending" as StepStatus,
+    })),
     { name: "Save snapshot", status: "pending" },
     { name: "Clean old snapshots", status: "pending" },
   ];
@@ -269,8 +280,7 @@ const exportSnapshot = async (): Promise<boolean> => {
   const snapshot: Record<string, unknown[]> = {};
   let allSuccess = true;
 
-  for (let i = 0; i < TABLES.length; i++) {
-    const table = TABLES[i];
+  for (const [i, table] of TABLES.entries()) {
     const stepIndex = i + 1;
     const stepStart = Date.now();
 
@@ -343,7 +353,9 @@ const exportSnapshot = async (): Promise<boolean> => {
   updateStep(
     cleanStepIndex,
     "success",
-    deleted > 0 ? `Removed ${deleted}, keeping ${remaining}` : `${remaining} snapshots`,
+    deleted > 0 ?
+      `Removed ${deleted}, keeping ${remaining}`
+    : `${remaining} snapshots`,
     (Date.now() - cleanStart) / 1000,
   );
 
@@ -375,7 +387,10 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
 
   steps = [
     { name: "Load snapshot", status: "pending" },
-    ...TABLES.map((t) => ({ name: `Import ${t.name}`, status: "pending" as StepStatus })),
+    ...TABLES.map((t) => ({
+      name: `Import ${t.name}`,
+      status: "pending" as StepStatus,
+    })),
   ];
 
   printHeader("IMPORT TO DEV");
@@ -409,8 +424,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
   // Steps 2-N: Import tables
   let allSuccess = true;
 
-  for (let i = 0; i < TABLES.length; i++) {
-    const table = TABLES[i];
+  for (const [i, table] of TABLES.entries()) {
     const stepIndex = i + 1;
     const stepStart = Date.now();
 
@@ -427,7 +441,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
     const jsonlContent = data
       .map((doc) => {
         // Remove Convex internal fields for clean import
-        const { _id, _creationTime, ...rest } = doc as Record<string, unknown>;
+        const { _creationTime, _id, ...rest } = doc as Record<string, unknown>;
         return JSON.stringify(rest);
       })
       .join("\n");
@@ -460,7 +474,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
       allSuccess = false;
     } else {
       // Extract document count from output
-      const match = importResult.output.match(/Added ([\d,]+) documents/);
+      const match = /Added ([\d,]+) documents/.exec(importResult.output);
       const count = match ? match[1] : data.length.toString();
       updateStep(
         stepIndex,
@@ -527,19 +541,22 @@ const main = async () => {
   const command = process.argv[2];
 
   switch (command) {
-    case "export":
+    case "export": {
       await exportSnapshot();
       break;
+    }
 
-    case "import":
+    case "import": {
       await importSnapshot(process.argv[3]);
       break;
+    }
 
-    case "sync":
+    case "sync": {
       await syncSnapshot();
       break;
+    }
 
-    default:
+    default: {
       console.log(`
 ${colors.bold}Convex Snapshot Manager${colors.reset}
 
@@ -557,6 +574,7 @@ ${colors.cyan}Configuration:${colors.reset}
   Tables:          ${TABLES.map((t) => t.name).join(", ")}
 `);
       process.exit(1);
+    }
   }
 };
 

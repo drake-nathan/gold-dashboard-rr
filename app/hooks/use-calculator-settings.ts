@@ -1,19 +1,19 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 
-import { useCreditCardsStorage } from "@/hooks/use-credit-cards-storage";
 import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
 import { useQuantityStorage } from "@/hooks/use-quantity-storage";
-import {
-  calculateCashbackPercentage,
-  type CreditCard,
-} from "@/lib/credit-cards";
+import { useUserCreditCards } from "@/hooks/use-user-credit-cards";
+import { useUserSettings } from "@/hooks/use-user-settings";
+import { calculateCashbackPercentage, type CreditCard } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
 export interface CalculatorSettingsState {
   availableCards: CreditCard[];
   calculatorSettings: CalculatorSettings;
+  isLoading: boolean;
+  isMigrating: boolean;
   totalCashbackPercentage: number;
 }
 
@@ -26,7 +26,8 @@ export interface CalculatorSettingsActions {
  * Custom hook for managing calculator settings (credit cards, membership, fee tiers)
  *
  * Handles:
- * - Local storage persistence for credit cards and fee tier
+ * - Data source abstraction (Convex for authenticated, localStorage for anonymous)
+ * - Automatic migration from localStorage to Convex on first auth
  * - Credit card CRUD operations
  * - Calculator settings state (membership, selected card, fee tier)
  * - Total cashback percentage calculation
@@ -34,32 +35,34 @@ export interface CalculatorSettingsActions {
  * Following React best practices:
  * - No Effects for localStorage writes (done in event handlers)
  * - Derived state computed during render (selected card synced with availableCards)
- * - IDs are read directly from storage hooks (not duplicated in useState)
- *   to ensure localStorage values are loaded after SSR hydration
  */
 export const useCalculatorSettings = (): CalculatorSettingsActions &
   CalculatorSettingsState => {
-  // Use the useLocalStorage hooks - these handle SSR-safe deferred loading
-  // with initializeWithValue: false, returning defaults on first render
-  // then the actual localStorage values after hydration
-  const [creditCardsStorage, setCreditCardsStorage] = useCreditCardsStorage();
+  // User data hooks (handle auth-aware data source selection)
+  const {
+    cards: availableCards,
+    isLoading: isCardsLoading,
+    isMigrating,
+    lastSelectedId: selectedCardId,
+    setLastSelectedId,
+    addCard,
+    updateCard: updateCardData,
+    deleteCard: deleteCardData,
+    resetPresetCard,
+  } = useUserCreditCards();
+
+  const {
+    costcoMembershipEnabled,
+    isLoading: isSettingsLoading,
+    setCostcoMembershipEnabled,
+  } = useUserSettings();
+
+  // Pure fee tier and quantity (still using localStorage - not user-specific)
   const [pureFeeTierStorage, setPureFeeTierStorage] = usePureFeeTierStorage();
   const [quantityStorage, setQuantityStorage] = useQuantityStorage();
 
-  // Derive available cards from storage
-  const availableCards = creditCardsStorage.cards;
-
-  // Read IDs directly from storage hooks (not useState) to ensure
-  // localStorage values are loaded after hydration.
-  // useState initializers only run once and would capture the default values
-  // before the storage hooks have read from localStorage.
-  const selectedCardId = creditCardsStorage.lastSelectedId;
   const selectedTierId = pureFeeTierStorage.selectedTierId;
   const quantity = quantityStorage.quantity;
-
-  // Only costcoMembershipEnabled uses useState since it's not persisted
-  const [costcoMembershipEnabled, setCostcoMembershipEnabled] =
-    useState<boolean>(true);
 
   // Derive selected card from availableCards (always fresh, no stale data)
   const selectedCard = useMemo(() => {
@@ -86,48 +89,72 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   );
 
   // Handle card changes from manager
-  const handleCardsChange = (newCards: CreditCard[], selectCardId?: string) => {
-    // Determine which card to select:
-    // 1. If selectCardId is provided (e.g., newly created card), use it
-    // 2. If current card still exists, keep it selected
-    // 3. Otherwise, fallback to first available card
-    const newSelectedCardId =
-      selectCardId ??
-      newCards.find((c) => c.id === selectedCardId)?.id ??
-      newCards[0].id;
+  const handleCardsChange = async (
+    newCards: CreditCard[],
+    selectCardId?: string,
+  ) => {
+    // Find which cards were added, updated, or deleted
+    const existingIds = new Set(availableCards.map((c) => c.id));
+    const newIds = new Set(newCards.map((c) => c.id));
 
-    // Save to localStorage (happens in event handler, not Effect)
-    // The storage hook will trigger a re-render with the new values
-    setCreditCardsStorage({
-      cards: newCards,
-      lastSelectedId: newSelectedCardId,
-    });
+    // Handle deletions
+    for (const card of availableCards) {
+      if (!newIds.has(card.id) && !card.isPreset) {
+        await deleteCardData(card.id);
+      }
+    }
+
+    // Handle additions and updates
+    for (const card of newCards) {
+      if (!existingIds.has(card.id)) {
+        // New card
+        await addCard(card);
+      } else {
+        // Existing card - check if updated
+        const existingCard = availableCards.find((c) => c.id === card.id);
+        if (existingCard) {
+          const hasChanges =
+            existingCard.name !== card.name ||
+            existingCard.issuer !== card.issuer ||
+            existingCard.pointsPerDollar !== card.pointsPerDollar ||
+            existingCard.valuePerPoint !== card.valuePerPoint ||
+            existingCard.cardType !== card.cardType ||
+            JSON.stringify(existingCard.signupBonus) !==
+              JSON.stringify(card.signupBonus);
+
+          if (hasChanges) {
+            await updateCardData(card.id, card);
+          }
+        }
+      }
+    }
+
+    // Update selected card if specified
+    if (selectCardId) {
+      await setLastSelectedId(selectCardId);
+    }
   };
 
   // Update calculator settings (called from event handlers)
-  const updateCalculatorSettings = (settings: CalculatorSettings) => {
-    // Update membership state (only setting not persisted to localStorage)
+  const updateCalculatorSettings = async (settings: CalculatorSettings) => {
+    // Update membership state
     if (settings.costcoMembershipEnabled !== costcoMembershipEnabled) {
-      setCostcoMembershipEnabled(settings.costcoMembershipEnabled);
+      await setCostcoMembershipEnabled(settings.costcoMembershipEnabled);
     }
 
-    // Update selected card ID in localStorage
-    // The storage hook will trigger a re-render with the new value
+    // Update selected card ID
     if (settings.creditCard.id !== selectedCardId) {
-      setCreditCardsStorage({
-        cards: availableCards,
-        lastSelectedId: settings.creditCard.id,
-      });
+      await setLastSelectedId(settings.creditCard.id);
     }
 
-    // Update selected tier ID in localStorage
+    // Update selected tier ID in localStorage (not user-specific)
     if (settings.pureFeeTier.id !== selectedTierId) {
       setPureFeeTierStorage({
         selectedTierId: settings.pureFeeTier.id,
       });
     }
 
-    // Update quantity in localStorage
+    // Update quantity in localStorage (not user-specific)
     if (settings.quantity !== quantity) {
       setQuantityStorage({
         quantity: settings.quantity,
@@ -140,10 +167,14 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
     (costcoMembershipEnabled ? 2 : 0) +
     calculateCashbackPercentage(selectedCard);
 
+  const isLoading = isCardsLoading || isSettingsLoading;
+
   return {
     availableCards,
     calculatorSettings,
     handleCardsChange,
+    isLoading,
+    isMigrating,
     totalCashbackPercentage,
     updateCalculatorSettings,
   };

@@ -18,6 +18,8 @@ import type * as lib_pureApiParsing from "../lib/pureApiParsing.js";
 import type * as marketPrices from "../marketPrices.js";
 import type * as pure from "../pure.js";
 import type * as snapshotExport from "../snapshotExport.js";
+import type * as userCards from "../userCards.js";
+import type * as userSettings from "../userSettings.js";
 
 import type {
   ApiFromModules,
@@ -36,6 +38,8 @@ declare const fullApi: ApiFromModules<{
   marketPrices: typeof marketPrices;
   pure: typeof pure;
   snapshotExport: typeof snapshotExport;
+  userCards: typeof userCards;
+  userSettings: typeof userSettings;
 }>;
 
 /**
