@@ -69,6 +69,101 @@ const TestComponent = ({
   );
 };
 
+// Test component with delete capability
+const TestComponentWithDelete = ({
+  onReady,
+}: {
+  onReady: (actions: {
+    deleteCard: (cardId: string) => Promise<void>;
+    getCards: () => CreditCard[];
+  }) => void;
+}) => {
+  const { cards, deleteCard, isLoading } = useUserCreditCards();
+
+  useEffect(() => {
+    if (!isLoading) {
+      onReady({
+        deleteCard,
+        getCards: () => cards,
+      });
+    }
+  }, [isLoading, deleteCard, cards, onReady]);
+
+  return (
+    <div>
+      <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
+      <div data-testid="card-count">{cards.length}</div>
+      {cards.map((card) => (
+        <div data-testid={`card-${card.id}`} key={card.id}>
+          {card.name}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Test component with update capability
+const TestComponentWithUpdate = ({
+  onReady,
+}: {
+  onReady: (actions: {
+    updateCard: (cardId: string, updates: Partial<CreditCard>) => Promise<void>;
+  }) => void;
+}) => {
+  const { cards, isLoading, updateCard } = useUserCreditCards();
+
+  useEffect(() => {
+    if (!isLoading) {
+      onReady({ updateCard });
+    }
+  }, [isLoading, updateCard, onReady]);
+
+  return (
+    <div>
+      <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
+      <div data-testid="card-count">{cards.length}</div>
+      {cards.map((card) => (
+        <div data-testid={`card-${card.id}`} key={card.id}>
+          {card.name}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Test component with reset capability
+const TestComponentWithReset = ({
+  onReady,
+}: {
+  onReady: (actions: {
+    getCards: () => CreditCard[];
+    resetAllCards: () => Promise<void>;
+  }) => void;
+}) => {
+  const { cards, isLoading, resetAllCards } = useUserCreditCards();
+
+  useEffect(() => {
+    if (!isLoading) {
+      onReady({
+        getCards: () => cards,
+        resetAllCards,
+      });
+    }
+  }, [isLoading, resetAllCards, cards, onReady]);
+
+  return (
+    <div>
+      <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
+      <div data-testid="card-count">{cards.length}</div>
+      {cards.map((card) => (
+        <div data-testid={`card-${card.id}`} key={card.id}>
+          {card.name}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 test("returns default preset cards when localStorage is empty", async () => {
   // Clear localStorage
   localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
@@ -161,4 +256,220 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
 
   expect(storedCard).toBeDefined();
   expect(storedCard?.name).toBe("Test Custom Card");
+});
+
+test("deleteCard removes custom card from localStorage", async () => {
+  // Set up localStorage with a custom card
+  const customCard: CreditCard = {
+    cardType: "cashback",
+    id: "card-to-delete",
+    isCustomizable: false,
+    isPreset: false,
+    issuer: "Test Bank",
+    name: "Card To Delete",
+    pointsPerDollar: 2.0,
+    valuePerPoint: 0.01,
+  };
+
+  localStorage.setItem(
+    CREDIT_CARDS_STORAGE_KEY,
+    JSON.stringify({
+      cards: [...DEFAULT_PRESET_CARDS, customCard],
+      lastSelectedId: customCard.id,
+    }),
+  );
+
+  interface Actions {
+    deleteCard: (cardId: string) => Promise<void>;
+    getCards: () => CreditCard[];
+  }
+  let actions: Actions | null = null;
+
+  const screen = await render(
+    <TestComponentWithDelete onReady={(a) => (actions = a)} />,
+  );
+
+  await expect.element(screen.getByText("ready")).toBeInTheDocument();
+  await expect.poll(() => actions !== null).toBe(true);
+
+  const verifiedActions = actions as unknown as Actions;
+
+  // Verify card exists initially
+  await expect.element(screen.getByText("Card To Delete")).toBeInTheDocument();
+
+  // Delete the card
+  await verifiedActions.deleteCard("card-to-delete");
+
+  // Verify card is removed from UI
+  await expect
+    .element(screen.getByText(String(DEFAULT_PRESET_CARDS.length)))
+    .toBeInTheDocument();
+
+  // Verify card is removed from localStorage
+  const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+
+  expect(stored).toBeDefined();
+
+  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
+  if (!stored) throw new Error("Storage should exist");
+
+  const parsed = JSON.parse(stored) as { cards: { id: string }[] };
+  const deletedCard = parsed.cards.find((c) => c.id === "card-to-delete");
+
+  expect(deletedCard).toBeUndefined();
+});
+
+test("updateCard modifies card in localStorage", async () => {
+  // Set up localStorage with a custom card
+  const customCard: CreditCard = {
+    cardType: "cashback",
+    id: "card-to-update",
+    isCustomizable: false,
+    isPreset: false,
+    issuer: "Old Bank",
+    name: "Old Card Name",
+    pointsPerDollar: 1.0,
+    valuePerPoint: 0.01,
+  };
+
+  localStorage.setItem(
+    CREDIT_CARDS_STORAGE_KEY,
+    JSON.stringify({
+      cards: [...DEFAULT_PRESET_CARDS, customCard],
+      lastSelectedId: customCard.id,
+    }),
+  );
+
+  interface Actions {
+    updateCard: (cardId: string, updates: Partial<CreditCard>) => Promise<void>;
+  }
+  let actions: Actions | null = null;
+
+  const screen = await render(
+    <TestComponentWithUpdate onReady={(a) => (actions = a)} />,
+  );
+
+  await expect.element(screen.getByText("ready")).toBeInTheDocument();
+  await expect.poll(() => actions !== null).toBe(true);
+
+  const verifiedActions = actions as unknown as Actions;
+
+  // Update the card
+  await verifiedActions.updateCard("card-to-update", {
+    name: "New Card Name",
+    pointsPerDollar: 3.0,
+  });
+
+  // Verify card is updated in UI
+  await expect.element(screen.getByText("New Card Name")).toBeInTheDocument();
+
+  // Verify card is updated in localStorage
+  const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+
+  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
+  if (!stored) throw new Error("Storage should exist");
+
+  const parsed = JSON.parse(stored) as {
+    cards: { id: string; name: string; pointsPerDollar: number }[];
+  };
+  const updatedCard = parsed.cards.find((c) => c.id === "card-to-update");
+
+  expect(updatedCard?.name).toBe("New Card Name");
+  expect(updatedCard?.pointsPerDollar).toBe(3.0);
+});
+
+test("resetAllCards clears all cards and resets to defaults", async () => {
+  // Set up localStorage with custom cards
+  const customCard: CreditCard = {
+    cardType: "travel",
+    id: "custom-card-1",
+    isCustomizable: false,
+    isPreset: false,
+    issuer: "Custom Bank",
+    name: "Custom Card",
+    pointsPerDollar: 5.0,
+    valuePerPoint: 0.02,
+  };
+
+  localStorage.setItem(
+    CREDIT_CARDS_STORAGE_KEY,
+    JSON.stringify({
+      cards: [...DEFAULT_PRESET_CARDS, customCard],
+      lastSelectedId: customCard.id,
+    }),
+  );
+
+  interface Actions {
+    getCards: () => CreditCard[];
+    resetAllCards: () => Promise<void>;
+  }
+  let actions: Actions | null = null;
+
+  const screen = await render(
+    <TestComponentWithReset onReady={(a) => (actions = a)} />,
+  );
+
+  await expect.element(screen.getByText("ready")).toBeInTheDocument();
+  await expect.poll(() => actions !== null).toBe(true);
+
+  const verifiedActions = actions as unknown as Actions;
+
+  // Verify custom card exists initially
+  const initialCount = DEFAULT_PRESET_CARDS.length + 1;
+
+  await expect
+    .element(screen.getByText(String(initialCount)))
+    .toBeInTheDocument();
+
+  // Reset all cards
+  await verifiedActions.resetAllCards();
+
+  // Verify only default cards remain
+  await expect
+    .element(screen.getByText(String(DEFAULT_PRESET_CARDS.length)))
+    .toBeInTheDocument();
+
+  // Verify localStorage is reset
+  const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+
+  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
+  if (!stored) throw new Error("Storage should exist");
+
+  const parsed = JSON.parse(stored) as { cards: CreditCard[] };
+
+  expect(parsed.cards).toHaveLength(DEFAULT_PRESET_CARDS.length);
+  expect(parsed.cards.every((c) => c.isPreset)).toBe(true);
+});
+
+test("lastSelectedId persists across operations", async () => {
+  localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
+
+  interface Actions {
+    setLastSelectedId: (id: string) => Promise<void>;
+  }
+  let actions: Actions | null = null;
+
+  const screen = await render(<TestComponent onReady={(a) => (actions = a)} />);
+
+  await expect.element(screen.getByText("ready")).toBeInTheDocument();
+  await expect.poll(() => actions !== null).toBe(true);
+
+  const verifiedActions = actions as unknown as Actions;
+
+  // Set a specific card as selected
+  const targetCardId = DEFAULT_PRESET_CARDS[1].id;
+  await verifiedActions.setLastSelectedId(targetCardId);
+
+  // Verify selection is shown in UI
+  await expect.element(screen.getByText(targetCardId)).toBeInTheDocument();
+
+  // Verify selection is in localStorage
+  const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+
+  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
+  if (!stored) throw new Error("Storage should exist");
+
+  const parsed = JSON.parse(stored) as { lastSelectedId: string };
+
+  expect(parsed.lastSelectedId).toBe(targetCardId);
 });
