@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import { z } from "zod";
+import * as z from "zod";
 
 const themeSchema = z.enum(["dark", "light", "system"]);
 
