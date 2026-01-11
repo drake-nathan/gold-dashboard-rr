@@ -12,7 +12,7 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 
 // Helper to get authenticated user ID (throws if not authenticated)
-const requireAuth = async (ctx: QueryCtx | MutationCtx): Promise<string> => {
+const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Authentication required");

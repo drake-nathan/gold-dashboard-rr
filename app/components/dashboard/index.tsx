@@ -47,7 +47,6 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     calculatorSettings,
     handleCardsChange,
     handleResetAll,
-    isLoading: isSettingsLoading,
     isMigrating,
     totalCashbackPercentage,
     updateCalculatorSettings,
@@ -58,7 +57,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
   // Show toast during migration (external system - Sonner toast)
-  const migrationToastId = useRef<string | number | undefined>(undefined);
+  const migrationToastId = useRef<number | string | undefined>(undefined);
   useEffect(() => {
     if (isMigrating && !migrationToastId.current) {
       migrationToastId.current = toast.loading("Syncing your card settings...");
@@ -202,7 +201,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           onOpenSettings={() => {
             setSettingsDrawerOpen(true);
           }}
-          setCalculatorSettings={updateCalculatorSettings}
+          setCalculatorSettings={(settings) => {
+            void updateCalculatorSettings(settings);
+          }}
           setMetalFilter={setMetalFilter}
           setShowOutOfStock={setShowOutOfStock}
           setSortOption={setSortOption}
@@ -213,7 +214,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         {/* Card Manager Drawer */}
         <CardManagerDrawer
           cards={availableCards}
-          onCardsChange={handleCardsChange}
+          onCardsChange={(cards, selectCardId) => {
+            void handleCardsChange(cards, selectCardId);
+          }}
           onClose={() => {
             setCardManagerOpen(false);
           }}
@@ -229,7 +232,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
           }}
           onOpenChange={setSettingsDrawerOpen}
           open={settingsDrawerOpen}
-          setCalculatorSettings={updateCalculatorSettings}
+          setCalculatorSettings={(settings) => {
+            void updateCalculatorSettings(settings);
+          }}
         />
 
         {/* Product Grid */}

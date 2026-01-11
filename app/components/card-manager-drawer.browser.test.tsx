@@ -10,7 +10,7 @@ const renderCardManagerDrawer = async (
   cards: CreditCard[] = [...DEFAULT_PRESET_CARDS],
   onCardsChange = () => undefined,
   open = true,
-  onResetAll = async () => undefined,
+  onResetAll = () => Promise.resolve(undefined),
 ) => {
   return render(
     <CardManagerDrawer

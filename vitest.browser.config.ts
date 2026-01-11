@@ -4,7 +4,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Vite version mismatch between vitest's bundled vite
+  plugins: [react(), tsconfigPaths()] as any,
   test: {
     browser: {
       enabled: true,

@@ -22,9 +22,12 @@ export interface CalculatorSettingsState {
 }
 
 export interface CalculatorSettingsActions {
-  handleCardsChange: (newCards: CreditCard[], selectCardId?: string) => void;
+  handleCardsChange: (
+    newCards: CreditCard[],
+    selectCardId?: string,
+  ) => Promise<void>;
   handleResetAll: () => Promise<void>;
-  updateCalculatorSettings: (settings: CalculatorSettings) => void;
+  updateCalculatorSettings: (settings: CalculatorSettings) => Promise<void>;
 }
 
 /**
@@ -45,16 +48,15 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   CalculatorSettingsState => {
   // User data hooks (handle auth-aware data source selection)
   const {
+    addCard,
     cards: availableCards,
+    deleteCard: deleteCardData,
     isLoading: isCardsLoading,
     isMigrating,
     lastSelectedId: selectedCardId,
-    setLastSelectedId,
-    addCard,
-    updateCard: updateCardData,
-    deleteCard: deleteCardData,
     resetAllCards,
-    resetPresetCard,
+    setLastSelectedId,
+    updateCard: updateCardData,
   } = useUserCreditCards();
 
   const {

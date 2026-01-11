@@ -431,7 +431,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
     updateStep(stepIndex, "running");
 
     const data = snapshot[table.name];
-    if (!data || !Array.isArray(data)) {
+    if (!Array.isArray(data)) {
       updateStep(stepIndex, "skipped", "Not in snapshot");
       continue;
     }
@@ -474,8 +474,10 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
       allSuccess = false;
     } else {
       // Extract document count from output
-      const match = /Added ([\d,]+) documents/.exec(importResult.output);
-      const count = match ? match[1] : data.length.toString();
+      const match = /Added (?<count>[\d,]+) documents/.exec(
+        importResult.output,
+      );
+      const count = match?.groups?.count ?? data.length.toString();
       updateStep(
         stepIndex,
         "success",

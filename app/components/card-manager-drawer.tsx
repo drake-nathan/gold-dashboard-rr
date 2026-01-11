@@ -97,14 +97,13 @@ export const CardManagerDrawer = ({
 }: CardManagerDrawerProps) => {
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
-    action: () => void;
+    action: () => Promise<void> | void;
     description: string;
     open: boolean;
     title: string;
     variant?: "danger" | "default";
   }>({
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    action: () => {},
+    action: () => undefined,
     description: "",
     open: false,
     title: "",
@@ -794,7 +793,9 @@ export const CardManagerDrawer = ({
         onCancel={() => {
           setConfirmDialog({ ...confirmDialog, open: false });
         }}
-        onConfirm={confirmDialog.action}
+        onConfirm={() => {
+          void confirmDialog.action();
+        }}
         open={confirmDialog.open}
         title={confirmDialog.title}
         variant={confirmDialog.variant}

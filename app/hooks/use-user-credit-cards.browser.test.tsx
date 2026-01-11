@@ -15,6 +15,9 @@ import {
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 
+// Import after mocks are set up
+import { useUserCreditCards } from "./use-user-credit-cards";
+
 // Mock Clerk auth - anonymous user (not signed in)
 vi.mock("@clerk/react-router", () => ({
   useAuth: () => ({
@@ -28,9 +31,6 @@ vi.mock("convex/react", () => ({
   useMutation: () => vi.fn(),
   useQuery: () => undefined,
 }));
-
-// Import after mocks are set up
-import { useUserCreditCards } from "./use-user-credit-cards";
 
 // Test component that exposes the hook's state and actions
 const TestComponent = ({
@@ -61,7 +61,7 @@ const TestComponent = ({
       <div data-testid="card-count">{cards.length}</div>
       <div data-testid="last-selected">{lastSelectedId}</div>
       {cards.map((card) => (
-        <div key={card.id} data-testid={`card-${card.id}`}>
+        <div data-testid={`card-${card.id}`} key={card.id}>
           {card.name}
         </div>
       ))}
@@ -73,9 +73,7 @@ test("returns default preset cards when localStorage is empty", async () => {
   // Clear localStorage
   localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
 
-  const screen = await render(
-    <TestComponent onReady={() => undefined} />,
-  );
+  const screen = await render(<TestComponent onReady={() => undefined} />);
 
   // Wait for hook to initialize
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
@@ -95,21 +93,22 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
   // Clear localStorage
   localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
 
-  let actions: {
+  interface Actions {
     addCard: (card: CreditCard) => Promise<void>;
     getCards: () => CreditCard[];
     setLastSelectedId: (id: string) => Promise<void>;
-  } | null = null;
+  }
+  let actions: Actions | null = null;
 
-  const screen = await render(
-    <TestComponent onReady={(a) => (actions = a)} />,
-  );
+  const screen = await render(<TestComponent onReady={(a) => (actions = a)} />);
 
   // Wait for hook to initialize
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
 
-  // Wait for actions to be available
+  // Wait for actions to be available and capture reference
   await expect.poll(() => actions !== null).toBe(true);
+
+  const verifiedActions = actions as unknown as Actions;
 
   const initialCount = DEFAULT_PRESET_CARDS.length;
 
@@ -133,8 +132,8 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
   // This simulates what handleCardsChange does:
   // 1. Add the card
   // 2. Then set the last selected ID
-  await actions!.addCard(customCard);
-  await actions!.setLastSelectedId(customCard.id);
+  await verifiedActions.addCard(customCard);
+  await verifiedActions.setLastSelectedId(customCard.id);
 
   // THIS IS THE BUG: The card should appear but it disappears because
   // setLastSelectedId overwrites localStorage with stale data
@@ -149,12 +148,17 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
 
   // Verify localStorage has the card
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+
   expect(stored).toBeDefined();
 
-  const parsed = JSON.parse(stored!);
-  const storedCard = parsed.cards.find(
-    (c: { id: string }) => c.id === "custom-test-card",
-  );
+  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing after assertion
+  if (!stored) throw new Error("Storage should exist");
+
+  const parsed = JSON.parse(stored) as {
+    cards: { id: string; name: string }[];
+  };
+  const storedCard = parsed.cards.find((c) => c.id === "custom-test-card");
+
   expect(storedCard).toBeDefined();
-  expect(storedCard.name).toBe("Test Custom Card");
+  expect(storedCard?.name).toBe("Test Custom Card");
 });

@@ -15,7 +15,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2022",
-    "types": ["node", "vite/client"],
+    "types": ["bun", "node", "vite/client"],
     "verbatimModuleSyntax": true
   },
   "exclude": ["convex"],
@@ -24,6 +24,5 @@
     "**/.server/**/*",
     "**/.client/**/*",
     ".react-router/types/**/*"
-  ],
-  "types": ["bun"]
+  ]
 }

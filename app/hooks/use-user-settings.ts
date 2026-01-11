@@ -7,10 +7,9 @@
  */
 
 import { useAuth } from "@clerk/react-router";
+import { api } from "convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
-
-import { api } from "convex/_generated/api";
 
 interface UseUserSettingsReturn {
   /**
@@ -45,7 +44,8 @@ export const useUserSettings = (): UseUserSettingsReturn => {
   );
   const updateSettingsMutation = useMutation(api.userSettings.updateSettings);
 
-  const isLoading = !isAuthLoaded || (isSignedIn && convexSettings === undefined);
+  const isLoading =
+    !isAuthLoaded || (isSignedIn && convexSettings === undefined);
 
   // Get current value
   const costcoMembershipEnabled: boolean = (() => {

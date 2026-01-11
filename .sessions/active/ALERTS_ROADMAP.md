@@ -7,19 +7,20 @@
 ## Overview
 
 Add alerts to Dashboard.Gold that notify users when:
+
 - A specific SKU comes back in stock or changes price
 - A category of items (all gold, 1oz gold, silver, etc.) meets conditions
 - Any item hits a profit margin or "above spot" threshold (e.g., below 0.5% above spot)
 
 ## Architecture Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| **Notifications** | Email only (via Resend) | SMS requires LLC for 10DLC registration. Add SMS later. |
-| **Pricing Model** | Simple monthly tier ($X/mo) | Keep it simple. Unlimited alerts for subscribers. |
-| **Alert Timing** | Batched digests | Prevents spam when multiple items trigger. User-friendly. |
-| **Auth** | Clerk (prod env exists) | Already integrated, just needs prod env vars. |
-| **Payments** | Stripe Checkout + Webhooks | Industry standard, Convex has good patterns for this. |
+| Decision              | Choice                           | Rationale                                                       |
+| --------------------- | -------------------------------- | --------------------------------------------------------------- |
+| **Notifications**     | Email only (via Resend)          | SMS requires LLC for 10DLC registration. Add SMS later.         |
+| **Pricing Model**     | Simple monthly tier ($X/mo)      | Keep it simple. Unlimited alerts for subscribers.               |
+| **Alert Timing**      | Batched digests                  | Prevents spam when multiple items trigger. User-friendly.       |
+| **Auth**              | Clerk (prod env exists)          | Already integrated, just needs prod env vars.                   |
+| **Payments**          | Stripe Checkout + Webhooks       | Industry standard, Convex has good patterns for this.           |
 | **Dev/Prod Strategy** | Static snapshot + disabled crons | Dev gets prod snapshot, no API calls. Manual refresh as needed. |
 
 ---
@@ -30,11 +31,13 @@ Add alerts to Dashboard.Gold that notify users when:
 **Estimated Sessions:** 1
 
 ### Goal
+
 Set up proper dev/prod Convex separation. Dev environment will use a static snapshot of prod data with all cron jobs disabled to avoid duplicate API calls.
 
 ### Strategy: Static Snapshot
 
 **Why this approach:**
+
 - Dev env is for testing **user features** (auth, subscriptions, alerts), not live data
 - Admin product matches (pureProductId mappings) are included in the snapshot
 - No need for complex sync infrastructure
@@ -44,34 +47,41 @@ Set up proper dev/prod Convex separation. Dev environment will use a static snap
 ### Tasks
 
 #### 0.1 Create Dev Convex Deployment ✅
+
 - [x] Dev deployment exists: `https://nautical-chickadee-997.convex.cloud`
 - [x] Updated `.env.local` to use dev deployment
 - [x] Production URL commented out for reference
 
 #### 0.2 Disable Cron Jobs in Dev ✅
+
 - [x] Updated `convex/crons.ts` to check `ENABLE_CRONS` env var
 - [x] Pushed to dev (crons disabled - no env var set)
 - [x] Added `ENABLE_CRONS=true` to prod Convex dashboard
 - [x] Redeployed prod to maintain cron functionality
 
 #### 0.3 Export Prod Data Snapshot ✅
+
 - [x] Created `scripts/export-prod-snapshot.sh` - exports full prod to zip
 - [x] Exported to `convex/seed/prod-snapshot-2025-12-27.zip`
 
 #### 0.4 Import Snapshot to Dev ✅
+
 - [x] Created `scripts/import-dev-snapshot.sh` - imports only essential tables
 - [x] Imported: costcoProducts (46), pureProducts (65), collectPurePrices (14,514), marketPrices (4)
 - [x] Skipped: priceHistory, stockHistory, marketPriceHistory, fetchRuns (large/debug)
 
 #### 0.5 Configure Dev Environment Variables ✅
+
 - [x] `.env.local` already configured with dev Convex URL
-- [x] Clerk dev keys already present (pk_test_, sk_test_)
+- [x] Clerk dev keys already present (pk*test*, sk*test*)
 - [x] `CONVEX_DEPLOYMENT=dev:nautical-chickadee-997` set
 
 #### 0.6 Document Snapshot Refresh Process ✅
+
 Documented in `scripts/snapshot.ts` with terminal UI.
 
 **Commands:**
+
 ```bash
 bun run snapshot:export   # Export from prod
 bun run snapshot:import   # Import to dev
@@ -79,30 +89,37 @@ bun run snapshot:sync     # Export then import (full sync)
 ```
 
 **When to refresh:**
+
 - New products added to Costco
 - Schema changes deployed to prod
 - New admin product matches made
 
 **What's included:**
+
 - costcoProducts, pureProducts, collectPurePrices, marketPrices
 
 **What's excluded (too large/not needed):**
+
 - priceHistory, stockHistory, marketPriceHistory, fetchRuns
 
 **Automatic cleanup:**
+
 - Keeps only last 3 snapshots in `convex/seed/`
 - Temp files cleaned up after import
 
 ### Testing (Dev Environment) ✅
+
 - [x] `bun run dev` connects to dev Convex deployment
 - [x] Dashboard loads with snapshot data (46 products, 65 Pure products)
 - [x] No cron jobs running (ENABLE_CRONS not set in dev)
 - [ ] Admin panel works with dev Clerk (to test in Phase 1)
 
 ### Deployment
+
 - N/A (dev environment only)
 
 ### Deliverables
+
 - Separate dev Convex deployment
 - Prod data snapshot imported to dev
 - Cron jobs disabled in dev
@@ -116,12 +133,14 @@ bun run snapshot:sync     # Export then import (full sync)
 **Estimated Sessions:** 1-2
 
 ### Prerequisites
+
 - [x] Clerk prod environment created
 - [x] Clerk prod API keys available
 
 ### Tasks
 
 #### 1.1 Configure Clerk Production Environment ✅
+
 - [x] Get Clerk production publishable key and secret key from Clerk dashboard
 - [x] Get Clerk JWT issuer domain for Convex (`your-app.clerk.accounts.dev` format)
 - [x] Add to Railway environment variables:
@@ -131,29 +150,33 @@ bun run snapshot:sync     # Export then import (full sync)
 - [x] Update Docker build args if needed (already configured)
 
 #### 1.2 Enable Auth Feature Flag ✅
+
 - [x] Set `VITE_ENABLE_AUTH=true` in Railway
 - [x] Test sign up / sign in flow in production (Google login works)
 - [x] Verify admin access still works (admin panel accessible)
 
 ### Automated Tests
+
 - [ ] Unit test: `convex/admin.ts` - `getAuthenticatedUserId` returns correct userId
 - [ ] Unit test: `convex/admin.ts` - `isAdmin` correctly checks env var
 - [ ] Integration test: Auth flow with Clerk test keys
 
 ### Manual Testing Checklist (Dev Environment)
+
 Run these tests in dev before deploying to prod:
 
-| Test | Steps | Expected Result |
-|------|-------|-----------------|
-| New signup | Click "Sign Up" → Create account | Redirected to dashboard, UserButton shows |
-| Existing login | Click "Sign In" → Enter credentials | Logged in, session persisted |
-| Admin access | Log in as admin → Navigate to /admin | Admin panel loads, can view products |
-| Non-admin access | Log in as non-admin → Navigate to /admin | "Access Denied" message |
-| Sign out | Click UserButton → Sign Out | Redirected, auth UI shows Sign In/Up |
-| Session persistence | Log in → Close browser → Reopen | Still logged in |
-| Convex auth | Check `ctx.auth.getUserIdentity()` in any query | Returns user object with subject (userId) |
+| Test                | Steps                                           | Expected Result                           |
+| ------------------- | ----------------------------------------------- | ----------------------------------------- |
+| New signup          | Click "Sign Up" → Create account                | Redirected to dashboard, UserButton shows |
+| Existing login      | Click "Sign In" → Enter credentials             | Logged in, session persisted              |
+| Admin access        | Log in as admin → Navigate to /admin            | Admin panel loads, can view products      |
+| Non-admin access    | Log in as non-admin → Navigate to /admin        | "Access Denied" message                   |
+| Sign out            | Click UserButton → Sign Out                     | Redirected, auth UI shows Sign In/Up      |
+| Session persistence | Log in → Close browser → Reopen                 | Still logged in                           |
+| Convex auth         | Check `ctx.auth.getUserIdentity()` in any query | Returns user object with subject (userId) |
 
 ### Deployment Steps
+
 1. [x] Merge auth changes to main (auth code was already in place)
 2. [x] Add env vars to Railway:
    - `VITE_CLERK_PUBLISHABLE_KEY` (prod)
@@ -169,6 +192,7 @@ Run these tests in dev before deploying to prod:
 6. [ ] Monitor for errors in Railway logs
 
 ### Deliverables
+
 - Users can sign up and sign in on production
 - Admin panel accessible to admins only
 - Auth UI shows in header
@@ -183,7 +207,9 @@ Run these tests in dev before deploying to prod:
 **Depends On:** Phase 1
 
 ### Goal
+
 Seamlessly migrate user's credit card settings from localStorage to their Convex account when they sign up. The migration should be:
+
 - **Invisible:** User doesn't notice anything
 - **Redundant:** localStorage backed up before deletion
 - **One-time:** Only runs on first authenticated session
@@ -191,7 +217,9 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 ### Tasks
 
 #### 2.1 Create Convex Schema ✅
+
 - [x] Add `userCreditCards` table to `convex/schema.ts`:
+
   ```typescript
   userCreditCards: defineTable({
     userId: v.string(),           // Clerk user ID
@@ -231,6 +259,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   ```
 
 #### 2.2 Create Convex Functions ✅
+
 - [x] Create `convex/userCards.ts`:
   - `getUserCards` query - fetch user's cards
   - `addCard` mutation - add custom card
@@ -246,6 +275,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   - `needsMigration` query - check if migration is needed
 
 #### 2.3 Implement Migration Logic ✅
+
 - [x] Update `app/hooks/use-calculator-settings.ts`:
   - Check if user is authenticated
   - If authenticated: use Convex queries/mutations
@@ -262,13 +292,14 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   - Uses Convex when authenticated, React state when anonymous
 
 - [x] Migration helper integrated into `use-user-credit-cards.ts`:
+
   ```typescript
   async function migrateLocalStorageToConvex(userId: string) {
     const localData = loadCreditCards();
 
     // Only migrate custom cards and customized presets
     const cardsToMigrate = localData.cards.filter(
-      card => !card.isPreset || hasBeenCustomized(card)
+      (card) => !card.isPreset || hasBeenCustomized(card),
     );
 
     // Bulk insert to Convex
@@ -289,12 +320,14 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   ```
 
 #### 2.4 Update Dashboard Components ✅
+
 - [x] Update `useCalculatorSettings` hook to support both sources
 - [x] Update `CardManagerDrawer` to use Convex mutations when authenticated
 - [x] Add loading states during migration (toast notifications)
 - [x] Handle edge cases (stale closure bug fixed with functional updates)
 
 ### Automated Tests
+
 - [ ] Unit test: `convex/userCards.ts` - CRUD operations (getUserCards, addCard, updateCard, deleteCard)
 - [ ] Unit test: `convex/userCards.ts` - migrateFromLocalStorage bulk import
 - [ ] Unit test: `convex/userSettings.ts` - getSettings, updateSettings
@@ -304,18 +337,19 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 
 ### Manual Testing Checklist (Dev Environment)
 
-| Test | Steps | Expected Result |
-|------|-------|-----------------|
-| Anonymous user | Don't sign in → Add custom card | Card saved to localStorage, persists on refresh |
-| New user, empty localStorage | Clear localStorage → Sign up | User created, default cards shown, no migration runs |
-| New user, existing localStorage | Add custom cards → Sign up | Cards migrated to Convex, localStorage cleared |
-| Migration verification | After migration → Check Convex dashboard | Custom cards in `userCreditCards` table |
-| Returning user | Sign out → Sign in again | Cards loaded from Convex (not localStorage) |
-| Card sync | Add card while signed in | Card appears immediately, persisted in Convex |
-| Failed migration recovery | Simulate failed migration → Retry | Migration completes on next auth check |
-| Offline behavior | Go offline → Try to add card | Graceful error message |
+| Test                            | Steps                                    | Expected Result                                      |
+| ------------------------------- | ---------------------------------------- | ---------------------------------------------------- |
+| Anonymous user                  | Don't sign in → Add custom card          | Card saved to localStorage, persists on refresh      |
+| New user, empty localStorage    | Clear localStorage → Sign up             | User created, default cards shown, no migration runs |
+| New user, existing localStorage | Add custom cards → Sign up               | Cards migrated to Convex, localStorage cleared       |
+| Migration verification          | After migration → Check Convex dashboard | Custom cards in `userCreditCards` table              |
+| Returning user                  | Sign out → Sign in again                 | Cards loaded from Convex (not localStorage)          |
+| Card sync                       | Add card while signed in                 | Card appears immediately, persisted in Convex        |
+| Failed migration recovery       | Simulate failed migration → Retry        | Migration completes on next auth check               |
+| Offline behavior                | Go offline → Try to add card             | Graceful error message                               |
 
 ### Deployment Steps
+
 1. [ ] Run `npx convex dev --once` to push schema changes to prod
 2. [ ] Verify tables created in Convex dashboard (`userCreditCards`, `userSettings`)
 3. [ ] Merge migration code to main
@@ -327,6 +361,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 6. [ ] Monitor Convex logs for migration errors
 
 ### Deliverables
+
 - Authenticated users' cards stored in Convex
 - Anonymous users continue using localStorage
 - Seamless one-time migration on first auth
@@ -342,6 +377,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 **Depends On:** Phase 2
 
 ### Pricing Model
+
 - **Free Tier:** View dashboard, no alerts
 - **Pro Tier:** $X/month - Unlimited alerts (email)
 - Future: Add SMS tier when LLC is formed
@@ -349,6 +385,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 ### Tasks
 
 #### 3.1 Stripe Setup
+
 - [ ] Create Stripe account (or use existing)
 - [ ] Create product and price in Stripe dashboard:
   - Product: "Dashboard.Gold Pro"
@@ -357,6 +394,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 - [ ] Set up webhook endpoint URL
 
 #### 3.2 Add Stripe to Convex
+
 - [ ] Add env vars to Railway:
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
@@ -383,6 +421,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   ```
 
 #### 3.3 Create Stripe Functions
+
 - [ ] Create `convex/stripe.ts`:
   - `createCheckoutSession` action - generate Stripe Checkout URL
   - `createPortalSession` action - customer portal for managing sub
@@ -395,6 +434,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   - Handle `invoice.payment_failed` - mark past_due
 
 #### 3.4 Frontend Integration
+
 - [ ] Create subscription management UI:
   - Show current plan status
   - "Upgrade to Pro" button → Stripe Checkout
@@ -406,6 +446,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
   - Show upgrade prompt for free users
 
 ### Automated Tests
+
 - [ ] Unit test: `convex/stripe.ts` - createCheckoutSession generates valid URL
 - [ ] Unit test: `convex/stripe.ts` - getSubscriptionStatus returns correct status
 - [ ] Unit test: `convex/http.ts` - webhook signature verification
@@ -413,27 +454,30 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 - [ ] Unit test: Subscription gating logic - isPro check works correctly
 
 ### Manual Testing Checklist (Dev Environment)
+
 **Important:** Use Stripe TEST mode (test API keys, test card numbers)
 
-| Test | Steps | Expected Result |
-|------|-------|-----------------|
-| Checkout flow | Click "Upgrade to Pro" → Complete checkout with test card `4242424242424242` | Redirected back, status shows "Pro" |
-| Webhook: checkout completed | Complete checkout → Check Convex | `userSubscriptions` row created with `status: active` |
-| Subscription status | After checkout → Refresh page | Pro badge shown, alerts enabled |
-| Customer portal | Click "Manage Subscription" | Stripe portal opens, can view/cancel |
-| Cancel subscription | In portal → Cancel | Status changes to "canceled", alerts disabled |
-| Webhook: subscription canceled | Cancel in portal → Check Convex | Status updated to "canceled" |
-| Failed payment | Use test card `4000000000000341` | Status changes to "past_due" |
-| Reactivate | After cancel → Upgrade again | New subscription created, status "active" |
-| Free user gating | Don't subscribe → Try to create alert | Upgrade prompt shown |
+| Test                           | Steps                                                                        | Expected Result                                       |
+| ------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Checkout flow                  | Click "Upgrade to Pro" → Complete checkout with test card `4242424242424242` | Redirected back, status shows "Pro"                   |
+| Webhook: checkout completed    | Complete checkout → Check Convex                                             | `userSubscriptions` row created with `status: active` |
+| Subscription status            | After checkout → Refresh page                                                | Pro badge shown, alerts enabled                       |
+| Customer portal                | Click "Manage Subscription"                                                  | Stripe portal opens, can view/cancel                  |
+| Cancel subscription            | In portal → Cancel                                                           | Status changes to "canceled", alerts disabled         |
+| Webhook: subscription canceled | Cancel in portal → Check Convex                                              | Status updated to "canceled"                          |
+| Failed payment                 | Use test card `4000000000000341`                                             | Status changes to "past_due"                          |
+| Reactivate                     | After cancel → Upgrade again                                                 | New subscription created, status "active"             |
+| Free user gating               | Don't subscribe → Try to create alert                                        | Upgrade prompt shown                                  |
 
 **Stripe Test Cards:**
+
 - Success: `4242 4242 4242 4242`
 - Decline: `4000 0000 0000 0002`
 - Requires auth: `4000 0025 0000 3155`
 - Failed payment: `4000 0000 0000 0341`
 
 **Local Webhook Testing:**
+
 ```bash
 # Install Stripe CLI
 brew install stripe/stripe-cli/stripe
@@ -445,6 +489,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 ```
 
 ### Deployment Steps
+
 1. [ ] Create Stripe product and price in **production** dashboard
 2. [ ] Add prod env vars to Railway:
    - `STRIPE_SECRET_KEY` (live key)
@@ -460,6 +505,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 7. [ ] Monitor Stripe webhook events for failures
 
 ### Deliverables
+
 - Users can subscribe via Stripe Checkout
 - Subscription status synced in Convex
 - Pro features gated behind subscription check
@@ -494,7 +540,9 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 ### Tasks
 
 #### 4.1 Schema Design
+
 - [ ] Add to `convex/schema.ts`:
+
   ```typescript
   alerts: defineTable({
     userId: v.string(),
@@ -571,6 +619,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   ```
 
 #### 4.2 Alert Evaluation Engine
+
 - [ ] Create `convex/alertEngine.ts`:
   - `evaluateAlerts` internal action - run on price/stock updates
   - `checkSKUAlert` helper - check if specific product matches
@@ -583,6 +632,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   - After price history updates → evaluate threshold alerts
 
 #### 4.3 Batch Processing & Email
+
 - [ ] Create `convex/alertNotifications.ts`:
   - `processPendingBatches` action - run every 15 minutes
   - `sendAlertEmail` action - send via Resend
@@ -601,6 +651,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   - Unsubscribe / manage alerts link
 
 #### 4.4 Alert Management UI
+
 - [ ] Create `/alerts` route:
   - List all user alerts
   - Create new alert form
@@ -618,6 +669,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   - Quick action to create SKU alert for that product
 
 #### 4.5 Subscription Gating
+
 - [ ] Check subscription status before:
   - Creating new alerts
   - Enabling disabled alerts
@@ -628,6 +680,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   - Alert limit reached (if implementing limits)
 
 ### Automated Tests
+
 - [ ] Unit test: `convex/alerts.ts` - CRUD operations (createAlert, updateAlert, deleteAlert, getAlerts)
 - [ ] Unit test: `convex/alertEngine.ts` - checkSKUAlert matches specific product
 - [ ] Unit test: `convex/alertEngine.ts` - checkCategoryAlert filters correctly
@@ -638,37 +691,41 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 - [ ] Integration test: End-to-end alert flow (create → trigger → email)
 
 ### Manual Testing Checklist (Dev Environment)
+
 **Important:** Use Resend test mode or verified test email addresses
 
-| Test | Steps | Expected Result |
-|------|-------|-----------------|
-| Create SKU alert | Pick product → "Create Alert" → Save | Alert created, shows in /alerts |
-| Create category alert | /alerts → New → Gold, 1oz → Save | Alert created with category filter |
-| Create threshold alert | /alerts → New → Below 0.5% above spot → Save | Alert created with threshold |
-| Alert list | Navigate to /alerts | All user's alerts shown with enable/disable toggles |
-| Edit alert | Click alert → Modify → Save | Changes persisted |
-| Delete alert | Click alert → Delete → Confirm | Alert removed |
-| SKU alert trigger | Create alert for OOS product → Mark in stock (in dev) | Alert triggered, added to batch |
-| Category alert trigger | Create "all gold" alert → Change gold product price (in dev) | Alert triggered for matching products |
-| Threshold alert trigger | Create "below 1% above spot" → Adjust product (in dev) | Alert triggered when threshold met |
-| Batch collection | Trigger multiple alerts | All collected in single batch |
-| Email digest | Wait for batch processing (or trigger manually) | Email received with all alerts |
-| Cooldown | Trigger same alert twice quickly | Second trigger ignored until cooldown expires |
-| Subscription gating | Unsubscribe → Try to create alert | Upgrade prompt shown |
-| Unsubscribe email | Click unsubscribe link in email | Alert disabled or settings updated |
+| Test                    | Steps                                                        | Expected Result                                     |
+| ----------------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| Create SKU alert        | Pick product → "Create Alert" → Save                         | Alert created, shows in /alerts                     |
+| Create category alert   | /alerts → New → Gold, 1oz → Save                             | Alert created with category filter                  |
+| Create threshold alert  | /alerts → New → Below 0.5% above spot → Save                 | Alert created with threshold                        |
+| Alert list              | Navigate to /alerts                                          | All user's alerts shown with enable/disable toggles |
+| Edit alert              | Click alert → Modify → Save                                  | Changes persisted                                   |
+| Delete alert            | Click alert → Delete → Confirm                               | Alert removed                                       |
+| SKU alert trigger       | Create alert for OOS product → Mark in stock (in dev)        | Alert triggered, added to batch                     |
+| Category alert trigger  | Create "all gold" alert → Change gold product price (in dev) | Alert triggered for matching products               |
+| Threshold alert trigger | Create "below 1% above spot" → Adjust product (in dev)       | Alert triggered when threshold met                  |
+| Batch collection        | Trigger multiple alerts                                      | All collected in single batch                       |
+| Email digest            | Wait for batch processing (or trigger manually)              | Email received with all alerts                      |
+| Cooldown                | Trigger same alert twice quickly                             | Second trigger ignored until cooldown expires       |
+| Subscription gating     | Unsubscribe → Try to create alert                            | Upgrade prompt shown                                |
+| Unsubscribe email       | Click unsubscribe link in email                              | Alert disabled or settings updated                  |
 
 **Testing Alert Triggers in Dev:**
 Since dev has static data, you can trigger alerts by:
+
 1. Temporarily modifying product data in Convex dashboard
 2. Calling internal functions directly from Convex dashboard
 3. Creating a test endpoint that simulates price/stock changes
 
 **Resend Testing:**
+
 - Use your verified email domain
 - Check Resend dashboard for delivery status
 - Test with `onboarding@resend.dev` for initial testing
 
 ### Deployment Steps
+
 1. [ ] Set up Resend account and verify domain
 2. [ ] Add `RESEND_API_KEY` to Railway
 3. [ ] Push schema changes to Convex prod
@@ -682,6 +739,7 @@ Since dev has static data, you can trigger alerts by:
    - `alertHistory` table for trigger records
 
 ### Deliverables
+
 - Users can create SKU, category, and threshold alerts
 - Alerts evaluated on data updates
 - Batched email digests sent via Resend
@@ -694,6 +752,7 @@ Since dev has static data, you can trigger alerts by:
 ## Future Enhancements (Post-MVP)
 
 ### SMS Notifications (Requires LLC)
+
 - [ ] Form LLC or business entity
 - [ ] Register for Twilio 10DLC
 - [ ] Add phone number collection
@@ -702,11 +761,13 @@ Since dev has static data, you can trigger alerts by:
 - [ ] Create higher-tier subscription with SMS
 
 ### Push Notifications
+
 - [ ] Add service worker for PWA
 - [ ] Implement web push notifications
 - [ ] Add as free notification option
 
 ### Advanced Alert Features
+
 - [ ] Alert scheduling (only during certain hours)
 - [ ] Multiple notification channels per alert
 - [ ] Alert sharing / public alerts
@@ -718,6 +779,7 @@ Since dev has static data, you can trigger alerts by:
 ## Environment Variables Summary
 
 ### Phase 0 (Dev Environment)
+
 ```bash
 # Dev Convex deployment
 VITE_CONVEX_URL=https://nautical-chickadee-997.convex.cloud
@@ -730,6 +792,7 @@ VITE_ENABLE_AUTH=true
 ```
 
 ### Phase 1 (Auth - Production)
+
 ```bash
 VITE_CLERK_PUBLISHABLE_KEY=pk_live_xxx
 CLERK_SECRET_KEY=sk_live_xxx
@@ -738,6 +801,7 @@ VITE_ENABLE_AUTH=true
 ```
 
 ### Phase 3 (Stripe)
+
 ```bash
 STRIPE_SECRET_KEY=sk_live_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
@@ -745,6 +809,7 @@ STRIPE_PRICE_ID=price_xxx
 ```
 
 ### Phase 4 (Alerts)
+
 ```bash
 RESEND_API_KEY=re_xxx
 ```
@@ -755,12 +820,12 @@ RESEND_API_KEY=re_xxx
 
 Track progress across sessions here:
 
-| Session | Date | Phase | Completed |
-|---------|------|-------|-----------|
-| 1 | 2024-12-27 | Planning | Created roadmap, added Phase 0 (dev env), testing & deployment for all phases |
-| 2 | 2025-12-27 | Phase 0 | Dev env setup complete: crons disabled, prod snapshot imported, scripts created |
-| 3 | 2025-12-27 | Phase 1 | 1.1-1.2 complete: Clerk prod configured, auth enabled, Google login + admin verified |
-| 4 | - | - | - |
+| Session | Date       | Phase    | Completed                                                                            |
+| ------- | ---------- | -------- | ------------------------------------------------------------------------------------ |
+| 1       | 2024-12-27 | Planning | Created roadmap, added Phase 0 (dev env), testing & deployment for all phases        |
+| 2       | 2025-12-27 | Phase 0  | Dev env setup complete: crons disabled, prod snapshot imported, scripts created      |
+| 3       | 2025-12-27 | Phase 1  | 1.1-1.2 complete: Clerk prod configured, auth enabled, Google login + admin verified |
+| 4       | -          | -        | -                                                                                    |
 
 ---
 

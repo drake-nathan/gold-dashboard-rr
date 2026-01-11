@@ -9,15 +9,13 @@
  */
 
 import { useAuth } from "@clerk/react-router";
+import { api } from "convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import { api } from "convex/_generated/api";
 
 import {
   CREDIT_CARDS_STORAGE_KEY,
   type CreditCard,
-  type CreditCardsStorage,
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 
@@ -208,7 +206,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
           localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
         }
 
-        console.log(
+        console.info(
           `Migration complete: ${cardsToMigrate.length} cards migrated`,
         );
       } catch (error) {
@@ -337,7 +335,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
           const filteredCards = current.cards.filter((c) => c.id !== cardId);
           const newSelectedId =
             current.lastSelectedId === cardId ?
-              filteredCards[0]?.id ?? DEFAULT_PRESET_CARDS[0].id
+              (filteredCards[0]?.id ?? DEFAULT_PRESET_CARDS[0].id)
             : current.lastSelectedId;
           return {
             cards: filteredCards,

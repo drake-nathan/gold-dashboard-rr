@@ -12,7 +12,7 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 
 // Helper to get authenticated user ID (throws if not authenticated)
-const requireAuth = async (ctx: QueryCtx | MutationCtx): Promise<string> => {
+const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Authentication required");
@@ -137,10 +137,12 @@ export const updateCard = mutation({
     if (args.name !== undefined) updates.name = args.name;
     if (args.issuer !== undefined) updates.issuer = args.issuer;
     if (args.cardType !== undefined) updates.cardType = args.cardType;
-    if (args.pointsPerDollar !== undefined)
+    if (args.pointsPerDollar !== undefined) {
       updates.pointsPerDollar = args.pointsPerDollar;
-    if (args.valuePerPoint !== undefined)
+    }
+    if (args.valuePerPoint !== undefined) {
       updates.valuePerPoint = args.valuePerPoint;
+    }
     if (args.signupBonus !== undefined) updates.signupBonus = args.signupBonus;
 
     await ctx.db.patch(card._id, updates);
