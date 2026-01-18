@@ -7,7 +7,6 @@ const commands = [
   { color: "\x1b[32m", command: "bun run typecheck", name: "typecheck" }, // Green
   { color: "\x1b[35m", command: "bun run test", name: "test" }, // Magenta
   { color: "\x1b[34m", command: "bun run test:browser", name: "test:browser" }, // Blue
-  { color: "\x1b[95m", command: "bun run test:convex", name: "test:convex" }, // Light Magenta
 ];
 
 // Clear the terminal
