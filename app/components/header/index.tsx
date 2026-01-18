@@ -8,7 +8,11 @@ import { AuthButtons } from "./auth-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { ThemeToggle } from "./theme-toggle";
 
-export const Header = () => {
+interface HeaderProps {
+  isAdmin?: boolean;
+}
+
+export const Header = ({ isAdmin = false }: HeaderProps) => {
   const posthog = usePostHog();
 
   const trackCoffeeClick = () => {
@@ -53,7 +57,7 @@ export const Header = () => {
           <div className="flex flex-col">
             <span className="text-lg leading-none font-bold tracking-tight sm:text-xl">
               Dashboard
-              <span className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 bg-clip-text text-transparent dark:from-yellow-400 dark:via-yellow-500 dark:to-yellow-400">
+              <span className="bg-linear-to-r from-yellow-500 via-yellow-600 to-yellow-500 bg-clip-text text-transparent dark:from-yellow-400 dark:via-yellow-500 dark:to-yellow-400">
                 .Gold
               </span>
             </span>
@@ -67,7 +71,7 @@ export const Header = () => {
         <div className="hidden items-center gap-2 sm:flex">
           <Button
             asChild
-            className="bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-400 text-yellow-950 hover:from-yellow-500 hover:via-yellow-400 hover:to-yellow-300 dark:from-yellow-700 dark:via-yellow-600 dark:to-yellow-500 dark:text-yellow-50 dark:hover:from-yellow-600 dark:hover:via-yellow-500 dark:hover:to-yellow-400"
+            className="bg-linear-to-r from-yellow-600 via-yellow-500 to-yellow-400 text-yellow-950 hover:from-yellow-500 hover:via-yellow-400 hover:to-yellow-300 dark:from-yellow-700 dark:via-yellow-600 dark:to-yellow-500 dark:text-yellow-50 dark:hover:from-yellow-600 dark:hover:via-yellow-500 dark:hover:to-yellow-400"
             size="sm"
           >
             <a
@@ -80,13 +84,13 @@ export const Header = () => {
               Buy Me a Coffee
             </a>
           </Button>
-          <AuthButtons />
+          <AuthButtons isAdmin={isAdmin} />
           <ThemeToggle />
         </div>
 
         {/* Mobile: Hamburger menu */}
         <div className="sm:hidden">
-          <MobileMenu />
+          <MobileMenu isAdmin={isAdmin} />
         </div>
       </div>
     </header>

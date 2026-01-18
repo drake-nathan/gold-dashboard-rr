@@ -1,3 +1,4 @@
+import { getAuth } from "@clerk/react-router/ssr.server";
 import { api } from "convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import { usePreloadedQuery } from "convex/react";
@@ -58,12 +59,27 @@ export const meta = () => {
   ];
 };
 
-export const loader = async () => {
+// Helper to check if a user is an admin (same logic as convex/admin.ts)
+const checkIsAdmin = (userId: null | string): boolean => {
+  if (!userId) return false;
+
+  const adminUserIds = process.env.ADMIN_USER_IDS;
+  if (!adminUserIds) return false;
+
+  const adminIds = adminUserIds.split(",").map((id) => id.trim());
+  return adminIds.includes(userId);
+};
+
+export const loader = async (args: Route.LoaderArgs) => {
   const convexUrl = process.env.VITE_CONVEX_URL;
 
   if (!convexUrl) {
     throw new Error("VITE_CONVEX_URL is not set");
   }
+
+  // Get auth info from Clerk (server-side)
+  const { userId } = await getAuth(args);
+  const isAdmin = checkIsAdmin(userId);
 
   // Use Convex's preloadQuery - this creates a payload that includes both the data
   // and the query metadata needed for client-side subscription
@@ -75,7 +91,7 @@ export const loader = async () => {
     },
   );
 
-  return { preloadedStats };
+  return { isAdmin, preloadedStats };
 };
 
 const Home = ({ loaderData }: Route.ComponentProps) => {
@@ -98,7 +114,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  return <Dashboard stats={stats} />;
+  return <Dashboard isAdmin={loaderData.isAdmin} stats={stats} />;
 };
 
 export default Home;
