@@ -8,11 +8,7 @@ import { AuthButtons } from "./auth-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { ThemeToggle } from "./theme-toggle";
 
-interface HeaderProps {
-  isAdmin?: boolean;
-}
-
-export const Header = ({ isAdmin = false }: HeaderProps) => {
+export const Header = () => {
   const posthog = usePostHog();
 
   const trackCoffeeClick = () => {
@@ -84,13 +80,13 @@ export const Header = ({ isAdmin = false }: HeaderProps) => {
               Buy Me a Coffee
             </a>
           </Button>
-          <AuthButtons isAdmin={isAdmin} />
+          <AuthButtons />
           <ThemeToggle />
         </div>
 
         {/* Mobile: Hamburger menu */}
         <div className="sm:hidden">
-          <MobileMenu isAdmin={isAdmin} />
+          <MobileMenu />
         </div>
       </div>
     </header>

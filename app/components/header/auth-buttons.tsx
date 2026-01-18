@@ -1,15 +1,17 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
+import { api } from "convex/_generated/api";
+import { useQuery } from "convex/react";
 import { Settings } from "lucide-react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 
-interface AuthButtonsProps {
-  isAdmin: boolean;
-}
-
-export const AuthButtons = ({ isAdmin }: AuthButtonsProps) => {
+export const AuthButtons = () => {
   const { openSignIn, openSignUp } = useClerk();
+
+  // Check if current user is admin
+  const adminCheck = useQuery(api.admin.checkIsAdmin);
+  const isAdmin = adminCheck?.isAdmin ?? false;
 
   return (
     <>

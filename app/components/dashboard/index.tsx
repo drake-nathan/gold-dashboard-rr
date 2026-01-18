@@ -30,11 +30,10 @@ type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 export type ProductCardData = GetStats["goldProducts"]["bestSpread"][number];
 
 interface DashboardProps {
-  isAdmin: boolean;
   stats: GetStats;
 }
 
-export const Dashboard = ({ isAdmin, stats }: DashboardProps) => {
+export const Dashboard = ({ stats }: DashboardProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
   const hasAutoFlipped = useRef(false);
@@ -177,7 +176,7 @@ export const Dashboard = ({ isAdmin, stats }: DashboardProps) => {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header isAdmin={isAdmin} />
+      <Header />
 
       <main className="container mx-auto flex-1 px-4 py-6">
         <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
