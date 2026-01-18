@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react";
+import { Check, Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,9 +9,49 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/providers/theme-provider";
 
-export const ThemeToggle = () => {
-  const { setTheme } = useTheme();
+/**
+ * Theme menu items - can be used in any dropdown
+ */
+export const ThemeMenuItems = () => {
+  const { setTheme, theme } = useTheme();
 
+  return (
+    <>
+      <DropdownMenuItem
+        onClick={() => {
+          setTheme("light");
+        }}
+      >
+        <Sun className="mr-2 h-4 w-4" />
+        Light
+        {theme === "light" && <Check className="ml-auto h-4 w-4" />}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          setTheme("dark");
+        }}
+      >
+        <Moon className="mr-2 h-4 w-4" />
+        Dark
+        {theme === "dark" && <Check className="ml-auto h-4 w-4" />}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        onClick={() => {
+          setTheme("system");
+        }}
+      >
+        <Monitor className="mr-2 h-4 w-4" />
+        System
+        {theme === "system" && <Check className="ml-auto h-4 w-4" />}
+      </DropdownMenuItem>
+    </>
+  );
+};
+
+/**
+ * Standalone theme toggle button with dropdown
+ */
+export const ThemeToggle = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -22,27 +62,7 @@ export const ThemeToggle = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => {
-            setTheme("light");
-          }}
-        >
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setTheme("dark");
-          }}
-        >
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setTheme("system");
-          }}
-        >
-          System
-        </DropdownMenuItem>
+        <ThemeMenuItems />
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -78,7 +78,7 @@
   --secondary: oklch(0.9595 0.02 286.0164);
   --secondary-foreground: oklch(0.1649 0.0352 281.8285);
   --muted: oklch(0.9595 0.02 286.0164);
-  --muted-foreground: oklch(0.1649 0.0352 281.8285);
+  --muted-foreground: oklch(0.55 0.03 280);
   --accent: oklch(0.8903 0.1739 171.269);
   --accent-foreground: oklch(0.1649 0.0352 281.8285);
   --destructive: oklch(0.6535 0.2348 34.037);
@@ -200,10 +200,5 @@
   [role="button"]:focus-visible,
   [role="combobox"]:focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
-  }
-
-  /* Ensure minimum contrast for muted text */
-  .text-muted-foreground {
-    @apply text-muted-foreground/90;
   }
 }

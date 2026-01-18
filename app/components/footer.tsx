@@ -1,13 +1,6 @@
-import { usePostHog } from "posthog-js/react";
 import { Link } from "react-router";
 
 export const Footer = () => {
-  const posthog = usePostHog();
-
-  const trackLinkClick = (link: string) => {
-    posthog.capture("footer_link_clicked", { link });
-  };
-
   return (
     <footer className="mt-12 border-t bg-muted/50 py-8">
       <div className="container mx-auto px-4">
@@ -20,9 +13,6 @@ export const Footer = () => {
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
             <Link
               className="transition-colors hover:text-foreground hover:underline"
-              onClick={() => {
-                trackLinkClick("privacy-policy");
-              }}
               to="/privacy"
             >
               Privacy Policy
@@ -30,28 +20,11 @@ export const Footer = () => {
             <a
               className="transition-colors hover:text-foreground hover:underline"
               href="mailto:nathan@nathandrake.dev"
-              onClick={() => {
-                trackLinkClick("contact");
-              }}
             >
               Contact
             </a>
-            <a
-              className="transition-colors hover:text-foreground hover:underline"
-              href="https://buymeacoffee.com/thenathandrake"
-              onClick={() => {
-                trackLinkClick("buy-me-a-coffee");
-              }}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Buy Me a Coffee
-            </a>
             <Link
               className="transition-colors hover:text-foreground hover:underline"
-              onClick={() => {
-                trackLinkClick("terms-of-service");
-              }}
               to="/terms"
             >
               Terms of Service

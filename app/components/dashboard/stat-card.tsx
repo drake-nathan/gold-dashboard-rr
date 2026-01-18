@@ -41,8 +41,11 @@ export const StatCard = ({
   valueColor,
   variant = "market",
 }: StatCardProps) => {
+  // Responsive sizing: equal width on mobile, variant-specific on desktop
   const widthClass =
-    variant === "market" ? "w-full sm:w-[180px]" : "w-full sm:w-[140px]";
+    variant === "market" ?
+      "min-w-[140px] flex-1 xl:flex-none xl:w-[180px]"
+    : "min-w-[140px] flex-1 xl:flex-none xl:w-[140px]";
 
   return (
     <Card className={`${widthClass} py-4`}>

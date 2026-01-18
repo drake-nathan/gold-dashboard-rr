@@ -240,9 +240,9 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
       return localStorageData.cards;
     }
 
-    if (convexCards === undefined) {
-      // Still loading, use defaults
-      return DEFAULT_PRESET_CARDS;
+    if (convexCards === undefined || isMigrating) {
+      // Still loading or migrating - show localStorage data to avoid flash
+      return localStorageData.cards;
     }
 
     // Merge Convex cards with default presets
@@ -271,7 +271,15 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     if (!isSignedIn) {
       return localStorageData.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id;
     }
-    return convexSettings?.lastSelectedCardId ?? DEFAULT_PRESET_CARDS[0].id;
+    // During loading/migration, use localStorage to avoid flash
+    if (
+      convexSettings === undefined ||
+      convexSettings === null ||
+      isMigrating
+    ) {
+      return localStorageData.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id;
+    }
+    return convexSettings.lastSelectedCardId ?? DEFAULT_PRESET_CARDS[0].id;
   })();
 
   // CRUD operations

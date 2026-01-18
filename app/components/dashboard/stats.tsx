@@ -26,7 +26,7 @@ export const Stats = ({
   const sp500 = marketPrices.find((p) => p.assetType === "sp500");
 
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:flex xl:flex-wrap xl:items-center xl:justify-between">
+    <div className="mb-6 flex flex-wrap justify-center gap-3 xl:justify-between">
       {/* Market Prices - grouped on desktop */}
       <div className="contents xl:flex xl:flex-wrap xl:gap-3">
         {gold ?
@@ -91,17 +91,19 @@ export const Stats = ({
           variant="info"
         />
 
-        {lastFetch ?
-          <StatCard
-            label="Last Update"
-            value={new Date(lastFetch.timestamp).toLocaleTimeString(undefined, {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-            valueColor="text-lg font-bold"
-            variant="info"
-          />
-        : null}
+        <StatCard
+          label="Last Update"
+          value={
+            lastFetch ?
+              new Date(lastFetch.timestamp).toLocaleTimeString(undefined, {
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "--:--"
+          }
+          valueColor="text-lg font-bold"
+          variant="info"
+        />
       </div>
     </div>
   );

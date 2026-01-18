@@ -8,6 +8,7 @@ import { useDebounceCallback, useIsClient } from "usehooks-ts";
 
 import { CalculatorSettingsDrawer } from "@/components/calculator-settings-drawer";
 import { CardManagerDrawer } from "@/components/card-manager-drawer";
+import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
 import { ProductCard } from "@/components/product-card";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
@@ -265,6 +266,9 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       </main>
 
       <Footer />
+
+      {/* Feature announcement modal for existing users */}
+      <FeatureAnnouncementModal />
     </div>
   );
 };
