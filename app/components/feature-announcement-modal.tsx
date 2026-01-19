@@ -53,7 +53,7 @@ const checkShouldShow = (isSignedIn: boolean): boolean => {
 };
 
 export const FeatureAnnouncementModal = () => {
-  const { openSignUp } = useClerk();
+  const { openSignIn, openSignUp } = useClerk();
   const { isLoaded, isSignedIn } = useAuth();
   const isClient = useIsClient();
   const [isDismissed, setIsDismissed] = useState(false);
@@ -73,6 +73,11 @@ export const FeatureAnnouncementModal = () => {
   const handleSignUp = () => {
     handleDismiss();
     openSignUp();
+  };
+
+  const handleSignIn = () => {
+    handleDismiss();
+    openSignIn();
   };
 
   // Don't render anything if not showing
@@ -131,6 +136,14 @@ export const FeatureAnnouncementModal = () => {
         <DialogFooter className="flex-col gap-2 sm:flex-col">
           <Button className="w-full" onClick={handleSignUp} size="lg">
             Create Free Account
+          </Button>
+          <Button
+            className="w-full"
+            onClick={handleSignIn}
+            size="lg"
+            variant="outline"
+          >
+            I Already Have an Account
           </Button>
           <Button
             className="w-full"

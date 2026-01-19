@@ -113,9 +113,44 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     api.userSettings.markMigrationComplete,
   );
 
-  // Run migration when user first authenticates and has localStorage data
+  // Helper to check if localStorage has custom data worth merging
+  const getCardsToMerge = useCallback(() => {
+    const cardsToMerge = localStorageData.cards
+      .filter((card) => {
+        if (!card.isPreset) return true; // Always merge custom cards
+
+        // Check if preset has been modified
+        const defaultPreset = DEFAULT_PRESET_CARDS.find(
+          (p) => p.id === card.id,
+        );
+        if (!defaultPreset) return true;
+
+        return (
+          card.pointsPerDollar !== defaultPreset.pointsPerDollar ||
+          card.valuePerPoint !== defaultPreset.valuePerPoint ||
+          card.signupBonus !== undefined
+        );
+      })
+      .map((card) => ({
+        cardId: card.id,
+        cardType: card.cardType,
+        isCustomizable: card.isCustomizable,
+        isPreset: card.isPreset,
+        issuer: card.issuer,
+        name: card.name,
+        pointsPerDollar: card.pointsPerDollar,
+        signupBonus: card.signupBonus,
+        valuePerPoint: card.valuePerPoint,
+      }));
+
+    return cardsToMerge;
+  }, [localStorageData.cards]);
+
+  // Run migration/merge when user authenticates
+  // - First device: full migration, mark complete, clear localStorage
+  // - Additional devices: merge any new cards, clear localStorage
   useEffect(() => {
-    const runMigration = async () => {
+    const runMigrationOrMerge = async () => {
       // Skip if not authenticated, already migrating, or already attempted
       if (
         !isSignedIn ||
@@ -126,104 +161,96 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
         return;
       }
 
-      // Skip if migration already complete (needsMigration is false)
-      if (!needsMigration) {
+      const cardsToMerge = getCardsToMerge();
+      const hasDataToMerge = cardsToMerge.length > 0;
+
+      // Case 1: First device - needs full migration
+      if (needsMigration) {
+        migrationAttempted.current = true;
+
+        // No custom data - just mark migration complete
+        if (!hasDataToMerge) {
+          await markMigrationCompleteMutation({});
+          return;
+        }
+
+        setIsMigrating(true);
+
+        try {
+          // Migrate cards
+          await migrateFromLocalStorageMutation({ cards: cardsToMerge });
+
+          // Migrate settings
+          await updateSettingsMutation({
+            lastSelectedCardId: localStorageData.lastSelectedId,
+          });
+
+          // Mark migration complete
+          await markMigrationCompleteMutation({});
+
+          // Clear localStorage after successful migration
+          if (typeof window !== "undefined") {
+            localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
+          }
+
+          console.info(
+            `Migration complete: ${cardsToMerge.length} cards migrated`,
+          );
+        } catch (error) {
+          console.error("Migration failed:", error);
+          migrationAttempted.current = false;
+        } finally {
+          setIsMigrating(false);
+        }
         return;
       }
 
+      // Case 2: Additional device - migration already done, but may have local data to merge
+      if (!hasDataToMerge) {
+        // No local data to merge, but clean up any stale localStorage
+        if (typeof window !== "undefined") {
+          const hasLocalStorage =
+            localStorage.getItem(CREDIT_CARDS_STORAGE_KEY) !== null;
+          if (hasLocalStorage) {
+            localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
+          }
+        }
+        return;
+      }
+
+      // Has data to merge from this device
       migrationAttempted.current = true;
-
-      // Check if there's any localStorage data worth migrating
-      const hasCustomCards = localStorageData.cards.some((c) => !c.isPreset);
-      const hasModifiedPresets = localStorageData.cards.some((card) => {
-        if (!card.isPreset) return false;
-        const defaultPreset = DEFAULT_PRESET_CARDS.find(
-          (p) => p.id === card.id,
-        );
-        if (!defaultPreset) return false;
-        // Check if any values differ from defaults
-        return (
-          card.pointsPerDollar !== defaultPreset.pointsPerDollar ||
-          card.valuePerPoint !== defaultPreset.valuePerPoint ||
-          card.signupBonus !== undefined
-        );
-      });
-
-      // Only migrate if there's custom data
-      if (!hasCustomCards && !hasModifiedPresets) {
-        // No custom data, just mark migration complete
-        await markMigrationCompleteMutation({});
-        return;
-      }
-
       setIsMigrating(true);
 
       try {
-        // Prepare cards to migrate (custom + modified presets)
-        const cardsToMigrate = localStorageData.cards
-          .filter((card) => {
-            if (!card.isPreset) return true; // Always migrate custom cards
-
-            // Check if preset has been modified
-            const defaultPreset = DEFAULT_PRESET_CARDS.find(
-              (p) => p.id === card.id,
-            );
-            if (!defaultPreset) return true;
-
-            return (
-              card.pointsPerDollar !== defaultPreset.pointsPerDollar ||
-              card.valuePerPoint !== defaultPreset.valuePerPoint ||
-              card.signupBonus !== undefined
-            );
-          })
-          .map((card) => ({
-            cardId: card.id,
-            cardType: card.cardType,
-            isCustomizable: card.isCustomizable,
-            isPreset: card.isPreset,
-            issuer: card.issuer,
-            name: card.name,
-            pointsPerDollar: card.pointsPerDollar,
-            signupBonus: card.signupBonus,
-            valuePerPoint: card.valuePerPoint,
-          }));
-
-        // Migrate cards
-        if (cardsToMigrate.length > 0) {
-          await migrateFromLocalStorageMutation({ cards: cardsToMigrate });
-        }
-
-        // Migrate settings
-        await updateSettingsMutation({
-          lastSelectedCardId: localStorageData.lastSelectedId,
+        // Merge cards (backend deduplicates by ID)
+        const result = await migrateFromLocalStorageMutation({
+          cards: cardsToMerge,
         });
 
-        // Mark migration complete
-        await markMigrationCompleteMutation({});
-
-        // Clear localStorage after successful migration
+        // Clear localStorage after successful merge
         if (typeof window !== "undefined") {
           localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
         }
 
         console.info(
-          `Migration complete: ${cardsToMigrate.length} cards migrated`,
+          `Merge complete: ${result.imported} cards imported, ${result.skipped} skipped (already existed)`,
         );
       } catch (error) {
-        console.error("Migration failed:", error);
-        // Reset flag to allow retry
+        console.error("Merge failed:", error);
         migrationAttempted.current = false;
       } finally {
         setIsMigrating(false);
       }
     };
 
-    void runMigration();
+    void runMigrationOrMerge();
   }, [
     isSignedIn,
     needsMigration,
     isMigrating,
-    localStorageData,
+    localStorageData.lastSelectedId,
+    getCardsToMerge,
     migrateFromLocalStorageMutation,
     updateSettingsMutation,
     markMigrationCompleteMutation,

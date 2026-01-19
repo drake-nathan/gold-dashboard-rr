@@ -65,11 +65,7 @@ export const Header = () => {
 
         {/* Desktop: Coffee button + Auth buttons + Theme toggle */}
         <div className="hidden items-center gap-2 sm:flex">
-          <Button
-            asChild
-            size="sm"
-            variant="ghost"
-          >
+          <Button asChild size="sm" variant="ghost">
             <a
               href="https://buymeacoffee.com/thenathandrake"
               onClick={trackCoffeeClick}

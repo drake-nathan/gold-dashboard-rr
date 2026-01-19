@@ -291,17 +291,17 @@ test("migration skips when user has no custom data", async () => {
   expect(mockMutationCalls.markMigrationComplete).toHaveLength(1);
 });
 
-test("migration does not run when needsMigration is false", async () => {
+test("merge runs when needsMigration is false but localStorage has custom data", async () => {
   resetMocks();
-  mockNeedsMigration = false; // Already migrated
+  mockNeedsMigration = false; // Already migrated on another device
 
-  // Set up localStorage with custom data (shouldn't matter)
+  // Set up localStorage with custom data from this device
   const customCard: CreditCard = {
     cardType: "cashback",
-    id: "should-not-migrate",
+    id: "should-merge",
     isCustomizable: false,
     isPreset: false,
-    name: "Should Not Migrate",
+    name: "Should Merge",
     pointsPerDollar: 5,
     valuePerPoint: 0.01,
   };
@@ -316,17 +316,27 @@ test("migration does not run when needsMigration is false", async () => {
 
   await render(<TestComponent onStateChange={() => undefined} />);
 
-  // Give it time to potentially run migration
+  // Wait for merge to complete
   await new Promise<void>((resolve) => {
     setTimeout(resolve, 200);
   });
 
-  // No mutations should be called
-  expect(mockMutationCalls.migrateFromLocalStorage).toHaveLength(0);
+  // migrateFromLocalStorage should be called to merge the custom card
+  expect(mockMutationCalls.migrateFromLocalStorage).toHaveLength(1);
+
+  // Verify the custom card was included in the merge
+  const mergedCards = mockMutationCalls.migrateFromLocalStorage[0][0] as {
+    cards: { cardId: string }[];
+  };
+
+  expect(mergedCards.cards).toHaveLength(1);
+  expect(mergedCards.cards[0].cardId).toBe("should-merge");
+
+  // markMigrationComplete should NOT be called (already complete)
   expect(mockMutationCalls.markMigrationComplete).toHaveLength(0);
 
-  // localStorage should still exist (not cleared)
-  expect(localStorage.getItem(CREDIT_CARDS_STORAGE_KEY)).not.toBeNull();
+  // localStorage should be cleared after successful merge
+  expect(localStorage.getItem(CREDIT_CARDS_STORAGE_KEY)).toBeNull();
 });
 
 test("migration handles preset with signupBonus as modified", async () => {
