@@ -129,7 +129,7 @@ bun run snapshot:sync     # Export then import (full sync)
 
 ## Phase 1: Production Auth Launch
 
-**Status:** In Progress
+**Status:** Complete ✅
 **Estimated Sessions:** 1-2
 
 ### Prerequisites
@@ -189,7 +189,7 @@ Run these tests in dev before deploying to prod:
    - [x] Sign up with new account (Google login)
    - [x] Sign in/out
    - [x] Admin access works
-6. [ ] Monitor for errors in Railway logs
+6. [x] Monitor for errors in Railway logs
 
 ### Deliverables
 
@@ -350,15 +350,15 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 
 ### Deployment Steps
 
-1. [ ] Run `npx convex dev --once` to push schema changes to prod
-2. [ ] Verify tables created in Convex dashboard (`userCreditCards`, `userSettings`)
-3. [ ] Merge migration code to main
-4. [ ] Deploy to Railway
-5. [ ] Smoke test in production:
-   - [ ] Anonymous user can still use localStorage
-   - [ ] New signup triggers migration (if they have localStorage data)
-   - [ ] Returning user loads from Convex
-6. [ ] Monitor Convex logs for migration errors
+1. [x] Run `npx convex dev --once` to push schema changes to prod
+2. [x] Verify tables created in Convex dashboard (`userCreditCards`, `userSettings`)
+3. [x] Merge migration code to main
+4. [x] Deploy to Railway
+5. [x] Smoke test in production:
+   - [x] Anonymous user can still use localStorage
+   - [x] New signup triggers migration (if they have localStorage data)
+   - [x] Returning user loads from Convex
+6. [x] Monitor Convex logs for migration errors
 
 ### Deliverables
 
@@ -372,14 +372,14 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 
 ## Phase 3: Stripe Integration
 
-**Status:** Not Started
+**Status:** Ready to Start
 **Estimated Sessions:** 2-3
-**Depends On:** Phase 2
+**Depends On:** Phase 2 ✅
 
 ### Pricing Model
 
 - **Free Tier:** View dashboard, no alerts
-- **Pro Tier:** $X/month - Unlimited alerts (email)
+- **Pro Tier:** $8/month - Unlimited alerts (email)
 - Future: Add SMS tier when LLC is formed
 
 ### Tasks
@@ -825,7 +825,8 @@ Track progress across sessions here:
 | 1       | 2024-12-27 | Planning | Created roadmap, added Phase 0 (dev env), testing & deployment for all phases        |
 | 2       | 2025-12-27 | Phase 0  | Dev env setup complete: crons disabled, prod snapshot imported, scripts created      |
 | 3       | 2025-12-27 | Phase 1  | 1.1-1.2 complete: Clerk prod configured, auth enabled, Google login + admin verified |
-| 4       | -          | -        | -                                                                                    |
+| 4       | 2025-01-18 | Phase 2  | Complete: User data migration shipped, localStorage → Convex working in prod         |
+| 5       | -          | -        | -                                                                                    |
 
 ---
 
