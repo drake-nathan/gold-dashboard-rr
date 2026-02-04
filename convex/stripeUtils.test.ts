@@ -144,6 +144,92 @@ test("handles subscription with cancelAtPeriodEnd=true", () => {
   expect(result.cancelAtPeriodEnd).toBe(true);
 });
 
+test("returns isPro=false for unpaid subscription", () => {
+  const subscriptions: StripeSubscription[] = [
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735689600000,
+      status: "unpaid",
+    },
+  ];
+
+  const result = determineSubscriptionStatus(subscriptions);
+
+  expect(result.isPro).toBe(false);
+  expect(result.status).toBe("unpaid");
+});
+
+test("returns free status for incomplete subscription", () => {
+  const subscriptions: StripeSubscription[] = [
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735689600000,
+      status: "incomplete",
+    },
+  ];
+
+  const result = determineSubscriptionStatus(subscriptions);
+
+  expect(result.isPro).toBe(false);
+  expect(result.status).toBe("free");
+});
+
+test("returns free status for incomplete_expired subscription", () => {
+  const subscriptions: StripeSubscription[] = [
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735689600000,
+      status: "incomplete_expired",
+    },
+  ];
+
+  const result = determineSubscriptionStatus(subscriptions);
+
+  expect(result.isPro).toBe(false);
+  expect(result.status).toBe("free");
+});
+
+test("returns free status for paused subscription", () => {
+  const subscriptions: StripeSubscription[] = [
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735689600000,
+      status: "paused",
+    },
+  ];
+
+  const result = determineSubscriptionStatus(subscriptions);
+
+  expect(result.isPro).toBe(false);
+  expect(result.status).toBe("free");
+});
+
+test("selects subscription with latest currentPeriodEnd when multiple active", () => {
+  const subscriptions: StripeSubscription[] = [
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735600000000, // Earlier
+      status: "active",
+    },
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735689600000, // Later - should be selected
+      status: "active",
+    },
+    {
+      cancelAtPeriodEnd: false,
+      currentPeriodEnd: 1735500000000, // Middle
+      status: "trialing",
+    },
+  ];
+
+  const result = determineSubscriptionStatus(subscriptions);
+
+  expect(result.isPro).toBe(true);
+  expect(result.status).toBe("active");
+  expect(result.currentPeriodEnd).toBe(1735689600000);
+});
+
 // =============================================================================
 // hasProAccess Tests
 // =============================================================================
@@ -184,4 +270,10 @@ test("hasProAccess returns true if any subscription is active", () => {
   ];
 
   expect(hasProAccess(subscriptions)).toBe(true);
+});
+
+test("hasProAccess returns false for unpaid subscription", () => {
+  const subscriptions: StripeSubscription[] = [{ status: "unpaid" }];
+
+  expect(hasProAccess(subscriptions)).toBe(false);
 });

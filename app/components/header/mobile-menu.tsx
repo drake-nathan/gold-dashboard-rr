@@ -47,6 +47,8 @@ export const MobileMenu = () => {
     }
     if (result.url) {
       window.location.href = result.url;
+    } else {
+      toast.error("An unexpected error occurred. Please try again.");
     }
   }, [openPortal]);
 
@@ -118,7 +120,7 @@ export const MobileMenu = () => {
                 {isPro ?
                   <UserButton.MenuItems>
                     <UserButton.Action
-                      label="Manage Subscription"
+                      label="Manage subscription"
                       labelIcon={<CreditCard className="size-4" />}
                       onClick={() => void handleManageSubscription()}
                     />

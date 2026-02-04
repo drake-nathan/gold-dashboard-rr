@@ -1,5 +1,4 @@
 import { Crown, ExternalLink, Loader2 } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,22 +9,19 @@ import { useSubscription } from "@/hooks/use-subscription";
  * Needs to be a separate component to use hooks.
  */
 export const SubscriptionPageContent = () => {
-  const { isPro, openPortal, subscription } = useSubscription();
-  const [isLoading, setIsLoading] = useState(false);
+  const { isActionLoading, isPro, openPortal, subscription } =
+    useSubscription();
 
   const handleManageClick = async () => {
-    setIsLoading(true);
-    try {
-      const result = await openPortal();
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-      if (result.url) {
-        window.location.href = result.url;
-      }
-    } finally {
-      setIsLoading(false);
+    const result = await openPortal();
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    if (result.url) {
+      window.location.href = result.url;
+    } else {
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -64,11 +60,11 @@ export const SubscriptionPageContent = () => {
       {isPro ?
         <Button
           className="w-full"
-          disabled={isLoading}
+          disabled={isActionLoading}
           onClick={() => void handleManageClick()}
           variant="outline"
         >
-          {isLoading ?
+          {isActionLoading ?
             <Loader2 className="size-4 animate-spin" />
           : <ExternalLink className="size-4" />}
           Manage on Stripe

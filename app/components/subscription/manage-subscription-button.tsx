@@ -44,6 +44,8 @@ export const ManageSubscriptionButton = ({
     if (result.url) {
       // Redirect to Stripe Portal
       window.location.href = result.url;
+    } else {
+      toast.error("An unexpected error occurred. Please try again.");
     }
   }, [openPortal]);
 

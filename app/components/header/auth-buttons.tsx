@@ -32,6 +32,8 @@ export const AuthButtons = () => {
     }
     if (result.url) {
       window.location.href = result.url;
+    } else {
+      toast.error("An unexpected error occurred. Please try again.");
     }
   }, [openPortal]);
 

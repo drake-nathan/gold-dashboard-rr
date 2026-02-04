@@ -20,7 +20,8 @@ export interface SubscriptionStatus {
     | "canceled"
     | "free"
     | "past_due"
-    | "trialing";
+    | "trialing"
+    | "unpaid";
   userId?: string;
 }
 
