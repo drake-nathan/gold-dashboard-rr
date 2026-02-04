@@ -36,8 +36,24 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(bunx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: bunx playwright install-deps chromium
 
       - name: Run CI checks with Turbo
         run: bunx turbo run format:check lint typecheck test test:convex test:browser
