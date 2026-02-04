@@ -1,20 +1,10 @@
-import { Coffee } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
 import { Link } from "react-router";
-
-import { Button } from "@/components/ui/button";
 
 import { AuthButtons } from "./auth-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { ThemeToggle } from "./theme-toggle";
 
 export const Header = () => {
-  const posthog = usePostHog();
-
-  const trackCoffeeClick = () => {
-    posthog.capture("buy_me_a_coffee_clicked", { location: "header" });
-  };
-
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -63,19 +53,8 @@ export const Header = () => {
           </div>
         </Link>
 
-        {/* Desktop: Coffee button + Auth buttons + Theme toggle */}
+        {/* Desktop: Auth buttons + Theme toggle */}
         <div className="hidden items-center gap-2 sm:flex">
-          <Button asChild size="sm" variant="ghost">
-            <a
-              href="https://buymeacoffee.com/thenathandrake"
-              onClick={trackCoffeeClick}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <Coffee className="mr-1.5 h-4 w-4" />
-              Buy Me a Coffee
-            </a>
-          </Button>
           <AuthButtons />
           <ThemeToggle />
         </div>

@@ -1,9 +1,10 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Coffee, LogIn, Menu, Settings, UserPlus } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
+import { CreditCard, Crown, LogIn, Menu, Settings, UserPlus } from "lucide-react";
+import { useCallback } from "react";
 import { Link } from "react-router";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,20 +15,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSubscription } from "@/hooks/use-subscription";
+import { cn } from "@/lib/cn";
 
+import { SubscriptionPageContent } from "./subscription-page-content";
 import { ThemeMenuItems } from "./theme-toggle";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const posthog = usePostHog();
-
-  const trackCoffeeClick = () => {
-    posthog.capture("buy_me_a_coffee_clicked", { location: "mobile_menu" });
-  };
+  const { isPro, openPortal } = useSubscription();
 
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
   const isAdmin = adminCheck?.isAdmin ?? false;
+
+  const handleManageSubscription = useCallback(async () => {
+    const result = await openPortal();
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+    if (result.url) {
+      window.location.href = result.url;
+    }
+  }, [openPortal]);
 
   return (
     <DropdownMenu>
@@ -36,30 +47,15 @@ export const MobileMenu = () => {
           <Menu className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-48">
         {/* Theme Options */}
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
           Theme
         </DropdownMenuLabel>
         <ThemeMenuItems />
 
-        {/* Buy Me a Coffee */}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a
-            className="text-yellow-600 dark:text-yellow-400"
-            href="https://buymeacoffee.com/thenathandrake"
-            onClick={trackCoffeeClick}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <Coffee className="mr-2 h-4 w-4" />
-            Buy Me a Coffee
-          </a>
-        </DropdownMenuItem>
-
         {/* Admin Link */}
-        {isAdmin ?
+        {isAdmin ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -69,7 +65,7 @@ export const MobileMenu = () => {
               </Link>
             </DropdownMenuItem>
           </>
-        : null}
+        ) : null}
 
         {/* Auth Section */}
         <DropdownMenuSeparator />
@@ -93,8 +89,43 @@ export const MobileMenu = () => {
         </SignedOut>
         <SignedIn>
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <UserButton />
-            <span className="text-sm">Account</span>
+            {/* Wrapper for Pro ring indicator */}
+            <div
+              className={cn(
+                "flex items-center justify-center rounded-full p-[2px]",
+                isPro &&
+                  "bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600",
+              )}
+            >
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "size-[28px]",
+                    userButtonTrigger: "rounded-full focus:shadow-none",
+                  },
+                }}
+              >
+                {isPro ? (
+                  <UserButton.MenuItems>
+                    <UserButton.Action
+                      label="Manage Subscription"
+                      labelIcon={<CreditCard className="size-4" />}
+                      onClick={() => void handleManageSubscription()}
+                    />
+                  </UserButton.MenuItems>
+                ) : null}
+                <UserButton.UserProfilePage
+                  label="Subscription"
+                  labelIcon={<Crown className="size-4" />}
+                  url="subscription"
+                >
+                  <SubscriptionPageContent />
+                </UserButton.UserProfilePage>
+              </UserButton>
+            </div>
+            <span className="text-sm">
+              Account{isPro ? <span className="ml-1 text-amber-500">Pro</span> : null}
+            </span>
           </div>
         </SignedIn>
       </DropdownMenuContent>
