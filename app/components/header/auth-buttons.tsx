@@ -2,20 +2,18 @@ import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
 import { CreditCard, Crown, Settings } from "lucide-react";
-import { useCallback } from "react";
 import { Link } from "react-router";
-import { toast } from "sonner";
 
 import { UpgradeButton } from "@/components/subscription";
 import { Button } from "@/components/ui/button";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useManagePortal } from "@/hooks/use-manage-portal";
 import { cn } from "@/lib/cn";
 
 import { SubscriptionPageContent } from "./subscription-page-content";
 
 export const AuthButtons = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { isLoading, isPro, openPortal } = useSubscription();
+  const { handleManagePortal, isLoading, isPro } = useManagePortal();
 
   // Only show Pro ring when we've confirmed subscription status (not during loading)
   const showProRing = !isLoading && isPro;
@@ -23,19 +21,6 @@ export const AuthButtons = () => {
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
   const isAdmin = adminCheck?.isAdmin ?? false;
-
-  const handleManageSubscription = useCallback(async () => {
-    const result = await openPortal();
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      toast.error("An unexpected error occurred. Please try again.");
-    }
-  }, [openPortal]);
 
   return (
     <>
@@ -92,7 +77,7 @@ export const AuthButtons = () => {
                 <UserButton.Action
                   label="Manage subscription"
                   labelIcon={<CreditCard className="size-4" />}
-                  onClick={() => void handleManageSubscription()}
+                  onClick={() => void handleManagePortal()}
                 />
               </UserButton.MenuItems>
             : null}

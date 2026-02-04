@@ -92,14 +92,14 @@ export const useSubscription = (): UseSubscriptionReturn => {
       return { error: "You must be logged in to subscribe" };
     }
 
+    // Get price ID from environment - check BEFORE setting loading state
+    const priceId = import.meta.env.VITE_STRIPE_PRICE_ID;
+    if (!priceId) {
+      return { error: "Stripe not configured" };
+    }
+
     setIsActionLoading(true);
     try {
-      // Get price ID from environment
-      const priceId = import.meta.env.VITE_STRIPE_PRICE_ID;
-      if (!priceId) {
-        return { error: "Stripe not configured" };
-      }
-
       const result = await createCheckoutSession({ priceId });
       return result;
     } finally {

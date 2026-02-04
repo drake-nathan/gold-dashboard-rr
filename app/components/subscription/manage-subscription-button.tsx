@@ -1,9 +1,7 @@
 import { Loader2, Settings } from "lucide-react";
-import { useCallback } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useManagePortal } from "@/hooks/use-manage-portal";
 
 interface ManageSubscriptionButtonProps {
   className?: string;
@@ -31,23 +29,8 @@ export const ManageSubscriptionButton = ({
   text = "Manage Subscription",
   variant = "outline",
 }: ManageSubscriptionButtonProps) => {
-  const { isActionLoading, isEnabled, isPro, openPortal } = useSubscription();
-
-  const handleManage = useCallback(async () => {
-    const result = await openPortal();
-
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-
-    if (result.url) {
-      // Redirect to Stripe Portal
-      window.location.href = result.url;
-    } else {
-      toast.error("An unexpected error occurred. Please try again.");
-    }
-  }, [openPortal]);
+  const { handleManagePortal, isActionLoading, isEnabled, isPro } =
+    useManagePortal();
 
   // Only show for Pro users when Stripe is enabled
   if (!isEnabled || !isPro) {
@@ -58,7 +41,7 @@ export const ManageSubscriptionButton = ({
     <Button
       className={className}
       disabled={isActionLoading}
-      onClick={() => void handleManage()}
+      onClick={() => void handleManagePortal()}
       size={size}
       variant={variant}
     >

@@ -207,3 +207,58 @@ test("returns past_due status for past due subscription", async () => {
     .element(screen.getByTestId("status"))
     .toHaveTextContent("past_due");
 });
+
+// =============================================================================
+// Action Loading State Tests
+// =============================================================================
+
+// Test component that can trigger createCheckout
+const TestComponentWithActions = () => {
+  const { createCheckout, isActionLoading, isLoading, isPro, subscription } =
+    useSubscription();
+
+  const handleCheckout = async () => {
+    await createCheckout();
+  };
+
+  return (
+    <div>
+      <div data-testid="isLoading">{String(isLoading)}</div>
+      <div data-testid="isPro">{String(isPro)}</div>
+      <div data-testid="status">{subscription.status}</div>
+      <div data-testid="isActionLoading">{String(isActionLoading)}</div>
+      <button
+        data-testid="checkout-button"
+        onClick={() => void handleCheckout()}
+        type="button"
+      >
+        Checkout
+      </button>
+    </div>
+  );
+};
+
+test("isActionLoading stays false when priceId is missing", async () => {
+  // Clear the price ID to test the early return
+  vi.stubEnv("VITE_STRIPE_PRICE_ID", "");
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockQueryResult = { isPro: false, status: "free", userId: "user_123" };
+
+  const screen = await render(<TestComponentWithActions />);
+
+  // Verify initial state
+  await expect
+    .element(screen.getByTestId("isActionLoading"))
+    .toHaveTextContent("false");
+
+  // Click checkout button
+  await screen.getByTestId("checkout-button").click();
+
+  // isActionLoading should still be false (validation failed before loading state set)
+  await expect
+    .element(screen.getByTestId("isActionLoading"))
+    .toHaveTextContent("false");
+
+  // Restore price ID for other tests
+  vi.stubEnv("VITE_STRIPE_PRICE_ID", "price_test");
+});

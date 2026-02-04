@@ -9,9 +9,7 @@ import {
   Settings,
   UserPlus,
 } from "lucide-react";
-import { useCallback } from "react";
 import { Link } from "react-router";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useManagePortal } from "@/hooks/use-manage-portal";
 import { cn } from "@/lib/cn";
 
 import { SubscriptionPageContent } from "./subscription-page-content";
@@ -30,7 +28,7 @@ import { ThemeMenuItems } from "./theme-toggle";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { isLoading, isPro, openPortal } = useSubscription();
+  const { handleManagePortal, isLoading, isPro } = useManagePortal();
 
   // Only show Pro indicators when we've confirmed subscription status
   const showProRing = !isLoading && isPro;
@@ -38,19 +36,6 @@ export const MobileMenu = () => {
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
   const isAdmin = adminCheck?.isAdmin ?? false;
-
-  const handleManageSubscription = useCallback(async () => {
-    const result = await openPortal();
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      toast.error("An unexpected error occurred. Please try again.");
-    }
-  }, [openPortal]);
 
   return (
     <DropdownMenu>
@@ -122,7 +107,7 @@ export const MobileMenu = () => {
                     <UserButton.Action
                       label="Manage subscription"
                       labelIcon={<CreditCard className="size-4" />}
-                      onClick={() => void handleManageSubscription()}
+                      onClick={() => void handleManagePortal()}
                     />
                   </UserButton.MenuItems>
                 : null}

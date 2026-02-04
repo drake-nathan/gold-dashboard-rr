@@ -1,7 +1,7 @@
 import { Crown, ExternalLink, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { useManagePortal } from "@/hooks/use-manage-portal";
 import { useSubscription } from "@/hooks/use-subscription";
 
 /**
@@ -9,21 +9,8 @@ import { useSubscription } from "@/hooks/use-subscription";
  * Needs to be a separate component to use hooks.
  */
 export const SubscriptionPageContent = () => {
-  const { isActionLoading, isPro, openPortal, subscription } =
-    useSubscription();
-
-  const handleManageClick = async () => {
-    const result = await openPortal();
-    if (result.error) {
-      toast.error(result.error);
-      return;
-    }
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      toast.error("An unexpected error occurred. Please try again.");
-    }
-  };
+  const { subscription } = useSubscription();
+  const { handleManagePortal, isActionLoading, isPro } = useManagePortal();
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -61,7 +48,7 @@ export const SubscriptionPageContent = () => {
         <Button
           className="w-full"
           disabled={isActionLoading}
-          onClick={() => void handleManageClick()}
+          onClick={() => void handleManagePortal()}
           variant="outline"
         >
           {isActionLoading ?

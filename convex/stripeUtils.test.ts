@@ -7,7 +7,6 @@ import { expect, test } from "vitest";
 
 import {
   determineSubscriptionStatus,
-  hasProAccess,
   type StripeSubscription,
 } from "./stripeUtils";
 
@@ -228,52 +227,4 @@ test("selects subscription with latest currentPeriodEnd when multiple active", (
   expect(result.isPro).toBe(true);
   expect(result.status).toBe("active");
   expect(result.currentPeriodEnd).toBe(1735689600000);
-});
-
-// =============================================================================
-// hasProAccess Tests
-// =============================================================================
-
-test("hasProAccess returns false for empty array", () => {
-  expect(hasProAccess([])).toBe(false);
-});
-
-test("hasProAccess returns true for active subscription", () => {
-  const subscriptions: StripeSubscription[] = [{ status: "active" }];
-
-  expect(hasProAccess(subscriptions)).toBe(true);
-});
-
-test("hasProAccess returns true for trialing subscription", () => {
-  const subscriptions: StripeSubscription[] = [{ status: "trialing" }];
-
-  expect(hasProAccess(subscriptions)).toBe(true);
-});
-
-test("hasProAccess returns false for canceled subscription", () => {
-  const subscriptions: StripeSubscription[] = [{ status: "canceled" }];
-
-  expect(hasProAccess(subscriptions)).toBe(false);
-});
-
-test("hasProAccess returns false for past_due subscription", () => {
-  const subscriptions: StripeSubscription[] = [{ status: "past_due" }];
-
-  expect(hasProAccess(subscriptions)).toBe(false);
-});
-
-test("hasProAccess returns true if any subscription is active", () => {
-  const subscriptions: StripeSubscription[] = [
-    { status: "canceled" },
-    { status: "past_due" },
-    { status: "active" },
-  ];
-
-  expect(hasProAccess(subscriptions)).toBe(true);
-});
-
-test("hasProAccess returns false for unpaid subscription", () => {
-  const subscriptions: StripeSubscription[] = [{ status: "unpaid" }];
-
-  expect(hasProAccess(subscriptions)).toBe(false);
 });

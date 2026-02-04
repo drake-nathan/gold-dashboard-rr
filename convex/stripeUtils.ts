@@ -96,14 +96,3 @@ export const determineSubscriptionStatus = (
     status: "free",
   };
 };
-
-/**
- * Checks if any subscription grants Pro access.
- *
- * @param subscriptions - Array of subscriptions from Stripe component
- * @returns true if user has Pro access
- */
-export const hasProAccess = (subscriptions: StripeSubscription[]): boolean =>
-  subscriptions.some(
-    (sub) => sub.status === "active" || sub.status === "trialing",
-  );

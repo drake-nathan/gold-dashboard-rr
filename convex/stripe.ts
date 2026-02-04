@@ -3,12 +3,26 @@ import { v } from "convex/values";
 
 import { components } from "./_generated/api";
 import { action, query } from "./_generated/server";
-import { determineSubscriptionStatus, hasProAccess } from "./stripeUtils";
+import { determineSubscriptionStatus } from "./stripeUtils";
 
 // Initialize the Stripe client from the component
 const stripeClient = new StripeSubscriptions(components.stripe, {
   // Webhook events are handled automatically by the component
 });
+
+/**
+ * Get the site URL from environment.
+ * Throws if SITE_URL is not configured.
+ */
+const getSiteUrl = (): string => {
+  const siteUrl = process.env.SITE_URL;
+  if (!siteUrl) {
+    throw new Error(
+      "SITE_URL environment variable is required for Stripe integration",
+    );
+  }
+  return siteUrl;
+};
 
 /**
  * Create a Stripe Checkout session for subscribing to Pro
@@ -33,7 +47,7 @@ export const createCheckoutSession = action({
       });
 
       // Create the checkout session
-      const siteUrl = process.env.SITE_URL ?? "https://dashboard.gold";
+      const siteUrl = getSiteUrl();
       const session = await stripeClient.createCheckoutSession(ctx, {
         cancelUrl: `${siteUrl}?checkout=canceled`,
         customerId: customer.customerId,
@@ -75,7 +89,7 @@ export const createPortalSession = action({
       });
 
       // Create portal session
-      const siteUrl = process.env.SITE_URL ?? "https://dashboard.gold";
+      const siteUrl = getSiteUrl();
       const session = await stripeClient.createCustomerPortalSession(ctx, {
         customerId: customer.customerId,
         returnUrl: siteUrl,
@@ -117,28 +131,5 @@ export const getSubscriptionStatus = query({
       ...result,
       userId: identity.subject,
     };
-  },
-});
-
-/**
- * Check if the current user has Pro access
- * Simple boolean check for gating features
- */
-export const isPro = query({
-  args: {},
-  handler: async (ctx): Promise<boolean> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return false;
-    }
-
-    // Query the component's subscriptions via public query
-    const subscriptions = await ctx.runQuery(
-      components.stripe.public.listSubscriptionsByUserId,
-      { userId: identity.subject },
-    );
-
-    // Use utility function to check Pro access
-    return hasProAccess(subscriptions);
   },
 });
