@@ -28,7 +28,8 @@ export const UpgradeButton = ({
   text = "Upgrade to Pro",
 }: UpgradeButtonProps) => {
   const { isSignedIn } = useAuth();
-  const { createCheckout, isActionLoading, isPro } = useSubscription();
+  const { createCheckout, isActionLoading, isEnabled, isLoading, isPro } =
+    useSubscription();
 
   const handleUpgrade = useCallback(async () => {
     if (!isSignedIn) {
@@ -49,8 +50,8 @@ export const UpgradeButton = ({
     }
   }, [isSignedIn, createCheckout]);
 
-  // Don't show if already Pro
-  if (isPro) {
+  // Don't show if Stripe is disabled, while loading, or if already Pro
+  if (!isEnabled || isLoading || isPro) {
     return null;
   }
 

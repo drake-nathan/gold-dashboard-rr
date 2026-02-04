@@ -3,6 +3,7 @@ import { v } from "convex/values";
 
 import { components } from "./_generated/api";
 import { action, query } from "./_generated/server";
+import { determineSubscriptionStatus, hasProAccess } from "./stripeUtils";
 
 // Initialize the Stripe client from the component
 const stripeClient = new StripeSubscriptions(components.stripe, {
@@ -109,29 +110,11 @@ export const getSubscriptionStatus = query({
       { userId: identity.subject },
     );
 
-    // Find active subscription
-    const activeSubscription = subscriptions.find(
-      (sub) => sub.status === "active" || sub.status === "trialing",
-    );
-
-    if (!activeSubscription) {
-      return {
-        isPro: false,
-        status: "free" as const,
-        userId: identity.subject,
-      };
-    }
+    // Use utility function to determine status
+    const result = determineSubscriptionStatus(subscriptions);
 
     return {
-      cancelAtPeriodEnd: activeSubscription.cancelAtPeriodEnd,
-      currentPeriodEnd: activeSubscription.currentPeriodEnd,
-      isPro: true,
-      status: activeSubscription.status as
-        | "active"
-        | "canceled"
-        | "free"
-        | "past_due"
-        | "trialing",
+      ...result,
       userId: identity.subject,
     };
   },
@@ -155,9 +138,7 @@ export const isPro = query({
       { userId: identity.subject },
     );
 
-    // Check if any subscription is active
-    return subscriptions.some(
-      (sub) => sub.status === "active" || sub.status === "trialing",
-    );
+    // Use utility function to check Pro access
+    return hasProAccess(subscriptions);
   },
 });

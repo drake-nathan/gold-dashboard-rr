@@ -15,7 +15,10 @@ import { SubscriptionPageContent } from "./subscription-page-content";
 
 export const AuthButtons = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { isPro, openPortal } = useSubscription();
+  const { isLoading, isPro, openPortal } = useSubscription();
+
+  // Only show Pro ring when we've confirmed subscription status (not during loading)
+  const showProRing = !isLoading && isPro;
 
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
@@ -64,11 +67,11 @@ export const AuthButtons = () => {
           </Button>
         : null}
         <UpgradeButton size="sm" />
-        {/* Wrapper for Pro ring indicator */}
+        {/* Wrapper for Pro ring indicator - only show after subscription loads */}
         <div
           className={cn(
-            "flex items-center justify-center rounded-full p-[2px]",
-            isPro &&
+            "flex items-center justify-center rounded-full p-[2px] transition-all duration-300",
+            showProRing &&
               "bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600",
           )}
         >

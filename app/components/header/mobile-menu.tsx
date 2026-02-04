@@ -1,7 +1,14 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import { CreditCard, Crown, LogIn, Menu, Settings, UserPlus } from "lucide-react";
+import {
+  CreditCard,
+  Crown,
+  LogIn,
+  Menu,
+  Settings,
+  UserPlus,
+} from "lucide-react";
 import { useCallback } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -23,7 +30,10 @@ import { ThemeMenuItems } from "./theme-toggle";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { isPro, openPortal } = useSubscription();
+  const { isLoading, isPro, openPortal } = useSubscription();
+
+  // Only show Pro indicators when we've confirmed subscription status
+  const showProRing = !isLoading && isPro;
 
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
@@ -55,7 +65,7 @@ export const MobileMenu = () => {
         <ThemeMenuItems />
 
         {/* Admin Link */}
-        {isAdmin ? (
+        {isAdmin ?
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -65,7 +75,7 @@ export const MobileMenu = () => {
               </Link>
             </DropdownMenuItem>
           </>
-        ) : null}
+        : null}
 
         {/* Auth Section */}
         <DropdownMenuSeparator />
@@ -89,11 +99,11 @@ export const MobileMenu = () => {
         </SignedOut>
         <SignedIn>
           <div className="flex items-center gap-2 px-2 py-1.5">
-            {/* Wrapper for Pro ring indicator */}
+            {/* Wrapper for Pro ring indicator - only show after subscription loads */}
             <div
               className={cn(
-                "flex items-center justify-center rounded-full p-[2px]",
-                isPro &&
+                "flex items-center justify-center rounded-full p-[2px] transition-all duration-300",
+                showProRing &&
                   "bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600",
               )}
             >
@@ -105,7 +115,7 @@ export const MobileMenu = () => {
                   },
                 }}
               >
-                {isPro ? (
+                {isPro ?
                   <UserButton.MenuItems>
                     <UserButton.Action
                       label="Manage Subscription"
@@ -113,7 +123,7 @@ export const MobileMenu = () => {
                       onClick={() => void handleManageSubscription()}
                     />
                   </UserButton.MenuItems>
-                ) : null}
+                : null}
                 <UserButton.UserProfilePage
                   label="Subscription"
                   labelIcon={<Crown className="size-4" />}
@@ -124,7 +134,10 @@ export const MobileMenu = () => {
               </UserButton>
             </div>
             <span className="text-sm">
-              Account{isPro ? <span className="ml-1 text-amber-500">Pro</span> : null}
+              Account
+              {showProRing ?
+                <span className="ml-1 text-amber-500">Pro</span>
+              : null}
             </span>
           </div>
         </SignedIn>

@@ -20,6 +20,7 @@ import type * as marketPrices from "../marketPrices.js";
 import type * as pure from "../pure.js";
 import type * as snapshotExport from "../snapshotExport.js";
 import type * as stripe from "../stripe.js";
+import type * as stripeUtils from "../stripeUtils.js";
 import type * as userCards from "../userCards.js";
 import type * as userSettings from "../userSettings.js";
 
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   pure: typeof pure;
   snapshotExport: typeof snapshotExport;
   stripe: typeof stripe;
+  stripeUtils: typeof stripeUtils;
   userCards: typeof userCards;
   userSettings: typeof userSettings;
 }>;

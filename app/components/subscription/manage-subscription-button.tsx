@@ -31,7 +31,7 @@ export const ManageSubscriptionButton = ({
   text = "Manage Subscription",
   variant = "outline",
 }: ManageSubscriptionButtonProps) => {
-  const { isActionLoading, isPro, openPortal } = useSubscription();
+  const { isActionLoading, isEnabled, isPro, openPortal } = useSubscription();
 
   const handleManage = useCallback(async () => {
     const result = await openPortal();
@@ -47,8 +47,8 @@ export const ManageSubscriptionButton = ({
     }
   }, [openPortal]);
 
-  // Only show for Pro users
-  if (!isPro) {
+  // Only show for Pro users when Stripe is enabled
+  if (!isEnabled || !isPro) {
     return null;
   }
 

@@ -37,6 +37,12 @@ interface UseSubscriptionReturn {
   isActionLoading: boolean;
 
   /**
+   * Whether Stripe is enabled (feature flag)
+   * Components should hide subscription UI when false
+   */
+  isEnabled: boolean;
+
+  /**
    * Whether subscription status is loading
    */
   isLoading: boolean;
@@ -61,29 +67,26 @@ interface UseSubscriptionReturn {
  * Hook for managing user subscription status and actions.
  */
 export const useSubscription = (): UseSubscriptionReturn => {
+  // Feature flag check - must be checked before conditional hook usage
+  const isStripeEnabled = import.meta.env.VITE_STRIPE_ENABLED === "true";
+
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  // Query subscription status (only when signed in)
+  // Query subscription status (only when signed in AND Stripe is enabled)
   const subscriptionQuery = useQuery(
     api.stripe.getSubscriptionStatus,
-    isSignedIn ? {} : "skip",
+    isStripeEnabled && isSignedIn ? {} : "skip",
   );
 
   // Actions for checkout and portal
   const createCheckoutSession = useAction(api.stripe.createCheckoutSession);
   const createPortalSession = useAction(api.stripe.createPortalSession);
 
-  const isLoading =
-    !isAuthLoaded || (isSignedIn && subscriptionQuery === undefined);
-
-  // Default subscription status for anonymous/loading states
-  const subscription: SubscriptionStatus = subscriptionQuery ?? {
-    isPro: false,
-    status: isSignedIn ? "free" : "anonymous",
-  };
-
   const createCheckout = useCallback(async () => {
+    if (!isStripeEnabled) {
+      return { error: "Stripe is not enabled" };
+    }
     if (!isSignedIn) {
       return { error: "You must be logged in to subscribe" };
     }
@@ -101,9 +104,12 @@ export const useSubscription = (): UseSubscriptionReturn => {
     } finally {
       setIsActionLoading(false);
     }
-  }, [isSignedIn, createCheckoutSession]);
+  }, [isStripeEnabled, isSignedIn, createCheckoutSession]);
 
   const openPortal = useCallback(async () => {
+    if (!isStripeEnabled) {
+      return { error: "Stripe is not enabled" };
+    }
     if (!isSignedIn) {
       return { error: "You must be logged in to manage subscription" };
     }
@@ -115,11 +121,34 @@ export const useSubscription = (): UseSubscriptionReturn => {
     } finally {
       setIsActionLoading(false);
     }
-  }, [isSignedIn, createPortalSession]);
+  }, [isStripeEnabled, isSignedIn, createPortalSession]);
+
+  // When Stripe is disabled, return disabled state
+  if (!isStripeEnabled) {
+    return {
+      createCheckout,
+      isActionLoading: false,
+      isEnabled: false,
+      isLoading: false,
+      isPro: false,
+      openPortal,
+      subscription: { isPro: false, status: "anonymous" as const },
+    };
+  }
+
+  const isLoading =
+    !isAuthLoaded || (isSignedIn && subscriptionQuery === undefined);
+
+  // Default subscription status for anonymous/loading states
+  const subscription: SubscriptionStatus = subscriptionQuery ?? {
+    isPro: false,
+    status: isSignedIn ? "free" : "anonymous",
+  };
 
   return {
     createCheckout,
     isActionLoading,
+    isEnabled: true,
     isLoading,
     isPro: subscription.isPro,
     openPortal,
