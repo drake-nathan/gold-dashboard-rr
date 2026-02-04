@@ -1,0 +1,47 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "format:check": {
+      "inputs": [
+        "**/*.{ts,tsx,js,jsx,json,md,css,html}",
+        "prettier.config.js",
+        ".prettierignore"
+      ],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": [
+        "app/**/*.{ts,tsx}",
+        "convex/**/*.ts",
+        "scripts/**/*.ts",
+        "*.config.{ts,js}",
+        "eslint.config.js",
+        "tsconfig*.json"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "inputs": ["app/**/*.{ts,tsx}", "vitest.config.ts"],
+      "outputs": ["coverage/**"]
+    },
+    "test:browser": {
+      "cache": false,
+      "inputs": ["app/**/*.{ts,tsx}", "vitest.browser.config.ts"],
+      "outputs": []
+    },
+    "test:convex": {
+      "inputs": ["convex/**/*.ts", "vitest.convex.config.ts"],
+      "outputs": []
+    },
+    "typecheck": {
+      "inputs": [
+        "app/**/*.{ts,tsx}",
+        "convex/**/*.ts",
+        "scripts/**/*.ts",
+        "*.config.ts",
+        "tsconfig*.json"
+      ],
+      "outputs": []
+    }
+  }
+}

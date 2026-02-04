@@ -104,7 +104,7 @@ export const MobileMenu = () => {
               className={cn(
                 "flex items-center justify-center rounded-full p-[2px] transition-all duration-300",
                 showProRing &&
-                  "bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600",
+                  "bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600",
               )}
             >
               <UserButton
