@@ -80,26 +80,37 @@ This project was recently migrated from Next.js to React Router 7 + Vite. Some r
 
 ## Environment Setup
 
-### Convex Deployment Strategy
+### Deployment Strategy
 
-**Production-Only Setup**: This project uses a single Convex production deployment for both development and production.
+This project uses **separate dev and prod environments**:
 
-**Rationale**:
+| Environment     | Convex Deployment | Railway Service | Use Case            |
+| --------------- | ----------------- | --------------- | ------------------- |
+| Local dev       | Dev               | -               | Development         |
+| Railway Preview | Dev               | Preview         | PR reviews, testing |
+| Railway Prod    | Prod              | Prod            | Production          |
 
-- Read-only dashboard with public API data
-- Semi-manual product mappings shouldn't be duplicated
-- No user-generated data (yet)
-- Simplifies workflow and prevents environment drift
-- **Market price data**: Gold API fetches run every 5 minutes and build 24h history - duplicating across environments would waste API calls and create inconsistent data
+**Key points:**
 
-**Important**: Always use the production deployment URL in `.env.local`. Never use `npx convex dev` which creates a separate dev deployment. Use `npx convex dev --once` to push changes, or better yet, use the production deployment directly.
-
-**When to reconsider**: When implementing user authentication and settings persistence, a separate dev environment may be beneficial for testing with mock users.
+- Clerk and Stripe have separate test/prod API keys
+- API keys (Unwrangle, Pure, Gold API, FMP) are shared across environments
+- Cron jobs only run in Convex prod (`ENABLE_CRONS=true`)
 
 ### Environment Variables
 
+See **[docs/environment-variables.md](docs/environment-variables.md)** for comprehensive documentation including:
+
+- Complete variable reference with descriptions
+- Environment matrix (what goes where)
+- Setup checklists for local dev and Railway preview
+- Troubleshooting guide
+
+**Quick reference:**
+
 - `.env.template` - Template file with empty values (committed to git)
-- `.env.local` - Actual values with API keys and production deployment URL (gitignored)
+- `.env.local` - Actual values for local dev (gitignored)
+- Convex Dashboard - API keys and backend secrets
+- Railway Dashboard - Runtime and build-time variables
 
 ### Validation
 
