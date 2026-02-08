@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
 import {
+  Bell,
   CreditCard,
   Crown,
   LogIn,
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 
+import { UpgradeButton } from "@/components/subscription";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -85,6 +87,15 @@ export const MobileMenu = () => {
           </DropdownMenuItem>
         </SignedOut>
         <SignedIn>
+          <DropdownMenuItem asChild>
+            <Link to="/alerts">
+              <Bell className="mr-2 h-4 w-4" />
+              Alerts
+            </Link>
+          </DropdownMenuItem>
+          <div className="px-2 py-1.5">
+            <UpgradeButton className="w-full justify-start" size="sm" />
+          </div>
           <div className="flex items-center gap-2 px-2 py-1.5">
             {/* Wrapper for Pro ring indicator - only show after subscription loads */}
             <div

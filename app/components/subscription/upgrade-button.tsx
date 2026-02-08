@@ -52,19 +52,19 @@ export const UpgradeButton = ({
     }
   }, [isSignedIn, createCheckout]);
 
-  // Don't show if Stripe is disabled, while loading, or if already Pro
-  if (!isEnabled || isLoading || isPro) {
+  // Don't show if Stripe is disabled or if already Pro
+  if (!isEnabled || isPro) {
     return null;
   }
 
   return (
     <Button
       className={className}
-      disabled={isActionLoading || !isSignedIn}
+      disabled={isActionLoading || isLoading || !isSignedIn}
       onClick={() => void handleUpgrade()}
       size={size}
     >
-      {isActionLoading ?
+      {isActionLoading || isLoading ?
         <Loader2 className="animate-spin" />
       : <Sparkles className="size-4" />}
       {text}

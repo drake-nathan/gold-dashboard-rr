@@ -42,6 +42,10 @@
         "tsconfig*.json"
       ],
       "outputs": []
+    },
+    "typecheck:convex": {
+      "inputs": ["convex/**/*.ts", "convex/tsconfig.json"],
+      "outputs": []
     }
   }
 }

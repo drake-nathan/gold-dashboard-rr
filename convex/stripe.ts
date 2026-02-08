@@ -3,7 +3,10 @@ import { v } from "convex/values";
 
 import { components } from "./_generated/api";
 import { action, query } from "./_generated/server";
-import { determineSubscriptionStatus } from "./stripeUtils";
+import {
+  getAnonymousAlertEntitlements,
+  getUserAlertEntitlements,
+} from "./subscriptionEntitlements";
 
 // Initialize the Stripe client from the component
 const stripeClient = new StripeSubscriptions(components.stripe, {
@@ -115,20 +118,19 @@ export const getSubscriptionStatus = query({
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      return { isPro: false, status: "anonymous" as const };
+      return {
+        alertEntitlements: getAnonymousAlertEntitlements(),
+        isPro: false,
+        status: "anonymous" as const,
+      };
     }
 
-    // Query the component's subscriptions via public query
-    const subscriptions = await ctx.runQuery(
-      components.stripe.public.listSubscriptionsByUserId,
-      { userId: identity.subject },
-    );
-
-    // Use utility function to determine status
-    const result = determineSubscriptionStatus(subscriptions);
+    const { alertEntitlements, subscriptionStatus } =
+      await getUserAlertEntitlements(ctx, identity.subject);
 
     return {
-      ...result,
+      alertEntitlements,
+      ...subscriptionStatus,
       userId: identity.subject,
     };
   },

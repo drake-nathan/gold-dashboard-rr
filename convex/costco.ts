@@ -146,6 +146,7 @@ export const fetchNewData = internalAction({
       let productsUpdated = 0;
       let priceChanges = 0;
       let stockChanges = 0;
+      const updatedProductIds = new Set<string>();
 
       // Collect all product IDs seen in this fetch
       const seenProductIds = new Set(processedProducts.map((p) => p.id));
@@ -157,7 +158,10 @@ export const fetchNewData = internalAction({
           timestamp,
         });
 
-        if (result.updated) productsUpdated++;
+        if (result.updated) {
+          productsUpdated++;
+          updatedProductIds.add(product.id);
+        }
         if (result.priceChanged) priceChanges++;
         if (result.stockChanged) stockChanges++;
 
@@ -178,6 +182,18 @@ export const fetchNewData = internalAction({
 
       stockChanges += outOfStockResult.stockChanges;
       productsUpdated += outOfStockResult.productsUpdated;
+      for (const productId of outOfStockResult.updatedProductIds) {
+        updatedProductIds.add(productId);
+      }
+
+      // Evaluate alerts for products that changed in this fetch cycle.
+      if (updatedProductIds.size > 0) {
+        await ctx.runMutation(internal.alerts.evaluateAlertsForProducts, {
+          evaluatedAt: timestamp,
+          productIds: [...updatedProductIds],
+          source: "costco_search",
+        });
+      }
 
       // Log fetch run
       fetchRunId = await ctx.runMutation(internal.costco.logFetchRun, {
@@ -382,6 +398,7 @@ export const markUnseenProductsOutOfStock = internalMutation({
   handler: async (ctx, args) => {
     let stockChanges = 0;
     let productsUpdated = 0;
+    const updatedProductIds: string[] = [];
 
     // Get all currently in-stock products
     const inStockProducts = await ctx.db
@@ -422,6 +439,7 @@ export const markUnseenProductsOutOfStock = internalMutation({
 
         stockChanges++;
         productsUpdated++;
+        updatedProductIds.push(product.productId);
 
         console.info(
           `Marked product ${product.name} (${product.productId}) as out of stock`,
@@ -429,7 +447,7 @@ export const markUnseenProductsOutOfStock = internalMutation({
       }
     }
 
-    return { productsUpdated, stockChanges };
+    return { productsUpdated, stockChanges, updatedProductIds };
   },
 });
 
@@ -1203,6 +1221,7 @@ export const verifyInStockProducts = internalAction({
       let priceChanges = 0;
       let stockChanges = 0;
       let creditsRemaining = 0;
+      const updatedProductIds = new Set<string>();
 
       // Fetch each product's details
       for (const product of inStockProducts) {
@@ -1230,6 +1249,9 @@ export const verifyInStockProducts = internalAction({
 
           if (result.priceChanged) priceChanges++;
           if (result.stockChanged) stockChanges++;
+          if (result.updated) {
+            updatedProductIds.add(product.productId);
+          }
         } catch (error) {
           console.error(
             `[Product API] Error verifying ${product.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -1248,6 +1270,14 @@ export const verifyInStockProducts = internalAction({
         stockChanges,
         timestamp,
       });
+
+      if (updatedProductIds.size > 0) {
+        await ctx.runMutation(internal.alerts.evaluateAlertsForProducts, {
+          evaluatedAt: timestamp,
+          productIds: [...updatedProductIds],
+          source: "costco_verify",
+        });
+      }
 
       console.info(
         `[Product API] Verification complete: ${inStockProducts.length} verified, ${priceChanges} price changes, ${stockChanges} stock changes. Credits remaining: ${creditsRemaining}`,

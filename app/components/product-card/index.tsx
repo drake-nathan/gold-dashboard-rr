@@ -1,7 +1,8 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import { ExternalLink } from "lucide-react";
+import { BellPlus, ExternalLink } from "lucide-react";
+import { Link } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,13 @@ export const ProductCard = ({
       generatePureProductUrl(product.pureProductSku)
     : `https://www.collectpure.com/search?q=${encodeURIComponent(product.name)}`;
 
+  const alertLink = `/alerts?${new URLSearchParams({
+    name: `${product.name} in-stock`,
+    productId: product.productId,
+    triggerOn: "in_stock",
+    type: "sku",
+  }).toString()}`;
+
   return (
     <Card className="flex h-full flex-col gap-3">
       <CardHeader>
@@ -89,6 +97,15 @@ export const ProductCard = ({
               src={product.thumbnail}
             />
           : null}
+        </div>
+
+        <div className="mt-3">
+          <Button asChild className="w-full" size="sm" variant="secondary">
+            <Link to={alertLink}>
+              <BellPlus className="size-4" />
+              Create In-Stock Alert
+            </Link>
+          </Button>
         </div>
       </CardHeader>
 

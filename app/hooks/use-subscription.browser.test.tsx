@@ -49,6 +49,15 @@ const TestComponent = () => {
       <div data-testid="currentPeriodEnd">
         {String(subscription.currentPeriodEnd ?? "undefined")}
       </div>
+      <div data-testid="canCreateAlerts">
+        {String(subscription.alertEntitlements.canCreateAlerts)}
+      </div>
+      <div data-testid="canManageAlerts">
+        {String(subscription.alertEntitlements.canManageAlerts)}
+      </div>
+      <div data-testid="canSendAlerts">
+        {String(subscription.alertEntitlements.canSendAlerts)}
+      </div>
     </div>
   );
 };
@@ -127,6 +136,34 @@ test("returns free status for user without subscription", async () => {
     .toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("free");
+  await expect
+    .element(screen.getByTestId("canManageAlerts"))
+    .toHaveTextContent("true");
+});
+
+test("uses alert entitlements returned by subscription query", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockQueryResult = {
+    alertEntitlements: {
+      canCreateAlerts: true,
+      canEnableAlerts: true,
+      canManageAlerts: true,
+      canSendAlerts: true,
+      shouldPauseEnabledAlerts: false,
+    },
+    isPro: true,
+    status: "active",
+    userId: "user_123",
+  };
+
+  const screen = await render(<TestComponent />);
+
+  await expect
+    .element(screen.getByTestId("canCreateAlerts"))
+    .toHaveTextContent("true");
+  await expect
+    .element(screen.getByTestId("canSendAlerts"))
+    .toHaveTextContent("true");
 });
 
 test("returns pro status for user with active subscription", async () => {

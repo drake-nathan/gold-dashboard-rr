@@ -1,7 +1,7 @@
 import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import { CreditCard, Crown, Settings } from "lucide-react";
+import { Bell, CreditCard, Crown, Settings } from "lucide-react";
 import { Link } from "react-router";
 
 import { UpgradeButton } from "@/components/subscription";
@@ -53,6 +53,12 @@ export const AuthButtons = () => {
             </Link>
           </Button>
         : null}
+        <Button asChild size="sm" variant="ghost">
+          <Link to="/alerts">
+            <Bell className="h-4 w-4" />
+            <span className="ml-1.5">Alerts</span>
+          </Link>
+        </Button>
         <UpgradeButton size="sm" />
         {/* Wrapper for Pro ring indicator - only show after subscription loads */}
         <div

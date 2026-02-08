@@ -208,4 +208,95 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  // ============================================================================
+  // Alerts (Phase 4)
+  // ============================================================================
+
+  alerts: defineTable({
+    userId: v.string(), // Clerk user ID
+    name: v.string(), // User-friendly label
+    type: v.union(
+      v.literal("sku"),
+      v.literal("category"),
+      v.literal("threshold"),
+    ),
+    enabled: v.boolean(),
+
+    // Internal pause state for entitlement/billing-driven disablement
+    pauseReason: v.optional(
+      v.union(v.literal("billing_hold"), v.literal("inactive_subscription")),
+    ),
+    pausedAt: v.optional(v.number()),
+
+    // SKU alert config
+    productId: v.optional(v.string()),
+
+    // Category alert config
+    metalType: v.optional(v.union(v.literal("gold"), v.literal("silver"))),
+    weight: v.optional(v.number()), // Troy ounces
+    brand: v.optional(v.string()),
+
+    // Threshold alert config
+    aboveSpotThreshold: v.optional(v.number()), // e.g., 0.5 for +0.5% above spot
+    profitThreshold: v.optional(v.number()), // USD
+
+    triggerOn: v.union(
+      v.literal("in_stock"),
+      v.literal("price_drop"),
+      v.literal("threshold_met"),
+    ),
+
+    lastTriggered: v.optional(v.number()),
+    cooldownMinutes: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_enabled", ["enabled"])
+    .index("by_user", ["userId"])
+    .index("by_user_and_enabled", ["userId", "enabled"]),
+
+  alertHistory: defineTable({
+    alertId: v.id("alerts"),
+    userId: v.string(),
+    triggeredAt: v.number(),
+    products: v.array(
+      v.object({
+        productId: v.string(),
+        productName: v.string(),
+        reason: v.string(),
+      }),
+    ),
+    notificationSent: v.boolean(),
+    notificationError: v.optional(v.string()),
+  })
+    .index("by_alert", ["alertId"])
+    .index("by_user", ["userId"]),
+
+  alertBatches: defineTable({
+    userId: v.string(),
+    alerts: v.array(
+      v.object({
+        alertId: v.id("alerts"),
+        alertName: v.string(),
+        products: v.array(
+          v.object({
+            productId: v.string(),
+            productName: v.string(),
+            reason: v.string(),
+          }),
+        ),
+      }),
+    ),
+    scheduledFor: v.number(),
+    sendAttempts: v.optional(v.number()),
+    lastAttemptedAt: v.optional(v.number()),
+    lastAttemptError: v.optional(v.string()),
+    terminalFailureAt: v.optional(v.number()),
+    sent: v.boolean(),
+    sentAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_pending", ["sent", "scheduledFor"])
+    .index("by_user", ["userId"]),
 });

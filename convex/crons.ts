@@ -72,6 +72,14 @@ if (ENABLE_CRONS) {
     "0 23,0-11 * * *", // Every hour at :00 from 11 PM - 11 AM UTC
     internal.fmp.fetchSP500,
   );
+
+  // Process pending alert digest batches every 15 minutes.
+  crons.cron(
+    "process-alert-batches",
+    "*/15 * * * *",
+    internal.alerts.processPendingAlertBatches,
+    {},
+  );
 }
 
 export default crons;

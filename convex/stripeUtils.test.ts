@@ -6,7 +6,9 @@
 import { expect, test } from "vitest";
 
 import {
+  determineAlertEntitlements,
   determineSubscriptionStatus,
+  getPauseReasonFromSubscriptionStatus,
   type StripeSubscription,
 } from "./stripeUtils";
 
@@ -227,4 +229,115 @@ test("selects subscription with latest currentPeriodEnd when multiple active", (
   expect(result.isPro).toBe(true);
   expect(result.status).toBe("active");
   expect(result.currentPeriodEnd).toBe(1735689600000);
+});
+
+// =============================================================================
+// determineAlertEntitlements Tests
+// =============================================================================
+
+test("grants full alert access for active status", () => {
+  const result = determineAlertEntitlements("active");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(true);
+  expect(result.canEnableAlerts).toBe(true);
+  expect(result.canSendAlerts).toBe(true);
+  expect(result.shouldPauseEnabledAlerts).toBe(false);
+  expect(result.pauseReason).toBeUndefined();
+});
+
+test("grants full alert access for trialing status", () => {
+  const result = determineAlertEntitlements("trialing");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(true);
+  expect(result.canEnableAlerts).toBe(true);
+  expect(result.canSendAlerts).toBe(true);
+  expect(result.shouldPauseEnabledAlerts).toBe(false);
+  expect(result.pauseReason).toBeUndefined();
+});
+
+test("blocks alert sends and enabling for past_due", () => {
+  const result = determineAlertEntitlements("past_due");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(false);
+  expect(result.canEnableAlerts).toBe(false);
+  expect(result.canSendAlerts).toBe(false);
+  expect(result.shouldPauseEnabledAlerts).toBe(true);
+  expect(result.pauseReason).toBe("billing_hold");
+});
+
+test("blocks alert sends and enabling for unpaid", () => {
+  const result = determineAlertEntitlements("unpaid");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(false);
+  expect(result.canEnableAlerts).toBe(false);
+  expect(result.canSendAlerts).toBe(false);
+  expect(result.shouldPauseEnabledAlerts).toBe(true);
+  expect(result.pauseReason).toBe("billing_hold");
+});
+
+test("blocks alert sends and enabling for canceled", () => {
+  const result = determineAlertEntitlements("canceled");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(false);
+  expect(result.canEnableAlerts).toBe(false);
+  expect(result.canSendAlerts).toBe(false);
+  expect(result.shouldPauseEnabledAlerts).toBe(true);
+  expect(result.pauseReason).toBe("inactive_subscription");
+});
+
+test("blocks alert sends and enabling for free", () => {
+  const result = determineAlertEntitlements("free");
+
+  expect(result.canManageAlerts).toBe(true);
+  expect(result.canCreateAlerts).toBe(false);
+  expect(result.canEnableAlerts).toBe(false);
+  expect(result.canSendAlerts).toBe(false);
+  expect(result.shouldPauseEnabledAlerts).toBe(true);
+  expect(result.pauseReason).toBe("inactive_subscription");
+});
+
+test("denies alert access for anonymous", () => {
+  const result = determineAlertEntitlements("anonymous");
+
+  expect(result.canManageAlerts).toBe(false);
+  expect(result.canCreateAlerts).toBe(false);
+  expect(result.canEnableAlerts).toBe(false);
+  expect(result.canSendAlerts).toBe(false);
+  expect(result.shouldPauseEnabledAlerts).toBe(false);
+  expect(result.pauseReason).toBeUndefined();
+});
+
+// =============================================================================
+// getPauseReasonFromSubscriptionStatus Tests
+// =============================================================================
+
+test("returns no pause reason for active status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("active")).toBeUndefined();
+});
+
+test("returns no pause reason for trialing status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("trialing")).toBeUndefined();
+});
+
+test("returns billing_hold for past_due status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("past_due")).toBe("billing_hold");
+});
+
+test("returns billing_hold for unpaid status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("unpaid")).toBe("billing_hold");
+});
+
+test("returns inactive_subscription for canceled status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("canceled")).toBe(
+    "inactive_subscription",
+  );
+});
+
+test("returns no pause reason for unsupported status", () => {
+  expect(getPauseReasonFromSubscriptionStatus("incomplete")).toBeUndefined();
 });

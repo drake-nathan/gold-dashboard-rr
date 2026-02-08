@@ -23,6 +23,42 @@ export interface SubscriptionStatusResult {
 }
 
 /**
+ * Statuses that can be evaluated for alert access.
+ */
+export type AlertEntitlementsStatus =
+  | "active"
+  | "anonymous"
+  | "canceled"
+  | "free"
+  | "past_due"
+  | "trialing"
+  | "unpaid";
+
+export type AlertPauseReason = "billing_hold" | "inactive_subscription";
+
+/**
+ * Alert feature gates derived from subscription status.
+ */
+export interface AlertEntitlements {
+  canCreateAlerts: boolean;
+  canEnableAlerts: boolean;
+  canManageAlerts: boolean;
+  canSendAlerts: boolean;
+  pauseReason?: AlertPauseReason;
+  shouldPauseEnabledAlerts: boolean;
+}
+
+const alertEntitlementsStatuses: AlertEntitlementsStatus[] = [
+  "active",
+  "anonymous",
+  "canceled",
+  "free",
+  "past_due",
+  "trialing",
+  "unpaid",
+];
+
+/**
  * Determines subscription status from an array of subscriptions.
  * Prioritizes active/trialing subscriptions over canceled ones.
  *
@@ -33,11 +69,23 @@ export const determineSubscriptionStatus = (
   subscriptions: StripeSubscription[],
 ): SubscriptionStatusResult => {
   // Find active or trialing subscription (these grant Pro access)
-  // Sort by currentPeriodEnd to get the most recent subscription if multiple exist
-  const activeSubscription = subscriptions
-    .filter((sub) => sub.status === "active" || sub.status === "trialing")
-    .sort((a, b) => (b.currentPeriodEnd ?? 0) - (a.currentPeriodEnd ?? 0))
-    .at(0);
+  // Select by latest currentPeriodEnd when multiple eligible subscriptions exist.
+  let activeSubscription: StripeSubscription | undefined;
+  for (const subscription of subscriptions) {
+    if (
+      subscription.status !== "active" &&
+      subscription.status !== "trialing"
+    ) {
+      continue;
+    }
+    if (
+      !activeSubscription ||
+      (subscription.currentPeriodEnd ?? 0) >
+        (activeSubscription.currentPeriodEnd ?? 0)
+    ) {
+      activeSubscription = subscription;
+    }
+  }
 
   if (activeSubscription) {
     return {
@@ -95,4 +143,89 @@ export const determineSubscriptionStatus = (
     isPro: false,
     status: "free",
   };
+};
+
+/**
+ * Determines alert entitlements from subscription status.
+ *
+ * Policy:
+ * - active/trialing: full access, alerts can send
+ * - past_due/unpaid: can manage existing alerts, cannot create/enable/send
+ * - canceled/free: can manage existing alerts, cannot create/enable/send
+ * - anonymous: no alert access
+ */
+export const determineAlertEntitlements = (
+  status: AlertEntitlementsStatus,
+): AlertEntitlements => {
+  if (status === "active" || status === "trialing") {
+    return {
+      canCreateAlerts: true,
+      canEnableAlerts: true,
+      canManageAlerts: true,
+      canSendAlerts: true,
+      shouldPauseEnabledAlerts: false,
+    };
+  }
+
+  if (status === "past_due" || status === "unpaid") {
+    return {
+      canCreateAlerts: false,
+      canEnableAlerts: false,
+      canManageAlerts: true,
+      canSendAlerts: false,
+      pauseReason: "billing_hold",
+      shouldPauseEnabledAlerts: true,
+    };
+  }
+
+  if (status === "canceled" || status === "free") {
+    return {
+      canCreateAlerts: false,
+      canEnableAlerts: false,
+      canManageAlerts: true,
+      canSendAlerts: false,
+      pauseReason: "inactive_subscription",
+      shouldPauseEnabledAlerts: true,
+    };
+  }
+
+  return {
+    canCreateAlerts: false,
+    canEnableAlerts: false,
+    canManageAlerts: false,
+    canSendAlerts: false,
+    shouldPauseEnabledAlerts: false,
+  };
+};
+
+/**
+ * Best-effort conversion from raw Stripe/component status string to our entitlement status union.
+ */
+export const toAlertEntitlementsStatus = (
+  status: string,
+): AlertEntitlementsStatus | undefined => {
+  const normalizedStatus = status as AlertEntitlementsStatus;
+  if (alertEntitlementsStatuses.includes(normalizedStatus)) {
+    return normalizedStatus;
+  }
+  return undefined;
+};
+
+/**
+ * Returns the pause reason when a subscription status requires disabling enabled alerts.
+ */
+export const getPauseReasonFromSubscriptionStatus = (
+  status: string,
+): AlertPauseReason | undefined => {
+  const entitlementsStatus = toAlertEntitlementsStatus(status);
+  if (!entitlementsStatus) {
+    return undefined;
+  }
+
+  const entitlements = determineAlertEntitlements(entitlementsStatus);
+  if (!entitlements.shouldPauseEnabledAlerts) {
+    return undefined;
+  }
+
+  return entitlements.pauseReason;
 };

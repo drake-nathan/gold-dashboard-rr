@@ -9,6 +9,7 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as alerts from "../alerts.js";
 import type * as costco from "../costco.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
@@ -21,6 +22,7 @@ import type * as pure from "../pure.js";
 import type * as snapshotExport from "../snapshotExport.js";
 import type * as stripe from "../stripe.js";
 import type * as stripeUtils from "../stripeUtils.js";
+import type * as subscriptionEntitlements from "../subscriptionEntitlements.js";
 import type * as userCards from "../userCards.js";
 import type * as userSettings from "../userSettings.js";
 
@@ -32,6 +34,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  alerts: typeof alerts;
   costco: typeof costco;
   crons: typeof crons;
   dashboard: typeof dashboard;
@@ -44,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   snapshotExport: typeof snapshotExport;
   stripe: typeof stripe;
   stripeUtils: typeof stripeUtils;
+  subscriptionEntitlements: typeof subscriptionEntitlements;
   userCards: typeof userCards;
   userSettings: typeof userSettings;
 }>;

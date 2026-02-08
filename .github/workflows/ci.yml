@@ -62,7 +62,7 @@ jobs:
     name: Deploy Convex
     runs-on: ubuntu-latest
     needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.CONVEX_DEPLOY_KEY != ''
     timeout-minutes: 5
 
     steps:

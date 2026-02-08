@@ -19,9 +19,10 @@ const runTurbo = async (): Promise<boolean> => {
       [
         "turbo",
         "run",
-        "format:check",
-        "lint",
+        "format",
+        "lint:fix",
         "typecheck",
+        "typecheck:convex",
         "test",
         "test:convex",
         "test:browser",

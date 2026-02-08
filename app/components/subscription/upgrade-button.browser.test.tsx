@@ -53,15 +53,14 @@ test("renders upgrade button for free users", async () => {
     .toBeInTheDocument();
 });
 
-test("hides button while subscription is loading", async () => {
+test("shows disabled button while subscription is loading", async () => {
   mockSubscription.isLoading = true;
 
   const screen = await render(<UpgradeButton />);
 
-  // Button should not exist when loading
-  const buttons = screen.container.querySelectorAll("button");
-
-  expect(buttons).toHaveLength(0);
+  await expect
+    .element(screen.getByRole("button", { name: /upgrade to pro/i }))
+    .toBeDisabled();
 });
 
 test("hides button for Pro users", async () => {

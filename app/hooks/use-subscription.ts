@@ -10,7 +10,17 @@ import { api } from "convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
 
+export interface AlertEntitlements {
+  canCreateAlerts: boolean;
+  canEnableAlerts: boolean;
+  canManageAlerts: boolean;
+  canSendAlerts: boolean;
+  pauseReason?: "billing_hold" | "inactive_subscription";
+  shouldPauseEnabledAlerts: boolean;
+}
+
 export interface SubscriptionStatus {
+  alertEntitlements: AlertEntitlements;
   cancelAtPeriodEnd?: boolean;
   currentPeriodEnd?: number;
   isPro: boolean;
@@ -26,6 +36,11 @@ export interface SubscriptionStatus {
 }
 
 interface UseSubscriptionReturn {
+  /**
+   * Alert capability gates derived from subscription status.
+   */
+  alertEntitlements: AlertEntitlements;
+
   /**
    * Create a checkout session and return the URL
    * User should be redirected to this URL
@@ -68,6 +83,23 @@ interface UseSubscriptionReturn {
  * Hook for managing user subscription status and actions.
  */
 export const useSubscription = (): UseSubscriptionReturn => {
+  const anonymousAlertEntitlements: AlertEntitlements = {
+    canCreateAlerts: false,
+    canEnableAlerts: false,
+    canManageAlerts: false,
+    canSendAlerts: false,
+    shouldPauseEnabledAlerts: false,
+  };
+
+  const inactiveAlertEntitlements: AlertEntitlements = {
+    canCreateAlerts: false,
+    canEnableAlerts: false,
+    canManageAlerts: true,
+    canSendAlerts: false,
+    pauseReason: "inactive_subscription",
+    shouldPauseEnabledAlerts: true,
+  };
+
   // Feature flag check - must be checked before conditional hook usage
   const isStripeEnabled = import.meta.env.VITE_STRIPE_ENABLED === "true";
 
@@ -127,26 +159,44 @@ export const useSubscription = (): UseSubscriptionReturn => {
   // When Stripe is disabled, return disabled state
   if (!isStripeEnabled) {
     return {
+      alertEntitlements: anonymousAlertEntitlements,
       createCheckout,
       isActionLoading: false,
       isEnabled: false,
       isLoading: false,
       isPro: false,
       openPortal,
-      subscription: { isPro: false, status: "anonymous" as const },
+      subscription: {
+        alertEntitlements: anonymousAlertEntitlements,
+        isPro: false,
+        status: "anonymous" as const,
+      },
     };
   }
 
   const isLoading =
     !isAuthLoaded || (isSignedIn && subscriptionQuery === undefined);
 
+  const fallbackAlertEntitlements =
+    isSignedIn ? inactiveAlertEntitlements : anonymousAlertEntitlements;
+
+  const queryAlertEntitlements = subscriptionQuery?.alertEntitlements;
+
   // Default subscription status for anonymous/loading states
-  const subscription: SubscriptionStatus = subscriptionQuery ?? {
-    isPro: false,
-    status: isSignedIn ? "free" : "anonymous",
-  };
+  const subscription: SubscriptionStatus =
+    subscriptionQuery ?
+      {
+        ...subscriptionQuery,
+        alertEntitlements: queryAlertEntitlements ?? fallbackAlertEntitlements,
+      }
+    : {
+        alertEntitlements: fallbackAlertEntitlements,
+        isPro: false,
+        status: isSignedIn ? "free" : "anonymous",
+      };
 
   return {
+    alertEntitlements: subscription.alertEntitlements,
     createCheckout,
     isActionLoading,
     isEnabled: true,
