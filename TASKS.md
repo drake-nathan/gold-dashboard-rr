@@ -2,14 +2,50 @@
 
 > Active epic: [Alerts & Subscriptions](.sessions/alerts.md)
 
-## Active
+## Active — Alerts Refinement (pre-prod)
 
-- [ ] Alerts: production rollout smoke test and monitoring
-- [ ] Alerts: full alert edit UX (field-level update, not just toggle/delete)
-- [ ] Alerts: one-click unsubscribe endpoint + tokenized link
-- [ ] Alerts: polish email template branding
-- [ ] Alerts: browser tests for /alerts UI
-- [ ] Stripe: production smoke checklist (dashboard, real checkout, webhook verify)
+### Step 1: Feature Completion ✅
+
+- [x] Alerts: full alert edit UX (field-level update via dialog, shared form fields)
+- [x] Alerts: one-click unsubscribe endpoint + tokenized HMAC link (RFC 8058)
+- [x] Alerts: polish email template branding (table layout, gold theme, CTA button)
+- [x] Extract shared `UserButton` config → `user-button-with-pro.tsx`
+
+### Step 2: UI Polish
+
+- [ ] Alerts UI: review /alerts page design, spacing, responsive behavior
+- [ ] Alerts UI: empty states, loading states, error handling
+- [ ] Subscription flow: upgrade prompts, gating UX, plan status display
+- [ ] Product card alert entrypoint: review quick-create UX
+- [ ] Email digest: test rendering across clients (Gmail, Apple Mail, Outlook)
+
+### Step 3: Test Coverage Audit
+
+- [ ] Audit alert evaluation engine for edge cases worth covering
+- [ ] Audit alert CRUD + entitlement gating for gaps
+- [ ] Browser tests for /alerts UI (create, list, toggle, delete flows)
+- [ ] Review existing 242 tests — prune any that test implementation details
+
+### Step 4: Staging Validation
+
+- [ ] Set Convex dev env var: `UNSUBSCRIBE_SECRET` (generate: `openssl rand -hex 32`)
+- [ ] Deploy to Railway preview (dev Convex) for full staging run
+- [ ] Verify feature flags: auth gating, subscription gating, cron guards
+- [ ] Manual test matrix: SKU/category/threshold alert create → trigger → digest
+- [ ] Manual test matrix: subscription transitions (active → past_due → canceled)
+- [ ] Manual test matrix: cooldown, batch merging, retry/dead-letter behavior
+- [ ] Manual test: anonymous user sees no alerts, free user sees upgrade prompt
+- [ ] Manual test: email delivery (Resend test mode), unsubscribe flow
+- [ ] Mobile device testing for /alerts and subscription flows
+
+### Step 5: Production Rollout
+
+- [ ] Set Convex prod env vars (RESEND_API_KEY, RESEND_FROM_EMAIL, SITE_URL, UNSUBSCRIBE_SECRET)
+- [ ] Stripe: production smoke (real checkout, webhook verify, portal)
+- [ ] Deploy to prod
+- [ ] Create test alert on prod account, trigger manually, verify email
+- [ ] Verify cron-driven auto-send (processPendingAlertBatches)
+- [ ] Monitor: Resend delivery rates, Convex logs, alertHistory table, spam/reputation
 
 ## Short Term
 

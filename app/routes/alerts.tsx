@@ -1,4 +1,4 @@
-import type { Id } from "convex/_generated/dataModel";
+import type { Doc, Id } from "convex/_generated/dataModel";
 
 import { SignIn, useAuth } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
@@ -7,6 +7,7 @@ import {
   Bell,
   BellOff,
   Loader2,
+  Pencil,
   Plus,
   Trash2,
   TriangleAlert,
@@ -21,6 +22,14 @@ import { UpgradeButton } from "@/components/subscription";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,6 +44,444 @@ import { useSubscription } from "@/hooks/use-subscription";
 
 type AlertFormType = "category" | "sku" | "threshold";
 type TriggerOn = "in_stock" | "price_drop" | "threshold_met";
+
+interface ProductOption {
+  metalType: string;
+  name: string;
+  productId: string;
+}
+
+interface AlertFormValues {
+  aboveSpotThreshold: string;
+  brand: string;
+  categoryMetal: "" | "gold" | "silver";
+  categoryTriggerOn: "in_stock" | "price_drop";
+  categoryWeight: string;
+  cooldownMinutes: number;
+  enabled: boolean;
+  formType: AlertFormType;
+  name: string;
+  profitThreshold: string;
+  skuProductId: string;
+  skuTriggerOn: "in_stock" | "price_drop";
+}
+
+const defaultFormValues: AlertFormValues = {
+  aboveSpotThreshold: "",
+  brand: "",
+  categoryMetal: "",
+  categoryTriggerOn: "in_stock",
+  categoryWeight: "",
+  cooldownMinutes: 60,
+  enabled: true,
+  formType: "threshold",
+  name: "",
+  profitThreshold: "",
+  skuProductId: "",
+  skuTriggerOn: "in_stock",
+};
+
+const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues => ({
+  aboveSpotThreshold:
+    alert.aboveSpotThreshold !== undefined ?
+      String(alert.aboveSpotThreshold)
+    : "",
+  brand: alert.brand ?? "",
+  categoryMetal: alert.metalType ?? "",
+  categoryTriggerOn:
+    alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
+  categoryWeight: alert.weight !== undefined ? String(alert.weight) : "",
+  cooldownMinutes: alert.cooldownMinutes,
+  enabled: alert.enabled,
+  formType: alert.type,
+  name: alert.name,
+  profitThreshold:
+    alert.profitThreshold !== undefined ? String(alert.profitThreshold) : "",
+  skuProductId: alert.productId ?? "",
+  skuTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
+});
+
+const getFormValidationError = (values: AlertFormValues): boolean => {
+  const categoryHasFilter =
+    values.categoryMetal.length > 0 ||
+    values.categoryWeight.trim() ||
+    values.brand.trim();
+  const thresholdHasFilter =
+    values.aboveSpotThreshold.trim().length > 0 ||
+    values.profitThreshold.trim().length > 0;
+
+  return (
+    (values.formType === "category" && !categoryHasFilter) ||
+    (values.formType === "sku" && !values.skuProductId) ||
+    (values.formType === "threshold" && !thresholdHasFilter)
+  );
+};
+
+const buildAlertPayload = (values: AlertFormValues) => {
+  let triggerOn: TriggerOn = "threshold_met";
+  const payload: {
+    aboveSpotThreshold?: number;
+    brand?: string;
+    cooldownMinutes: number;
+    enabled: boolean;
+    metalType?: "gold" | "silver";
+    name: string;
+    productId?: string;
+    profitThreshold?: number;
+    triggerOn: TriggerOn;
+    type: AlertFormType;
+    weight?: number;
+  } = {
+    cooldownMinutes: values.cooldownMinutes,
+    enabled: values.enabled,
+    name: values.name.trim(),
+    triggerOn,
+    type: values.formType,
+  };
+
+  if (values.formType === "sku") {
+    triggerOn = values.skuTriggerOn;
+    payload.productId = values.skuProductId;
+    payload.triggerOn = triggerOn;
+  }
+
+  if (values.formType === "category") {
+    triggerOn = values.categoryTriggerOn;
+    payload.triggerOn = triggerOn;
+
+    if (values.categoryMetal) {
+      payload.metalType = values.categoryMetal;
+    }
+
+    const parsedWeight = Number.parseFloat(values.categoryWeight);
+    if (values.categoryWeight.trim() && Number.isFinite(parsedWeight)) {
+      payload.weight = parsedWeight;
+    }
+
+    const trimmedBrand = values.brand.trim();
+    if (trimmedBrand) {
+      payload.brand = trimmedBrand;
+    }
+  }
+
+  if (values.formType === "threshold") {
+    const parsedAboveSpot = Number.parseFloat(values.aboveSpotThreshold);
+    const parsedProfit = Number.parseFloat(values.profitThreshold);
+
+    if (
+      values.aboveSpotThreshold.trim() &&
+      Number.isFinite(parsedAboveSpot)
+    ) {
+      payload.aboveSpotThreshold = parsedAboveSpot;
+    }
+
+    if (values.profitThreshold.trim() && Number.isFinite(parsedProfit)) {
+      payload.profitThreshold = parsedProfit;
+    }
+  }
+
+  return payload;
+};
+
+const AlertFormFields = ({
+  onChange,
+  productOptions,
+  values,
+}: {
+  onChange: (update: Partial<AlertFormValues>) => void;
+  productOptions: ProductOption[];
+  values: AlertFormValues;
+}) => (
+  <>
+    <div className="space-y-2">
+      <Label htmlFor="alert-name">Name</Label>
+      <Input
+        id="alert-name"
+        onChange={(event) => {
+          onChange({ name: event.target.value });
+        }}
+        placeholder="Deal watcher"
+        value={values.name}
+      />
+    </div>
+
+    <div className="space-y-2">
+      <Label htmlFor="alert-type">Alert Type</Label>
+      <Select
+        onValueChange={(value) => {
+          onChange({ formType: value as AlertFormType });
+        }}
+        value={values.formType}
+      >
+        <SelectTrigger id="alert-type">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="threshold">Threshold</SelectItem>
+          <SelectItem value="sku">Specific Product (SKU)</SelectItem>
+          <SelectItem value="category">Category</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    {values.formType === "sku" ?
+      <>
+        <div className="space-y-2">
+          <Label htmlFor="alert-product">Product</Label>
+          <Select
+            onValueChange={(value) => {
+              onChange({ skuProductId: value });
+            }}
+            value={values.skuProductId || undefined}
+          >
+            <SelectTrigger id="alert-product">
+              <SelectValue placeholder="Select a product" />
+            </SelectTrigger>
+            <SelectContent>
+              {productOptions.map((product) => (
+                <SelectItem
+                  key={product.productId}
+                  value={product.productId}
+                >
+                  {product.name} ({product.metalType})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alert-sku-trigger">Trigger On</Label>
+          <Select
+            onValueChange={(value) => {
+              onChange({
+                skuTriggerOn: value as "in_stock" | "price_drop",
+              });
+            }}
+            value={values.skuTriggerOn}
+          >
+            <SelectTrigger id="alert-sku-trigger">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="in_stock">Back in stock</SelectItem>
+              <SelectItem value="price_drop">Price drop</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </>
+    : null}
+
+    {values.formType === "category" ?
+      <>
+        <div className="space-y-2">
+          <Label htmlFor="alert-category-trigger">Trigger On</Label>
+          <Select
+            onValueChange={(value) => {
+              onChange({
+                categoryTriggerOn: value as "in_stock" | "price_drop",
+              });
+            }}
+            value={values.categoryTriggerOn}
+          >
+            <SelectTrigger id="alert-category-trigger">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="in_stock">Back in stock</SelectItem>
+              <SelectItem value="price_drop">Price drop</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alert-metal">Metal</Label>
+          <Select
+            onValueChange={(value) => {
+              onChange({
+                categoryMetal:
+                  value === "any" ? "" : (value as "gold" | "silver"),
+              });
+            }}
+            value={values.categoryMetal || "any"}
+          >
+            <SelectTrigger id="alert-metal">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">Any metal</SelectItem>
+              <SelectItem value="gold">Gold</SelectItem>
+              <SelectItem value="silver">Silver</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alert-weight">Weight (oz)</Label>
+          <Input
+            id="alert-weight"
+            onChange={(event) => {
+              onChange({ categoryWeight: event.target.value });
+            }}
+            placeholder="Optional (e.g. 1)"
+            type="number"
+            value={values.categoryWeight}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alert-brand">Brand</Label>
+          <Input
+            id="alert-brand"
+            onChange={(event) => {
+              onChange({ brand: event.target.value });
+            }}
+            placeholder="Optional (e.g. PAMP)"
+            value={values.brand}
+          />
+        </div>
+      </>
+    : null}
+
+    {values.formType === "threshold" ?
+      <>
+        <div className="space-y-2">
+          <Label htmlFor="alert-above-spot">
+            Above Spot Threshold (%)
+          </Label>
+          <Input
+            id="alert-above-spot"
+            onChange={(event) => {
+              onChange({ aboveSpotThreshold: event.target.value });
+            }}
+            placeholder="Optional (e.g. 0.5)"
+            type="number"
+            value={values.aboveSpotThreshold}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="alert-profit-threshold">
+            Profit Threshold (USD)
+          </Label>
+          <Input
+            id="alert-profit-threshold"
+            onChange={(event) => {
+              onChange({ profitThreshold: event.target.value });
+            }}
+            placeholder="Optional (e.g. 25)"
+            type="number"
+            value={values.profitThreshold}
+          />
+        </div>
+      </>
+    : null}
+
+    <div className="space-y-2">
+      <Label htmlFor="alert-cooldown">Cooldown (minutes)</Label>
+      <Input
+        id="alert-cooldown"
+        min={1}
+        onChange={(event) => {
+          const value = Number.parseInt(event.target.value, 10);
+          onChange({ cooldownMinutes: Number.isFinite(value) ? value : 60 });
+        }}
+        type="number"
+        value={values.cooldownMinutes}
+      />
+    </div>
+  </>
+);
+
+const EditAlertDialog = ({
+  alert,
+  onClose,
+  onSave,
+  productOptions,
+}: {
+  alert: Doc<"alerts">;
+  onClose: () => void;
+  onSave: (alertId: Id<"alerts">, payload: ReturnType<typeof buildAlertPayload>) => Promise<void>;
+  productOptions: ProductOption[];
+}) => {
+  const [values, setValues] = useState<AlertFormValues>(() =>
+    alertFormValuesFromDoc(alert),
+  );
+  const [isSaving, setIsSaving] = useState(false);
+
+  const hasValidationError = getFormValidationError(values);
+  const saveDisabled = isSaving || hasValidationError || !values.name.trim();
+
+  const handleSave = async () => {
+    if (saveDisabled) return;
+
+    const payload = buildAlertPayload(values);
+    setIsSaving(true);
+    try {
+      await onSave(alert._id, payload);
+      onClose();
+    } catch {
+      // error toast handled by caller
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Dialog onOpenChange={(open) => { if (!open) onClose(); }} open>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Alert</DialogTitle>
+          <DialogDescription>
+            Update the configuration for this alert.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <AlertFormFields
+            onChange={(update) => {
+              setValues((prev) => ({ ...prev, ...update }));
+            }}
+            productOptions={productOptions}
+            values={values}
+          />
+
+          <div className="flex items-center justify-between rounded-md border p-3">
+            <div>
+              <p className="text-sm font-medium">Enabled</p>
+              <p className="text-xs text-muted-foreground">
+                Disable to pause this alert.
+              </p>
+            </div>
+            <Switch
+              checked={values.enabled}
+              onCheckedChange={(checked) => {
+                setValues((prev) => ({ ...prev, enabled: checked }));
+              }}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={onClose} variant="outline">
+            Cancel
+          </Button>
+          <Button
+            disabled={saveDisabled}
+            onClick={() => {
+              void handleSave();
+            }}
+          >
+            {isSaving ?
+              <Loader2 className="size-4 animate-spin" />
+            : null}
+            Save Changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export const meta = () => [
   { title: "Alerts - Dashboard.Gold" },
@@ -65,29 +512,17 @@ const AlertsPage = () => {
     : "threshold";
 
   const [isSaving, setIsSaving] = useState(false);
-  const [formType, setFormType] = useState<AlertFormType>(initialFormType);
-  const [name, setName] = useState(searchParams.get("name") ?? "");
-  const [enabled, setEnabled] = useState(true);
-  const [cooldownMinutes, setCooldownMinutes] = useState(60);
-
-  const [skuProductId, setSkuProductId] = useState(
-    searchParams.get("productId") ?? "",
-  );
-  const [skuTriggerOn, setSkuTriggerOn] = useState<"in_stock" | "price_drop">(
-    searchParams.get("triggerOn") === "price_drop" ? "price_drop" : "in_stock",
-  );
-
-  const [categoryMetal, setCategoryMetal] = useState<"" | "gold" | "silver">(
-    "",
-  );
-  const [categoryWeight, setCategoryWeight] = useState("");
-  const [categoryBrand, setCategoryBrand] = useState("");
-  const [categoryTriggerOn, setCategoryTriggerOn] = useState<
-    "in_stock" | "price_drop"
-  >("in_stock");
-
-  const [aboveSpotThreshold, setAboveSpotThreshold] = useState("");
-  const [profitThreshold, setProfitThreshold] = useState("");
+  const [editingAlert, setEditingAlert] = useState<Doc<"alerts"> | null>(null);
+  const [formValues, setFormValues] = useState<AlertFormValues>(() => ({
+    ...defaultFormValues,
+    formType: initialFormType,
+    name: searchParams.get("name") ?? "",
+    skuProductId: searchParams.get("productId") ?? "",
+    skuTriggerOn:
+      searchParams.get("triggerOn") === "price_drop" ?
+        ("price_drop" as const)
+      : ("in_stock" as const),
+  }));
 
   const productOptions = useMemo(() => {
     if (!stats) {
@@ -113,21 +548,14 @@ const AlertsPage = () => {
     return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [stats]);
 
-  const categoryHasFilter =
-    categoryMetal.length > 0 || categoryWeight.trim() || categoryBrand.trim();
-  const thresholdHasFilter =
-    aboveSpotThreshold.trim().length > 0 || profitThreshold.trim().length > 0;
-  const hasTypeValidationError =
-    (formType === "category" && !categoryHasFilter) ||
-    (formType === "sku" && !skuProductId) ||
-    (formType === "threshold" && !thresholdHasFilter);
+  const hasValidationError = getFormValidationError(formValues);
 
   const createDisabled =
     isSaving ||
     isSubscriptionLoading ||
     !alertEntitlements.canCreateAlerts ||
-    hasTypeValidationError ||
-    !name.trim();
+    hasValidationError ||
+    !formValues.name.trim();
 
   const getPauseBadge = (
     pauseReason?: "billing_hold" | "inactive_subscription",
@@ -149,92 +577,40 @@ const AlertsPage = () => {
       return;
     }
 
-    const trimmedName = name.trim();
-    let triggerOn: TriggerOn = "threshold_met";
-    const payload: {
-      aboveSpotThreshold?: number;
-      brand?: string;
-      cooldownMinutes: number;
-      enabled: boolean;
-      metalType?: "gold" | "silver";
-      name: string;
-      productId?: string;
-      profitThreshold?: number;
-      triggerOn: TriggerOn;
-      type: AlertFormType;
-      weight?: number;
-    } = {
-      cooldownMinutes,
-      enabled,
-      name: trimmedName,
-      triggerOn,
-      type: formType,
-    };
-
-    if (formType === "sku") {
-      if (!skuProductId) {
-        toast.error("Select a product for SKU alerts");
-        return;
-      }
-      triggerOn = skuTriggerOn;
-      payload.productId = skuProductId;
-      payload.triggerOn = triggerOn;
-    }
-
-    if (formType === "category") {
-      triggerOn = categoryTriggerOn;
-      payload.triggerOn = triggerOn;
-
-      if (categoryMetal) {
-        payload.metalType = categoryMetal;
-      }
-
-      const parsedWeight = Number.parseFloat(categoryWeight);
-      if (categoryWeight.trim() && Number.isFinite(parsedWeight)) {
-        payload.weight = parsedWeight;
-      }
-
-      const trimmedBrand = categoryBrand.trim();
-      if (trimmedBrand) {
-        payload.brand = trimmedBrand;
-      }
-    }
-
-    if (formType === "threshold") {
-      const parsedAboveSpot = Number.parseFloat(aboveSpotThreshold);
-      const parsedProfit = Number.parseFloat(profitThreshold);
-
-      if (aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot)) {
-        payload.aboveSpotThreshold = parsedAboveSpot;
-      }
-
-      if (profitThreshold.trim() && Number.isFinite(parsedProfit)) {
-        payload.profitThreshold = parsedProfit;
-      }
-    }
+    const payload = buildAlertPayload(formValues);
 
     setIsSaving(true);
     try {
       await createAlert(payload);
       toast.success("Alert created");
-
-      setName("");
-      setEnabled(true);
-      setCooldownMinutes(60);
-      setSkuProductId("");
-      setSkuTriggerOn("in_stock");
-      setCategoryMetal("");
-      setCategoryWeight("");
-      setCategoryBrand("");
-      setCategoryTriggerOn("in_stock");
-      setAboveSpotThreshold("");
-      setProfitThreshold("");
+      setFormValues({
+        ...defaultFormValues,
+        formType: formValues.formType,
+      });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create alert",
       );
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const onEditAlert = async (
+    alertId: Id<"alerts">,
+    payload: ReturnType<typeof buildAlertPayload>,
+  ) => {
+    try {
+      await updateAlert({
+        alertId,
+        ...payload,
+      });
+      toast.success("Alert updated");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update alert",
+      );
+      throw error;
     }
   };
 
@@ -339,198 +715,13 @@ const AlertsPage = () => {
               <CardTitle className="text-base">Create Alert</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="alert-name">Name</Label>
-                <Input
-                  id="alert-name"
-                  onChange={(event) => {
-                    setName(event.target.value);
-                  }}
-                  placeholder="Deal watcher"
-                  value={name}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="alert-type">Alert Type</Label>
-                <Select
-                  onValueChange={(value) => {
-                    setFormType(value as AlertFormType);
-                  }}
-                  value={formType}
-                >
-                  <SelectTrigger id="alert-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="threshold">Threshold</SelectItem>
-                    <SelectItem value="sku">Specific Product (SKU)</SelectItem>
-                    <SelectItem value="category">Category</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formType === "sku" ?
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-product">Product</Label>
-                    <Select
-                      onValueChange={setSkuProductId}
-                      value={skuProductId || undefined}
-                    >
-                      <SelectTrigger id="alert-product">
-                        <SelectValue placeholder="Select a product" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {productOptions.map((product) => (
-                          <SelectItem
-                            key={product.productId}
-                            value={product.productId}
-                          >
-                            {product.name} ({product.metalType})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-sku-trigger">Trigger On</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        setSkuTriggerOn(value as "in_stock" | "price_drop");
-                      }}
-                      value={skuTriggerOn}
-                    >
-                      <SelectTrigger id="alert-sku-trigger">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="in_stock">Back in stock</SelectItem>
-                        <SelectItem value="price_drop">Price drop</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              : null}
-
-              {formType === "category" ?
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-category-trigger">Trigger On</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        setCategoryTriggerOn(
-                          value as "in_stock" | "price_drop",
-                        );
-                      }}
-                      value={categoryTriggerOn}
-                    >
-                      <SelectTrigger id="alert-category-trigger">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="in_stock">Back in stock</SelectItem>
-                        <SelectItem value="price_drop">Price drop</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-metal">Metal</Label>
-                    <Select
-                      onValueChange={(value) => {
-                        setCategoryMetal(
-                          value === "any" ? "" : (value as "gold" | "silver"),
-                        );
-                      }}
-                      value={categoryMetal || "any"}
-                    >
-                      <SelectTrigger id="alert-metal">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="any">Any metal</SelectItem>
-                        <SelectItem value="gold">Gold</SelectItem>
-                        <SelectItem value="silver">Silver</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-weight">Weight (oz)</Label>
-                    <Input
-                      id="alert-weight"
-                      onChange={(event) => {
-                        setCategoryWeight(event.target.value);
-                      }}
-                      placeholder="Optional (e.g. 1)"
-                      type="number"
-                      value={categoryWeight}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-brand">Brand</Label>
-                    <Input
-                      id="alert-brand"
-                      onChange={(event) => {
-                        setCategoryBrand(event.target.value);
-                      }}
-                      placeholder="Optional (e.g. PAMP)"
-                      value={categoryBrand}
-                    />
-                  </div>
-                </>
-              : null}
-
-              {formType === "threshold" ?
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-above-spot">
-                      Above Spot Threshold (%)
-                    </Label>
-                    <Input
-                      id="alert-above-spot"
-                      onChange={(event) => {
-                        setAboveSpotThreshold(event.target.value);
-                      }}
-                      placeholder="Optional (e.g. 0.5)"
-                      type="number"
-                      value={aboveSpotThreshold}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="alert-profit-threshold">
-                      Profit Threshold (USD)
-                    </Label>
-                    <Input
-                      id="alert-profit-threshold"
-                      onChange={(event) => {
-                        setProfitThreshold(event.target.value);
-                      }}
-                      placeholder="Optional (e.g. 25)"
-                      type="number"
-                      value={profitThreshold}
-                    />
-                  </div>
-                </>
-              : null}
-
-              <div className="space-y-2">
-                <Label htmlFor="alert-cooldown">Cooldown (minutes)</Label>
-                <Input
-                  id="alert-cooldown"
-                  min={1}
-                  onChange={(event) => {
-                    const value = Number.parseInt(event.target.value, 10);
-                    setCooldownMinutes(Number.isFinite(value) ? value : 60);
-                  }}
-                  type="number"
-                  value={cooldownMinutes}
-                />
-              </div>
+              <AlertFormFields
+                onChange={(update) => {
+                  setFormValues((prev) => ({ ...prev, ...update }));
+                }}
+                productOptions={productOptions}
+                values={formValues}
+              />
 
               <div className="flex items-center justify-between rounded-md border p-3">
                 <div>
@@ -540,9 +731,9 @@ const AlertsPage = () => {
                   </p>
                 </div>
                 <Switch
-                  checked={enabled}
+                  checked={formValues.enabled}
                   onCheckedChange={(checked) => {
-                    setEnabled(checked);
+                    setFormValues((prev) => ({ ...prev, enabled: checked }));
                   }}
                 />
               </div>
@@ -616,16 +807,28 @@ const AlertsPage = () => {
                         />
                       </div>
 
-                      <Button
-                        onClick={() => {
-                          void onDeleteAlert(alert._id);
-                        }}
-                        size="sm"
-                        variant="destructive"
-                      >
-                        <Trash2 className="size-4" />
-                        Delete
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={() => {
+                            setEditingAlert(alert);
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Pencil className="size-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            void onDeleteAlert(alert._id);
+                          }}
+                          size="sm"
+                          variant="destructive"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -636,6 +839,15 @@ const AlertsPage = () => {
       </main>
 
       <Footer />
+
+      {editingAlert ?
+        <EditAlertDialog
+          alert={editingAlert}
+          onClose={() => { setEditingAlert(null); }}
+          onSave={onEditAlert}
+          productOptions={productOptions}
+        />
+      : null}
     </div>
   );
 };

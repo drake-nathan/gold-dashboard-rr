@@ -39,6 +39,7 @@ Comprehensive reference for managing environment variables across all environmen
 | `RESEND_API_KEY`             | Convex | If Alerts | Yes          | Resend API key for sending alert digests                        |
 | `RESEND_FROM_EMAIL`          | Convex | If Alerts | Yes          | Sender address (e.g. `alerts@dashboard.gold`)                   |
 | `RESEND_REPLY_TO_EMAIL`      | Convex | No        | Yes          | Optional reply-to for alerts (default `support@dashboard.gold`) |
+| `UNSUBSCRIBE_SECRET`         | Convex | If Alerts | No           | HMAC secret for signing one-click unsubscribe tokens            |
 | **Analytics**                |
 | `VITE_PUBLIC_POSTHOG_KEY`    | Client | Yes       | Yes          | PostHog API key                                                 |
 | `VITE_PUBLIC_POSTHOG_HOST`   | Client | Yes       | No           | PostHog host URL                                                |
@@ -75,6 +76,7 @@ Where each variable is configured:
 | `RESEND_API_KEY`             |       -        |      -       |        -        |    test    |    prod     |
 | `RESEND_FROM_EMAIL`          |       -        |      -       |        -        | sender dev | sender prod |
 | `RESEND_REPLY_TO_EMAIL`      |       -        |      -       |        -        |  optional  |  optional   |
+| `UNSUBSCRIBE_SECRET`         |       -        |      -       |        -        |    same    |    same     |
 | `VITE_PUBLIC_POSTHOG_KEY`    |      key       |     key      |       key       |     -      |      -      |
 | `VITE_PUBLIC_POSTHOG_HOST`   |      host      |     host     |      host       |     -      |      -      |
 
@@ -194,6 +196,8 @@ All API keys are **shared** across environments (no test/prod split):
 | `SITE_URL`              | `http://localhost:5173` (local testing links)   | `https://dashboard.gold`                        |
 
 `RESEND_API_KEY` and `RESEND_FROM_EMAIL` must be set in Convex for `processPendingAlertBatches` to send digest emails. `RESEND_REPLY_TO_EMAIL` is optional.
+
+`UNSUBSCRIBE_SECRET` is used to sign one-click unsubscribe tokens (HMAC-SHA256). Same value for dev and prod. Generate with: `openssl rand -hex 32`. If not set, alert emails will fall back to mailto-based unsubscribe headers (no one-click). Also requires `CONVEX_SITE_URL` (auto-set by Convex) to build the unsubscribe endpoint URL.
 
 ### PostHog Analytics
 

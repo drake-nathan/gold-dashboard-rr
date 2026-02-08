@@ -35,6 +35,7 @@ const alertBatchRetryBaseDelayMinutes = 15;
 const alertBatchRetryMaxDelayMinutes = 12 * 60;
 const categoryWeightToleranceOz = 0.05;
 const defaultPendingBatchProcessLimit = 25;
+const UNSUBSCRIBE_TOKEN_SEPARATOR = ".";
 const defaultReplyToEmail = "support@dashboard.gold";
 const recentPriceDropWindowMs = 30 * 60 * 1000;
 const resendSendEmailUrl = "https://api.resend.com/emails";
@@ -80,6 +81,7 @@ interface SendAlertEmailArgs {
   subject: string;
   text: string;
   to: string;
+  unsubscribeUrl?: string;
 }
 
 interface SendAlertEmailFailure {
@@ -306,54 +308,117 @@ const escapeHtml = (value: string): string =>
 const formatAlertDigest = (
   batch: AlertBatchDoc,
   siteUrl?: string,
+  unsubscribeUrl?: string,
 ): AlertDigestContent => {
   const totalProducts = batch.alerts.reduce(
     (count, alertEntry) => count + alertEntry.products.length,
     0,
   );
   const pluralizedProducts = totalProducts === 1 ? "item" : "items";
-  const subject = `Dashboard.Gold alert digest: ${totalProducts} ${pluralizedProducts}`;
+  const subject = `Dashboard.Gold: ${totalProducts} ${pluralizedProducts} triggered`;
   const manageAlertsUrl =
     siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
+  const dashboardUrl =
+    siteUrl ? `${siteUrl.replace(/\/+$/, "")}/dashboard` : undefined;
 
+  // --- Plain text version ---
   const textLines: string[] = [
-    "Dashboard.Gold alert digest",
+    "Dashboard.Gold Alert Digest",
+    "=".repeat(30),
     "",
-    `You have ${totalProducts} triggered ${pluralizedProducts}.`,
+    `${totalProducts} ${pluralizedProducts} triggered your alerts.`,
     "",
-  ];
-  const htmlSections: string[] = [
-    "<p><strong>Dashboard.Gold alert digest</strong></p>",
-    `<p>You have ${totalProducts} triggered ${pluralizedProducts}.</p>`,
   ];
 
   for (const alertEntry of batch.alerts) {
     textLines.push(`${alertEntry.alertName}:`);
-    const listItems: string[] = [];
-
     for (const product of alertEntry.products) {
-      textLines.push(`- ${product.productName}: ${product.reason}`);
-      listItems.push(
-        `<li><strong>${escapeHtml(product.productName)}</strong>: ${escapeHtml(product.reason)}</li>`,
-      );
+      textLines.push(`  - ${product.productName}: ${product.reason}`);
     }
-
     textLines.push("");
-    htmlSections.push(
-      `<h3 style="margin:16px 0 8px;">${escapeHtml(alertEntry.alertName)}</h3>`,
-      `<ul style="margin:0 0 12px 20px;padding:0;">${listItems.join("")}</ul>`,
-    );
   }
 
+  if (dashboardUrl) {
+    textLines.push(`View dashboard: ${dashboardUrl}`);
+  }
   if (manageAlertsUrl) {
     textLines.push(`Manage alerts: ${manageAlertsUrl}`);
-    htmlSections.push(
-      `<p style="margin-top:20px;"><a href="${manageAlertsUrl}">Manage alerts</a></p>`,
+  }
+  if (unsubscribeUrl) {
+    textLines.push(`Unsubscribe from all alerts: ${unsubscribeUrl}`);
+  }
+
+  // --- HTML version ---
+  const alertSectionsHtml: string[] = [];
+
+  for (const alertEntry of batch.alerts) {
+    const rows = alertEntry.products
+      .map(
+        (product) =>
+          `<tr>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;">${escapeHtml(product.productName)}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;color:#b8860b;white-space:nowrap;">${escapeHtml(product.reason)}</td>
+</tr>`,
+      )
+      .join("");
+
+    alertSectionsHtml.push(
+      `<div style="margin-bottom:20px;">
+<h3 style="margin:0 0 8px;font-size:15px;font-weight:600;color:#333;">${escapeHtml(alertEntry.alertName)}</h3>
+<table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e5e5;border-radius:6px;">
+<thead><tr>
+<th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Product</th>
+<th style="padding:8px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Trigger</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</div>`,
     );
   }
 
+  const footerLinks: string[] = [];
+  if (dashboardUrl) {
+    footerLinks.push(
+      `<a href="${dashboardUrl}" style="color:#b8860b;text-decoration:none;">View Dashboard</a>`,
+    );
+  }
+  if (manageAlertsUrl) {
+    footerLinks.push(
+      `<a href="${manageAlertsUrl}" style="color:#b8860b;text-decoration:none;">Manage Alerts</a>`,
+    );
+  }
+  if (unsubscribeUrl) {
+    footerLinks.push(
+      `<a href="${unsubscribeUrl}" style="color:#999;text-decoration:none;">Unsubscribe</a>`,
+    );
+  }
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:600px;margin:0 auto;padding:20px;">
+
+<div style="text-align:center;padding:24px 0 16px;">
+<h1 style="margin:0;font-size:22px;font-weight:700;color:#b8860b;letter-spacing:-0.5px;">Dashboard.Gold</h1>
+</div>
+
+<div style="background:#ffffff;border-radius:8px;border:1px solid #e5e5e5;padding:24px;margin-bottom:16px;">
+<p style="margin:0 0 16px;font-size:15px;color:#333;">
+${totalProducts} ${pluralizedProducts} triggered your alerts.
+</p>
+${alertSectionsHtml.join("")}
+${dashboardUrl ? `<div style="text-align:center;margin-top:20px;"><a href="${dashboardUrl}" style="display:inline-block;background:#b8860b;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;">View Dashboard</a></div>` : ""}
+</div>
+
+<div style="text-align:center;padding:16px 0;font-size:12px;color:#999;">
+${footerLinks.join(' <span style="color:#ccc;">&middot;</span> ')}
+</div>
+
+</div>
+</body></html>`;
+
   return {
-    html: htmlSections.join(""),
+    html,
     subject,
     text: textLines.join("\n").trim(),
   };
@@ -418,26 +483,64 @@ const resolveAlertRecipientEmail = async (
   return email;
 };
 
+const buildUnsubscribeUrl = async (
+  userId: string,
+): Promise<null | string> => {
+  const secret = process.env.UNSUBSCRIBE_SECRET;
+  const convexUrl = process.env.CONVEX_SITE_URL;
+  if (!secret || !convexUrl) {
+    return null;
+  }
+
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { hash: "SHA-256", name: "HMAC" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(userId),
+  );
+  const signatureHex = [...new Uint8Array(signature)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  const token = `${userId}${UNSUBSCRIBE_TOKEN_SEPARATOR}${signatureHex}`;
+  return `${convexUrl.replace(/\/+$/, "")}/unsubscribe?token=${encodeURIComponent(token)}`;
+};
+
 const sendAlertEmail = async (
   config: AlertDeliveryConfig,
   args: SendAlertEmailArgs,
 ): Promise<SendAlertEmailResult> => {
   try {
-    const unsubscribeDestinations = [
-      `<mailto:${config.replyToEmail}?subject=unsubscribe>`,
-    ];
-    if (config.siteUrl) {
-      unsubscribeDestinations.push(
-        `<${config.siteUrl.replace(/\/+$/, "")}/alerts>`,
-      );
+    const emailHeaders: Record<string, string> = {};
+
+    if (args.unsubscribeUrl) {
+      // RFC 8058 one-click unsubscribe
+      emailHeaders["List-Unsubscribe"] =
+        `<${args.unsubscribeUrl}>, <mailto:${config.replyToEmail}?subject=unsubscribe>`;
+      emailHeaders["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+    } else {
+      // Fallback: mailto + manage alerts page
+      const unsubscribeDestinations = [
+        `<mailto:${config.replyToEmail}?subject=unsubscribe>`,
+      ];
+      if (config.siteUrl) {
+        unsubscribeDestinations.push(
+          `<${config.siteUrl.replace(/\/+$/, "")}/alerts>`,
+        );
+      }
+      emailHeaders["List-Unsubscribe"] = unsubscribeDestinations.join(", ");
     }
 
     const response = await fetch(resendSendEmailUrl, {
       body: JSON.stringify({
         from: config.fromEmail,
-        headers: {
-          "List-Unsubscribe": unsubscribeDestinations.join(", "),
-        },
+        headers: emailHeaders,
         html: args.html,
         reply_to: config.replyToEmail,
         subject: args.subject,
@@ -700,6 +803,31 @@ export const getUserSendAlertPermissions = internalQuery({
       status: subscriptionStatus.status,
       userId: args.userId,
     };
+  },
+});
+
+/**
+ * Disable all enabled alerts for a user. Used by one-click unsubscribe endpoint.
+ */
+export const disableAllAlertsForUser = internalMutation({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    const enabledAlerts = await ctx.db
+      .query("alerts")
+      .withIndex("by_user_and_enabled", (q) =>
+        q.eq("userId", args.userId).eq("enabled", true),
+      )
+      .collect();
+
+    const now = Date.now();
+    for (const alert of enabledAlerts) {
+      await ctx.db.patch(alert._id, {
+        enabled: false,
+        updatedAt: now,
+      });
+    }
+
+    return { disabledCount: enabledAlerts.length, success: true };
   },
 });
 
@@ -1364,12 +1492,18 @@ export const processPendingAlertBatches: ReturnType<typeof internalAction> =
           continue;
         }
 
-        const digest = formatAlertDigest(batch, deliveryConfig.siteUrl);
+        const unsubscribeUrl = await buildUnsubscribeUrl(batch.userId);
+        const digest = formatAlertDigest(
+          batch,
+          deliveryConfig.siteUrl,
+          unsubscribeUrl ?? undefined,
+        );
         const sendResult = await sendAlertEmail(deliveryConfig, {
           html: digest.html,
           subject: digest.subject,
           text: digest.text,
           to: recipientEmail,
+          unsubscribeUrl: unsubscribeUrl ?? undefined,
         });
 
         if (!sendResult.ok) {

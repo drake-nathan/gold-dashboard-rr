@@ -1,15 +1,7 @@
-import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
+import { SignedIn, SignedOut, useClerk } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import {
-  Bell,
-  CreditCard,
-  Crown,
-  LogIn,
-  Menu,
-  Settings,
-  UserPlus,
-} from "lucide-react";
+import { Bell, LogIn, Menu, Settings, UserPlus } from "lucide-react";
 import { Link } from "react-router";
 
 import { UpgradeButton } from "@/components/subscription";
@@ -23,14 +15,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useManagePortal } from "@/hooks/use-manage-portal";
-import { cn } from "@/lib/cn";
 
-import { SubscriptionPageContent } from "./subscription-page-content";
 import { ThemeMenuItems } from "./theme-toggle";
+import { UserButtonWithPro } from "./user-button-with-pro";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { handleManagePortal, isLoading, isPro } = useManagePortal();
+  const { isLoading, isPro } = useManagePortal();
 
   // Only show Pro indicators when we've confirmed subscription status
   const showProRing = !isLoading && isPro;
@@ -97,40 +88,7 @@ export const MobileMenu = () => {
             <UpgradeButton className="w-full justify-start" size="sm" />
           </div>
           <div className="flex items-center gap-2 px-2 py-1.5">
-            {/* Wrapper for Pro ring indicator - only show after subscription loads */}
-            <div
-              className={cn(
-                "flex items-center justify-center rounded-full p-[2px] transition-all duration-300",
-                showProRing &&
-                  "bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600",
-              )}
-            >
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "size-[28px]",
-                    userButtonTrigger: "rounded-full focus:shadow-none",
-                  },
-                }}
-              >
-                {isPro ?
-                  <UserButton.MenuItems>
-                    <UserButton.Action
-                      label="Manage subscription"
-                      labelIcon={<CreditCard className="size-4" />}
-                      onClick={() => void handleManagePortal()}
-                    />
-                  </UserButton.MenuItems>
-                : null}
-                <UserButton.UserProfilePage
-                  label="Subscription"
-                  labelIcon={<Crown className="size-4" />}
-                  url="subscription"
-                >
-                  <SubscriptionPageContent />
-                </UserButton.UserProfilePage>
-              </UserButton>
-            </div>
+            <UserButtonWithPro avatarSize="size-[28px]" />
             <span className="text-sm">
               Account
               {showProRing ?
