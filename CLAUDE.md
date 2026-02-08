@@ -4,6 +4,28 @@
 
 A gold/silver price tracking dashboard that monitors Costco precious metals products and compares them with Collect Pure's spot prices and bids.
 
+## Task Management
+
+### System
+
+- **`TASKS.md`** — The task board. All pending work lives here (Active / Short Term / Medium Term / Backlog / Testing). No completed items — delete them when done. Git history is the archive.
+- **`.sessions/<name>.md`** — Session files for active epics only. Each starts with a status header. Delete when the epic ships.
+- **`AGENTS.md`** — Symlink to `CLAUDE.md` for multi-agent compatibility.
+
+### Rules for Agents
+
+1. **Read `TASKS.md` first** at the start of any task-oriented session to understand current priorities.
+2. **Update `TASKS.md` as you work:**
+   - Check off / delete items when complete.
+   - Add new items you discover in the appropriate section — inform the user when you do.
+   - Keep the file under 150 lines. If it grows past that, consolidate or split into an epic.
+3. **Session files** (`.sessions/<name>.md`):
+   - Create only for multi-session epics (3+ sessions expected).
+   - Always start with: `> **Status:** In Progress | Complete | Paused`
+   - Link from TASKS.md Active section.
+   - Delete when the epic is complete.
+4. **No archive directories.** Git history preserves everything.
+
 ## Tech Stack
 
 - **Framework**: React Router 7 (migrated from Next.js)
@@ -417,7 +439,7 @@ bun run test && bun run test:browser
 
 Convex is configured to use the production deployment (`effervescent-dog-80`) for all development and production work.
 
-**Authentication**: Clerk auth is currently disabled in `convex/auth.config.ts` until ready for implementation (see TODO.md).
+**Authentication**: Clerk auth is enabled in production. See `.sessions/alerts.md` for the full auth/subscription rollout history.
 
 To run Convex in development:
 
@@ -719,10 +741,8 @@ This provides optimal performance with instant page loads and real-time reactivi
 
 ### Future Enhancements
 
-See `TODO.md` for planned features including:
+See `TASKS.md` for planned features including:
 
-- Clerk authentication integration
-- User settings persistence
 - Price history charts
 - Favorites/watchlist
 - Product comparison tools
@@ -883,4 +903,7 @@ For Railway/Docker deployment, ensure:
   - React Hook Form integration with real-time validation
   - Sonner toast notifications for user feedback
   - Confirmation dialogs for destructive actions (delete/reset)
-  - Ready for database migration when auth is enabled
+- ✅ Clerk authentication enabled in production
+- ✅ User data migration (localStorage → Convex) complete
+- ✅ Stripe subscription integration (checkout, webhooks, entitlements)
+- ✅ Alert system core (schema, CRUD, evaluation engine, email delivery) — production rollout pending

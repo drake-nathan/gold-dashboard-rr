@@ -1,8 +1,10 @@
-# Alerts Feature Roadmap
+# Alerts & Subscriptions
 
-> **Created:** December 27, 2024
-> **Status:** Planning
-> **Goal:** Add subscription-based alert system for price/stock notifications
+> **Status:** In Progress — Phase 4 (alert system core complete, production rollout pending)
+> **Started:** 2024-12-27
+> **Last updated:** 2026-02-08
+
+**Goal:** Subscription-based alert system for price/stock notifications
 
 ## Overview
 
