@@ -52,4 +52,4 @@ EXPOSE 3000
 
 # React Router 7 build output
 # Using node (not bun) to run react-router-serve for compatibility
-CMD ["npx", "react-router-serve", "./build/server/index.js"]
+CMD ["node", "./node_modules/@react-router/serve/bin.js", "./build/server/index.js"]
