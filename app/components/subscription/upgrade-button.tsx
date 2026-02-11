@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/react-router";
-import { Loader2, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
@@ -52,21 +52,21 @@ export const UpgradeButton = ({
     }
   }, [isSignedIn, createCheckout]);
 
-  // Don't show if Stripe is disabled or if already Pro
-  if (!isEnabled || isPro) {
+  // Don't show if Stripe is disabled, already Pro, or still loading.
+  // Hiding while loading prevents the upgrade button from flashing
+  // to signed-in Pro users before their subscription status resolves.
+  if (!isEnabled || isPro || isLoading) {
     return null;
   }
 
   return (
     <Button
       className={className}
-      disabled={isActionLoading || isLoading || !isSignedIn}
+      disabled={isActionLoading || !isSignedIn}
       onClick={() => void handleUpgrade()}
       size={size}
     >
-      {isActionLoading || isLoading ?
-        <Loader2 className="animate-spin" />
-      : <Sparkles className="size-4" />}
+      <Sparkles className="size-4" />
       {text}
     </Button>
   );

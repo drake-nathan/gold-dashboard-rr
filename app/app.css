@@ -191,6 +191,13 @@
     letter-spacing: var(--tracking-normal);
   }
 
+  /* Block hover/focus bleed-through when a dialog overlay is active.
+     Radix portal siblings (the original page content) should not respond
+     to pointer events while the overlay is visible. */
+  body:has([data-slot="dialog-overlay"]) > *:not([data-radix-portal]) {
+    pointer-events: none;
+  }
+
   /* Enhanced focus states for better accessibility */
   button:focus-visible,
   a:focus-visible,

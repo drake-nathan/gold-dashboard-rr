@@ -1,10 +1,17 @@
 import { UserButton } from "@clerk/react-router";
 import { CreditCard, Crown } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { useManagePortal } from "@/hooks/use-manage-portal";
 import { cn } from "@/lib/cn";
 
 import { SubscriptionPageContent } from "./subscription-page-content";
+
+/** Skeleton sizes account for the avatar + 2px border on each side (p-[2px] wrapper) */
+const SKELETON_SIZES: Record<string, string> = {
+  "size-[28px]": "size-[32px]",
+  "size-[32px]": "size-[36px]",
+};
 
 export const UserButtonWithPro = ({
   avatarSize = "size-[32px]",
@@ -13,6 +20,17 @@ export const UserButtonWithPro = ({
 }) => {
   const { handleManagePortal, isLoading, isPro } = useManagePortal();
   const showProRing = !isLoading && isPro;
+
+  // While subscription status is loading, show a skeleton circle matching
+  // the avatar size. This prevents the upgrade button flash and avoids
+  // showing an un-ringed avatar that pops into a pro ring.
+  if (isLoading) {
+    return (
+      <Skeleton
+        className={cn("rounded-full", SKELETON_SIZES[avatarSize] ?? avatarSize)}
+      />
+    );
+  }
 
   return (
     <div

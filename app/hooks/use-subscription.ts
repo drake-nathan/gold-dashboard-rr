@@ -8,7 +8,7 @@
 import { useAuth } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export interface AlertEntitlements {
   canCreateAlerts: boolean;
@@ -112,6 +112,19 @@ export const useSubscription = (): UseSubscriptionReturn => {
     isStripeEnabled && isSignedIn ? {} : "skip",
   );
 
+  // Cache the last successful query result to prevent UI flash during revalidation.
+  // When navigating between routes, the Convex query briefly returns undefined while
+  // the WebSocket subscription re-establishes. Without this cache, the pro ring,
+  // upgrade button, and other subscription-dependent UI would flash on every navigation.
+  const lastKnownResult = useRef(subscriptionQuery);
+  if (subscriptionQuery !== undefined) {
+    lastKnownResult.current = subscriptionQuery;
+  }
+  // Clear cache when user signs out so stale pro status doesn't linger
+  if (!isSignedIn) {
+    lastKnownResult.current = undefined;
+  }
+
   // Actions for checkout and portal
   const createCheckoutSession = useAction(api.stripe.createCheckoutSession);
   const createPortalSession = useAction(api.stripe.createPortalSession);
@@ -174,19 +187,23 @@ export const useSubscription = (): UseSubscriptionReturn => {
     };
   }
 
+  // Use cached result during brief revalidation windows to prevent UI flash.
+  // Only show true loading state on first load (no cached data available).
+  const effectiveQuery = subscriptionQuery ?? lastKnownResult.current;
+
   const isLoading =
-    !isAuthLoaded || (isSignedIn && subscriptionQuery === undefined);
+    !isAuthLoaded || (isSignedIn && effectiveQuery === undefined);
 
   const fallbackAlertEntitlements =
     isSignedIn ? inactiveAlertEntitlements : anonymousAlertEntitlements;
 
-  const queryAlertEntitlements = subscriptionQuery?.alertEntitlements;
+  const queryAlertEntitlements = effectiveQuery?.alertEntitlements;
 
   // Default subscription status for anonymous/loading states
   const subscription: SubscriptionStatus =
-    subscriptionQuery ?
+    effectiveQuery ?
       {
-        ...subscriptionQuery,
+        ...effectiveQuery,
         alertEntitlements: queryAlertEntitlements ?? fallbackAlertEntitlements,
       }
     : {

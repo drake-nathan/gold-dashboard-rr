@@ -5,12 +5,15 @@ import { api } from "convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import {
   Bell,
-  BellOff,
+  BellRing,
+  Clock,
   Loader2,
+  MoreVertical,
   Pencil,
   Plus,
   Trash2,
   TriangleAlert,
+  Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
@@ -30,6 +33,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,6 +49,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -168,10 +179,7 @@ const buildAlertPayload = (values: AlertFormValues) => {
     const parsedAboveSpot = Number.parseFloat(values.aboveSpotThreshold);
     const parsedProfit = Number.parseFloat(values.profitThreshold);
 
-    if (
-      values.aboveSpotThreshold.trim() &&
-      Number.isFinite(parsedAboveSpot)
-    ) {
+    if (values.aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot)) {
       payload.aboveSpotThreshold = parsedAboveSpot;
     }
 
@@ -183,6 +191,26 @@ const buildAlertPayload = (values: AlertFormValues) => {
   return payload;
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Alert type / trigger display helpers                                      */
+/* -------------------------------------------------------------------------- */
+
+const ALERT_TYPE_LABELS: Record<string, string> = {
+  category: "Category",
+  sku: "Product",
+  threshold: "Threshold",
+};
+
+const TRIGGER_LABELS: Record<string, string> = {
+  in_stock: "Back in stock",
+  price_drop: "Price drop",
+  threshold_met: "Threshold met",
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Shared form fields                                                        */
+/* -------------------------------------------------------------------------- */
+
 const AlertFormFields = ({
   onChange,
   productOptions,
@@ -193,7 +221,7 @@ const AlertFormFields = ({
   values: AlertFormValues;
 }) => (
   <>
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <Label htmlFor="alert-name">Name</Label>
       <Input
         id="alert-name"
@@ -205,7 +233,7 @@ const AlertFormFields = ({
       />
     </div>
 
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <Label htmlFor="alert-type">Alert Type</Label>
       <Select
         onValueChange={(value) => {
@@ -226,7 +254,7 @@ const AlertFormFields = ({
 
     {values.formType === "sku" ?
       <>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-product">Product</Label>
           <Select
             onValueChange={(value) => {
@@ -239,10 +267,7 @@ const AlertFormFields = ({
             </SelectTrigger>
             <SelectContent>
               {productOptions.map((product) => (
-                <SelectItem
-                  key={product.productId}
-                  value={product.productId}
-                >
+                <SelectItem key={product.productId} value={product.productId}>
                   {product.name} ({product.metalType})
                 </SelectItem>
               ))}
@@ -250,7 +275,7 @@ const AlertFormFields = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-sku-trigger">Trigger On</Label>
           <Select
             onValueChange={(value) => {
@@ -274,7 +299,7 @@ const AlertFormFields = ({
 
     {values.formType === "category" ?
       <>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-category-trigger">Trigger On</Label>
           <Select
             onValueChange={(value) => {
@@ -294,7 +319,7 @@ const AlertFormFields = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-metal">Metal</Label>
           <Select
             onValueChange={(value) => {
@@ -316,7 +341,7 @@ const AlertFormFields = ({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-weight">Weight (oz)</Label>
           <Input
             id="alert-weight"
@@ -329,7 +354,7 @@ const AlertFormFields = ({
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="alert-brand">Brand</Label>
           <Input
             id="alert-brand"
@@ -345,10 +370,8 @@ const AlertFormFields = ({
 
     {values.formType === "threshold" ?
       <>
-        <div className="space-y-2">
-          <Label htmlFor="alert-above-spot">
-            Above Spot Threshold (%)
-          </Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="alert-above-spot">Above Spot Threshold (%)</Label>
           <Input
             id="alert-above-spot"
             onChange={(event) => {
@@ -360,10 +383,8 @@ const AlertFormFields = ({
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="alert-profit-threshold">
-            Profit Threshold (USD)
-          </Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="alert-profit-threshold">Profit Threshold (USD)</Label>
           <Input
             id="alert-profit-threshold"
             onChange={(event) => {
@@ -377,7 +398,7 @@ const AlertFormFields = ({
       </>
     : null}
 
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <Label htmlFor="alert-cooldown">Cooldown (minutes)</Label>
       <Input
         id="alert-cooldown"
@@ -393,6 +414,10 @@ const AlertFormFields = ({
   </>
 );
 
+/* -------------------------------------------------------------------------- */
+/*  Edit dialog                                                               */
+/* -------------------------------------------------------------------------- */
+
 const EditAlertDialog = ({
   alert,
   onClose,
@@ -401,7 +426,10 @@ const EditAlertDialog = ({
 }: {
   alert: Doc<"alerts">;
   onClose: () => void;
-  onSave: (alertId: Id<"alerts">, payload: ReturnType<typeof buildAlertPayload>) => Promise<void>;
+  onSave: (
+    alertId: Id<"alerts">,
+    payload: ReturnType<typeof buildAlertPayload>,
+  ) => Promise<void>;
   productOptions: ProductOption[];
 }) => {
   const [values, setValues] = useState<AlertFormValues>(() =>
@@ -428,8 +456,13 @@ const EditAlertDialog = ({
   };
 
   return (
-    <Dialog onOpenChange={(open) => { if (!open) onClose(); }} open>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      open
+    >
+      <DialogContent className="flex max-h-[85vh] flex-col">
         <DialogHeader>
           <DialogTitle>Edit Alert</DialogTitle>
           <DialogDescription>
@@ -437,28 +470,32 @@ const EditAlertDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <AlertFormFields
-            onChange={(update) => {
-              setValues((prev) => ({ ...prev, ...update }));
-            }}
-            productOptions={productOptions}
-            values={values}
-          />
-
-          <div className="flex items-center justify-between rounded-md border p-3">
-            <div>
-              <p className="text-sm font-medium">Enabled</p>
-              <p className="text-xs text-muted-foreground">
-                Disable to pause this alert.
-              </p>
-            </div>
-            <Switch
-              checked={values.enabled}
-              onCheckedChange={(checked) => {
-                setValues((prev) => ({ ...prev, enabled: checked }));
+        <div className="-mx-6 flex-1 overflow-y-auto px-6">
+          <div className="space-y-4 pb-2">
+            <AlertFormFields
+              onChange={(update) => {
+                setValues((prev) => ({ ...prev, ...update }));
               }}
+              productOptions={productOptions}
+              values={values}
             />
+
+            <Separator />
+
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Enabled</p>
+                <p className="text-xs text-muted-foreground">
+                  Disable to pause this alert.
+                </p>
+              </div>
+              <Switch
+                checked={values.enabled}
+                onCheckedChange={(checked) => {
+                  setValues((prev) => ({ ...prev, enabled: checked }));
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -483,6 +520,108 @@ const EditAlertDialog = ({
   );
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Individual alert card                                                     */
+/* -------------------------------------------------------------------------- */
+
+const AlertCard = ({
+  alert,
+  onDelete,
+  onEdit,
+  onToggle,
+}: {
+  alert: Doc<"alerts">;
+  onDelete: (alertId: Id<"alerts">) => Promise<void>;
+  onEdit: (alert: Doc<"alerts">) => void;
+  onToggle: (alertId: Id<"alerts">, enabled: boolean) => Promise<void>;
+}) => {
+  const typeLabel = ALERT_TYPE_LABELS[alert.type] ?? alert.type;
+  const triggerLabel = TRIGGER_LABELS[alert.triggerOn] ?? alert.triggerOn;
+
+  return (
+    <div
+      className={`group relative rounded-lg border bg-card p-4 transition-colors${alert.enabled ? "" : " opacity-60"}`}
+    >
+      {/* Top row: name + actions */}
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0 leading-snug font-medium wrap-break-word">
+          {alert.name}
+        </p>
+
+        {/* Right side: toggle + overflow menu */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Switch
+            checked={alert.enabled}
+            onCheckedChange={(checked) => {
+              void onToggle(alert._id, checked);
+            }}
+          />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="size-8 text-muted-foreground"
+                size="icon"
+                variant="ghost"
+              >
+                <MoreVertical className="size-4" />
+                <span className="sr-only">Alert actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  onEdit(alert);
+                }}
+              >
+                <Pencil className="mr-2 size-4" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => {
+                  void onDelete(alert._id);
+                }}
+              >
+                <Trash2 className="mr-2 size-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Metadata badges */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <Badge className="gap-1" variant="outline">
+          <Zap className="size-3" />
+          {typeLabel}
+        </Badge>
+        <Badge className="gap-1" variant="outline">
+          <BellRing className="size-3" />
+          {triggerLabel}
+        </Badge>
+        <Badge className="gap-1 tabular-nums" variant="outline">
+          <Clock className="size-3" />
+          {alert.cooldownMinutes}m
+        </Badge>
+        {alert.pauseReason ?
+          <Badge variant="destructive">
+            {alert.pauseReason === "billing_hold" ?
+              "Billing issue"
+            : "Subscription inactive"}
+          </Badge>
+        : null}
+      </div>
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Page meta                                                                 */
+/* -------------------------------------------------------------------------- */
+
 export const meta = () => [
   { title: "Alerts - Dashboard.Gold" },
   {
@@ -491,6 +630,10 @@ export const meta = () => [
   },
   { content: "noindex, nofollow", name: "robots" },
 ];
+
+/* -------------------------------------------------------------------------- */
+/*  Main page                                                                 */
+/* -------------------------------------------------------------------------- */
 
 const AlertsPage = () => {
   const [searchParams] = useSearchParams();
@@ -556,21 +699,6 @@ const AlertsPage = () => {
     !alertEntitlements.canCreateAlerts ||
     hasValidationError ||
     !formValues.name.trim();
-
-  const getPauseBadge = (
-    pauseReason?: "billing_hold" | "inactive_subscription",
-  ) => {
-    if (!pauseReason) {
-      return null;
-    }
-    return (
-      <Badge variant="outline">
-        {pauseReason === "billing_hold" ?
-          "Paused (billing issue)"
-        : "Paused (subscription inactive)"}
-      </Badge>
-    );
-  };
 
   const onCreateAlert = async () => {
     if (createDisabled) {
@@ -641,6 +769,7 @@ const AlertsPage = () => {
     }
   };
 
+  /* ---- Auth loading ---- */
   if (!isAuthLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -652,6 +781,7 @@ const AlertsPage = () => {
     );
   }
 
+  /* ---- Not signed in ---- */
   if (!isSignedIn) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -673,168 +803,161 @@ const AlertsPage = () => {
   }
 
   const canCreate = alertEntitlements.canCreateAlerts;
+  const enabledCount = alerts?.filter((a) => a.enabled).length ?? 0;
+  const totalCount = alerts?.length ?? 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
-      <main className="container mx-auto flex-1 px-4 py-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Alerts</h1>
-            <p className="text-sm text-muted-foreground">
-              Create and manage stock/price alerts for products you track.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge
-              variant={alertEntitlements.canSendAlerts ? "default" : "outline"}
+      <main className="container mx-auto flex-1 px-4 py-8">
+        {/* ---- Page header ---- */}
+        <div className="mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Alerts</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Get notified when Costco products hit your price targets.
+              </p>
+            </div>
+
+            {/* Status pill */}
+            <div
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium${
+                alertEntitlements.canSendAlerts ?
+                  " border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                : " border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+              }`}
             >
-              {alertEntitlements.canSendAlerts ? "Sending enabled" : "Paused"}
-            </Badge>
+              <span
+                className={`inline-block size-1.5 rounded-full${
+                  alertEntitlements.canSendAlerts ? " bg-emerald-500" : (
+                    " bg-yellow-500"
+                  )
+                }`}
+              />
+              {alertEntitlements.canSendAlerts ?
+                "Sending active"
+              : "Sending paused"}
+            </div>
           </div>
         </div>
 
+        {/* ---- Upgrade prompt ---- */}
         {!canCreate ?
-          <Card className="mb-6 border-amber-500/40 bg-amber-500/5">
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-start gap-2">
-                <TriangleAlert className="mt-0.5 h-4 w-4 text-amber-600" />
-                <p className="text-sm text-muted-foreground">
-                  New alerts require an active Pro subscription. You can still
-                  manage existing alerts.
-                </p>
-              </div>
-              <UpgradeButton size="sm" />
-            </CardContent>
-          </Card>
+          <div className="mb-8 flex flex-col gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2.5">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
+              <p className="text-sm text-muted-foreground">
+                Creating new alerts requires a Pro subscription. You can still
+                view and manage existing alerts.
+              </p>
+            </div>
+            <UpgradeButton size="sm" />
+          </div>
         : null}
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Create Alert</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <AlertFormFields
-                onChange={(update) => {
-                  setFormValues((prev) => ({ ...prev, ...update }));
-                }}
-                productOptions={productOptions}
-                values={formValues}
-              />
-
-              <div className="flex items-center justify-between rounded-md border p-3">
-                <div>
-                  <p className="text-sm font-medium">Enabled on create</p>
-                  <p className="text-xs text-muted-foreground">
-                    Disable to save as draft.
-                  </p>
-                </div>
-                <Switch
-                  checked={formValues.enabled}
-                  onCheckedChange={(checked) => {
-                    setFormValues((prev) => ({ ...prev, enabled: checked }));
+        {/* ---- Two-column layout ---- */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_1.25fr]">
+          {/* ---- Create form ---- */}
+          <div>
+            <Card>
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Plus className="size-4 text-muted-foreground" />
+                  Create Alert
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <AlertFormFields
+                  onChange={(update) => {
+                    setFormValues((prev) => ({ ...prev, ...update }));
                   }}
+                  productOptions={productOptions}
+                  values={formValues}
                 />
-              </div>
 
-              <Button
-                className="w-full"
-                disabled={createDisabled}
-                onClick={() => {
-                  void onCreateAlert();
-                }}
-              >
-                {isSaving ?
-                  <Loader2 className="size-4 animate-spin" />
-                : <Plus className="size-4" />}
-                Create Alert
-              </Button>
-            </CardContent>
-          </Card>
+                <Separator />
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Your Alerts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {alerts === undefined ?
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" />
-                  Loading alerts...
-                </div>
-              : alerts.length === 0 ?
-                <div className="flex h-full min-h-28 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-                  No alerts yet.
-                </div>
-              : alerts.map((alert) => (
-                  <div
-                    className="space-y-3 rounded-md border p-3"
-                    key={alert._id}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="font-medium">{alert.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {alert.type} • {alert.triggerOn} •{" "}
-                          {alert.cooldownMinutes}m cooldown
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {alert.enabled ?
-                          <Badge className="gap-1" variant="default">
-                            <Bell className="size-3" />
-                            Enabled
-                          </Badge>
-                        : <Badge className="gap-1" variant="secondary">
-                            <BellOff className="size-3" />
-                            Disabled
-                          </Badge>
-                        }
-                        {getPauseBadge(alert.pauseReason)}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor={`enable-${alert._id}`}>Enable</Label>
-                        <Switch
-                          checked={alert.enabled}
-                          id={`enable-${alert._id}`}
-                          onCheckedChange={(checked) => {
-                            void onToggleAlert(alert._id, checked);
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={() => {
-                            setEditingAlert(alert);
-                          }}
-                          size="sm"
-                          variant="outline"
-                        >
-                          <Pencil className="size-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            void onDeleteAlert(alert._id);
-                          }}
-                          size="sm"
-                          variant="destructive"
-                        >
-                          <Trash2 className="size-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Enabled on create</p>
+                    <p className="text-xs text-muted-foreground">
+                      Disable to save as draft.
+                    </p>
                   </div>
-                ))
-              }
-            </CardContent>
-          </Card>
+                  <Switch
+                    checked={formValues.enabled}
+                    onCheckedChange={(checked) => {
+                      setFormValues((prev) => ({ ...prev, enabled: checked }));
+                    }}
+                  />
+                </div>
+
+                <Button
+                  className="w-full"
+                  disabled={createDisabled}
+                  onClick={() => {
+                    void onCreateAlert();
+                  }}
+                >
+                  {isSaving ?
+                    <Loader2 className="size-4 animate-spin" />
+                  : <Plus className="size-4" />}
+                  Create Alert
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* ---- Alerts list ---- */}
+          <div>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold">Your Alerts</h2>
+              {totalCount > 0 ?
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {enabledCount} of {totalCount} active
+                </span>
+              : null}
+            </div>
+
+            {alerts === undefined ?
+              /* Loading state */
+              <Card>
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin" />
+                    Loading alerts...
+                  </div>
+                </CardContent>
+              </Card>
+            : alerts.length === 0 ?
+              /* Empty state */
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted">
+                    <Bell className="size-5 text-muted-foreground" />
+                  </div>
+                  <p className="font-medium">No alerts yet</p>
+                  <p className="mt-1 max-w-[240px] text-sm text-muted-foreground">
+                    Create your first alert to get notified about deals and
+                    restocks.
+                  </p>
+                </CardContent>
+              </Card>
+            : /* Alert cards */
+              <div className="space-y-3">
+                {alerts.map((alert) => (
+                  <AlertCard
+                    alert={alert}
+                    key={alert._id}
+                    onDelete={onDeleteAlert}
+                    onEdit={setEditingAlert}
+                    onToggle={onToggleAlert}
+                  />
+                ))}
+              </div>
+            }
+          </div>
         </div>
       </main>
 
@@ -843,7 +966,9 @@ const AlertsPage = () => {
       {editingAlert ?
         <EditAlertDialog
           alert={editingAlert}
-          onClose={() => { setEditingAlert(null); }}
+          onClose={() => {
+            setEditingAlert(null);
+          }}
           onSave={onEditAlert}
           productOptions={productOptions}
         />

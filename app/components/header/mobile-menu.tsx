@@ -14,17 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useManagePortal } from "@/hooks/use-manage-portal";
+import { useSubscription } from "@/hooks/use-subscription";
 
 import { ThemeMenuItems } from "./theme-toggle";
 import { UserButtonWithPro } from "./user-button-with-pro";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const { isLoading, isPro } = useManagePortal();
-
-  // Only show Pro indicators when we've confirmed subscription status
-  const showProRing = !isLoading && isPro;
+  const { isPro } = useSubscription();
 
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
@@ -91,7 +88,7 @@ export const MobileMenu = () => {
             <UserButtonWithPro avatarSize="size-[28px]" />
             <span className="text-sm">
               Account
-              {showProRing ?
+              {isPro ?
                 <span className="ml-1 text-amber-500">Pro</span>
               : null}
             </span>

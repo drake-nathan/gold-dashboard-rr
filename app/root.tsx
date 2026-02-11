@@ -95,30 +95,30 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Validate env vars at module scope (fails fast during SSR bootstrap)
+const convexUrl = import.meta.env.VITE_CONVEX_URL;
+const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
+
+if (!convexUrl) {
+  throw new Error("VITE_CONVEX_URL environment variable is not set");
+}
+if (!clerkApiKey) {
+  throw new Error(
+    "VITE_CLERK_PUBLISHABLE_KEY environment variable is not set",
+  );
+}
+if (!posthogKey || !posthogHost) {
+  throw new Error(
+    "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
+  );
+}
+
+// Singleton — keeps Convex WebSocket alive and query cache warm across navigations
+const convex = new ConvexReactClient(convexUrl);
+
 const App = ({ loaderData }: Route.ComponentProps) => {
-  const convexUrl = import.meta.env.VITE_CONVEX_URL;
-  const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
-
-  if (!convexUrl) {
-    throw new Error("VITE_CONVEX_URL environment variable is not set");
-  }
-
-  if (!clerkApiKey) {
-    throw new Error(
-      "VITE_CLERK_PUBLISHABLE_KEY environment variable is not set",
-    );
-  }
-
-  if (!posthogKey || !posthogHost) {
-    throw new Error(
-      "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
-    );
-  }
-
-  const convex = new ConvexReactClient(convexUrl);
-
   return (
     <PostHogProvider
       apiKey={posthogKey}
