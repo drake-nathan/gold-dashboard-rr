@@ -33,6 +33,7 @@ const getSiteUrl = (): string => {
  */
 export const createCheckoutSession = action({
   args: {
+    // Kept for client compatibility; server enforces STRIPE_PRICE_ID.
     priceId: v.string(),
   },
   handler: async (ctx, args): Promise<{ error?: string; url?: string }> => {
@@ -42,6 +43,21 @@ export const createCheckoutSession = action({
     }
 
     try {
+      const configuredPriceId = process.env.STRIPE_PRICE_ID;
+      if (!configuredPriceId) {
+        throw new Error(
+          "STRIPE_PRICE_ID environment variable is required for Stripe integration",
+        );
+      }
+
+      if (args.priceId !== configuredPriceId) {
+        console.warn("Ignoring client-provided Stripe priceId mismatch", {
+          configuredPriceId,
+          providedPriceId: args.priceId,
+          userId: identity.subject,
+        });
+      }
+
       // Get or create a Stripe customer linked to this Clerk user
       const customer = await stripeClient.getOrCreateCustomer(ctx, {
         email: identity.email,
@@ -55,7 +71,7 @@ export const createCheckoutSession = action({
         cancelUrl: `${siteUrl}?checkout=canceled`,
         customerId: customer.customerId,
         mode: "subscription",
-        priceId: args.priceId,
+        priceId: configuredPriceId,
         subscriptionMetadata: { userId: identity.subject },
         successUrl: `${siteUrl}?checkout=success`,
       });
