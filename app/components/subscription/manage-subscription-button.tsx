@@ -29,8 +29,7 @@ export const ManageSubscriptionButton = ({
   text = "Manage Subscription",
   variant = "outline",
 }: ManageSubscriptionButtonProps) => {
-  const { handleManagePortal, isActionLoading, isEnabled, isPro } =
-    useManagePortal();
+  const { handleManagePortal, isActionLoading, isEnabled, isPro } = useManagePortal();
 
   // Only show for Pro users when Stripe is enabled
   if (!isEnabled || !isPro) {

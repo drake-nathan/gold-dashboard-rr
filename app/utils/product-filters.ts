@@ -1,10 +1,7 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-import type {
-  MetalFilter,
-  SortOption,
-} from "@/components/dashboard/filter-types";
+import type { MetalFilter, SortOption } from "@/components/dashboard/filter-types";
 
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 export type ProductCardData = GetStats["goldProducts"]["bestSpread"][number];
@@ -105,7 +102,5 @@ export const sortProducts = (
  * Checks if auto-flip to out-of-stock should be triggered
  * Returns true if there are no in-stock products
  */
-export const shouldAutoFlipToOutOfStock = (
-  goldInStock: number,
-  silverInStock: number,
-): boolean => goldInStock === 0 && silverInStock === 0;
+export const shouldAutoFlipToOutOfStock = (goldInStock: number, silverInStock: number): boolean =>
+  goldInStock === 0 && silverInStock === 0;

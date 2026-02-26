@@ -94,32 +94,25 @@ const defaultFormValues: AlertFormValues = {
 
 const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues => ({
   aboveSpotThreshold:
-    alert.aboveSpotThreshold !== undefined ?
-      String(alert.aboveSpotThreshold)
-    : "",
+    alert.aboveSpotThreshold !== undefined ? String(alert.aboveSpotThreshold) : "",
   brand: alert.brand ?? "",
   categoryMetal: alert.metalType ?? "",
-  categoryTriggerOn:
-    alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
+  categoryTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
   categoryWeight: alert.weight !== undefined ? String(alert.weight) : "",
   cooldownMinutes: alert.cooldownMinutes,
   enabled: alert.enabled,
   formType: alert.type,
   name: alert.name,
-  profitThreshold:
-    alert.profitThreshold !== undefined ? String(alert.profitThreshold) : "",
+  profitThreshold: alert.profitThreshold !== undefined ? String(alert.profitThreshold) : "",
   skuProductId: alert.productId ?? "",
   skuTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
 });
 
 const getFormValidationError = (values: AlertFormValues): boolean => {
   const categoryHasFilter =
-    values.categoryMetal.length > 0 ||
-    values.categoryWeight.trim() ||
-    values.brand.trim();
+    values.categoryMetal.length > 0 || values.categoryWeight.trim() || values.brand.trim();
   const thresholdHasFilter =
-    values.aboveSpotThreshold.trim().length > 0 ||
-    values.profitThreshold.trim().length > 0;
+    values.aboveSpotThreshold.trim().length > 0 || values.profitThreshold.trim().length > 0;
 
   return (
     (values.formType === "category" && !categoryHasFilter) ||
@@ -324,8 +317,7 @@ const AlertFormFields = ({
           <Select
             onValueChange={(value) => {
               onChange({
-                categoryMetal:
-                  value === "any" ? "" : (value as "gold" | "silver"),
+                categoryMetal: value === "any" ? "" : (value as "gold" | "silver"),
               });
             }}
             value={values.categoryMetal || "any"}
@@ -426,15 +418,10 @@ const EditAlertDialog = ({
 }: {
   alert: Doc<"alerts">;
   onClose: () => void;
-  onSave: (
-    alertId: Id<"alerts">,
-    payload: ReturnType<typeof buildAlertPayload>,
-  ) => Promise<void>;
+  onSave: (alertId: Id<"alerts">, payload: ReturnType<typeof buildAlertPayload>) => Promise<void>;
   productOptions: ProductOption[];
 }) => {
-  const [values, setValues] = useState<AlertFormValues>(() =>
-    alertFormValuesFromDoc(alert),
-  );
+  const [values, setValues] = useState<AlertFormValues>(() => alertFormValuesFromDoc(alert));
   const [isSaving, setIsSaving] = useState(false);
 
   const hasValidationError = getFormValidationError(values);
@@ -465,9 +452,7 @@ const EditAlertDialog = ({
       <DialogContent className="flex max-h-[85vh] flex-col">
         <DialogHeader>
           <DialogTitle>Edit Alert</DialogTitle>
-          <DialogDescription>
-            Update the configuration for this alert.
-          </DialogDescription>
+          <DialogDescription>Update the configuration for this alert.</DialogDescription>
         </DialogHeader>
 
         <div className="-mx-6 flex-1 overflow-y-auto px-6">
@@ -485,9 +470,7 @@ const EditAlertDialog = ({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium">Enabled</p>
-                <p className="text-xs text-muted-foreground">
-                  Disable to pause this alert.
-                </p>
+                <p className="text-xs text-muted-foreground">Disable to pause this alert.</p>
               </div>
               <Switch
                 checked={values.enabled}
@@ -544,9 +527,7 @@ const AlertCard = ({
     >
       {/* Top row: name + actions */}
       <div className="flex items-start justify-between gap-2">
-        <p className="min-w-0 leading-snug font-medium wrap-break-word">
-          {alert.name}
-        </p>
+        <p className="min-w-0 leading-snug font-medium wrap-break-word">{alert.name}</p>
 
         {/* Right side: toggle + overflow menu */}
         <div className="flex shrink-0 items-center gap-1.5">
@@ -559,11 +540,7 @@ const AlertCard = ({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                className="size-8 text-muted-foreground"
-                size="icon"
-                variant="ghost"
-              >
+              <Button className="size-8 text-muted-foreground" size="icon" variant="ghost">
                 <MoreVertical className="size-4" />
                 <span className="sr-only">Alert actions</span>
               </Button>
@@ -608,9 +585,7 @@ const AlertCard = ({
         </Badge>
         {alert.pauseReason ?
           <Badge variant="destructive">
-            {alert.pauseReason === "billing_hold" ?
-              "Billing issue"
-            : "Subscription inactive"}
+            {alert.pauseReason === "billing_hold" ? "Billing issue" : "Subscription inactive"}
           </Badge>
         : null}
       </div>
@@ -638,8 +613,7 @@ export const meta = () => [
 const AlertsPage = () => {
   const [searchParams] = useSearchParams();
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
-  const { alertEntitlements, isLoading: isSubscriptionLoading } =
-    useSubscription();
+  const { alertEntitlements, isLoading: isSubscriptionLoading } = useSubscription();
 
   const alerts = useQuery(api.alerts.getAlerts, isSignedIn ? {} : "skip");
   const stats = useQuery(api.dashboard.getStats, isSignedIn ? {} : "skip");
@@ -650,9 +624,7 @@ const AlertsPage = () => {
 
   const initialType = searchParams.get("type");
   const initialFormType: AlertFormType =
-    initialType === "sku" || initialType === "category" ?
-      initialType
-    : "threshold";
+    initialType === "sku" || initialType === "category" ? initialType : "threshold";
 
   const [isSaving, setIsSaving] = useState(false);
   const [editingAlert, setEditingAlert] = useState<Doc<"alerts"> | null>(null);
@@ -672,10 +644,7 @@ const AlertsPage = () => {
       return [];
     }
 
-    const allProducts = [
-      ...stats.goldProducts.bestSpread,
-      ...stats.silverProducts.bestSpread,
-    ];
+    const allProducts = [...stats.goldProducts.bestSpread, ...stats.silverProducts.bestSpread];
 
     const unique = new Map(
       allProducts.map((product) => [
@@ -716,9 +685,7 @@ const AlertsPage = () => {
         formType: formValues.formType,
       });
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create alert",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to create alert");
     } finally {
       setIsSaving(false);
     }
@@ -735,9 +702,7 @@ const AlertsPage = () => {
       });
       toast.success("Alert updated");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update alert",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to update alert");
       throw error;
     }
   };
@@ -750,9 +715,7 @@ const AlertsPage = () => {
       });
       toast.success(nextEnabled ? "Alert enabled" : "Alert disabled");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update alert",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to update alert");
     }
   };
 
@@ -763,9 +726,7 @@ const AlertsPage = () => {
       });
       toast.success("Alert deleted");
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete alert",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to delete alert");
     }
   };
 
@@ -788,15 +749,9 @@ const AlertsPage = () => {
         <div className="flex flex-col items-center">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold">Alerts</h1>
-            <p className="text-sm text-muted-foreground">
-              Sign in to manage your alerts
-            </p>
+            <p className="text-sm text-muted-foreground">Sign in to manage your alerts</p>
           </div>
-          <SignIn
-            fallbackRedirectUrl="/alerts"
-            forceRedirectUrl="/alerts"
-            routing="hash"
-          />
+          <SignIn fallbackRedirectUrl="/alerts" forceRedirectUrl="/alerts" routing="hash" />
         </div>
       </div>
     );
@@ -830,14 +785,10 @@ const AlertsPage = () => {
             >
               <span
                 className={`inline-block size-1.5 rounded-full${
-                  alertEntitlements.canSendAlerts ? " bg-emerald-500" : (
-                    " bg-yellow-500"
-                  )
+                  alertEntitlements.canSendAlerts ? " bg-emerald-500" : " bg-yellow-500"
                 }`}
               />
-              {alertEntitlements.canSendAlerts ?
-                "Sending active"
-              : "Sending paused"}
+              {alertEntitlements.canSendAlerts ? "Sending active" : "Sending paused"}
             </div>
           </div>
         </div>
@@ -848,8 +799,8 @@ const AlertsPage = () => {
             <div className="flex items-start gap-2.5">
               <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
               <p className="text-sm text-muted-foreground">
-                Creating new alerts requires a Pro subscription. You can still
-                view and manage existing alerts.
+                Creating new alerts requires a Pro subscription. You can still view and manage
+                existing alerts.
               </p>
             </div>
             <UpgradeButton size="sm" />
@@ -881,9 +832,7 @@ const AlertsPage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Enabled on create</p>
-                    <p className="text-xs text-muted-foreground">
-                      Disable to save as draft.
-                    </p>
+                    <p className="text-xs text-muted-foreground">Disable to save as draft.</p>
                   </div>
                   <Switch
                     checked={formValues.enabled}
@@ -939,8 +888,7 @@ const AlertsPage = () => {
                   </div>
                   <p className="font-medium">No alerts yet</p>
                   <p className="mt-1 max-w-[240px] text-sm text-muted-foreground">
-                    Create your first alert to get notified about deals and
-                    restocks.
+                    Create your first alert to get notified about deals and restocks.
                   </p>
                 </CardContent>
               </Card>

@@ -105,9 +105,7 @@ test("button click interaction", async () => {
 
 5. **Polling for async state changes**:
    ```tsx
-   await expect
-     .poll(() => document.documentElement.classList.contains("dark"))
-     .toBe(true);
+   await expect.poll(() => document.documentElement.classList.contains("dark")).toBe(true);
    ```
 
 ### Testing with Providers
@@ -128,9 +126,7 @@ test("theme toggle works", async () => {
   const darkOption = screen.getByText("Dark");
   await darkOption.click();
 
-  await expect
-    .poll(() => document.documentElement.classList.contains("dark"))
-    .toBe(true);
+  await expect.poll(() => document.documentElement.classList.contains("dark")).toBe(true);
 });
 ```
 

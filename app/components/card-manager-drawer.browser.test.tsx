@@ -120,10 +120,7 @@ test("cancels create mode and hides form", async () => {
 
 test("adds a custom card with valid data", async () => {
   const onCardsChange = vi.fn();
-  const screen = await renderCardManagerDrawer(
-    [...DEFAULT_PRESET_CARDS],
-    onCardsChange,
-  );
+  const screen = await renderCardManagerDrawer([...DEFAULT_PRESET_CARDS], onCardsChange);
 
   // Click "Add Custom Card"
   const addButton = screen.getByRole("button", { name: /Add Custom Card/ });

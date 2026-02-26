@@ -6,13 +6,7 @@ import { Link } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/format-time";
 import { calculateProductMetrics } from "@/utils/product-calculations";
@@ -31,17 +25,9 @@ interface ProductCardProps {
   product: ProductCardData;
 }
 
-export const ProductCard = ({
-  calculatorSettings,
-  marketPrices,
-  product,
-}: ProductCardProps) => {
+export const ProductCard = ({ calculatorSettings, marketPrices, product }: ProductCardProps) => {
   // Calculate all metrics using utility function
-  const calc = calculateProductMetrics(
-    product,
-    marketPrices,
-    calculatorSettings,
-  );
+  const calc = calculateProductMetrics(product, marketPrices, calculatorSettings);
 
   // Generate Collect Pure URL if we have the SKU
   const collectPureUrl =
@@ -61,21 +47,14 @@ export const ProductCard = ({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-h-24 flex-col justify-between">
-            <CardTitle className="line-clamp-2 text-base leading-tight">
-              {product.name}
-            </CardTitle>
+            <CardTitle className="line-clamp-2 text-base leading-tight">{product.name}</CardTitle>
             <div className="flex flex-col gap-1.5">
               <div className="inline-flex w-fit items-center gap-2 rounded-full">
-                <Badge
-                  variant={product.currentInStock ? "default" : "secondary"}
-                >
+                <Badge variant={product.currentInStock ? "default" : "secondary"}>
                   {product.currentInStock ? "In Stock" : "Out of Stock"}
                 </Badge>
-                <Badge
-                  variant={product.metalType === "gold" ? "gold" : "silver"}
-                >
-                  {product.metalType.charAt(0).toUpperCase() +
-                    product.metalType.slice(1)}
+                <Badge variant={product.metalType === "gold" ? "gold" : "silver"}>
+                  {product.metalType.charAt(0).toUpperCase() + product.metalType.slice(1)}
                 </Badge>
                 {product.metalWeight ?
                   <span className="text-xs text-muted-foreground">
@@ -206,24 +185,20 @@ export const ProductCard = ({
                           label="SUB Bonus Points:"
                           labelClassName="text-xs font-medium text-primary"
                           tooltip={`Proportional signup bonus points for this purchase (${calculatorSettings.creditCard.signupBonus?.pointsBonus.toLocaleString("en-US")} points ÷ ${formatCurrency(calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0)} spend × ${formatCurrency(calc.costcoPrice)})`}
-                          value={`+${calc.signupBonusPoints.toLocaleString(
-                            "en-US",
-                            {
-                              maximumFractionDigits: 0,
-                            },
-                          )}`}
+                          value={`+${calc.signupBonusPoints.toLocaleString("en-US", {
+                            maximumFractionDigits: 0,
+                          })}`}
                           valueClassName="text-xs font-semibold text-primary"
                         />
-                        {calc.spendProgress !== null &&
-                          calc.spendProgressPercentage !== null && (
-                            <PriceRow
-                              label="SUB Progress:"
-                              labelClassName="text-xs text-muted-foreground italic"
-                              tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
-                              value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
-                              valueClassName="text-xs italic text-muted-foreground"
-                            />
-                          )}
+                        {calc.spendProgress !== null && calc.spendProgressPercentage !== null && (
+                          <PriceRow
+                            label="SUB Progress:"
+                            labelClassName="text-xs text-muted-foreground italic"
+                            tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
+                            value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
+                            valueClassName="text-xs italic text-muted-foreground"
+                          />
+                        )}
                         <PriceRow
                           label="Total Points:"
                           tooltip="Total points earned (base + SUB bonus)"
@@ -299,16 +274,15 @@ export const ProductCard = ({
                           value={`+${formatCurrency(calc.signupBonusCashback)}`}
                           valueClassName="text-xs font-semibold text-primary"
                         />
-                        {calc.spendProgress !== null &&
-                          calc.spendProgressPercentage !== null && (
-                            <PriceRow
-                              label="SUB Progress:"
-                              labelClassName="text-xs text-muted-foreground italic"
-                              tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
-                              value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
-                              valueClassName="text-xs italic text-muted-foreground"
-                            />
-                          )}
+                        {calc.spendProgress !== null && calc.spendProgressPercentage !== null && (
+                          <PriceRow
+                            label="SUB Progress:"
+                            labelClassName="text-xs text-muted-foreground italic"
+                            tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
+                            value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
+                            valueClassName="text-xs italic text-muted-foreground"
+                          />
+                        )}
                         <PriceRow
                           label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
                           tooltip="Combined cashback from all sources"
@@ -341,9 +315,7 @@ export const ProductCard = ({
                 tooltip="Final profit/loss after receiving all cashback"
                 value={
                   <>
-                    <span className="sr-only">
-                      {calc.netProfit >= 0 ? "Profit" : "Loss"}:
-                    </span>
+                    <span className="sr-only">{calc.netProfit >= 0 ? "Profit" : "Loss"}:</span>
                     {`${calc.netProfit >= 0 ? "+" : "-"}${formatCurrency(Math.abs(calc.netProfit))}`}
                   </>
                 }

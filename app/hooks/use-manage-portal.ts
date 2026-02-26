@@ -43,8 +43,7 @@ interface UseManagePortalReturn {
  * Handles error toasts and URL redirection.
  */
 export const useManagePortal = (): UseManagePortalReturn => {
-  const { isActionLoading, isEnabled, isLoading, isPro, openPortal } =
-    useSubscription();
+  const { isActionLoading, isEnabled, isLoading, isPro, openPortal } = useSubscription();
 
   const handleManagePortal = useCallback(async () => {
     const result = await openPortal();

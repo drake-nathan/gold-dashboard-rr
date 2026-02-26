@@ -55,9 +55,7 @@ const TestComponent = () => {
       <div data-testid="canManageAlerts">
         {String(subscription.alertEntitlements.canManageAlerts)}
       </div>
-      <div data-testid="canSendAlerts">
-        {String(subscription.alertEntitlements.canSendAlerts)}
-      </div>
+      <div data-testid="canSendAlerts">{String(subscription.alertEntitlements.canSendAlerts)}</div>
     </div>
   );
 };
@@ -77,9 +75,7 @@ test("shows loading when auth is not loaded", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("true");
 });
 
 test("shows loading when signed in but query is pending", async () => {
@@ -88,9 +84,7 @@ test("shows loading when signed in but query is pending", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("true");
 });
 
 test("not loading when auth loaded and signed out", async () => {
@@ -98,9 +92,7 @@ test("not loading when auth loaded and signed out", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
 });
 
 // =============================================================================
@@ -112,13 +104,9 @@ test("returns anonymous status when signed out", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
-  await expect
-    .element(screen.getByTestId("status"))
-    .toHaveTextContent("anonymous");
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("anonymous");
 });
 
 // =============================================================================
@@ -131,14 +119,10 @@ test("returns free status for user without subscription", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("free");
-  await expect
-    .element(screen.getByTestId("canManageAlerts"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("canManageAlerts")).toHaveTextContent("true");
 });
 
 test("uses alert entitlements returned by subscription query", async () => {
@@ -158,12 +142,8 @@ test("uses alert entitlements returned by subscription query", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("canCreateAlerts"))
-    .toHaveTextContent("true");
-  await expect
-    .element(screen.getByTestId("canSendAlerts"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("canCreateAlerts")).toHaveTextContent("true");
+  await expect.element(screen.getByTestId("canSendAlerts")).toHaveTextContent("true");
 });
 
 test("returns pro status for user with active subscription", async () => {
@@ -178,19 +158,11 @@ test("returns pro status for user with active subscription", async () => {
 
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("true");
-  await expect
-    .element(screen.getByTestId("status"))
-    .toHaveTextContent("active");
-  await expect
-    .element(screen.getByTestId("cancelAtPeriodEnd"))
-    .toHaveTextContent("false");
-  await expect
-    .element(screen.getByTestId("currentPeriodEnd"))
-    .toHaveTextContent("1735689600000");
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("active");
+  await expect.element(screen.getByTestId("cancelAtPeriodEnd")).toHaveTextContent("false");
+  await expect.element(screen.getByTestId("currentPeriodEnd")).toHaveTextContent("1735689600000");
 });
 
 test("returns trialing status for user in trial", async () => {
@@ -204,9 +176,7 @@ test("returns trialing status for user in trial", async () => {
   const screen = await render(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("true");
-  await expect
-    .element(screen.getByTestId("status"))
-    .toHaveTextContent("trialing");
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("trialing");
 });
 
 test("returns canceled status for canceled subscription", async () => {
@@ -221,12 +191,8 @@ test("returns canceled status for canceled subscription", async () => {
   const screen = await render(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
-  await expect
-    .element(screen.getByTestId("status"))
-    .toHaveTextContent("canceled");
-  await expect
-    .element(screen.getByTestId("cancelAtPeriodEnd"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("canceled");
+  await expect.element(screen.getByTestId("cancelAtPeriodEnd")).toHaveTextContent("true");
 });
 
 test("returns past_due status for past due subscription", async () => {
@@ -240,9 +206,7 @@ test("returns past_due status for past due subscription", async () => {
   const screen = await render(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
-  await expect
-    .element(screen.getByTestId("status"))
-    .toHaveTextContent("past_due");
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("past_due");
 });
 
 // =============================================================================
@@ -251,8 +215,7 @@ test("returns past_due status for past due subscription", async () => {
 
 // Test component that can trigger createCheckout
 const TestComponentWithActions = () => {
-  const { createCheckout, isActionLoading, isLoading, isPro, subscription } =
-    useSubscription();
+  const { createCheckout, isActionLoading, isLoading, isPro, subscription } = useSubscription();
 
   const handleCheckout = async () => {
     await createCheckout();
@@ -264,11 +227,7 @@ const TestComponentWithActions = () => {
       <div data-testid="isPro">{String(isPro)}</div>
       <div data-testid="status">{subscription.status}</div>
       <div data-testid="isActionLoading">{String(isActionLoading)}</div>
-      <button
-        data-testid="checkout-button"
-        onClick={() => void handleCheckout()}
-        type="button"
-      >
+      <button data-testid="checkout-button" onClick={() => void handleCheckout()} type="button">
         Checkout
       </button>
     </div>
@@ -284,17 +243,13 @@ test("isActionLoading stays false when priceId is missing", async () => {
   const screen = await render(<TestComponentWithActions />);
 
   // Verify initial state
-  await expect
-    .element(screen.getByTestId("isActionLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isActionLoading")).toHaveTextContent("false");
 
   // Click checkout button
   await screen.getByTestId("checkout-button").click();
 
   // isActionLoading should still be false (validation failed before loading state set)
-  await expect
-    .element(screen.getByTestId("isActionLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isActionLoading")).toHaveTextContent("false");
 
   // Restore price ID for other tests
   vi.stubEnv("VITE_STRIPE_PRICE_ID", "price_test");

@@ -48,19 +48,17 @@ beforeEach(() => {
 test("renders upgrade button for free users", async () => {
   const screen = await render(<UpgradeButton />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /upgrade to pro/i }))
-    .toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeInTheDocument();
 });
 
-test("shows disabled button while subscription is loading", async () => {
+test("hides button while subscription is loading", async () => {
   mockSubscription.isLoading = true;
 
   const screen = await render(<UpgradeButton />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /upgrade to pro/i }))
-    .toBeDisabled();
+  const buttons = screen.container.querySelectorAll("button");
+
+  expect(buttons).toHaveLength(0);
 });
 
 test("hides button for Pro users", async () => {
@@ -79,9 +77,7 @@ test("disables button when action is loading", async () => {
 
   const screen = await render(<UpgradeButton />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /upgrade to pro/i }))
-    .toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
 });
 
 test("disables button when user is not signed in", async () => {
@@ -89,9 +85,7 @@ test("disables button when user is not signed in", async () => {
 
   const screen = await render(<UpgradeButton />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /upgrade to pro/i }))
-    .toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
 });
 
 test("calls createCheckout when clicked", async () => {
@@ -106,9 +100,7 @@ test("calls createCheckout when clicked", async () => {
 test("renders custom text when provided", async () => {
   const screen = await render(<UpgradeButton text="Go Pro Now" />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /go pro now/i }))
-    .toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: /go pro now/i })).toBeInTheDocument();
 });
 
 test("hides button when Stripe is disabled", async () => {

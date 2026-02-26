@@ -6,13 +6,7 @@ import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
 import { Dashboard } from "@/components/dashboard";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { Route } from "./+types/dashboard";
 
@@ -90,8 +84,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
         <div className="text-center">
           <div className="text-lg font-medium">Error</div>
           <div className="text-sm text-muted-foreground">
-            We&apos;re having an issue connecting to our database, please try
-            again later.
+            We&apos;re having an issue connecting to our database, please try again later.
           </div>
         </div>
       </div>
@@ -132,9 +125,7 @@ export const ErrorBoundary = () => {
           <CardContent className="space-y-4">
             {error.data ?
               <div className="rounded-md bg-muted p-4">
-                <p className="text-sm text-muted-foreground">
-                  {String(error.data)}
-                </p>
+                <p className="text-sm text-muted-foreground">{String(error.data)}</p>
               </div>
             : null}
             <div className="flex gap-2">
@@ -172,21 +163,17 @@ export const ErrorBoundary = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <CardTitle className="text-destructive">
-              Something went wrong
-            </CardTitle>
+            <CardTitle className="text-destructive">Something went wrong</CardTitle>
           </div>
           <CardDescription>
-            An error occurred while loading the dashboard. This could be due to
-            a network issue or a problem with the data.
+            An error occurred while loading the dashboard. This could be due to a network issue or a
+            problem with the data.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-md bg-muted p-4">
             <p className="mb-2 text-sm font-medium">Error details:</p>
-            <p className="font-mono text-xs text-muted-foreground">
-              {errorMessage}
-            </p>
+            <p className="font-mono text-xs text-muted-foreground">{errorMessage}</p>
             {import.meta.env.MODE === "development" && errorStack ?
               <details className="mt-2">
                 <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">

@@ -1,10 +1,6 @@
 import { HelpCircle } from "lucide-react";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PriceRowProps {
   className?: string;
@@ -44,9 +40,7 @@ export const PriceRow = ({
           </Tooltip>
         : null}
       </span>
-      <span className={`text-right ${valueClassName ?? "font-medium"}`}>
-        {value}
-      </span>
+      <span className={`text-right ${valueClassName ?? "font-medium"}`}>{value}</span>
     </div>
   );
 };

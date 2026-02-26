@@ -88,30 +88,17 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
   const migrationAttempted = useRef(false);
 
   // Convex queries/mutations (only run when authenticated)
-  const convexCards = useQuery(
-    api.userCards.getUserCards,
-    isSignedIn ? {} : "skip",
-  );
-  const convexSettings = useQuery(
-    api.userSettings.getSettings,
-    isSignedIn ? {} : "skip",
-  );
-  const needsMigration = useQuery(
-    api.userSettings.needsMigration,
-    isSignedIn ? {} : "skip",
-  );
+  const convexCards = useQuery(api.userCards.getUserCards, isSignedIn ? {} : "skip");
+  const convexSettings = useQuery(api.userSettings.getSettings, isSignedIn ? {} : "skip");
+  const needsMigration = useQuery(api.userSettings.needsMigration, isSignedIn ? {} : "skip");
 
   const addCardMutation = useMutation(api.userCards.addCard);
   const updateCardMutation = useMutation(api.userCards.updateCard);
   const deleteCardMutation = useMutation(api.userCards.deleteCard);
   const resetPresetCardMutation = useMutation(api.userCards.resetPresetCard);
-  const migrateFromLocalStorageMutation = useMutation(
-    api.userCards.migrateFromLocalStorage,
-  );
+  const migrateFromLocalStorageMutation = useMutation(api.userCards.migrateFromLocalStorage);
   const updateSettingsMutation = useMutation(api.userSettings.updateSettings);
-  const markMigrationCompleteMutation = useMutation(
-    api.userSettings.markMigrationComplete,
-  );
+  const markMigrationCompleteMutation = useMutation(api.userSettings.markMigrationComplete);
 
   // Helper to check if localStorage has custom data worth merging
   const getCardsToMerge = useCallback(() => {
@@ -120,9 +107,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
         if (!card.isPreset) return true; // Always merge custom cards
 
         // Check if preset has been modified
-        const defaultPreset = DEFAULT_PRESET_CARDS.find(
-          (p) => p.id === card.id,
-        );
+        const defaultPreset = DEFAULT_PRESET_CARDS.find((p) => p.id === card.id);
         if (!defaultPreset) return true;
 
         return (
@@ -193,9 +178,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
             localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
           }
 
-          console.info(
-            `Migration complete: ${cardsToMerge.length} cards migrated`,
-          );
+          console.info(`Migration complete: ${cardsToMerge.length} cards migrated`);
         } catch (error) {
           console.error("Migration failed:", error);
           migrationAttempted.current = false;
@@ -209,8 +192,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
       if (!hasDataToMerge) {
         // No local data to merge, but clean up any stale localStorage
         if (typeof window !== "undefined") {
-          const hasLocalStorage =
-            localStorage.getItem(CREDIT_CARDS_STORAGE_KEY) !== null;
+          const hasLocalStorage = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY) !== null;
           if (hasLocalStorage) {
             localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
           }
@@ -258,8 +240,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
 
   // Determine if we're still loading
   const isLoading =
-    !isAuthLoaded ||
-    (isSignedIn && (convexCards === undefined || convexSettings === undefined));
+    !isAuthLoaded || (isSignedIn && (convexCards === undefined || convexSettings === undefined));
 
   // Build cards array (merge Convex cards with default presets)
   const cards: CreditCard[] = (() => {
@@ -277,9 +258,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     const convexCardIds = new Set(convexCards.map((c) => c.id));
 
     // Start with default presets that aren't in Convex
-    const defaultPresets = DEFAULT_PRESET_CARDS.filter(
-      (p) => !convexCardIds.has(p.id),
-    );
+    const defaultPresets = DEFAULT_PRESET_CARDS.filter((p) => !convexCardIds.has(p.id));
 
     // Add Convex cards (modified presets + custom)
     const allCards = [...defaultPresets, ...convexCards];
@@ -299,11 +278,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
       return localStorageData.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id;
     }
     // During loading/migration, use localStorage to avoid flash
-    if (
-      convexSettings === undefined ||
-      convexSettings === null ||
-      isMigrating
-    ) {
+    if (convexSettings === undefined || convexSettings === null || isMigrating) {
       return localStorageData.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id;
     }
     return convexSettings.lastSelectedCardId ?? DEFAULT_PRESET_CARDS[0].id;
@@ -350,9 +325,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
       } else {
         // Use functional update to avoid stale closure
         setLocalStorageData((current) => ({
-          cards: current.cards.map((c) =>
-            c.id === cardId ? { ...c, ...updates } : c,
-          ),
+          cards: current.cards.map((c) => (c.id === cardId ? { ...c, ...updates } : c)),
           lastSelectedId: current.lastSelectedId,
         }));
       }

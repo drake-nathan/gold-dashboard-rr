@@ -15,11 +15,7 @@ import {
 import { getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements } from "./subscriptionEntitlements";
 
-const alertTypeValidator = v.union(
-  v.literal("sku"),
-  v.literal("category"),
-  v.literal("threshold"),
-);
+const alertTypeValidator = v.union(v.literal("sku"), v.literal("category"), v.literal("threshold"));
 
 const triggerOnValidator = v.union(
   v.literal("in_stock"),
@@ -111,9 +107,7 @@ const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
 
   if (config.type === "category") {
     if (!config.metalType && !config.weight && !config.brand) {
-      throw new Error(
-        "Category alerts require at least one filter (metalType, weight, or brand)",
-      );
+      throw new Error("Category alerts require at least one filter (metalType, weight, or brand)");
     }
     if (config.triggerOn === "threshold_met") {
       throw new Error("Category alerts cannot use triggerOn=threshold_met");
@@ -121,13 +115,8 @@ const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
   }
 
   if (config.type === "threshold") {
-    if (
-      config.aboveSpotThreshold === undefined &&
-      config.profitThreshold === undefined
-    ) {
-      throw new Error(
-        "Threshold alerts require aboveSpotThreshold or profitThreshold",
-      );
+    if (config.aboveSpotThreshold === undefined && config.profitThreshold === undefined) {
+      throw new Error("Threshold alerts require aboveSpotThreshold or profitThreshold");
     }
     if (config.triggerOn !== "threshold_met") {
       throw new Error("Threshold alerts must use triggerOn=threshold_met");
@@ -138,10 +127,7 @@ const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
     throw new Error("weight must be greater than 0");
   }
 
-  if (
-    config.aboveSpotThreshold !== undefined &&
-    config.aboveSpotThreshold < 0
-  ) {
+  if (config.aboveSpotThreshold !== undefined && config.aboveSpotThreshold < 0) {
     throw new Error("aboveSpotThreshold must be >= 0");
   }
 
@@ -157,9 +143,7 @@ const pauseEnabledAlertsForUser = async (
 ): Promise<number> => {
   const enabledAlerts = await ctx.db
     .query("alerts")
-    .withIndex("by_user_and_enabled", (q) =>
-      q.eq("userId", userId).eq("enabled", true),
-    )
+    .withIndex("by_user_and_enabled", (q) => q.eq("userId", userId).eq("enabled", true))
     .collect();
 
   const pausedAt = Date.now();
@@ -286,9 +270,7 @@ const mergeAlertProducts = (
   existingProducts: TriggeredAlertProduct[],
   nextProducts: TriggeredAlertProduct[],
 ): TriggeredAlertProduct[] => {
-  const productMap = new Map(
-    existingProducts.map((product) => [product.productId, product]),
-  );
+  const productMap = new Map(existingProducts.map((product) => [product.productId, product]));
 
   for (const product of nextProducts) {
     productMap.set(product.productId, product);
@@ -316,10 +298,8 @@ const formatAlertDigest = (
   );
   const pluralizedProducts = totalProducts === 1 ? "item" : "items";
   const subject = `Dashboard.Gold: ${totalProducts} ${pluralizedProducts} triggered`;
-  const manageAlertsUrl =
-    siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
-  const dashboardUrl =
-    siteUrl ? `${siteUrl.replace(/\/+$/, "")}/dashboard` : undefined;
+  const manageAlertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
+  const dashboardUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/dashboard` : undefined;
 
   // --- Plain text version ---
   const textLines: string[] = [
@@ -449,10 +429,9 @@ const resolveAlertRecipientEmail = async (
   ctx: ActionCtx,
   userId: string,
 ): Promise<string | undefined> => {
-  const subscriptions = await ctx.runQuery(
-    components.stripe.public.listSubscriptionsByUserId,
-    { userId },
-  );
+  const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+    userId,
+  });
 
   let subscription: (typeof subscriptions)[number] | undefined;
   for (const candidate of subscriptions) {
@@ -460,10 +439,7 @@ const resolveAlertRecipientEmail = async (
       continue;
     }
 
-    if (
-      !subscription ||
-      candidate.currentPeriodEnd > subscription.currentPeriodEnd
-    ) {
+    if (!subscription || candidate.currentPeriodEnd > subscription.currentPeriodEnd) {
       subscription = candidate;
     }
   }
@@ -483,9 +459,7 @@ const resolveAlertRecipientEmail = async (
   return email;
 };
 
-const buildUnsubscribeUrl = async (
-  userId: string,
-): Promise<null | string> => {
+const buildUnsubscribeUrl = async (userId: string): Promise<null | string> => {
   const secret = process.env.UNSUBSCRIBE_SECRET;
   const convexUrl = process.env.CONVEX_SITE_URL;
   if (!secret || !convexUrl) {
@@ -500,11 +474,7 @@ const buildUnsubscribeUrl = async (
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(userId),
-  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(userId));
   const signatureHex = [...new Uint8Array(signature)]
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -526,13 +496,9 @@ const sendAlertEmail = async (
       emailHeaders["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
     } else {
       // Fallback: mailto + manage alerts page
-      const unsubscribeDestinations = [
-        `<mailto:${config.replyToEmail}?subject=unsubscribe>`,
-      ];
+      const unsubscribeDestinations = [`<mailto:${config.replyToEmail}?subject=unsubscribe>`];
       if (config.siteUrl) {
-        unsubscribeDestinations.push(
-          `<${config.siteUrl.replace(/\/+$/, "")}/alerts>`,
-        );
+        unsubscribeDestinations.push(`<${config.siteUrl.replace(/\/+$/, "")}/alerts>`);
       }
       emailHeaders["List-Unsubscribe"] = unsubscribeDestinations.join(", ");
     }
@@ -562,9 +528,7 @@ const sendAlertEmail = async (
 
     if (!response.ok) {
       const failureMessage =
-        body?.message ??
-        body?.error ??
-        `${response.status} ${response.statusText}`;
+        body?.message ?? body?.error ?? `${response.status} ${response.statusText}`;
       return {
         error: `Resend send failed: ${failureMessage}`,
         ok: false,
@@ -767,18 +731,11 @@ export const syncAlertPauseState = mutation({
     const userId = await requireAuth(ctx);
     const { alertEntitlements } = await getUserAlertEntitlements(ctx, userId);
 
-    if (
-      !alertEntitlements.shouldPauseEnabledAlerts ||
-      !alertEntitlements.pauseReason
-    ) {
+    if (!alertEntitlements.shouldPauseEnabledAlerts || !alertEntitlements.pauseReason) {
       return { pausedCount: 0, success: true };
     }
 
-    const pausedCount = await pauseEnabledAlertsForUser(
-      ctx,
-      userId,
-      alertEntitlements.pauseReason,
-    );
+    const pausedCount = await pauseEnabledAlertsForUser(ctx, userId, alertEntitlements.pauseReason);
 
     return {
       pausedCount,
@@ -794,8 +751,10 @@ export const syncAlertPauseState = mutation({
 export const getUserSendAlertPermissions = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, args) => {
-    const { alertEntitlements, subscriptionStatus } =
-      await getUserAlertEntitlements(ctx, args.userId);
+    const { alertEntitlements, subscriptionStatus } = await getUserAlertEntitlements(
+      ctx,
+      args.userId,
+    );
 
     return {
       alertEntitlements,
@@ -814,9 +773,7 @@ export const disableAllAlertsForUser = internalMutation({
   handler: async (ctx, args) => {
     const enabledAlerts = await ctx.db
       .query("alerts")
-      .withIndex("by_user_and_enabled", (q) =>
-        q.eq("userId", args.userId).eq("enabled", true),
-      )
+      .withIndex("by_user_and_enabled", (q) => q.eq("userId", args.userId).eq("enabled", true))
       .collect();
 
     const now = Date.now();
@@ -836,18 +793,11 @@ export const disableAllAlertsForUser = internalMutation({
  */
 export const pauseAlertsForUser = internalMutation({
   args: {
-    pauseReason: v.union(
-      v.literal("billing_hold"),
-      v.literal("inactive_subscription"),
-    ),
+    pauseReason: v.union(v.literal("billing_hold"), v.literal("inactive_subscription")),
     userId: v.string(),
   },
   handler: async (ctx, args) => {
-    const pausedCount = await pauseEnabledAlertsForUser(
-      ctx,
-      args.userId,
-      args.pauseReason,
-    );
+    const pausedCount = await pauseEnabledAlertsForUser(ctx, args.userId, args.pauseReason);
 
     return { pausedCount, success: true };
   },
@@ -868,11 +818,7 @@ export const applySubscriptionStatusToAlerts = internalMutation({
       return { pausedCount: 0, success: true };
     }
 
-    const pausedCount = await pauseEnabledAlertsForUser(
-      ctx,
-      args.userId,
-      pauseReason,
-    );
+    const pausedCount = await pauseEnabledAlertsForUser(ctx, args.userId, pauseReason);
 
     return { pausedCount, pauseReason, success: true };
   },
@@ -924,9 +870,7 @@ export const evaluateAlertsForProducts = internalMutation({
       };
     }
 
-    const productById = new Map(
-      products.map((product) => [product.productId, product]),
-    );
+    const productById = new Map(products.map((product) => [product.productId, product]));
 
     const enabledAlerts = await ctx.db
       .query("alerts")
@@ -975,19 +919,14 @@ export const evaluateAlertsForProducts = internalMutation({
         pureProductIds.map((pureProductId) =>
           ctx.db
             .query("pureProducts")
-            .withIndex("by_pure_id", (q) =>
-              q.eq("pureProductId", pureProductId),
-            )
+            .withIndex("by_pure_id", (q) => q.eq("pureProductId", pureProductId))
             .first(),
         ),
       )
     ).filter((product) => product !== null);
 
     const pureBidByProductId = new Map(
-      pureProducts.map((product) => [
-        product.pureProductId,
-        product.currentBidPricePerOz,
-      ]),
+      pureProducts.map((product) => [product.pureProductId, product.currentBidPricePerOz]),
     );
 
     const sendEntitlementByUser = new Map<string, boolean>();
@@ -1003,10 +942,7 @@ export const evaluateAlertsForProducts = internalMutation({
 
       let canSendAlerts = sendEntitlementByUser.get(alert.userId);
       if (canSendAlerts === undefined) {
-        const { alertEntitlements } = await getUserAlertEntitlements(
-          ctx,
-          alert.userId,
-        );
+        const { alertEntitlements } = await getUserAlertEntitlements(ctx, alert.userId);
         canSendAlerts = alertEntitlements.canSendAlerts;
         sendEntitlementByUser.set(alert.userId, canSendAlerts);
       }
@@ -1019,13 +955,10 @@ export const evaluateAlertsForProducts = internalMutation({
       let candidateProducts = products;
 
       if (alert.type === "sku") {
-        const matchedProduct =
-          alert.productId ? productById.get(alert.productId) : undefined;
+        const matchedProduct = alert.productId ? productById.get(alert.productId) : undefined;
         candidateProducts = matchedProduct ? [matchedProduct] : [];
       } else if (alert.type === "category") {
-        candidateProducts = products.filter((product) =>
-          matchesCategoryFilters(alert, product),
-        );
+        candidateProducts = products.filter((product) => matchesCategoryFilters(alert, product));
       }
 
       const triggeredProducts: TriggeredAlertProduct[] = [];
@@ -1062,9 +995,7 @@ export const evaluateAlertsForProducts = internalMutation({
 
         const fallbackBid = fallbackBidByMetal.get(product.metalType) ?? null;
         const matchedPureBid =
-          product.pureProductId ?
-            (pureBidByProductId.get(product.pureProductId) ?? null)
-          : null;
+          product.pureProductId ? (pureBidByProductId.get(product.pureProductId) ?? null) : null;
         const bidPerOunce = matchedPureBid ?? fallbackBid;
         if (!bidPerOunce) {
           continue;
@@ -1079,13 +1010,10 @@ export const evaluateAlertsForProducts = internalMutation({
 
         const estimatedWeight = getEstimatedWeightOz(product);
         const estimatedProfit =
-          estimatedWeight ?
-            bidPerOunce * estimatedWeight - product.currentPrice
-          : undefined;
+          estimatedWeight ? bidPerOunce * estimatedWeight - product.currentPrice : undefined;
 
         const aboveSpotMet =
-          alert.aboveSpotThreshold !== undefined &&
-          aboveSpotPercentage <= alert.aboveSpotThreshold;
+          alert.aboveSpotThreshold !== undefined && aboveSpotPercentage <= alert.aboveSpotThreshold;
         const profitMet =
           alert.profitThreshold !== undefined &&
           estimatedProfit !== undefined &&
@@ -1135,10 +1063,7 @@ export const evaluateAlertsForProducts = internalMutation({
           .query("alertBatches")
           .withIndex("by_user", (q) => q.eq("userId", alert.userId))
           .filter((q) =>
-            q.and(
-              q.eq(q.field("scheduledFor"), scheduleTime),
-              q.eq(q.field("sent"), false),
-            ),
+            q.and(q.eq(q.field("scheduledFor"), scheduleTime), q.eq(q.field("sent"), false)),
           )
           .first();
         pendingBatchByUser.set(alert.userId, pendingBatch ?? null);
@@ -1151,9 +1076,7 @@ export const evaluateAlertsForProducts = internalMutation({
       };
 
       if (pendingBatch) {
-        const existingEntry = pendingBatch.alerts.find(
-          (entry) => entry.alertId === alert._id,
-        );
+        const existingEntry = pendingBatch.alerts.find((entry) => entry.alertId === alert._id);
 
         let nextAlerts = pendingBatch.alerts;
         if (existingEntry) {
@@ -1161,10 +1084,7 @@ export const evaluateAlertsForProducts = internalMutation({
             entry.alertId === alert._id ?
               {
                 ...entry,
-                products: mergeAlertProducts(
-                  entry.products,
-                  mergedTriggeredProducts,
-                ),
+                products: mergeAlertProducts(entry.products, mergedTriggeredProducts),
               }
             : entry,
           );
@@ -1221,9 +1141,7 @@ export const listPendingAlertBatches = internalQuery({
 
     return await ctx.db
       .query("alertBatches")
-      .withIndex("by_pending", (q) =>
-        q.eq("sent", false).lte("scheduledFor", now),
-      )
+      .withIndex("by_pending", (q) => q.eq("sent", false).lte("scheduledFor", now))
       .order("asc")
       .take(limit);
   },
@@ -1264,9 +1182,7 @@ export const markAlertBatchProcessed = internalMutation({
       matchedHistory.map((history: AlertHistoryDoc) =>
         ctx.db.patch(history._id, {
           notificationError:
-            shouldMarkSent ? undefined : (
-              (args.errorMessage ?? "Alert delivery skipped")
-            ),
+            shouldMarkSent ? undefined : (args.errorMessage ?? "Alert delivery skipped"),
           notificationSent: shouldMarkSent,
         }),
       ),
@@ -1275,9 +1191,7 @@ export const markAlertBatchProcessed = internalMutation({
     await ctx.db.patch(batch._id, {
       lastAttemptedAt: args.processedAt,
       lastAttemptError:
-        shouldMarkSent ? undefined : (
-          (args.errorMessage ?? "Alert delivery skipped")
-        ),
+        shouldMarkSent ? undefined : (args.errorMessage ?? "Alert delivery skipped"),
       sent: true,
       sentAt: args.processedAt,
       terminalFailureAt: shouldMarkSent ? undefined : args.processedAt,
@@ -1310,14 +1224,10 @@ export const deferAlertBatchForMissingConfig = internalMutation({
     }
 
     const deferMs = alertBatchMissingConfigDeferMinutes * 60 * 1000;
-    const deferredUntil = Math.max(
-      batch.scheduledFor,
-      args.deferredAt + deferMs,
-    );
+    const deferredUntil = Math.max(batch.scheduledFor, args.deferredAt + deferMs);
     await ctx.db.patch(batch._id, {
       lastAttemptedAt: args.deferredAt,
-      lastAttemptError:
-        "Alert delivery deferred: missing RESEND_API_KEY or RESEND_FROM_EMAIL",
+      lastAttemptError: "Alert delivery deferred: missing RESEND_API_KEY or RESEND_FROM_EMAIL",
       scheduledFor: deferredUntil,
     });
 
@@ -1405,154 +1315,130 @@ export const recordAlertBatchSendFailure = internalMutation({
 /**
  * Internal action that sends due alert batches. Wire this to a cron.
  */
-export const processPendingAlertBatches: ReturnType<typeof internalAction> =
-  internalAction({
-    args: {
-      limit: v.optional(v.number()),
-      now: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-      const now = args.now ?? Date.now();
-      const pendingBatches = await ctx.runQuery(
-        internal.alerts.listPendingAlertBatches,
-        {
-          limit: args.limit,
-          now,
-        },
-      );
-      const deliveryConfig = getAlertDeliveryConfig();
+export const processPendingAlertBatches: ReturnType<typeof internalAction> = internalAction({
+  args: {
+    limit: v.optional(v.number()),
+    now: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const now = args.now ?? Date.now();
+    const pendingBatches = await ctx.runQuery(internal.alerts.listPendingAlertBatches, {
+      limit: args.limit,
+      now,
+    });
+    const deliveryConfig = getAlertDeliveryConfig();
 
-      let considered = 0;
-      let deferredByMissingConfig = 0;
-      let deferredRescheduled = 0;
-      let exhaustedRetries = 0;
-      let failedSends = 0;
-      let retriesScheduled = 0;
-      let sentBatches = 0;
-      let skippedByEntitlement = 0;
-      let skippedByMissingRecipient = 0;
+    let considered = 0;
+    let deferredByMissingConfig = 0;
+    let deferredRescheduled = 0;
+    let exhaustedRetries = 0;
+    let failedSends = 0;
+    let retriesScheduled = 0;
+    let sentBatches = 0;
+    let skippedByEntitlement = 0;
+    let skippedByMissingRecipient = 0;
 
-      if (!deliveryConfig && pendingBatches.length > 0) {
-        console.error(
-          "Alert delivery config missing; deferring pending batches",
-          {
-            pendingBatches: pendingBatches.length,
-          },
-        );
-      }
+    if (!deliveryConfig && pendingBatches.length > 0) {
+      console.error("Alert delivery config missing; deferring pending batches", {
+        pendingBatches: pendingBatches.length,
+      });
+    }
 
-      for (const batch of pendingBatches) {
-        considered++;
+    for (const batch of pendingBatches) {
+      considered++;
 
-        const permissions = await ctx.runQuery(
-          internal.alerts.getUserSendAlertPermissions,
-          {
-            userId: batch.userId,
-          },
-        );
-        if (!permissions.alertEntitlements.canSendAlerts) {
-          skippedByEntitlement++;
-          await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
-            batchId: batch._id,
-            errorMessage: `Skipped: subscription status ${permissions.status} cannot receive alerts`,
-            processedAt: now,
-            status: "skipped",
-          });
-          continue;
-        }
-
-        if (!deliveryConfig) {
-          deferredByMissingConfig++;
-          const deferResult = await ctx.runMutation(
-            internal.alerts.deferAlertBatchForMissingConfig,
-            {
-              batchId: batch._id,
-              deferredAt: now,
-            },
-          );
-          if (deferResult.success) {
-            deferredRescheduled++;
-          }
-          continue;
-        }
-
-        const recipientEmail = await resolveAlertRecipientEmail(
-          ctx,
-          batch.userId,
-        );
-        if (!recipientEmail) {
-          skippedByMissingRecipient++;
-          await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
-            batchId: batch._id,
-            errorMessage:
-              "Skipped: no recipient email available for subscription",
-            processedAt: now,
-            status: "skipped",
-          });
-          continue;
-        }
-
-        const unsubscribeUrl = await buildUnsubscribeUrl(batch.userId);
-        const digest = formatAlertDigest(
-          batch,
-          deliveryConfig.siteUrl,
-          unsubscribeUrl ?? undefined,
-        );
-        const sendResult = await sendAlertEmail(deliveryConfig, {
-          html: digest.html,
-          subject: digest.subject,
-          text: digest.text,
-          to: recipientEmail,
-          unsubscribeUrl: unsubscribeUrl ?? undefined,
-        });
-
-        if (!sendResult.ok) {
-          failedSends++;
-          const failureResult = await ctx.runMutation(
-            internal.alerts.recordAlertBatchSendFailure,
-            {
-              batchId: batch._id,
-              errorMessage: sendResult.error,
-              failedAt: now,
-            },
-          );
-
-          if (failureResult.gaveUp) {
-            exhaustedRetries++;
-          } else {
-            retriesScheduled++;
-          }
-
-          console.error("Failed to send alert batch", {
-            batchId: batch._id,
-            error: sendResult.error,
-            gaveUp: failureResult.gaveUp,
-            nextScheduledFor: failureResult.nextScheduledFor,
-            sendAttempts: failureResult.sendAttempts,
-          });
-          continue;
-        }
-
+      const permissions = await ctx.runQuery(internal.alerts.getUserSendAlertPermissions, {
+        userId: batch.userId,
+      });
+      if (!permissions.alertEntitlements.canSendAlerts) {
+        skippedByEntitlement++;
         await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
           batchId: batch._id,
+          errorMessage: `Skipped: subscription status ${permissions.status} cannot receive alerts`,
           processedAt: now,
-          status: "sent",
+          status: "skipped",
         });
-        sentBatches++;
+        continue;
       }
 
-      return {
-        considered,
-        deferredByMissingConfig,
-        deferredRescheduled,
-        exhaustedRetries,
-        failedSends,
-        pendingCount: pendingBatches.length,
-        retriesScheduled,
-        sentBatches,
-        skippedByEntitlement,
-        skippedByMissingRecipient,
-        success: true,
-      };
-    },
-  });
+      if (!deliveryConfig) {
+        deferredByMissingConfig++;
+        const deferResult = await ctx.runMutation(internal.alerts.deferAlertBatchForMissingConfig, {
+          batchId: batch._id,
+          deferredAt: now,
+        });
+        if (deferResult.success) {
+          deferredRescheduled++;
+        }
+        continue;
+      }
+
+      const recipientEmail = await resolveAlertRecipientEmail(ctx, batch.userId);
+      if (!recipientEmail) {
+        skippedByMissingRecipient++;
+        await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
+          batchId: batch._id,
+          errorMessage: "Skipped: no recipient email available for subscription",
+          processedAt: now,
+          status: "skipped",
+        });
+        continue;
+      }
+
+      const unsubscribeUrl = await buildUnsubscribeUrl(batch.userId);
+      const digest = formatAlertDigest(batch, deliveryConfig.siteUrl, unsubscribeUrl ?? undefined);
+      const sendResult = await sendAlertEmail(deliveryConfig, {
+        html: digest.html,
+        subject: digest.subject,
+        text: digest.text,
+        to: recipientEmail,
+        unsubscribeUrl: unsubscribeUrl ?? undefined,
+      });
+
+      if (!sendResult.ok) {
+        failedSends++;
+        const failureResult = await ctx.runMutation(internal.alerts.recordAlertBatchSendFailure, {
+          batchId: batch._id,
+          errorMessage: sendResult.error,
+          failedAt: now,
+        });
+
+        if (failureResult.gaveUp) {
+          exhaustedRetries++;
+        } else {
+          retriesScheduled++;
+        }
+
+        console.error("Failed to send alert batch", {
+          batchId: batch._id,
+          error: sendResult.error,
+          gaveUp: failureResult.gaveUp,
+          nextScheduledFor: failureResult.nextScheduledFor,
+          sendAttempts: failureResult.sendAttempts,
+        });
+        continue;
+      }
+
+      await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
+        batchId: batch._id,
+        processedAt: now,
+        status: "sent",
+      });
+      sentBatches++;
+    }
+
+    return {
+      considered,
+      deferredByMissingConfig,
+      deferredRescheduled,
+      exhaustedRetries,
+      failedSends,
+      pendingCount: pendingBatches.length,
+      retriesScheduled,
+      sentBatches,
+      skippedByEntitlement,
+      skippedByMissingRecipient,
+      success: true,
+    };
+  },
+});

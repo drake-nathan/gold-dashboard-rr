@@ -333,9 +333,7 @@ test("returns billing_hold for unpaid status", () => {
 });
 
 test("returns inactive_subscription for canceled status", () => {
-  expect(getPauseReasonFromSubscriptionStatus("canceled")).toBe(
-    "inactive_subscription",
-  );
+  expect(getPauseReasonFromSubscriptionStatus("canceled")).toBe("inactive_subscription");
 });
 
 test("returns no pause reason for unsupported status", () => {

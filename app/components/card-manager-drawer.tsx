@@ -34,11 +34,7 @@ import {
 } from "@/components/ui/sheet";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
 import { Switch } from "@/components/ui/switch";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   addCustomCard,
   calculateCashbackPercentage,
@@ -55,21 +51,14 @@ import {
 const cardFormSchema = z.object({
   cardType: z.enum(["cashback", "travel"]),
   issuer: z.string().optional(),
-  name: z
-    .string()
-    .min(1, "Card name is required")
-    .max(100, "Card name is too long"),
+  name: z.string().min(1, "Card name is required").max(100, "Card name is too long"),
   pointsPerDollar: z
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
     .max(100, "Must be 100 or less"),
   signupBonusEnabled: z.boolean(),
-  signupBonusPoints: z
-    .number({ message: "Must be a number" })
-    .min(0, "Must be 0 or greater"),
-  signupBonusSpend: z
-    .number({ message: "Must be a number" })
-    .min(0, "Must be 0 or greater"),
+  signupBonusPoints: z.number({ message: "Must be a number" }).min(0, "Must be 0 or greater"),
+  signupBonusSpend: z.number({ message: "Must be a number" }).min(0, "Must be 0 or greater"),
   valuePerPointCents: z
     .number({ message: "Must be a number" })
     .min(0, "Must be 0 or greater")
@@ -325,8 +314,8 @@ export const CardManagerDrawer = ({
         <SheetHeader>
           <SheetTitle>Manage Credit Cards</SheetTitle>
           <SheetDescription>
-            Add custom cards or customize preset card values (points per dollar
-            & value per point). Changes are saved to your browser.
+            Add custom cards or customize preset card values (points per dollar & value per point).
+            Changes are saved to your browser.
           </SheetDescription>
         </SheetHeader>
 
@@ -368,10 +357,7 @@ export const CardManagerDrawer = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Reward Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select reward type" />
@@ -387,8 +373,8 @@ export const CardManagerDrawer = ({
                           </SelectContent>
                         </Select>
                         <FormDescription>
-                          How rewards are calculated: cashback shows total cash
-                          back, travel shows points earned and cost per point
+                          How rewards are calculated: cashback shows total cash back, travel shows
+                          points earned and cost per point
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -424,10 +410,7 @@ export const CardManagerDrawer = ({
                             min="0"
                             name={field.name}
                             onBlur={(e) => {
-                              if (
-                                e.target.value === "" ||
-                                Number.isNaN(field.value)
-                              ) {
+                              if (e.target.value === "" || Number.isNaN(field.value)) {
                                 field.onChange(0);
                               }
                               field.onBlur();
@@ -442,9 +425,7 @@ export const CardManagerDrawer = ({
                             value={Number.isNaN(field.value) ? "" : field.value}
                           />
                         </FormControl>
-                        <FormDescription>
-                          How many points you earn per $1 spent
-                        </FormDescription>
+                        <FormDescription>How many points you earn per $1 spent</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -461,10 +442,7 @@ export const CardManagerDrawer = ({
                             min="0"
                             name={field.name}
                             onBlur={(e) => {
-                              if (
-                                e.target.value === "" ||
-                                Number.isNaN(field.value)
-                              ) {
+                              if (e.target.value === "" || Number.isNaN(field.value)) {
                                 field.onChange(0);
                               }
                               field.onBlur();
@@ -501,10 +479,7 @@ export const CardManagerDrawer = ({
                             </FormDescription>
                           </div>
                           <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -523,10 +498,7 @@ export const CardManagerDrawer = ({
                                   min="0"
                                   name={field.name}
                                   onBlur={(e) => {
-                                    if (
-                                      e.target.value === "" ||
-                                      Number.isNaN(field.value)
-                                    ) {
+                                    if (e.target.value === "" || Number.isNaN(field.value)) {
                                       field.onChange(0);
                                     }
                                     field.onBlur();
@@ -538,9 +510,7 @@ export const CardManagerDrawer = ({
                                   ref={field.ref}
                                   step="1000"
                                   type="number"
-                                  value={
-                                    Number.isNaN(field.value) ? "" : field.value
-                                  }
+                                  value={Number.isNaN(field.value) ? "" : field.value}
                                 />
                               </FormControl>
                               <FormDescription>
@@ -562,10 +532,7 @@ export const CardManagerDrawer = ({
                                   min="0"
                                   name={field.name}
                                   onBlur={(e) => {
-                                    if (
-                                      e.target.value === "" ||
-                                      Number.isNaN(field.value)
-                                    ) {
+                                    if (e.target.value === "" || Number.isNaN(field.value)) {
                                       field.onChange(0);
                                     }
                                     field.onBlur();
@@ -577,9 +544,7 @@ export const CardManagerDrawer = ({
                                   ref={field.ref}
                                   step="100"
                                   type="number"
-                                  value={
-                                    Number.isNaN(field.value) ? "" : field.value
-                                  }
+                                  value={Number.isNaN(field.value) ? "" : field.value}
                                 />
                               </FormControl>
                               <FormDescription>
@@ -608,9 +573,7 @@ export const CardManagerDrawer = ({
                           </div>
                           <div className="flex justify-between border-t border-border pt-1 text-base font-bold">
                             <span>Total with SUB:</span>
-                            <span className="text-primary">
-                              {totalCashback.toFixed(2)}%
-                            </span>
+                            <span className="text-primary">{totalCashback.toFixed(2)}%</span>
                           </div>
                         </>
                       : null}
@@ -622,12 +585,7 @@ export const CardManagerDrawer = ({
                   <Button className="flex-1" size="sm" type="submit">
                     {editMode.type === "create" ? "Add Card" : "Save Changes"}
                   </Button>
-                  <Button
-                    onClick={handleCancelEdit}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
+                  <Button onClick={handleCancelEdit} size="sm" type="button" variant="outline">
                     Cancel
                   </Button>
                 </div>
@@ -638,11 +596,7 @@ export const CardManagerDrawer = ({
           {/* Add Card Button and Reset All Button */}
           {!editMode && (
             <div className="flex gap-2">
-              <Button
-                className="flex-1"
-                onClick={handleStartCreate}
-                variant="outline"
-              >
+              <Button className="flex-1" onClick={handleStartCreate} variant="outline">
                 <Plus className="size-4" />
                 Add Custom Card
               </Button>
@@ -655,9 +609,7 @@ export const CardManagerDrawer = ({
 
           {/* Cards List */}
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">
-              Your Cards
-            </h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">Your Cards</h3>
             {sortedCards.length === 0 ?
               <div className="rounded-lg border border-dashed p-6 text-center">
                 <p className="text-sm text-muted-foreground">
@@ -666,8 +618,7 @@ export const CardManagerDrawer = ({
               </div>
             : sortedCards.map((card) => {
                 const cashback = calculateCashbackPercentage(card);
-                const isEditing =
-                  editMode?.type === "edit" && editMode.cardId === card.id;
+                const isEditing = editMode?.type === "edit" && editMode.cardId === card.id;
 
                 return (
                   <SwipeableCard
@@ -688,32 +639,21 @@ export const CardManagerDrawer = ({
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <div className="truncate text-sm font-semibold">
-                              {card.name}
-                            </div>
+                            <div className="truncate text-sm font-semibold">{card.name}</div>
                             {card.isPreset ?
                               <Badge variant="secondary">Preset</Badge>
                             : null}
                           </div>
                           {card.issuer ?
-                            <div className="text-xs text-muted-foreground">
-                              {card.issuer}
-                            </div>
+                            <div className="text-xs text-muted-foreground">{card.issuer}</div>
                           : null}
                           <div className="mt-1.5 text-xs text-muted-foreground">
-                            {card.pointsPerDollar}x @{" "}
-                            {(card.valuePerPoint * 100).toFixed(2)}¢ ={" "}
-                            <span className="font-bold text-primary">
-                              {cashback.toFixed(2)}%
-                            </span>
+                            {card.pointsPerDollar}x @ {(card.valuePerPoint * 100).toFixed(2)}¢ ={" "}
+                            <span className="font-bold text-primary">{cashback.toFixed(2)}%</span>
                             {card.signupBonus?.enabled ?
                               <span className="ml-1 text-primary">
-                                (SUB: +
-                                {calculateSubBonusPercentage(card).toFixed(2)}%
-                                ={" "}
-                                {calculateTotalCashbackPercentage(card).toFixed(
-                                  2,
-                                )}
+                                (SUB: +{calculateSubBonusPercentage(card).toFixed(2)}% ={" "}
+                                {calculateTotalCashbackPercentage(card).toFixed(2)}
                                 %)
                               </span>
                             : null}

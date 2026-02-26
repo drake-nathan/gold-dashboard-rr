@@ -5,21 +5,12 @@ import { Loader2, ShieldAlert } from "lucide-react";
 
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { Route } from "./+types/admin";
 
 export const meta: Route.MetaFunction = () => {
-  return [
-    { title: "Admin - Dashboard.Gold" },
-    { content: "noindex, nofollow", name: "robots" },
-  ];
+  return [{ title: "Admin - Dashboard.Gold" }, { content: "noindex, nofollow", name: "robots" }];
 };
 
 const AdminPage = () => {
@@ -47,15 +38,9 @@ const AdminPage = () => {
         <div className="flex flex-col items-center">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold">Admin Access</h1>
-            <p className="text-sm text-muted-foreground">
-              Sign in to access the admin panel
-            </p>
+            <p className="text-sm text-muted-foreground">Sign in to access the admin panel</p>
           </div>
-          <SignIn
-            fallbackRedirectUrl="/admin"
-            forceRedirectUrl="/admin"
-            routing="hash"
-          />
+          <SignIn fallbackRedirectUrl="/admin" forceRedirectUrl="/admin" routing="hash" />
         </div>
       </div>
     );

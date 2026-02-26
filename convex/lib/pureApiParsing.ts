@@ -23,20 +23,14 @@ export interface PureProduct {
  * @param weightGrams - Optional weight in grams (takes precedence)
  * @returns Weight in troy ounces
  */
-export const parseWeightToOz = (
-  weight: string,
-  weightGrams?: number,
-): number => {
+export const parseWeightToOz = (weight: string, weightGrams?: number): number => {
   if (weightGrams) {
     // Convert grams to troy ounces (1 troy oz = 31.1035 g)
     return weightGrams / 31.1035;
   }
 
   // Parse weight string
-  const weightMatch =
-    /(?<value>\d+(?:\.\d+)?)\s*(?<unit>troy ounce|ounce|oz|gram|g)/i.exec(
-      weight,
-    );
+  const weightMatch = /(?<value>\d+(?:\.\d+)?)\s*(?<unit>troy ounce|ounce|oz|gram|g)/i.exec(weight);
 
   if (weightMatch?.groups?.value && weightMatch.groups.unit) {
     const value = parseFloat(weightMatch.groups.value);

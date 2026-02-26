@@ -115,18 +115,13 @@ export const fetchNewData = internalAction({
       });
 
       if (!spotResponse.ok) {
-        throw new Error(
-          `Spot prices API responded with status: ${spotResponse.status}`,
-        );
+        throw new Error(`Spot prices API responded with status: ${spotResponse.status}`);
       }
 
       const spotData = (await spotResponse.json()) as PureSpotPricesResponse;
 
       // Store spot prices
-      const metalMap: Record<
-        string,
-        "gold" | "palladium" | "platinum" | "silver"
-      > = {
+      const metalMap: Record<string, "gold" | "palladium" | "platinum" | "silver"> = {
         Gold: "gold",
         Palladium: "palladium",
         Platinum: "platinum",
@@ -153,9 +148,7 @@ export const fetchNewData = internalAction({
 
       // Step 2: Get existing product IDs from our database
       // This allows us to update manually added products even if they don't have "Stocked by Costco"
-      const existingProductIds = await ctx.runQuery(
-        internal.pure.getExistingPureProductIds,
-      );
+      const existingProductIds = await ctx.runQuery(internal.pure.getExistingPureProductIds);
       const existingIdsSet = new Set(existingProductIds);
 
       // Step 3: Fetch all Pure products (gold and silver only for MVP)
@@ -195,9 +188,7 @@ export const fetchNewData = internalAction({
             const products = (await productsResponse.json()) as PureProduct[];
             totalProductsFetched += products.length;
 
-            console.info(
-              `Fetched ${products.length} ${material} products at offset ${offset}`,
-            );
+            console.info(`Fetched ${products.length} ${material} products at offset ${offset}`);
 
             // Process products into batch data:
             // - "Stocked by Costco" attribute
@@ -206,15 +197,12 @@ export const fetchNewData = internalAction({
             const productBatch = products
               .filter((product) => {
                 // Include products with "Stocked by Costco" attribute
-                const isStockedByCostco = product.attributes.some(
-                  (attr: string) =>
-                    attr.toLowerCase().includes("stocked by costco"),
+                const isStockedByCostco = product.attributes.some((attr: string) =>
+                  attr.toLowerCase().includes("stocked by costco"),
                 );
 
                 // Also include generic fallback products (matched by SKU)
-                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(
-                  product.sku,
-                );
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(product.sku);
 
                 // Also include products already in our database (e.g., manually added)
                 const existsInDb = existingIdsSet.has(product.id);
@@ -222,21 +210,13 @@ export const fetchNewData = internalAction({
                 return isStockedByCostco || isGenericFallback || existsInDb;
               })
               .map((product) => {
-                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(
-                  product.sku,
-                );
-                const metalType = product.material.toLowerCase() as
-                  | "gold"
-                  | "silver";
-                const weightOz = parseWeightToOz(
-                  product.weight,
-                  product.weightGrams,
-                );
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(product.sku);
+                const metalType = product.material.toLowerCase() as "gold" | "silver";
+                const weightOz = parseWeightToOz(product.weight, product.weightGrams);
                 const productType = extractProductType(product);
 
                 // Get bid price if available, otherwise null
-                const bidPrice =
-                  product.variants[0]?.highestOffer?.price ?? null;
+                const bidPrice = product.variants[0]?.highestOffer?.price ?? null;
                 const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
 
                 return {
@@ -257,12 +237,9 @@ export const fetchNewData = internalAction({
 
             // Batch upsert products (reduces transaction contention)
             if (productBatch.length > 0) {
-              const stored = await ctx.runMutation(
-                internal.pure.batchUpsertPureProducts,
-                {
-                  products: productBatch,
-                },
-              );
+              const stored = await ctx.runMutation(internal.pure.batchUpsertPureProducts, {
+                products: productBatch,
+              });
 
               totalProductsStored += stored;
               console.info(
@@ -349,9 +326,7 @@ export const batchUpsertPureProducts = internalMutation({
       // Check if product already exists
       const existing = await ctx.db
         .query("pureProducts")
-        .withIndex("by_pure_id", (q) =>
-          q.eq("pureProductId", product.pureProductId),
-        )
+        .withIndex("by_pure_id", (q) => q.eq("pureProductId", product.pureProductId))
         .first();
 
       if (existing) {

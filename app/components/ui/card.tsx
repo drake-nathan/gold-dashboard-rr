@@ -25,17 +25,10 @@ const CardHeader = ({ className, ...props }: React.ComponentProps<"div">) => (
 );
 
 const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => (
-  <div
-    className={cn("leading-none font-semibold", className)}
-    data-slot="card-title"
-    {...props}
-  />
+  <div className={cn("leading-none font-semibold", className)} data-slot="card-title" {...props} />
 );
 
-const CardDescription = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">) => (
+const CardDescription = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
     className={cn("text-sm text-muted-foreground", className)}
     data-slot="card-description"
@@ -45,10 +38,7 @@ const CardDescription = ({
 
 const CardAction = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
-    className={cn(
-      "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
-      className,
-    )}
+    className={cn("col-start-2 row-span-2 row-start-1 self-start justify-self-end", className)}
     data-slot="card-action"
     {...props}
   />
@@ -66,12 +56,4 @@ const CardFooter = ({ className, ...props }: React.ComponentProps<"div">) => (
   />
 );
 
-export {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-};
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

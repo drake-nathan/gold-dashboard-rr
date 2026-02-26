@@ -13,10 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/cn";
 
-const Command = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof CommandPrimitive>) => (
+const Command = ({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) => (
   <CommandPrimitive
     className={cn(
       "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
@@ -60,10 +57,7 @@ const CommandInput = ({
   className,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) => (
-  <div
-    className="flex h-9 items-center gap-2 border-b px-3"
-    data-slot="command-input-wrapper"
-  >
+  <div className="flex h-9 items-center gap-2 border-b px-3" data-slot="command-input-wrapper">
     <SearchIcon className="size-4 shrink-0 opacity-50" />
     <CommandPrimitive.Input
       className={cn(
@@ -81,18 +75,13 @@ const CommandList = ({
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) => (
   <CommandPrimitive.List
-    className={cn(
-      "max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto",
-      className,
-    )}
+    className={cn("max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto", className)}
     data-slot="command-list"
     {...props}
   />
 );
 
-const CommandEmpty = ({
-  ...props
-}: React.ComponentProps<typeof CommandPrimitive.Empty>) => (
+const CommandEmpty = ({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) => (
   <CommandPrimitive.Empty
     className="py-6 text-center text-sm"
     data-slot="command-empty"
@@ -139,15 +128,9 @@ const CommandItem = ({
   />
 );
 
-const CommandShortcut = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
+const CommandShortcut = ({ className, ...props }: React.ComponentProps<"span">) => (
   <span
-    className={cn(
-      "ml-auto text-xs tracking-widest text-muted-foreground",
-      className,
-    )}
+    className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
     data-slot="command-shortcut"
     {...props}
   />

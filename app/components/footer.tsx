@@ -11,10 +11,7 @@ export const Footer = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            <Link
-              className="transition-colors hover:text-foreground hover:underline"
-              to="/privacy"
-            >
+            <Link className="transition-colors hover:text-foreground hover:underline" to="/privacy">
               Privacy Policy
             </Link>
             <a
@@ -23,19 +20,14 @@ export const Footer = () => {
             >
               Contact
             </a>
-            <Link
-              className="transition-colors hover:text-foreground hover:underline"
-              to="/terms"
-            >
+            <Link className="transition-colors hover:text-foreground hover:underline" to="/terms">
               Terms of Service
             </Link>
           </div>
 
           <div className="text-center sm:text-right">
             <p>&copy; {new Date().getFullYear()} Dashboard.Gold</p>
-            <p className="mt-1 text-xs">
-              Not financial advice. Verify all prices independently.
-            </p>
+            <p className="mt-1 text-xs">Not financial advice. Verify all prices independently.</p>
           </div>
         </div>
       </div>

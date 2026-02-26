@@ -20,13 +20,9 @@ const deserializer = (value: string): PureFeeTierStorage => {
     const validated = pureFeeTierStorageSchema.parse(parsed);
 
     // Verify the tier still exists
-    const tierExists = PURE_FEE_TIERS.some(
-      (t) => t.id === validated.selectedTierId,
-    );
+    const tierExists = PURE_FEE_TIERS.some((t) => t.id === validated.selectedTierId);
     if (!tierExists) {
-      console.warn(
-        `Pure fee tier "${validated.selectedTierId}" no longer exists, using default`,
-      );
+      console.warn(`Pure fee tier "${validated.selectedTierId}" no longer exists, using default`);
       return defaultValue;
     }
 
@@ -59,18 +55,14 @@ const serializer = (value: PureFeeTierStorage): string => {
  * - Validation that selected tier exists in PURE_FEE_TIERS
  */
 export const usePureFeeTierStorage = () => {
-  const [storage, setStorage] = useLocalStorage<PureFeeTierStorage>(
-    STORAGE_KEY,
-    defaultValue,
-    {
-      deserializer,
-      // Read localStorage immediately on mount.
-      // Components using this hook should be wrapped with client-only
-      // rendering (e.g., useIsClient check) to prevent SSR mismatch.
-      initializeWithValue: true,
-      serializer,
-    },
-  );
+  const [storage, setStorage] = useLocalStorage<PureFeeTierStorage>(STORAGE_KEY, defaultValue, {
+    deserializer,
+    // Read localStorage immediately on mount.
+    // Components using this hook should be wrapped with client-only
+    // rendering (e.g., useIsClient check) to prevent SSR mismatch.
+    initializeWithValue: true,
+    serializer,
+  });
 
   return [storage, setStorage] as const;
 };

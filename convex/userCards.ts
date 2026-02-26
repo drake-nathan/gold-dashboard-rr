@@ -76,9 +76,7 @@ export const addCard = mutation({
     // Check if card already exists for this user
     const existing = await ctx.db
       .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) =>
-        q.eq("userId", userId).eq("cardId", args.cardId),
-      )
+      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
       .first();
 
     if (existing) {
@@ -122,9 +120,7 @@ export const updateCard = mutation({
 
     const card = await ctx.db
       .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) =>
-        q.eq("userId", userId).eq("cardId", args.cardId),
-      )
+      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
       .first();
 
     if (!card) {
@@ -163,9 +159,7 @@ export const deleteCard = mutation({
 
     const card = await ctx.db
       .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) =>
-        q.eq("userId", userId).eq("cardId", args.cardId),
-      )
+      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
       .first();
 
     if (!card) {
@@ -195,9 +189,7 @@ export const resetPresetCard = mutation({
 
     const card = await ctx.db
       .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) =>
-        q.eq("userId", userId).eq("cardId", args.cardId),
-      )
+      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
       .first();
 
     if (!card) {

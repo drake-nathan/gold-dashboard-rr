@@ -16,17 +16,13 @@ export const SubscriptionPageContent = () => {
     <div className="flex flex-col gap-4 p-4">
       <div>
         <h2 className="text-lg font-semibold">Subscription</h2>
-        <p className="text-sm text-neutral-500">
-          Manage your billing and subscription.
-        </p>
+        <p className="text-sm text-neutral-500">Manage your billing and subscription.</p>
       </div>
 
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium">
-              {isPro ? "Dashboard.Gold Pro" : "Free Plan"}
-            </p>
+            <p className="font-medium">{isPro ? "Dashboard.Gold Pro" : "Free Plan"}</p>
             <p className="text-sm text-neutral-500">
               {isPro ?
                 subscription.status === "trialing" ?

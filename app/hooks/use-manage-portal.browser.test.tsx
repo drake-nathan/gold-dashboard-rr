@@ -47,16 +47,11 @@ beforeEach(() => {
 
 // Test component that uses the hook
 const TestComponent = () => {
-  const { handleManagePortal, isActionLoading, isEnabled, isLoading, isPro } =
-    useManagePortal();
+  const { handleManagePortal, isActionLoading, isEnabled, isLoading, isPro } = useManagePortal();
 
   return (
     <div>
-      <button
-        data-testid="manage-button"
-        onClick={() => void handleManagePortal()}
-        type="button"
-      >
+      <button data-testid="manage-button" onClick={() => void handleManagePortal()} type="button">
         Manage
       </button>
       <div data-testid="isActionLoading">{String(isActionLoading)}</div>
@@ -73,9 +68,7 @@ const TestComponent = () => {
 
 test("shows error toast when openPortal returns error", async () => {
   const { toast } = await import("sonner");
-  mockSubscription.openPortal = vi
-    .fn()
-    .mockResolvedValue({ error: "Something went wrong" });
+  mockSubscription.openPortal = vi.fn().mockResolvedValue({ error: "Something went wrong" });
 
   const screen = await render(<TestComponent />);
   await screen.getByTestId("manage-button").click();
@@ -90,9 +83,7 @@ test("shows fallback error when no URL and no error returned", async () => {
   const screen = await render(<TestComponent />);
   await screen.getByTestId("manage-button").click();
 
-  expect(toast.error).toHaveBeenCalledWith(
-    "An unexpected error occurred. Please try again.",
-  );
+  expect(toast.error).toHaveBeenCalledWith("An unexpected error occurred. Please try again.");
 });
 
 // =============================================================================
@@ -118,25 +109,19 @@ test("does not show error toast on successful URL response", async () => {
 test("passes through isActionLoading from useSubscription", async () => {
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isActionLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isActionLoading")).toHaveTextContent("false");
 });
 
 test("passes through isEnabled from useSubscription", async () => {
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isEnabled"))
-    .toHaveTextContent("true");
+  await expect.element(screen.getByTestId("isEnabled")).toHaveTextContent("true");
 });
 
 test("passes through isLoading from useSubscription", async () => {
   const screen = await render(<TestComponent />);
 
-  await expect
-    .element(screen.getByTestId("isLoading"))
-    .toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
 });
 
 test("passes through isPro from useSubscription", async () => {

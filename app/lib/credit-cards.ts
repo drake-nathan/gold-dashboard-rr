@@ -3,14 +3,8 @@ import { z } from "zod";
 // Zod schema for signup bonus
 export const signupBonusSchema = z.object({
   enabled: z.boolean().default(false),
-  pointsBonus: z
-    .number()
-    .min(0, "Points bonus must be 0 or greater")
-    .default(0),
-  spendRequirement: z
-    .number()
-    .min(0, "Spend requirement must be 0 or greater")
-    .default(0),
+  pointsBonus: z.number().min(0, "Points bonus must be 0 or greater").default(0),
+  spendRequirement: z.number().min(0, "Spend requirement must be 0 or greater").default(0),
 });
 
 export type SignupBonus = z.infer<typeof signupBonusSchema>;
@@ -22,19 +16,10 @@ export const creditCardSchema = z.object({
   isCustomizable: z.boolean().default(false), // Whether preset values can be customized
   isPreset: z.boolean().default(false),
   issuer: z.string().optional(),
-  name: z
-    .string()
-    .min(1, "Card name is required")
-    .max(100, "Card name is too long"),
-  pointsPerDollar: z
-    .number()
-    .min(0)
-    .max(100, "Points per dollar must be between 0 and 100"),
+  name: z.string().min(1, "Card name is required").max(100, "Card name is too long"),
+  pointsPerDollar: z.number().min(0).max(100, "Points per dollar must be between 0 and 100"),
   signupBonus: signupBonusSchema.optional(),
-  valuePerPoint: z
-    .number()
-    .min(0)
-    .max(1, "Value per point must be between 0 and 1"),
+  valuePerPoint: z.number().min(0).max(1, "Value per point must be between 0 and 1"),
 });
 
 export type CreditCard = z.infer<typeof creditCardSchema>;
@@ -119,8 +104,7 @@ export const calculateSubBonusPercentage = (card: CreditCard): number => {
     return 0;
   }
 
-  const bonusPointsPerDollar =
-    card.signupBonus.pointsBonus / card.signupBonus.spendRequirement;
+  const bonusPointsPerDollar = card.signupBonus.pointsBonus / card.signupBonus.spendRequirement;
   return bonusPointsPerDollar * card.valuePerPoint * 100;
 };
 
@@ -159,15 +143,11 @@ export const loadCreditCards = (): CreditCardsStorage => {
     // Merge with presets to ensure they're always available
     const presetIds = new Set(DEFAULT_PRESET_CARDS.map((c) => c.id));
     const customCards = validated.cards.filter((c) => !presetIds.has(c.id));
-    const userModifiedPresets = validated.cards.filter((c) =>
-      presetIds.has(c.id),
-    );
+    const userModifiedPresets = validated.cards.filter((c) => presetIds.has(c.id));
 
     // Use user-modified preset values if they exist, otherwise use defaults
     const mergedPresets = DEFAULT_PRESET_CARDS.map((defaultCard) => {
-      const userModified = userModifiedPresets.find(
-        (c) => c.id === defaultCard.id,
-      );
+      const userModified = userModifiedPresets.find((c) => c.id === defaultCard.id);
       return userModified ?? defaultCard;
     });
 
@@ -243,10 +223,7 @@ export const updateCard = (
   });
 
 // Delete a custom card (presets cannot be deleted)
-export const deleteCard = (
-  cards: CreditCard[],
-  cardId: string,
-): CreditCard[] => {
+export const deleteCard = (cards: CreditCard[], cardId: string): CreditCard[] => {
   const card = cards.find((c) => c.id === cardId);
   if (!card || card.isPreset) {
     throw new Error("Cannot delete preset cards");
@@ -255,10 +232,7 @@ export const deleteCard = (
 };
 
 // Reset a preset card to default values
-export const resetPresetCard = (
-  cards: CreditCard[],
-  cardId: string,
-): CreditCard[] => {
+export const resetPresetCard = (cards: CreditCard[], cardId: string): CreditCard[] => {
   const defaultCard = DEFAULT_PRESET_CARDS.find((c) => c.id === cardId);
   if (!defaultCard) {
     throw new Error("Card is not a preset");
@@ -269,11 +243,7 @@ export const resetPresetCard = (
 
 // Sort cards alphabetically (presets first, then custom)
 export const sortCards = (cards: CreditCard[]): CreditCard[] => {
-  const presets = cards
-    .filter((c) => c.isPreset)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const custom = cards
-    .filter((c) => !c.isPreset)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const presets = cards.filter((c) => c.isPreset).sort((a, b) => a.name.localeCompare(b.name));
+  const custom = cards.filter((c) => !c.isPreset).sort((a, b) => a.name.localeCompare(b.name));
   return [...presets, ...custom];
 };

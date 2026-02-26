@@ -141,11 +141,7 @@ export default defineSchema({
     .index("by_sku", ["sku"])
     .index("by_metal_type", ["metalType"])
     .index("by_metal_and_weight", ["metalType", "weight"])
-    .index("by_metal_weight_fallback", [
-      "metalType",
-      "weight",
-      "isGenericFallback",
-    ]),
+    .index("by_metal_weight_fallback", ["metalType", "weight", "isGenericFallback"]),
 
   // Market prices from Gold API and FMP
   marketPrices: defineTable({
@@ -216,17 +212,11 @@ export default defineSchema({
   alerts: defineTable({
     userId: v.string(), // Clerk user ID
     name: v.string(), // User-friendly label
-    type: v.union(
-      v.literal("sku"),
-      v.literal("category"),
-      v.literal("threshold"),
-    ),
+    type: v.union(v.literal("sku"), v.literal("category"), v.literal("threshold")),
     enabled: v.boolean(),
 
     // Internal pause state for entitlement/billing-driven disablement
-    pauseReason: v.optional(
-      v.union(v.literal("billing_hold"), v.literal("inactive_subscription")),
-    ),
+    pauseReason: v.optional(v.union(v.literal("billing_hold"), v.literal("inactive_subscription"))),
     pausedAt: v.optional(v.number()),
 
     // SKU alert config
@@ -241,11 +231,7 @@ export default defineSchema({
     aboveSpotThreshold: v.optional(v.number()), // e.g., 0.5 for +0.5% above spot
     profitThreshold: v.optional(v.number()), // USD
 
-    triggerOn: v.union(
-      v.literal("in_stock"),
-      v.literal("price_drop"),
-      v.literal("threshold_met"),
-    ),
+    triggerOn: v.union(v.literal("in_stock"), v.literal("price_drop"), v.literal("threshold_met")),
 
     lastTriggered: v.optional(v.number()),
     cooldownMinutes: v.number(),

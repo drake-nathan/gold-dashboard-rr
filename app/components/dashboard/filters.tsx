@@ -81,9 +81,7 @@ export const Filters = ({
           <SheetContent className="max-h-[85vh]" side="bottom">
             <SheetHeader>
               <SheetTitle>Filters & Calculator</SheetTitle>
-              <SheetDescription>
-                Adjust filters and calculator settings
-              </SheetDescription>
+              <SheetDescription>Adjust filters and calculator settings</SheetDescription>
             </SheetHeader>
             <div className="mt-4 max-h-[calc(85vh-8rem)] space-y-6 overflow-y-auto px-4 pb-4">
               <div className="space-y-3">

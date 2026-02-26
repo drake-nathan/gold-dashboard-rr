@@ -51,9 +51,7 @@ export const StatCard = ({
     <Card className={`${widthClass} py-4`}>
       <CardContent className="relative space-y-1 p-0 px-3">
         {percentChange !== undefined && (
-          <div className="absolute -top-1 right-3">
-            {renderTrendBadge(percentChange)}
-          </div>
+          <div className="absolute -top-1 right-3">{renderTrendBadge(percentChange)}</div>
         )}
         <div className="text-xs text-muted-foreground">{label}</div>
         <div className={valueColor}>{value}</div>

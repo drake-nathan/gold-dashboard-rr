@@ -60,9 +60,7 @@ test("disables button when action is loading", async () => {
 
   const screen = await render(<ManageSubscriptionButton />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /manage subscription/i }))
-    .toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: /manage subscription/i })).toBeDisabled();
 });
 
 test("calls openPortal when clicked", async () => {
@@ -77,7 +75,5 @@ test("calls openPortal when clicked", async () => {
 test("renders custom text when provided", async () => {
   const screen = await render(<ManageSubscriptionButton text="Billing" />);
 
-  await expect
-    .element(screen.getByRole("button", { name: /billing/i }))
-    .toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: /billing/i })).toBeInTheDocument();
 });

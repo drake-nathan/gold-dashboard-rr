@@ -7,10 +7,7 @@ import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 
 const http = httpRouter();
-type StripeWebhookCtx = Pick<
-  GenericActionCtx<GenericDataModel>,
-  "runMutation" | "runQuery"
->;
+type StripeWebhookCtx = Pick<GenericActionCtx<GenericDataModel>, "runMutation" | "runQuery">;
 
 const resolveUserIdFromSubscription = async (
   ctx: Pick<StripeWebhookCtx, "runQuery">,
@@ -21,10 +18,9 @@ const resolveUserIdFromSubscription = async (
     return fallbackUserId;
   }
 
-  const subscription = (await ctx.runQuery(
-    components.stripe.public.getSubscription,
-    { stripeSubscriptionId },
-  )) as null | { userId?: string };
+  const subscription = (await ctx.runQuery(components.stripe.public.getSubscription, {
+    stripeSubscriptionId,
+  })) as null | { userId?: string };
 
   return subscription?.userId;
 };
@@ -37,11 +33,7 @@ const applySubscriptionStatusToAlerts = async (
     userId?: string;
   },
 ): Promise<void> => {
-  const userId = await resolveUserIdFromSubscription(
-    ctx,
-    args.stripeSubscriptionId,
-    args.userId,
-  );
+  const userId = await resolveUserIdFromSubscription(ctx, args.stripeSubscriptionId, args.userId);
   if (!userId) {
     return;
   }
@@ -59,10 +51,7 @@ const UNSUBSCRIBE_TOKEN_SEPARATOR = ".";
 /**
  * Create an HMAC-SHA256 signature for the given data using the unsubscribe secret.
  */
-const signUnsubscribeToken = async (
-  userId: string,
-  secret: string,
-): Promise<string> => {
+const signUnsubscribeToken = async (userId: string, secret: string): Promise<string> => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -71,11 +60,7 @@ const signUnsubscribeToken = async (
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(userId),
-  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(userId));
   const signatureHex = [...new Uint8Array(signature)]
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -85,10 +70,7 @@ const signUnsubscribeToken = async (
 /**
  * Verify an unsubscribe token and return the userId if valid.
  */
-const verifyUnsubscribeToken = async (
-  token: string,
-  secret: string,
-): Promise<null | string> => {
+const verifyUnsubscribeToken = async (token: string, secret: string): Promise<null | string> => {
   const separatorIndex = token.indexOf(UNSUBSCRIBE_TOKEN_SEPARATOR);
   if (separatorIndex === -1) {
     return null;
@@ -142,10 +124,7 @@ const unsubscribeHandler = httpAction(async (ctx, request) => {
 
   // Handle both POST (RFC 8058 one-click) and GET (user clicking link)
   if (request.method === "POST" || request.method === "GET") {
-    const result = await ctx.runMutation(
-      internal.alerts.disableAllAlertsForUser,
-      { userId },
-    );
+    const result = await ctx.runMutation(internal.alerts.disableAllAlertsForUser, { userId });
 
     if (request.method === "GET") {
       const siteUrl = process.env.SITE_URL ?? "";
@@ -193,9 +172,7 @@ registerRoutes(http, components.stripe, {
     "customer.subscription.deleted": async (ctx, event) => {
       const subscription = event.data.object;
       const metadataUserId =
-        typeof subscription.metadata.userId === "string" ?
-          subscription.metadata.userId
-        : undefined;
+        typeof subscription.metadata.userId === "string" ? subscription.metadata.userId : undefined;
 
       await applySubscriptionStatusToAlerts(ctx, {
         status: "canceled",
@@ -206,9 +183,7 @@ registerRoutes(http, components.stripe, {
     "customer.subscription.updated": async (ctx, event) => {
       const subscription = event.data.object;
       const metadataUserId =
-        typeof subscription.metadata.userId === "string" ?
-          subscription.metadata.userId
-        : undefined;
+        typeof subscription.metadata.userId === "string" ? subscription.metadata.userId : undefined;
 
       await applySubscriptionStatusToAlerts(ctx, {
         status: subscription.status,

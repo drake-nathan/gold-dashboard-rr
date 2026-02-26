@@ -41,9 +41,7 @@ const testPresetCard = {
 test("getUserCards requires authentication", async () => {
   const t = convexTest(schema, modules);
 
-  await expect(t.query(api.userCards.getUserCards, {})).rejects.toThrow(
-    "Authentication required",
-  );
+  await expect(t.query(api.userCards.getUserCards, {})).rejects.toThrow("Authentication required");
 });
 
 test("getUserCards returns empty array for new user", async () => {
@@ -137,9 +135,9 @@ test("addCard rejects duplicate card IDs", async () => {
   await asUser.mutation(api.userCards.addCard, testCard);
 
   // Try to add the same card again
-  await expect(
-    asUser.mutation(api.userCards.addCard, testCard),
-  ).rejects.toThrow("Card with ID test-card-1 already exists");
+  await expect(asUser.mutation(api.userCards.addCard, testCard)).rejects.toThrow(
+    "Card with ID test-card-1 already exists",
+  );
 });
 
 test("addCard supports signup bonus", async () => {
@@ -248,9 +246,9 @@ test("updateCard can update signupBonus", async () => {
 test("deleteCard requires authentication", async () => {
   const t = convexTest(schema, modules);
 
-  await expect(
-    t.mutation(api.userCards.deleteCard, { cardId: "test-card-1" }),
-  ).rejects.toThrow("Authentication required");
+  await expect(t.mutation(api.userCards.deleteCard, { cardId: "test-card-1" })).rejects.toThrow(
+    "Authentication required",
+  );
 });
 
 test("deleteCard rejects non-existent card", async () => {
@@ -385,9 +383,9 @@ test("resetAllCards deletes all user cards", async () => {
 test("migrateFromLocalStorage requires authentication", async () => {
   const t = convexTest(schema, modules);
 
-  await expect(
-    t.mutation(api.userCards.migrateFromLocalStorage, { cards: [] }),
-  ).rejects.toThrow("Authentication required");
+  await expect(t.mutation(api.userCards.migrateFromLocalStorage, { cards: [] })).rejects.toThrow(
+    "Authentication required",
+  );
 });
 
 test("migrateFromLocalStorage imports new cards", async () => {

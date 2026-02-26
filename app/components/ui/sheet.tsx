@@ -5,27 +5,19 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-const Sheet = ({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Root>) => (
+const Sheet = ({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) => (
   <SheetPrimitive.Root data-slot="sheet" {...props} />
 );
 
-const SheetTrigger = ({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Trigger>) => (
+const SheetTrigger = ({ ...props }: React.ComponentProps<typeof SheetPrimitive.Trigger>) => (
   <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />
 );
 
-const SheetClose = ({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Close>) => (
+const SheetClose = ({ ...props }: React.ComponentProps<typeof SheetPrimitive.Close>) => (
   <SheetPrimitive.Close data-slot="sheet-close" {...props} />
 );
 
-const SheetPortal = ({
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Portal>) => (
+const SheetPortal = ({ ...props }: React.ComponentProps<typeof SheetPrimitive.Portal>) => (
   <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 );
 
@@ -90,10 +82,7 @@ const SheetFooter = ({ className, ...props }: React.ComponentProps<"div">) => (
   />
 );
 
-const SheetTitle = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Title>) => (
+const SheetTitle = ({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Title>) => (
   <div className="flex items-center justify-between gap-4">
     <SheetPrimitive.Title
       className={cn("font-semibold text-foreground", className)}

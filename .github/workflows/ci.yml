@@ -56,7 +56,7 @@ jobs:
         run: bunx playwright install-deps chromium
 
       - name: Run CI checks with Turbo
-        run: bunx turbo run format:check lint typecheck test test:convex test:browser
+        run: bunx turbo run format:check lint typecheck typecheck:convex test test:convex test:browser
 
   deploy-convex:
     name: Deploy Convex

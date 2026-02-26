@@ -2,11 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "format:check": {
-      "inputs": [
-        "**/*.{ts,tsx,js,jsx,json,md,css,html}",
-        "prettier.config.js",
-        ".prettierignore"
-      ],
+      "inputs": ["**/*.{ts,tsx,js,jsx,json,md,css,html}", "prettier.config.js", ".prettierignore"],
       "outputs": []
     },
     "lint": {

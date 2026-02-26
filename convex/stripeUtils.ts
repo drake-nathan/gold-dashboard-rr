@@ -72,16 +72,12 @@ export const determineSubscriptionStatus = (
   // Select by latest currentPeriodEnd when multiple eligible subscriptions exist.
   let activeSubscription: StripeSubscription | undefined;
   for (const subscription of subscriptions) {
-    if (
-      subscription.status !== "active" &&
-      subscription.status !== "trialing"
-    ) {
+    if (subscription.status !== "active" && subscription.status !== "trialing") {
       continue;
     }
     if (
       !activeSubscription ||
-      (subscription.currentPeriodEnd ?? 0) >
-        (activeSubscription.currentPeriodEnd ?? 0)
+      (subscription.currentPeriodEnd ?? 0) > (activeSubscription.currentPeriodEnd ?? 0)
     ) {
       activeSubscription = subscription;
     }
@@ -97,9 +93,7 @@ export const determineSubscriptionStatus = (
   }
 
   // Check for past_due subscription (not Pro, but show status)
-  const pastDueSubscription = subscriptions.find(
-    (sub) => sub.status === "past_due",
-  );
+  const pastDueSubscription = subscriptions.find((sub) => sub.status === "past_due");
 
   if (pastDueSubscription) {
     return {
@@ -111,9 +105,7 @@ export const determineSubscriptionStatus = (
   }
 
   // Check for unpaid subscription (not Pro, but show status)
-  const unpaidSubscription = subscriptions.find(
-    (sub) => sub.status === "unpaid",
-  );
+  const unpaidSubscription = subscriptions.find((sub) => sub.status === "unpaid");
 
   if (unpaidSubscription) {
     return {
@@ -125,9 +117,7 @@ export const determineSubscriptionStatus = (
   }
 
   // Check for canceled subscription
-  const canceledSubscription = subscriptions.find(
-    (sub) => sub.status === "canceled",
-  );
+  const canceledSubscription = subscriptions.find((sub) => sub.status === "canceled");
 
   if (canceledSubscription) {
     return {
@@ -154,9 +144,7 @@ export const determineSubscriptionStatus = (
  * - canceled/free: can manage existing alerts, cannot create/enable/send
  * - anonymous: no alert access
  */
-export const determineAlertEntitlements = (
-  status: AlertEntitlementsStatus,
-): AlertEntitlements => {
+export const determineAlertEntitlements = (status: AlertEntitlementsStatus): AlertEntitlements => {
   if (status === "active" || status === "trialing") {
     return {
       canCreateAlerts: true,
@@ -201,9 +189,7 @@ export const determineAlertEntitlements = (
 /**
  * Best-effort conversion from raw Stripe/component status string to our entitlement status union.
  */
-export const toAlertEntitlementsStatus = (
-  status: string,
-): AlertEntitlementsStatus | undefined => {
+export const toAlertEntitlementsStatus = (status: string): AlertEntitlementsStatus | undefined => {
   const normalizedStatus = status as AlertEntitlementsStatus;
   if (alertEntitlementsStatuses.includes(normalizedStatus)) {
     return normalizedStatus;

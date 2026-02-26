@@ -70,9 +70,7 @@ const insertCostcoProduct = async (
 test("getAlerts requires authentication", async () => {
   const t = convexTest(schema, modules);
 
-  await expect(t.query(api.alerts.getAlerts, {})).rejects.toThrow(
-    "Authentication required",
-  );
+  await expect(t.query(api.alerts.getAlerts, {})).rejects.toThrow("Authentication required");
 });
 
 test("createAlert blocks free users without active subscription", async () => {
@@ -173,10 +171,9 @@ test("getUserSendAlertPermissions reflects subscription status transitions", asy
     stripeSubscriptionId: "sub_send_guard",
   });
 
-  const activePermissions = await t.query(
-    internal.alerts.getUserSendAlertPermissions,
-    { userId: "user_send_guard" },
-  );
+  const activePermissions = await t.query(internal.alerts.getUserSendAlertPermissions, {
+    userId: "user_send_guard",
+  });
 
   expect(activePermissions.status).toBe("active");
   expect(activePermissions.isPro).toBe(true);
@@ -192,10 +189,9 @@ test("getUserSendAlertPermissions reflects subscription status transitions", asy
     stripeSubscriptionId: "sub_send_guard",
   });
 
-  const pastDuePermissions = await t.query(
-    internal.alerts.getUserSendAlertPermissions,
-    { userId: "user_send_guard" },
-  );
+  const pastDuePermissions = await t.query(internal.alerts.getUserSendAlertPermissions, {
+    userId: "user_send_guard",
+  });
 
   expect(pastDuePermissions.status).toBe("past_due");
   expect(pastDuePermissions.isPro).toBe(false);
@@ -261,9 +257,7 @@ test("pauseAlertsForUser pauses only enabled alerts for the target user", async 
 
     expect(user1Alerts).toHaveLength(2);
 
-    const pausedAlert = user1Alerts.find(
-      (alert) => alert.name === "User 1 enabled alert",
-    );
+    const pausedAlert = user1Alerts.find((alert) => alert.name === "User 1 enabled alert");
 
     expect(pausedAlert?.enabled).toBe(false);
     expect(pausedAlert?.pauseReason).toBe("billing_hold");
@@ -331,23 +325,17 @@ test("subscription transition active -> past_due -> active pauses once", async (
     });
   });
 
-  const activeResult = await t.mutation(
-    internal.alerts.applySubscriptionStatusToAlerts,
-    {
-      status: "active",
-      userId: "user_1",
-    },
-  );
+  const activeResult = await t.mutation(internal.alerts.applySubscriptionStatusToAlerts, {
+    status: "active",
+    userId: "user_1",
+  });
 
   expect(activeResult).toMatchObject({ pausedCount: 0, success: true });
 
-  const pastDueResult = await t.mutation(
-    internal.alerts.applySubscriptionStatusToAlerts,
-    {
-      status: "past_due",
-      userId: "user_1",
-    },
-  );
+  const pastDueResult = await t.mutation(internal.alerts.applySubscriptionStatusToAlerts, {
+    status: "past_due",
+    userId: "user_1",
+  });
 
   expect(pastDueResult).toMatchObject({
     pausedCount: 1,
@@ -355,13 +343,10 @@ test("subscription transition active -> past_due -> active pauses once", async (
     success: true,
   });
 
-  const activeAgainResult = await t.mutation(
-    internal.alerts.applySubscriptionStatusToAlerts,
-    {
-      status: "active",
-      userId: "user_1",
-    },
-  );
+  const activeAgainResult = await t.mutation(internal.alerts.applySubscriptionStatusToAlerts, {
+    status: "active",
+    userId: "user_1",
+  });
 
   expect(activeAgainResult).toMatchObject({ pausedCount: 0, success: true });
 
@@ -395,13 +380,10 @@ test("subscription transition active(cancel-end) -> canceled uses inactive pause
     });
   });
 
-  const canceledResult = await t.mutation(
-    internal.alerts.applySubscriptionStatusToAlerts,
-    {
-      status: "canceled",
-      userId: "user_1",
-    },
-  );
+  const canceledResult = await t.mutation(internal.alerts.applySubscriptionStatusToAlerts, {
+    status: "canceled",
+    userId: "user_1",
+  });
 
   expect(canceledResult).toMatchObject({
     pausedCount: 1,
@@ -440,13 +422,13 @@ test("deleteAlert only allows deleting own alerts", async () => {
     }),
   );
 
-  await expect(
-    asUser2.mutation(api.alerts.deleteAlert, { alertId }),
-  ).rejects.toThrow("Alert not found");
+  await expect(asUser2.mutation(api.alerts.deleteAlert, { alertId })).rejects.toThrow(
+    "Alert not found",
+  );
 
-  await expect(
-    asUser1.mutation(api.alerts.deleteAlert, { alertId }),
-  ).resolves.toMatchObject({ success: true });
+  await expect(asUser1.mutation(api.alerts.deleteAlert, { alertId })).resolves.toMatchObject({
+    success: true,
+  });
 });
 
 test("evaluateAlertsForProducts queues history and batch for active SKU alerts", async () => {
@@ -490,14 +472,11 @@ test("evaluateAlertsForProducts queues history and batch for active SKU alerts",
   expect(firstRun.triggeredAlerts).toBe(1);
   expect(firstRun.queueInserts).toBe(1);
 
-  const cooldownRun = await t.mutation(
-    internal.alerts.evaluateAlertsForProducts,
-    {
-      evaluatedAt: evaluatedAt + 60_000,
-      productIds: ["sku_eval_1"],
-      source: "test_eval",
-    },
-  );
+  const cooldownRun = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt: evaluatedAt + 60_000,
+    productIds: ["sku_eval_1"],
+    source: "test_eval",
+  });
 
   expect(cooldownRun.triggeredAlerts).toBe(0);
 
@@ -579,14 +558,11 @@ test("evaluateAlertsForProducts triggers threshold alerts when spread threshold 
     type: "threshold",
   });
 
-  const evaluation = await t.mutation(
-    internal.alerts.evaluateAlertsForProducts,
-    {
-      evaluatedAt,
-      productIds: ["sku_threshold_1"],
-      source: "threshold_test",
-    },
-  );
+  const evaluation = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt,
+    productIds: ["sku_threshold_1"],
+    source: "threshold_test",
+  });
 
   expect(evaluation.triggeredAlerts).toBe(1);
 
@@ -653,14 +629,11 @@ test("evaluateAlertsForProducts uses spot price denominator for above-spot thres
     type: "threshold",
   });
 
-  const evaluation = await t.mutation(
-    internal.alerts.evaluateAlertsForProducts,
-    {
-      evaluatedAt,
-      productIds: ["sku_threshold_denominator_1"],
-      source: "threshold_denominator_test",
-    },
-  );
+  const evaluation = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt,
+    productIds: ["sku_threshold_denominator_1"],
+    source: "threshold_denominator_test",
+  });
 
   // True above-spot = 20% ((120 - 100) / 100), so threshold 18 should not trigger.
   expect(evaluation.triggeredAlerts).toBe(0);
@@ -668,9 +641,7 @@ test("evaluateAlertsForProducts uses spot price denominator for above-spot thres
   await t.run(async (ctx) => {
     const history = await ctx.db
       .query("alertHistory")
-      .withIndex("by_user", (q) =>
-        q.eq("userId", "user_threshold_denominator_1"),
-      )
+      .withIndex("by_user", (q) => q.eq("userId", "user_threshold_denominator_1"))
       .collect();
 
     expect(history).toHaveLength(0);
@@ -700,14 +671,11 @@ test("evaluateAlertsForProducts skips users without send entitlements", async ()
     });
   });
 
-  const evaluation = await t.mutation(
-    internal.alerts.evaluateAlertsForProducts,
-    {
-      evaluatedAt,
-      productIds: ["sku_free_eval_1"],
-      source: "free_test",
-    },
-  );
+  const evaluation = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt,
+    productIds: ["sku_free_eval_1"],
+    source: "free_test",
+  });
 
   expect(evaluation.triggeredAlerts).toBe(0);
   expect(evaluation.skippedByEntitlement).toBe(1);
@@ -790,12 +758,9 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
       source: "digest_test",
     });
 
-    const processResult = await t.action(
-      internal.alerts.processPendingAlertBatches,
-      {
-        now: evaluatedAt + 20 * 60 * 1000,
-      },
-    );
+    const processResult = await t.action(internal.alerts.processPendingAlertBatches, {
+      now: evaluatedAt + 20 * 60 * 1000,
+    });
 
     expect(processResult.sentBatches).toBe(1);
     expect(processResult.failedSends).toBe(0);
@@ -803,10 +768,7 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
 
     const fetchCall = fetchMock.mock.calls[0];
     const requestInit = fetchCall[1] as RequestInit;
-    const requestBody =
-      typeof requestInit.body === "string" ?
-        JSON.parse(requestInit.body)
-      : null;
+    const requestBody = typeof requestInit.body === "string" ? JSON.parse(requestInit.body) : null;
 
     expect(requestBody).not.toBeNull();
 
@@ -818,9 +780,7 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
     expect(requestBody.headers["List-Unsubscribe"]).toContain(
       "mailto:support@dashboard.gold?subject=unsubscribe",
     );
-    expect(requestBody.headers["List-Unsubscribe"]).toContain(
-      "https://dashboard.gold/alerts",
-    );
+    expect(requestBody.headers["List-Unsubscribe"]).toContain("https://dashboard.gold/alerts");
 
     await t.run(async (ctx) => {
       const batches = await ctx.db

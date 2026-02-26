@@ -46,9 +46,7 @@ const run = async () => {
   const success = await runTurbo();
 
   if (success) {
-    console.log(
-      `${boldText}${greenText}✓ All checks passed successfully!${resetColor}`,
-    );
+    console.log(`${boldText}${greenText}✓ All checks passed successfully!${resetColor}`);
   } else {
     console.log(
       `${boldText}${redText}✗ Some checks failed. Please fix the issues above.${resetColor}`,

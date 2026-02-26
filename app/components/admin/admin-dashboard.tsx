@@ -146,15 +146,9 @@ export const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent className="mt-6 space-y-4" value="needs_review">
-            {(
-              productsData.needs_review.length === 0 &&
-              productsData.pending_approval.length === 0
-            ) ?
+            {productsData.needs_review.length === 0 && productsData.pending_approval.length === 0 ?
               <EmptyState message="No products need action" />
-            : [
-                ...productsData.pending_approval,
-                ...productsData.needs_review,
-              ].map((product) => (
+            : [...productsData.pending_approval, ...productsData.needs_review].map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
             }
@@ -349,9 +343,7 @@ const UrlParserCard = () => {
             )}
             {pureProduct === null && !addedProduct && (
               <div className="mt-2 space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Product not found in database
-                </p>
+                <p className="text-sm text-muted-foreground">Product not found in database</p>
                 <Button
                   disabled={isAdding}
                   onClick={() => {
@@ -388,9 +380,7 @@ const UrlParserCard = () => {
                     <Button
                       className="ml-2"
                       onClick={() => {
-                        void navigator.clipboard.writeText(
-                          product.pureProductId,
-                        );
+                        void navigator.clipboard.writeText(product.pureProductId);
                       }}
                       size="sm"
                       variant="ghost"

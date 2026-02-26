@@ -13,11 +13,7 @@ const SKELETON_SIZES: Record<string, string> = {
   "size-[32px]": "size-[36px]",
 };
 
-export const UserButtonWithPro = ({
-  avatarSize = "size-[32px]",
-}: {
-  avatarSize?: string;
-}) => {
+export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?: string }) => {
   const { handleManagePortal, isLoading, isPro } = useManagePortal();
   const showProRing = !isLoading && isPro;
 
@@ -25,19 +21,14 @@ export const UserButtonWithPro = ({
   // the avatar size. This prevents the upgrade button flash and avoids
   // showing an un-ringed avatar that pops into a pro ring.
   if (isLoading) {
-    return (
-      <Skeleton
-        className={cn("rounded-full", SKELETON_SIZES[avatarSize] ?? avatarSize)}
-      />
-    );
+    return <Skeleton className={cn("rounded-full", SKELETON_SIZES[avatarSize] ?? avatarSize)} />;
   }
 
   return (
     <div
       className={cn(
         "flex items-center justify-center rounded-full p-[2px] transition-all duration-300",
-        showProRing &&
-          "bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600",
+        showProRing && "bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600",
       )}
     >
       <UserButton

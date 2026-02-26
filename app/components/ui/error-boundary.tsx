@@ -3,13 +3,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "./button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -47,10 +41,7 @@ interface ErrorBoundaryState {
  * </ErrorBoundary>
  * ```
  */
-export class ErrorBoundary extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { error: null, hasError: false };
@@ -87,13 +78,10 @@ export class ErrorBoundary extends Component<
           <CardHeader>
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
-              <CardTitle className="text-destructive">
-                Something went wrong
-              </CardTitle>
+              <CardTitle className="text-destructive">Something went wrong</CardTitle>
             </div>
             <CardDescription>
-              An error occurred while rendering this section. You can try
-              refreshing to recover.
+              An error occurred while rendering this section. You can try refreshing to recover.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -133,9 +121,7 @@ export const ErrorFallback = ({
       <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-destructive" />
       <p className="mb-1 font-medium text-destructive">Error</p>
       <p className="mb-4 text-sm text-muted-foreground">
-        {typeof error === "string" ?
-          error
-        : error?.message || "An unexpected error occurred"}
+        {typeof error === "string" ? error : error?.message || "An unexpected error occurred"}
       </p>
       {onReset ?
         <Button onClick={onReset} size="sm" variant="outline">

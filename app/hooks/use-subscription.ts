@@ -24,14 +24,7 @@ export interface SubscriptionStatus {
   cancelAtPeriodEnd?: boolean;
   currentPeriodEnd?: number;
   isPro: boolean;
-  status:
-    | "active"
-    | "anonymous"
-    | "canceled"
-    | "free"
-    | "past_due"
-    | "trialing"
-    | "unpaid";
+  status: "active" | "anonymous" | "canceled" | "free" | "past_due" | "trialing" | "unpaid";
   userId?: string;
 }
 
@@ -191,8 +184,7 @@ export const useSubscription = (): UseSubscriptionReturn => {
   // Only show true loading state on first load (no cached data available).
   const effectiveQuery = subscriptionQuery ?? lastKnownResult.current;
 
-  const isLoading =
-    !isAuthLoaded || (isSignedIn && effectiveQuery === undefined);
+  const isLoading = !isAuthLoaded || (isSignedIn && effectiveQuery === undefined);
 
   const fallbackAlertEntitlements =
     isSignedIn ? inactiveAlertEntitlements : anonymousAlertEntitlements;

@@ -28,8 +28,7 @@ export const UpgradeButton = ({
   text = "Upgrade to Pro",
 }: UpgradeButtonProps) => {
   const { isSignedIn } = useAuth();
-  const { createCheckout, isActionLoading, isEnabled, isLoading, isPro } =
-    useSubscription();
+  const { createCheckout, isActionLoading, isEnabled, isLoading, isPro } = useSubscription();
 
   const handleUpgrade = useCallback(async () => {
     if (!isSignedIn) {

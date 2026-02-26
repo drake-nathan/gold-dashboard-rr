@@ -47,8 +47,7 @@ export const CalculatorSettingsDrawer = ({
         <SheetHeader>
           <SheetTitle>Calculator Settings</SheetTitle>
           <SheetDescription>
-            Configure your cashback and fee settings to see accurate profit
-            calculations.
+            Configure your cashback and fee settings to see accurate profit calculations.
           </SheetDescription>
         </SheetHeader>
 
@@ -59,9 +58,7 @@ export const CalculatorSettingsDrawer = ({
               <div>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 space-y-0.5">
-                    <Label htmlFor="costco-exec-drawer">
-                      Costco Executive Membership
-                    </Label>
+                    <Label htmlFor="costco-exec-drawer">Costco Executive Membership</Label>
                     <p className="text-xs text-muted-foreground">
                       2% annual reward on eligible purchases
                     </p>
@@ -110,22 +107,16 @@ export const CalculatorSettingsDrawer = ({
                   value={calculatorSettings.pureFeeTier.id}
                 >
                   <SelectTrigger id="pure-fee-tier-drawer">
-                    <SelectValue>
-                      {formatTierDisplay(calculatorSettings.pureFeeTier)}
-                    </SelectValue>
+                    <SelectValue>{formatTierDisplay(calculatorSettings.pureFeeTier)}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {PURE_FEE_TIERS.map((tier) => (
                       <SelectItem key={tier.id} value={tier.id}>
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium">
-                            {formatTierDisplay(tier)}
-                          </span>
+                          <span className="font-medium">{formatTierDisplay(tier)}</span>
                           {tier.requiredQuarterlySales !== null && (
                             <span className="text-xs text-muted-foreground">
-                              Requires $
-                              {tier.requiredQuarterlySales.toLocaleString()}+
-                              quarterly
+                              Requires ${tier.requiredQuarterlySales.toLocaleString()}+ quarterly
                             </span>
                           )}
                         </div>
@@ -143,16 +134,12 @@ export const CalculatorSettingsDrawer = ({
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="space-y-1 text-xs text-muted-foreground">
                     <p>
-                      <strong className="text-foreground">
-                        Profit calculations
-                      </strong>{" "}
-                      include your total cashback minus Pure&apos;s selling fees
-                      for your selected tier.
+                      <strong className="text-foreground">Profit calculations</strong> include your
+                      total cashback minus Pure&apos;s selling fees for your selected tier.
                     </p>
                     <p>
-                      These calculations assume you&apos;re selling at
-                      Pure&apos;s current bid prices and don&apos;t include
-                      shipping costs.
+                      These calculations assume you&apos;re selling at Pure&apos;s current bid
+                      prices and don&apos;t include shipping costs.
                     </p>
                   </div>
                 </div>
@@ -173,14 +160,10 @@ export const CalculatorSettingsDrawer = ({
                   </span>
                   <div className="text-xs text-muted-foreground">
                     <span>
-                      {calculatorSettings.costcoMembershipEnabled ? "2%" : "0%"}{" "}
-                      Executive +{" "}
+                      {calculatorSettings.costcoMembershipEnabled ? "2%" : "0%"} Executive +{" "}
                     </span>
                     <span>
-                      {calculateCashbackPercentage(
-                        calculatorSettings.creditCard,
-                      ).toFixed(2)}
-                      % Card
+                      {calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% Card
                     </span>
                   </div>
                 </div>

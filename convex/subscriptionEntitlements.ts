@@ -23,10 +23,9 @@ export const getUserAlertEntitlements = async (
   ctx: SubscriptionLookupCtx,
   userId: string,
 ): Promise<UserAlertEntitlementsResult> => {
-  const subscriptions = await ctx.runQuery(
-    components.stripe.public.listSubscriptionsByUserId,
-    { userId },
-  );
+  const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
+    userId,
+  });
 
   const subscriptionStatus = determineSubscriptionStatus(subscriptions);
 

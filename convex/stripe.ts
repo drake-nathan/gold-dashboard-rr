@@ -20,9 +20,7 @@ const stripeClient = new StripeSubscriptions(components.stripe, {
 const getSiteUrl = (): string => {
   const siteUrl = process.env.SITE_URL;
   if (!siteUrl) {
-    throw new Error(
-      "SITE_URL environment variable is required for Stripe integration",
-    );
+    throw new Error("SITE_URL environment variable is required for Stripe integration");
   }
   return siteUrl;
 };
@@ -45,9 +43,7 @@ export const createCheckoutSession = action({
     try {
       const configuredPriceId = process.env.STRIPE_PRICE_ID;
       if (!configuredPriceId) {
-        throw new Error(
-          "STRIPE_PRICE_ID environment variable is required for Stripe integration",
-        );
+        throw new Error("STRIPE_PRICE_ID environment variable is required for Stripe integration");
       }
 
       if (args.priceId !== configuredPriceId) {
@@ -80,8 +76,7 @@ export const createCheckoutSession = action({
     } catch (error) {
       console.error("Error creating checkout session:", error);
       return {
-        error:
-          error instanceof Error ? error.message : "Failed to create checkout",
+        error: error instanceof Error ? error.message : "Failed to create checkout",
       };
     }
   },
@@ -141,8 +136,10 @@ export const getSubscriptionStatus = query({
       };
     }
 
-    const { alertEntitlements, subscriptionStatus } =
-      await getUserAlertEntitlements(ctx, identity.subject);
+    const { alertEntitlements, subscriptionStatus } = await getUserAlertEntitlements(
+      ctx,
+      identity.subject,
+    );
 
     return {
       alertEntitlements,
