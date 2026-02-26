@@ -1,8 +1,10 @@
-# Alerts Feature Roadmap
+# Alerts & Subscriptions
 
-> **Created:** December 27, 2024
-> **Status:** Planning
-> **Goal:** Add subscription-based alert system for price/stock notifications
+> **Status:** In Progress — Phase 4 (alert system core complete, production rollout pending)
+> **Started:** 2024-12-27
+> **Last updated:** 2026-02-08
+
+**Goal:** Subscription-based alert system for price/stock notifications
 
 ## Overview
 
@@ -372,7 +374,7 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 
 ## Phase 3: Stripe Integration
 
-**Status:** Ready to Start
+**Status:** Core complete (prod rollout checklist pending)
 **Estimated Sessions:** 2-3
 **Depends On:** Phase 2 ✅
 
@@ -383,6 +385,15 @@ Seamlessly migrate user's credit card settings from localStorage to their Convex
 - Future: Add SMS tier when LLC is formed
 
 ### Tasks
+
+### Phase 3 Progress Update (2026-02-08)
+
+- [x] Stripe checkout + portal integration shipped (`convex/stripe.ts` + frontend UI)
+- [x] Stripe webhooks wired (`convex/http.ts`)
+- [x] Subscription status + entitlement logic implemented (`convex/stripeUtils.ts`, `convex/subscriptionEntitlements.ts`)
+- [x] Convex-level enforcement added for alert permissions
+- [x] Pause-on-billing-state transitions implemented for enabled alerts
+- [ ] Final production smoke checklist + monitoring handoff (see Deployment Steps below)
 
 #### 3.1 Stripe Setup
 
@@ -516,7 +527,7 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 
 ## Phase 4: Alert System
 
-**Status:** Not Started
+**Status:** In Progress (core implemented, rollout/polish pending)
 **Estimated Sessions:** 3-4
 **Depends On:** Phase 3
 
@@ -539,9 +550,24 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 
 ### Tasks
 
+### Phase 4 Progress Update (2026-02-08)
+
+- [x] Schema shipped: `alerts`, `alertHistory`, `alertBatches`
+- [x] Alert CRUD + entitlement gating shipped (`convex/alerts.ts`)
+- [x] Evaluation engine shipped and integrated with Costco update flows
+- [x] Batch queueing shipped (15-minute scheduling windows)
+- [x] Digest delivery action shipped (`processPendingAlertBatches`) with Resend integration
+- [x] Digest headers improved (`reply_to` + `List-Unsubscribe`)
+- [x] Alerts UI route shipped (`/alerts`) with create/list/enable-disable/delete
+- [x] Product-card quick-create alert entrypoint shipped
+- [x] Subscription prompts and send-state badges shipped in alerts UI
+- [ ] Full edit-alert UX (beyond enable/disable toggle) still pending
+- [ ] One-click unsubscribe endpoint/flow still pending (manage-link exists)
+- [ ] Production rollout + full manual matrix still pending
+
 #### 4.1 Schema Design
 
-- [ ] Add to `convex/schema.ts`:
+- [x] Add to `convex/schema.ts`:
 
   ```typescript
   alerts: defineTable({
@@ -620,44 +646,46 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
 
 #### 4.2 Alert Evaluation Engine
 
-- [ ] Create `convex/alertEngine.ts`:
-  - `evaluateAlerts` internal action - run on price/stock updates
-  - `checkSKUAlert` helper - check if specific product matches
-  - `checkCategoryAlert` helper - check if any category product matches
-  - `checkThresholdAlert` helper - check if threshold conditions met
-  - `queueAlertBatch` mutation - add to batch queue
+- [x] Implement evaluation engine (currently in `convex/alerts.ts`):
+  - `evaluateAlertsForProducts` internal mutation - run on price/stock updates
+  - SKU/category/threshold matching helpers
+  - Batch queue merge behavior per user + window
 
-- [ ] Integrate with existing cron jobs:
-  - After `fetchNewData` (Costco) → evaluate alerts
-  - After price history updates → evaluate threshold alerts
+- [x] Integrate with Costco update flows:
+  - `fetchNewData` (Costco) triggers evaluation
+  - `verifyInStockProducts` triggers evaluation
+- [ ] Evaluate adding threshold-only sweeps on additional price update paths if needed
 
 #### 4.3 Batch Processing & Email
 
-- [ ] Create `convex/alertNotifications.ts`:
-  - `processPendingBatches` action - run every 15 minutes
-  - `sendAlertEmail` action - send via Resend
-  - `formatAlertDigest` helper - create email HTML
+- [x] Implement notifications pipeline (currently in `convex/alerts.ts`):
+  - `processPendingAlertBatches` action
+  - `sendAlertEmail` helper (Resend)
+  - `formatAlertDigest` helper (HTML + text)
+  - `markAlertBatchProcessed` mutation (history + batch status updates)
+  - Cron wiring every 15 minutes (`convex/crons.ts`)
 
 - [ ] Set up Resend:
-  - [ ] Create Resend account
-  - [ ] Add domain verification
-  - [ ] Get API key
-  - [ ] Add `RESEND_API_KEY` to Railway
+  - [x] Create Resend account
+  - [x] Add domain verification
+  - [x] Get API key
+  - [x] Configure dev/test sending
+  - [ ] Add/update prod deployment env vars (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`, optional `RESEND_REPLY_TO_EMAIL`)
 
 - [ ] Design email template:
-  - Clean, mobile-friendly design
-  - List of triggered alerts with products
-  - Direct links to products on dashboard
-  - Unsubscribe / manage alerts link
+  - [x] Initial digest template with alert grouping
+  - [x] Manage alerts link
+  - [x] `reply_to` + `List-Unsubscribe` header
+  - [ ] Polish template branding/layout for production
 
 #### 4.4 Alert Management UI
 
-- [ ] Create `/alerts` route:
-  - List all user alerts
-  - Create new alert form
-  - Edit existing alert
-  - Enable/disable toggle
-  - Delete alert
+- [x] Create `/alerts` route:
+  - [x] List all user alerts
+  - [x] Create new alert form
+  - [ ] Edit existing alert form
+  - [x] Enable/disable toggle
+  - [x] Delete alert
 
 - [ ] Alert creation wizard:
   - Step 1: Choose type (SKU, Category, Threshold)
@@ -665,30 +693,28 @@ stripe listen --forward-to localhost:3000/api/stripe-webhook
   - Step 3: Set notification preferences
   - Preview matching products
 
-- [ ] Add "Create Alert" button to product cards:
-  - Quick action to create SKU alert for that product
+- [x] Add "Create Alert" button to product cards:
+  - [x] Quick action to create SKU alert for that product
 
 #### 4.5 Subscription Gating
 
-- [ ] Check subscription status before:
-  - Creating new alerts
-  - Enabling disabled alerts
-  - Sending notification emails
+- [x] Check subscription status before:
+  - [x] Creating new alerts
+  - [x] Enabling disabled alerts
+  - [x] Sending notification emails
 
-- [ ] Show subscription prompt when:
-  - Free user tries to create alert
+- [x] Show subscription prompt when:
+  - [x] Free user tries to create alert
   - Alert limit reached (if implementing limits)
 
 ### Automated Tests
 
-- [ ] Unit test: `convex/alerts.ts` - CRUD operations (createAlert, updateAlert, deleteAlert, getAlerts)
-- [ ] Unit test: `convex/alertEngine.ts` - checkSKUAlert matches specific product
-- [ ] Unit test: `convex/alertEngine.ts` - checkCategoryAlert filters correctly
-- [ ] Unit test: `convex/alertEngine.ts` - checkThresholdAlert calculates above-spot correctly
-- [ ] Unit test: `convex/alertEngine.ts` - cooldown period enforced
-- [ ] Unit test: `convex/alertNotifications.ts` - formatAlertDigest generates valid HTML
-- [ ] Unit test: `convex/alertNotifications.ts` - processPendingBatches sends batched emails
-- [ ] Integration test: End-to-end alert flow (create → trigger → email)
+- [x] `convex/alerts.convex.test.ts` covers CRUD + entitlement behavior
+- [x] `convex/alerts.convex.test.ts` covers evaluation (SKU + threshold + cooldown + entitlement skip)
+- [x] `convex/alerts.convex.test.ts` covers batch delivery success + non-entitled skip
+- [x] Manual E2E smoke executed in dev (create -> evaluate -> process -> receive digest)
+- [ ] Expand browser-level tests for `/alerts` UI interactions
+- [ ] Add production smoke verification records post-deploy
 
 ### Manual Testing Checklist (Dev Environment)
 
@@ -726,17 +752,62 @@ Since dev has static data, you can trigger alerts by:
 
 ### Deployment Steps
 
-1. [ ] Set up Resend account and verify domain
-2. [ ] Add `RESEND_API_KEY` to Railway
-3. [ ] Push schema changes to Convex prod
-4. [ ] Deploy to Railway
-5. [ ] Create test alert for yourself
+1. [x] Set up Resend account and verify domain
+2. [ ] Set Convex prod env vars:
+   - `RESEND_API_KEY`
+   - `RESEND_FROM_EMAIL`
+   - optional `RESEND_REPLY_TO_EMAIL` (defaults to `support@dashboard.gold`)
+   - `SITE_URL=https://dashboard.gold`
+3. [ ] Confirm `ENABLE_CRONS=true` in Convex prod
+4. [ ] Deploy latest app/Convex code to production
+5. [ ] Create test alert on production account
 6. [ ] Trigger alert manually (via Convex dashboard) to verify email
-7. [ ] Wait for real data update to verify automatic triggering
+7. [ ] Verify cron-driven auto send without manual `processPendingAlertBatches`
 8. [ ] Monitor:
    - Resend dashboard for delivery rates
    - Convex logs for evaluation errors
    - `alertHistory` table for trigger records
+   - Spam placement / domain reputation trend
+
+### Remaining Recommendations (Post-Checkpoint)
+
+1. Finish alert edit UX in `/alerts` (field-level update flow, not just toggle/delete).
+2. Add one-click unsubscribe flow (endpoint + tokenized link) to complement manage-link behavior.
+3. Complete manual validation matrix:
+   - category + threshold end-to-end
+   - subscription transitions (active -> past_due/unpaid/canceled)
+   - cooldown verification
+4. Add lightweight operational visibility (batch send failures/skips view or admin query).
+5. Run production smoke and capture explicit pass/fail notes in this roadmap.
+
+### Code Review Follow-ups (2026-02-08)
+
+Action items:
+
+- [x] P0: Add bounded retry policy for failed alert sends (attempt count, backoff, max attempts/dead-letter behavior).
+- [x] P1: Clarify and unify threshold math semantics ("above spot" denominator and data source) across dashboard + alerts.
+- [x] P1: Clean `useSubscription` data flow typing (remove cast fallback path) and assert `alertEntitlements` in browser tests.
+- [x] P1: Improve visibility for `deferredByMissingConfig` in production (explicit error logging/monitoring signal).
+- [ ] P2: Extract shared `UserButton` configuration used by desktop and mobile header menus.
+- [x] P2: Add explicit code comment in `deleteAlert` that deletes are intentionally allowed regardless of subscription state.
+- [x] P3: Simplify redundant `mergeAlertProducts([], triggeredProducts)` call.
+- [x] P3: Add guard for CI Convex deploy job when `CONVEX_DEPLOY_KEY` is missing to avoid noisy main-branch failures.
+
+Completed in this fix-now batch:
+
+- Added retry/defer behavior for alert batch delivery (`sendAttempts`, backoff, terminal failure handling).
+- Added explicit logging and rescheduling when email delivery config is missing.
+- Updated above-spot threshold math in alert evaluation to use spot/bid denominator (aligned with dashboard semantics).
+- Removed stale `useSubscription` cast and expanded browser test coverage for query-provided alert entitlements.
+- Added intentional-delete comment path in `deleteAlert`.
+- Added CI deploy guard for missing `CONVEX_DEPLOY_KEY`.
+
+Reviewed / no immediate change required:
+
+- [x] `getSubscriptionStatus` already returns `alertEntitlements`; reviewer note was based on older code.
+- [x] Costco evaluation integration exists in both `fetchNewData` and `verifyInStockProducts`.
+- [x] `VITE_ENABLE_AUTH` is currently not referenced in codebase (auth is not feature-flagged now).
+- [x] `CLAUDE.md` does not currently reference `VITE_ADSENSE_CLIENT_ID` (docs + Dockerfile still do).
 
 ### Deliverables
 
@@ -812,6 +883,9 @@ STRIPE_PRICE_ID=price_xxx
 
 ```bash
 RESEND_API_KEY=re_xxx
+RESEND_FROM_EMAIL=alerts@dashboard.gold
+RESEND_REPLY_TO_EMAIL=support@dashboard.gold
+SITE_URL=https://dashboard.gold
 ```
 
 ---
@@ -820,13 +894,15 @@ RESEND_API_KEY=re_xxx
 
 Track progress across sessions here:
 
-| Session | Date       | Phase    | Completed                                                                            |
-| ------- | ---------- | -------- | ------------------------------------------------------------------------------------ |
-| 1       | 2024-12-27 | Planning | Created roadmap, added Phase 0 (dev env), testing & deployment for all phases        |
-| 2       | 2025-12-27 | Phase 0  | Dev env setup complete: crons disabled, prod snapshot imported, scripts created      |
-| 3       | 2025-12-27 | Phase 1  | 1.1-1.2 complete: Clerk prod configured, auth enabled, Google login + admin verified |
-| 4       | 2025-01-18 | Phase 2  | Complete: User data migration shipped, localStorage → Convex working in prod         |
-| 5       | -          | -        | -                                                                                    |
+| Session | Date       | Phase         | Completed                                                                            |
+| ------- | ---------- | ------------- | ------------------------------------------------------------------------------------ |
+| 1       | 2024-12-27 | Planning      | Created roadmap, added Phase 0 (dev env), testing & deployment for all phases        |
+| 2       | 2025-12-27 | Phase 0       | Dev env setup complete: crons disabled, prod snapshot imported, scripts created      |
+| 3       | 2025-12-27 | Phase 1       | 1.1-1.2 complete: Clerk prod configured, auth enabled, Google login + admin verified |
+| 4       | 2025-01-18 | Phase 2       | Complete: User data migration shipped, localStorage → Convex working in prod         |
+| 5       | 2026-02-08 | Phase 3/4     | Stripe entitlement enforcement complete; alerts core shipped (UI, eval, digest send) |
+| 6       | 2026-02-08 | Review triage | Validated external review findings, prioritized fixes, updated roadmap               |
+| 7       | -          | -             | -                                                                                    |
 
 ---
 

@@ -367,9 +367,7 @@ test("prevents deletion of preset cards", () => {
     },
   ];
 
-  expect(() => deleteCard(cards, "costco-visa")).toThrow(
-    "Cannot delete preset cards",
-  );
+  expect(() => deleteCard(cards, "costco-visa")).toThrow("Cannot delete preset cards");
 });
 
 test("only deletes specified card", () => {
@@ -419,9 +417,7 @@ test("resets modified preset card to defaults", () => {
   const cards = [modifiedPreset];
   const result = resetPresetCard(cards, "costco-visa");
 
-  const defaultCostcoCard = DEFAULT_PRESET_CARDS.find(
-    (c) => c.id === "costco-visa",
-  );
+  const defaultCostcoCard = DEFAULT_PRESET_CARDS.find((c) => c.id === "costco-visa");
 
   expect(defaultCostcoCard).toBeDefined();
 
@@ -443,9 +439,7 @@ test("throws error when resetting non-preset card", () => {
 
   const cards = [customCard];
 
-  expect(() => resetPresetCard(cards, "custom-123")).toThrow(
-    "Card is not a preset",
-  );
+  expect(() => resetPresetCard(cards, "custom-123")).toThrow("Card is not a preset");
 });
 
 // ============================================================================

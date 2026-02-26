@@ -2,16 +2,10 @@ import { test } from "vitest";
 
 import type { ProductCardData } from "./product-filters";
 
-import {
-  filterProducts,
-  shouldAutoFlipToOutOfStock,
-  sortProducts,
-} from "./product-filters";
+import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
 
 // Mock product data helpers
-const createMockProduct = (
-  overrides: Partial<ProductCardData> = {},
-): ProductCardData => {
+const createMockProduct = (overrides: Partial<ProductCardData> = {}): ProductCardData => {
   return {
     _creationTime: Date.now(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,9 +87,7 @@ test("filterProducts: filters by metal type - silver only", ({ expect }) => {
   expect(result[0]?.metalType).toBe("silver");
 });
 
-test("filterProducts: filters out of stock products when showOutOfStock is false", ({
-  expect,
-}) => {
+test("filterProducts: filters out of stock products when showOutOfStock is false", ({ expect }) => {
   const goldProducts = [
     createMockProduct({ currentInStock: true, metalType: "gold" }),
     createMockProduct({ currentInStock: false, metalType: "gold" }),
@@ -114,9 +106,7 @@ test("filterProducts: filters out of stock products when showOutOfStock is false
   expect(result.every((p) => p.currentInStock)).toBe(true);
 });
 
-test("filterProducts: includes out of stock products when showOutOfStock is true", ({
-  expect,
-}) => {
+test("filterProducts: includes out of stock products when showOutOfStock is true", ({ expect }) => {
   const goldProducts = [
     createMockProduct({ currentInStock: true, metalType: "gold" }),
     createMockProduct({ currentInStock: false, metalType: "gold" }),
@@ -134,12 +124,8 @@ test("filterProducts: includes out of stock products when showOutOfStock is true
   expect(result).toHaveLength(4);
 });
 
-test("filterProducts: returns empty array when no products match", ({
-  expect,
-}) => {
-  const goldProducts = [
-    createMockProduct({ currentInStock: false, metalType: "gold" }),
-  ];
+test("filterProducts: returns empty array when no products match", ({ expect }) => {
+  const goldProducts = [createMockProduct({ currentInStock: false, metalType: "gold" })];
   const silverProducts: ProductCardData[] = [];
 
   const result = filterProducts(goldProducts, silverProducts, {
@@ -180,9 +166,7 @@ test("sortProducts: sorts by spread descending", ({ expect }) => {
   expect(result[2]?.spreadPercentage).toBe(5);
 });
 
-test("sortProducts: handles null spread percentages (profit-desc)", ({
-  expect,
-}) => {
+test("sortProducts: handles null spread percentages (profit-desc)", ({ expect }) => {
   const products = [
     createMockProduct({ spreadPercentage: 10 }),
     createMockProduct({ spreadPercentage: null }),
@@ -196,9 +180,7 @@ test("sortProducts: handles null spread percentages (profit-desc)", ({
   expect(result[2]?.spreadPercentage).toBe(null); // null should be last (treated as 999)
 });
 
-test("sortProducts: handles null spread percentages (profit-asc)", ({
-  expect,
-}) => {
+test("sortProducts: handles null spread percentages (profit-asc)", ({ expect }) => {
   const products = [
     createMockProduct({ spreadPercentage: 10 }),
     createMockProduct({ spreadPercentage: null }),
@@ -240,9 +222,7 @@ test("sortProducts: sorts by price descending", ({ expect }) => {
   expect(result[2]?.currentPrice).toBe(50);
 });
 
-test("sortProducts: sorts by last in stock (most recent first)", ({
-  expect,
-}) => {
+test("sortProducts: sorts by last in stock (most recent first)", ({ expect }) => {
   const products = [
     createMockProduct({ lastInStockAt: 1000 }),
     createMockProduct({ lastInStockAt: 2000 }),
@@ -256,9 +236,7 @@ test("sortProducts: sorts by last in stock (most recent first)", ({
   expect(result[2]?.lastInStockAt).toBe(500);
 });
 
-test("sortProducts: handles null lastInStockAt (currently in stock products)", ({
-  expect,
-}) => {
+test("sortProducts: handles null lastInStockAt (currently in stock products)", ({ expect }) => {
   const products = [
     createMockProduct({ lastInStockAt: 1000 }),
     createMockProduct({ lastInStockAt: null }), // Currently in stock
@@ -286,9 +264,7 @@ test("sortProducts: does not mutate original array", ({ expect }) => {
 
 // === PRODUCTS WITHOUT BIDS TESTS ===
 
-test("sortProducts: places products without bids at bottom (profit-desc)", ({
-  expect,
-}) => {
+test("sortProducts: places products without bids at bottom (profit-desc)", ({ expect }) => {
   const products = [
     createMockProduct({ pureBidPrice: 95, spreadPercentage: 10 }),
     createMockProduct({ pureBidPrice: null, spreadPercentage: null }), // No bid
@@ -302,9 +278,7 @@ test("sortProducts: places products without bids at bottom (profit-desc)", ({
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
 });
 
-test("sortProducts: places products without bids at bottom (profit-asc)", ({
-  expect,
-}) => {
+test("sortProducts: places products without bids at bottom (profit-asc)", ({ expect }) => {
   const products = [
     createMockProduct({ pureBidPrice: 95, spreadPercentage: 10 }),
     createMockProduct({ pureBidPrice: null, spreadPercentage: null }), // No bid
@@ -318,9 +292,7 @@ test("sortProducts: places products without bids at bottom (profit-asc)", ({
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
 });
 
-test("sortProducts: places products without bids at bottom (price-asc)", ({
-  expect,
-}) => {
+test("sortProducts: places products without bids at bottom (price-asc)", ({ expect }) => {
   const products = [
     createMockProduct({ currentPrice: 100, pureBidPrice: 95 }),
     createMockProduct({ currentPrice: 50, pureBidPrice: null }), // No bid
@@ -334,9 +306,7 @@ test("sortProducts: places products without bids at bottom (price-asc)", ({
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom (even though price is lower)
 });
 
-test("sortProducts: places products without bids at bottom (price-desc)", ({
-  expect,
-}) => {
+test("sortProducts: places products without bids at bottom (price-desc)", ({ expect }) => {
   const products = [
     createMockProduct({ currentPrice: 100, pureBidPrice: 95 }),
     createMockProduct({ currentPrice: 200, pureBidPrice: null }), // No bid
@@ -350,9 +320,7 @@ test("sortProducts: places products without bids at bottom (price-desc)", ({
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom (even though price is higher)
 });
 
-test("sortProducts: places products without bids at bottom (last-in-stock)", ({
-  expect,
-}) => {
+test("sortProducts: places products without bids at bottom (last-in-stock)", ({ expect }) => {
   const products = [
     createMockProduct({ lastInStockAt: 1000, pureBidPrice: 95 }),
     createMockProduct({ lastInStockAt: 3000, pureBidPrice: null }), // No bid
@@ -384,26 +352,18 @@ test("sortProducts: handles multiple products without bids", ({ expect }) => {
 
 // === AUTO-FLIP LOGIC TESTS ===
 
-test("shouldAutoFlipToOutOfStock: returns true when both counts are zero", ({
-  expect,
-}) => {
+test("shouldAutoFlipToOutOfStock: returns true when both counts are zero", ({ expect }) => {
   expect(shouldAutoFlipToOutOfStock(0, 0)).toBe(true);
 });
 
-test("shouldAutoFlipToOutOfStock: returns false when gold has stock", ({
-  expect,
-}) => {
+test("shouldAutoFlipToOutOfStock: returns false when gold has stock", ({ expect }) => {
   expect(shouldAutoFlipToOutOfStock(1, 0)).toBe(false);
 });
 
-test("shouldAutoFlipToOutOfStock: returns false when silver has stock", ({
-  expect,
-}) => {
+test("shouldAutoFlipToOutOfStock: returns false when silver has stock", ({ expect }) => {
   expect(shouldAutoFlipToOutOfStock(0, 1)).toBe(false);
 });
 
-test("shouldAutoFlipToOutOfStock: returns false when both have stock", ({
-  expect,
-}) => {
+test("shouldAutoFlipToOutOfStock: returns false when both have stock", ({ expect }) => {
   expect(shouldAutoFlipToOutOfStock(5, 3)).toBe(false);
 });

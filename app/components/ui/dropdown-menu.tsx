@@ -6,9 +6,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/cn";
 
-const DropdownMenu = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) => (
+const DropdownMenu = ({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) => (
   <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 );
 
@@ -96,10 +94,7 @@ const DropdownMenuCheckboxItem = ({
 const DropdownMenuRadioGroup = ({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) => (
-  <DropdownMenuPrimitive.RadioGroup
-    data-slot="dropdown-menu-radio-group"
-    {...props}
-  />
+  <DropdownMenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...props} />
 );
 
 const DropdownMenuRadioItem = ({
@@ -150,23 +145,15 @@ const DropdownMenuSeparator = ({
   />
 );
 
-const DropdownMenuShortcut = ({
-  className,
-  ...props
-}: React.ComponentProps<"span">) => (
+const DropdownMenuShortcut = ({ className, ...props }: React.ComponentProps<"span">) => (
   <span
-    className={cn(
-      "ml-auto text-xs tracking-widest text-muted-foreground",
-      className,
-    )}
+    className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
     data-slot="dropdown-menu-shortcut"
     {...props}
   />
 );
 
-const DropdownMenuSub = ({
-  ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) => (
+const DropdownMenuSub = ({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) => (
   <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />
 );
 

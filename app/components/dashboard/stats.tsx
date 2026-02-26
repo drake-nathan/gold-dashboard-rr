@@ -14,11 +14,7 @@ interface StatsProps {
   totalCashbackPercentage: number;
 }
 
-export const Stats = ({
-  lastFetch,
-  marketPrices,
-  totalCashbackPercentage,
-}: StatsProps) => {
+export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: StatsProps) => {
   // Find each asset in market prices
   const gold = marketPrices.find((p) => p.assetType === "gold");
   const silver = marketPrices.find((p) => p.assetType === "silver");

@@ -6,21 +6,15 @@ import * as React from "react";
 
 import { cn } from "@/lib/cn";
 
-const Select = ({
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) => (
+const Select = ({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) => (
   <SelectPrimitive.Root data-slot="select" {...props} />
 );
 
-const SelectGroup = ({
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Group>) => (
+const SelectGroup = ({ ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) => (
   <SelectPrimitive.Group data-slot="select-group" {...props} />
 );
 
-const SelectValue = ({
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.Value>) => (
+const SelectValue = ({ ...props }: React.ComponentProps<typeof SelectPrimitive.Value>) => (
   <SelectPrimitive.Value data-slot="select-value" {...props} />
 );
 
@@ -130,10 +124,7 @@ const SelectScrollUpButton = ({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) => (
   <SelectPrimitive.ScrollUpButton
-    className={cn(
-      "flex cursor-default items-center justify-center py-1",
-      className,
-    )}
+    className={cn("flex cursor-default items-center justify-center py-1", className)}
     data-slot="select-scroll-up-button"
     {...props}
   >
@@ -146,10 +137,7 @@ const SelectScrollDownButton = ({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) => (
   <SelectPrimitive.ScrollDownButton
-    className={cn(
-      "flex cursor-default items-center justify-center py-1",
-      className,
-    )}
+    className={cn("flex cursor-default items-center justify-center py-1", className)}
     data-slot="select-scroll-down-button"
     {...props}
   >

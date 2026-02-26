@@ -119,8 +119,7 @@ const TestComponent = ({
     lastSelectedId: string;
   }) => void;
 }) => {
-  const { cards, isLoading, isMigrating, lastSelectedId } =
-    useUserCreditCards();
+  const { cards, isLoading, isMigrating, lastSelectedId } = useUserCreditCards();
 
   useEffect(() => {
     onStateChange({ cards, isLoading, isMigrating, lastSelectedId });
@@ -188,9 +187,7 @@ test("migration runs when user signs in with custom cards in localStorage", asyn
     cards: { cardId: string }[];
   };
 
-  expect(
-    migratedCards.cards.some((c) => c.cardId === "custom-migrate-test"),
-  ).toBe(true);
+  expect(migratedCards.cards.some((c) => c.cardId === "custom-migrate-test")).toBe(true);
 
   // Verify updateSettings was called with lastSelectedCardId
   expect(mockMutationCalls.updateSettings).toHaveLength(1);
@@ -251,14 +248,10 @@ test("migration only migrates custom cards and modified presets", async () => {
   expect(migratedCards.cards).toHaveLength(2);
 
   // Verify the custom card is included
-  expect(migratedCards.cards.some((c) => c.cardId === "custom-card-123")).toBe(
-    true,
-  );
+  expect(migratedCards.cards.some((c) => c.cardId === "custom-card-123")).toBe(true);
 
   // Verify the modified preset is included
-  expect(migratedCards.cards.some((c) => c.cardId === defaultPreset.id)).toBe(
-    true,
-  );
+  expect(migratedCards.cards.some((c) => c.cardId === defaultPreset.id)).toBe(true);
 
   // Verify unmodified presets are NOT included
   for (const preset of unmodifiedPresets) {
@@ -399,9 +392,7 @@ test("migration preserves localStorage when migration fails", async () => {
   );
 
   // Suppress console.error for this test
-  const consoleSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
   await render(<TestComponent onStateChange={() => undefined} />);
 
@@ -424,9 +415,7 @@ test("migration preserves localStorage when migration fails", async () => {
   // Verify the custom card is still in localStorage
   const parsed = JSON.parse(stored ?? "{}") as { cards: { id: string }[] };
 
-  expect(parsed.cards.some((c) => c.id === "card-for-failed-migration")).toBe(
-    true,
-  );
+  expect(parsed.cards.some((c) => c.id === "card-for-failed-migration")).toBe(true);
 
   consoleSpy.mockRestore();
 });

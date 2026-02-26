@@ -73,9 +73,7 @@ export const fetchMarketPrices = internalAction({
     }
 
     // Log summary
-    console.info(
-      `Gold API fetch complete: ${results.success} success, ${results.failed} failed`,
-    );
+    console.info(`Gold API fetch complete: ${results.success} success, ${results.failed} failed`);
     if (results.errors.length > 0) {
       console.error("Errors:", results.errors);
     }
@@ -91,11 +89,7 @@ export const fetchMarketPrices = internalAction({
  */
 export const upsertMarketPrice = internalMutation({
   args: {
-    assetType: v.union(
-      v.literal("gold"),
-      v.literal("silver"),
-      v.literal("bitcoin"),
-    ),
+    assetType: v.union(v.literal("gold"), v.literal("silver"), v.literal("bitcoin")),
     currentPrice: v.number(),
     symbol: v.string(),
     timestamp: v.number(),
@@ -125,9 +119,7 @@ export const upsertMarketPrice = internalMutation({
     let percentChange: null | number = null;
     if (historicalPrice) {
       // Calculate percentage change: ((current - old) / old) * 100
-      percentChange =
-        ((args.currentPrice - historicalPrice.price) / historicalPrice.price) *
-        100;
+      percentChange = ((args.currentPrice - historicalPrice.price) / historicalPrice.price) * 100;
     }
 
     // Check if entry exists
@@ -187,11 +179,7 @@ export const getMarketPrices = query({
  */
 export const getMarketPrice = query({
   args: {
-    assetType: v.union(
-      v.literal("gold"),
-      v.literal("silver"),
-      v.literal("bitcoin"),
-    ),
+    assetType: v.union(v.literal("gold"), v.literal("silver"), v.literal("bitcoin")),
   },
   handler: async (ctx, args) => {
     const asset = ASSETS.find((a) => a.assetType === args.assetType);

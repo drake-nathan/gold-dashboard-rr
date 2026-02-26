@@ -1,10 +1,10 @@
-import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
+import { SignedIn, SignedOut, useClerk } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Coffee, LogIn, Menu, Settings, UserPlus } from "lucide-react";
-import { usePostHog } from "posthog-js/react";
+import { Bell, LogIn, Menu, Settings, UserPlus } from "lucide-react";
 import { Link } from "react-router";
 
+import { UpgradeButton } from "@/components/subscription";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,16 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSubscription } from "@/hooks/use-subscription";
 
 import { ThemeMenuItems } from "./theme-toggle";
+import { UserButtonWithPro } from "./user-button-with-pro";
 
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
-  const posthog = usePostHog();
-
-  const trackCoffeeClick = () => {
-    posthog.capture("buy_me_a_coffee_clicked", { location: "mobile_menu" });
-  };
+  const { isPro } = useSubscription();
 
   // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
@@ -36,27 +34,12 @@ export const MobileMenu = () => {
           <Menu className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-48">
         {/* Theme Options */}
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
           Theme
         </DropdownMenuLabel>
         <ThemeMenuItems />
-
-        {/* Buy Me a Coffee */}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a
-            className="text-yellow-600 dark:text-yellow-400"
-            href="https://buymeacoffee.com/thenathandrake"
-            onClick={trackCoffeeClick}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            <Coffee className="mr-2 h-4 w-4" />
-            Buy Me a Coffee
-          </a>
-        </DropdownMenuItem>
 
         {/* Admin Link */}
         {isAdmin ?
@@ -92,9 +75,23 @@ export const MobileMenu = () => {
           </DropdownMenuItem>
         </SignedOut>
         <SignedIn>
+          <DropdownMenuItem asChild>
+            <Link to="/alerts">
+              <Bell className="mr-2 h-4 w-4" />
+              Alerts
+            </Link>
+          </DropdownMenuItem>
+          <div className="px-2 py-1.5">
+            <UpgradeButton className="w-full justify-start" size="sm" />
+          </div>
           <div className="flex items-center gap-2 px-2 py-1.5">
-            <UserButton />
-            <span className="text-sm">Account</span>
+            <UserButtonWithPro avatarSize="size-[28px]" />
+            <span className="text-sm">
+              Account
+              {isPro ?
+                <span className="ml-1 text-amber-500">Pro</span>
+              : null}
+            </span>
           </div>
         </SignedIn>
       </DropdownMenuContent>

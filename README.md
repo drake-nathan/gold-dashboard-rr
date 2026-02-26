@@ -126,15 +126,14 @@ The backend uses Convex for serverless functions and real-time data:
 │   ├── twelve.ts          # Gold API integration (XAU/XAG/BTC)
 │   ├── fmp.ts             # FMP API integration (S&P 500)
 │   └── crons.ts           # Scheduled jobs
-├── CLAUDE.md              # Comprehensive project documentation
-└── CONVEX.md              # Backend architecture and audit
+├── CLAUDE.md              # Project documentation (symlinked as AGENTS.md)
+└── TASKS.md               # Task board
 ```
 
 ## Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Complete project documentation including tech stack, database schema, API integrations, and UI implementation
-- **[CONVEX.md](./CONVEX.md)** - Backend architecture, performance optimizations, and refactoring history
-- **[TODO.md](./TODO.md)** - Planned features and improvements
+- **[TASKS.md](./TASKS.md)** - Task board with current priorities
 
 ## Key Features
 

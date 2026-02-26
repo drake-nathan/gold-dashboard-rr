@@ -51,18 +51,14 @@ const serializer = (value: QuantityStorage): string => {
  * - Validates quantity is between 1 and MAX_QUANTITY
  */
 export const useQuantityStorage = () => {
-  const [storage, setStorage] = useLocalStorage<QuantityStorage>(
-    STORAGE_KEY,
-    defaultValue,
-    {
-      deserializer,
-      // Read localStorage immediately on mount.
-      // Components using this hook should be wrapped with client-only
-      // rendering (e.g., useIsClient check) to prevent SSR mismatch.
-      initializeWithValue: true,
-      serializer,
-    },
-  );
+  const [storage, setStorage] = useLocalStorage<QuantityStorage>(STORAGE_KEY, defaultValue, {
+    deserializer,
+    // Read localStorage immediately on mount.
+    // Components using this hook should be wrapped with client-only
+    // rendering (e.g., useIsClient check) to prevent SSR mismatch.
+    initializeWithValue: true,
+    serializer,
+  });
 
   return [storage, setStorage] as const;
 };

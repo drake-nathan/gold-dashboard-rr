@@ -53,12 +53,8 @@ test("can select light theme from dropdown", async () => {
   await lightOption.click();
 
   // Verify theme was applied to document
-  await expect
-    .poll(() => document.documentElement.classList.contains("dark"))
-    .toBe(false);
-  await expect
-    .poll(() => document.documentElement.classList.contains("light"))
-    .toBe(true);
+  await expect.poll(() => document.documentElement.classList.contains("dark")).toBe(false);
+  await expect.poll(() => document.documentElement.classList.contains("light")).toBe(true);
 });
 
 test("can select dark theme from dropdown", async () => {
@@ -77,7 +73,5 @@ test("can select dark theme from dropdown", async () => {
   await darkOption.click();
 
   // Verify theme was applied to document
-  await expect
-    .poll(() => document.documentElement.classList.contains("dark"))
-    .toBe(true);
+  await expect.poll(() => document.documentElement.classList.contains("dark")).toBe(true);
 });

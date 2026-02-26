@@ -12,14 +12,7 @@
  */
 
 import { spawn } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 // ============================================================================
@@ -129,15 +122,13 @@ const printSteps = () => {
       case "success": {
         icon = symbols.success;
         color = colors.green;
-        statusText =
-          step.duration ? `done (${step.duration.toFixed(1)}s)` : "done";
+        statusText = step.duration ? `done (${step.duration.toFixed(1)}s)` : "done";
         break;
       }
     }
 
     const name = step.name.padEnd(maxNameLen);
-    const msg =
-      step.message ? ` ${colors.dim}${step.message}${colors.reset}` : "";
+    const msg = step.message ? ` ${colors.dim}${step.message}${colors.reset}` : "";
 
     console.log(
       `  ${color}${icon}${colors.reset} ${name} ${color}${statusText}${colors.reset}${msg}`,
@@ -147,12 +138,7 @@ const printSteps = () => {
   console.log("");
 };
 
-const updateStep = (
-  index: number,
-  status: StepStatus,
-  message?: string,
-  duration?: number,
-) => {
+const updateStep = (index: number, status: StepStatus, message?: string, duration?: number) => {
   steps[index].status = status;
   if (message !== undefined) steps[index].message = message;
   if (duration !== undefined) steps[index].duration = duration;
@@ -287,11 +273,9 @@ const exportSnapshot = async (): Promise<boolean> => {
     updateStep(stepIndex, "running");
 
     // Run Convex query to get data
-    const result = await runCommand(
-      "npx",
-      ["convex", "run", "--prod", table.exportFn],
-      { silent: true },
-    );
+    const result = await runCommand("npx", ["convex", "run", "--prod", table.exportFn], {
+      silent: true,
+    });
 
     if (!result.success) {
       updateStep(stepIndex, "error", "Query failed");
@@ -305,12 +289,7 @@ const exportSnapshot = async (): Promise<boolean> => {
       const data = JSON.parse(result.output);
       snapshot[table.name] = data;
       const count = Array.isArray(data) ? data.length : 0;
-      updateStep(
-        stepIndex,
-        "success",
-        `${count} docs`,
-        (Date.now() - stepStart) / 1000,
-      );
+      updateStep(stepIndex, "success", `${count} docs`, (Date.now() - stepStart) / 1000);
     } catch {
       updateStep(stepIndex, "error", "Parse failed");
       allSuccess = false;
@@ -318,9 +297,7 @@ const exportSnapshot = async (): Promise<boolean> => {
   }
 
   if (!allSuccess) {
-    console.log(
-      `${colors.red}${colors.bold}${symbols.error} Export failed${colors.reset}\n`,
-    );
+    console.log(`${colors.red}${colors.bold}${symbols.error} Export failed${colors.reset}\n`);
     return false;
   }
 
@@ -332,12 +309,7 @@ const exportSnapshot = async (): Promise<boolean> => {
   try {
     writeFileSync(snapshotFile, JSON.stringify(snapshot, null, 2));
     const size = statSync(snapshotFile).size;
-    updateStep(
-      saveStepIndex,
-      "success",
-      formatBytes(size),
-      (Date.now() - saveStart) / 1000,
-    );
+    updateStep(saveStepIndex, "success", formatBytes(size), (Date.now() - saveStart) / 1000);
   } catch {
     updateStep(saveStepIndex, "error", "Write failed");
     return false;
@@ -353,9 +325,7 @@ const exportSnapshot = async (): Promise<boolean> => {
   updateStep(
     cleanStepIndex,
     "success",
-    deleted > 0 ?
-      `Removed ${deleted}, keeping ${remaining}`
-    : `${remaining} snapshots`,
+    deleted > 0 ? `Removed ${deleted}, keeping ${remaining}` : `${remaining} snapshots`,
     (Date.now() - cleanStart) / 1000,
   );
 
@@ -378,9 +348,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
   const snapshotFile = snapshotPath || getLatestSnapshot();
 
   if (!snapshotFile) {
-    console.log(
-      `${colors.red}${symbols.error} No snapshot found in ${SEED_DIR}${colors.reset}`,
-    );
+    console.log(`${colors.red}${symbols.error} No snapshot found in ${SEED_DIR}${colors.reset}`);
     console.log(`${colors.dim}  Run: bun run snapshot:export${colors.reset}\n`);
     return false;
   }
@@ -474,16 +442,9 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
       allSuccess = false;
     } else {
       // Extract document count from output
-      const match = /Added (?<count>[\d,]+) documents/.exec(
-        importResult.output,
-      );
+      const match = /Added (?<count>[\d,]+) documents/.exec(importResult.output);
       const count = match?.groups?.count ?? data.length.toString();
-      updateStep(
-        stepIndex,
-        "success",
-        `${count} docs`,
-        (Date.now() - stepStart) / 1000,
-      );
+      updateStep(stepIndex, "success", `${count} docs`, (Date.now() - stepStart) / 1000);
     }
   }
 
@@ -511,9 +472,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
 // ============================================================================
 
 const syncSnapshot = async (): Promise<boolean> => {
-  console.log(
-    `${colors.bold}${colors.magenta}Starting full sync: prod → dev${colors.reset}\n`,
-  );
+  console.log(`${colors.bold}${colors.magenta}Starting full sync: prod → dev${colors.reset}\n`);
 
   const exportSuccess = await exportSnapshot();
   if (!exportSuccess) {
@@ -529,9 +488,7 @@ const syncSnapshot = async (): Promise<boolean> => {
     return false;
   }
 
-  console.log(
-    `${colors.green}${colors.bold}${symbols.success} Sync complete!${colors.reset}\n`,
-  );
+  console.log(`${colors.green}${colors.bold}${symbols.success} Sync complete!${colors.reset}\n`);
   return true;
 };
 

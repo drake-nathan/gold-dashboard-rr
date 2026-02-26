@@ -4,9 +4,7 @@ import * as React from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
-const AlertDialog = ({
-  ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => (
+const AlertDialog = ({ ...props }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) => (
   <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
 );
 
@@ -53,10 +51,7 @@ const AlertDialogContent = ({
   </AlertDialogPortal>
 );
 
-const AlertDialogHeader = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">) => (
+const AlertDialogHeader = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
     className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
     data-slot="alert-dialog-header"
@@ -64,15 +59,9 @@ const AlertDialogHeader = ({
   />
 );
 
-const AlertDialogFooter = ({
-  className,
-  ...props
-}: React.ComponentProps<"div">) => (
+const AlertDialogFooter = ({ className, ...props }: React.ComponentProps<"div">) => (
   <div
-    className={cn(
-      "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-      className,
-    )}
+    className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
     data-slot="alert-dialog-footer"
     {...props}
   />
@@ -104,10 +93,7 @@ const AlertDialogAction = ({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Action>) => (
-  <AlertDialogPrimitive.Action
-    className={cn(buttonVariants(), className)}
-    {...props}
-  />
+  <AlertDialogPrimitive.Action className={cn(buttonVariants(), className)} {...props} />
 );
 
 const AlertDialogCancel = ({

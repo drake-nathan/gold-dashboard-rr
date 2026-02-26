@@ -69,9 +69,7 @@ export const loadPureFeeTier = (): string => {
     const validated = pureFeeTierStorageSchema.parse(parsed);
 
     // Verify the tier still exists
-    const tierExists = PURE_FEE_TIERS.some(
-      (t) => t.id === validated.selectedTierId,
-    );
+    const tierExists = PURE_FEE_TIERS.some((t) => t.id === validated.selectedTierId);
     if (!tierExists) {
       return PURE_FEE_TIERS[0].id;
     }

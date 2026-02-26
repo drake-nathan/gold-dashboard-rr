@@ -42,8 +42,7 @@ const TestComponent = ({
     setLastSelectedId: (id: string) => Promise<void>;
   }) => void;
 }) => {
-  const { addCard, cards, isLoading, lastSelectedId, setLastSelectedId } =
-    useUserCreditCards();
+  const { addCard, cards, isLoading, lastSelectedId, setLastSelectedId } = useUserCreditCards();
 
   useEffect(() => {
     if (!isLoading) {
@@ -135,10 +134,7 @@ const TestComponentWithUpdate = ({
 const TestComponentWithReset = ({
   onReady,
 }: {
-  onReady: (actions: {
-    getCards: () => CreditCard[];
-    resetAllCards: () => Promise<void>;
-  }) => void;
+  onReady: (actions: { getCards: () => CreditCard[]; resetAllCards: () => Promise<void> }) => void;
 }) => {
   const { cards, isLoading, resetAllCards } = useUserCreditCards();
 
@@ -174,14 +170,10 @@ test("returns default preset cards when localStorage is empty", async () => {
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
 
   // Verify default card count
-  await expect
-    .element(screen.getByText(String(DEFAULT_PRESET_CARDS.length)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(DEFAULT_PRESET_CARDS.length))).toBeInTheDocument();
 
   // Verify first preset card is in the list
-  await expect
-    .element(screen.getByText(DEFAULT_PRESET_CARDS[0].name))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(DEFAULT_PRESET_CARDS[0].name)).toBeInTheDocument();
 });
 
 test("addCard followed by setLastSelectedId preserves the new card", async () => {
@@ -208,9 +200,7 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
   const initialCount = DEFAULT_PRESET_CARDS.length;
 
   // Verify initial count
-  await expect
-    .element(screen.getByText(String(initialCount)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(initialCount))).toBeInTheDocument();
 
   // Create a custom card
   const customCard: CreditCard = {
@@ -232,14 +222,10 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
 
   // THIS IS THE BUG: The card should appear but it disappears because
   // setLastSelectedId overwrites localStorage with stale data
-  await expect
-    .element(screen.getByText(String(initialCount + 1)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(initialCount + 1))).toBeInTheDocument();
 
   // Verify the custom card is in the list
-  await expect
-    .element(screen.getByText("Test Custom Card"))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText("Test Custom Card")).toBeInTheDocument();
 
   // Verify localStorage has the card
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
@@ -285,9 +271,7 @@ test("deleteCard removes custom card from localStorage", async () => {
   }
   let actions: Actions | null = null;
 
-  const screen = await render(
-    <TestComponentWithDelete onReady={(a) => (actions = a)} />,
-  );
+  const screen = await render(<TestComponentWithDelete onReady={(a) => (actions = a)} />);
 
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
   await expect.poll(() => actions !== null).toBe(true);
@@ -301,9 +285,7 @@ test("deleteCard removes custom card from localStorage", async () => {
   await verifiedActions.deleteCard("card-to-delete");
 
   // Verify card is removed from UI
-  await expect
-    .element(screen.getByText(String(DEFAULT_PRESET_CARDS.length)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(DEFAULT_PRESET_CARDS.length))).toBeInTheDocument();
 
   // Verify card is removed from localStorage
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
@@ -345,9 +327,7 @@ test("updateCard modifies card in localStorage", async () => {
   }
   let actions: Actions | null = null;
 
-  const screen = await render(
-    <TestComponentWithUpdate onReady={(a) => (actions = a)} />,
-  );
+  const screen = await render(<TestComponentWithUpdate onReady={(a) => (actions = a)} />);
 
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
   await expect.poll(() => actions !== null).toBe(true);
@@ -405,9 +385,7 @@ test("resetAllCards clears all cards and resets to defaults", async () => {
   }
   let actions: Actions | null = null;
 
-  const screen = await render(
-    <TestComponentWithReset onReady={(a) => (actions = a)} />,
-  );
+  const screen = await render(<TestComponentWithReset onReady={(a) => (actions = a)} />);
 
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
   await expect.poll(() => actions !== null).toBe(true);
@@ -417,17 +395,13 @@ test("resetAllCards clears all cards and resets to defaults", async () => {
   // Verify custom card exists initially
   const initialCount = DEFAULT_PRESET_CARDS.length + 1;
 
-  await expect
-    .element(screen.getByText(String(initialCount)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(initialCount))).toBeInTheDocument();
 
   // Reset all cards
   await verifiedActions.resetAllCards();
 
   // Verify only default cards remain
-  await expect
-    .element(screen.getByText(String(DEFAULT_PRESET_CARDS.length)))
-    .toBeInTheDocument();
+  await expect.element(screen.getByText(String(DEFAULT_PRESET_CARDS.length))).toBeInTheDocument();
 
   // Verify localStorage is reset
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);

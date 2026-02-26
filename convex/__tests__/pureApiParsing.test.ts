@@ -1,10 +1,6 @@
 import { expect, test } from "vitest";
 
-import {
-  extractProductType,
-  parseWeightToOz,
-  type PureProduct,
-} from "../lib/pureApiParsing";
+import { extractProductType, parseWeightToOz, type PureProduct } from "../lib/pureApiParsing";
 
 // ============================================================================
 // parseWeightToOz TESTS
@@ -105,9 +101,7 @@ test("parseWeightToOz: defaults to 1 for unit without number", () => {
 // ============================================================================
 
 // Helper to create minimal PureProduct
-const createPureProduct = (
-  overrides: Partial<PureProduct> = {},
-): PureProduct => ({
+const createPureProduct = (overrides: Partial<PureProduct> = {}): PureProduct => ({
   title: "Test Product",
   ...overrides,
 });

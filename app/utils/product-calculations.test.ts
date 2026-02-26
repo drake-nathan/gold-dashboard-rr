@@ -71,11 +71,7 @@ const mockCalculatorSettings: CalculatorSettings = {
 // ============================================================================
 
 test("calculates profit correctly with all cashback enabled", () => {
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, mockCalculatorSettings);
 
   // Costco price: $4000
   // Pure bid: $3900
@@ -104,11 +100,7 @@ test("calculates profit correctly with only credit card cashback", () => {
     costcoMembershipEnabled: false, // No Costco membership
   };
 
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    settings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, settings);
 
   // Only credit card cashback: $80
   // Initial cash loss: $129.25
@@ -121,11 +113,7 @@ test("calculates profit correctly with only credit card cashback", () => {
 });
 
 test("calculates above spot percentage correctly", () => {
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, mockCalculatorSettings);
 
   // Current price per oz: $2100
   // Market spot price: $2000
@@ -145,11 +133,7 @@ test("handles missing Pure bid price gracefully", () => {
     pureBidPricePerOz: null,
   };
 
-  const result = calculateProductMetrics(
-    productNoBid,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(productNoBid, mockMarketPrices, mockCalculatorSettings);
 
   expect(result.pureBidPrice).toBeNull();
   expect(result.pureFee).toBe(0);
@@ -181,11 +165,7 @@ test("handles missing market price for metal type", () => {
     metalType: "platinum" as ProductCardData["metalType"], // Not in our mock market prices
   };
 
-  const result = calculateProductMetrics(
-    platinumProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(platinumProduct, mockMarketPrices, mockCalculatorSettings);
 
   expect(result.aboveSpotPercentage).toBeNull();
 });
@@ -196,11 +176,7 @@ test("handles zero Costco price correctly", () => {
     currentPrice: 0,
   };
 
-  const result = calculateProductMetrics(
-    freeProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(freeProduct, mockMarketPrices, mockCalculatorSettings);
 
   expect(result.costcoPrice).toBe(0);
   expect(result.costcoCashback).toBe(0);
@@ -213,11 +189,7 @@ test("handles zero Costco price correctly", () => {
 // ============================================================================
 
 test("applies green color for profitable deals", () => {
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, mockCalculatorSettings);
 
   // Net profit is positive ($30.75)
   expect(result.netProfit).toBeGreaterThan(0);
@@ -247,11 +219,7 @@ test("applies red color for unprofitable deals", () => {
 // ============================================================================
 
 test("calculates cashback percentages correctly", () => {
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, mockCalculatorSettings);
 
   expect(result.costcoCashbackPercentage).toBe(2); // 2%
   expect(result.creditCardCashbackPercentage).toBe(2); // 2%
@@ -260,11 +228,7 @@ test("calculates cashback percentages correctly", () => {
 });
 
 test("calculates net profit percentage correctly", () => {
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, mockCalculatorSettings);
 
   // Net profit: $30.75
   // Costco price: $4000
@@ -284,11 +248,7 @@ test("applies correct fee rate for different Pure tiers", () => {
     pureFeeTier: PURE_FEE_TIERS[2], // Pure Gold: 0.625% gold fee
   };
 
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    goldTierSettings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, goldTierSettings);
 
   expect(result.pureFeePercentage).toBe(0.625);
   expect(result.pureFee).toBeCloseTo(24.375, 2); // $3900 * 0.00625
@@ -302,11 +262,7 @@ test("applies correct fee rate for silver products", () => {
     pureBidPrice: 480,
   };
 
-  const result = calculateProductMetrics(
-    silverProduct,
-    mockMarketPrices,
-    mockCalculatorSettings,
-  );
+  const result = calculateProductMetrics(silverProduct, mockMarketPrices, mockCalculatorSettings);
 
   // Pure Copper tier: 1% for silver
   expect(result.pureFeePercentage).toBe(1);
@@ -331,11 +287,7 @@ test("calculates correctly with high-value credit card", () => {
     quantity: 1,
   };
 
-  const result = calculateProductMetrics(
-    mockGoldProduct,
-    mockMarketPrices,
-    settings,
-  );
+  const result = calculateProductMetrics(mockGoldProduct, mockMarketPrices, settings);
 
   // Costco cashback: $80 (2%)
   // Credit card cashback: $120 (3%)

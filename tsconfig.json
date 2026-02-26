@@ -19,10 +19,5 @@
     "verbatimModuleSyntax": true
   },
   "exclude": ["convex"],
-  "include": [
-    "**/*",
-    "**/.server/**/*",
-    "**/.client/**/*",
-    ".react-router/types/**/*"
-  ]
+  "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"]
 }

@@ -4,6 +4,28 @@
 
 A gold/silver price tracking dashboard that monitors Costco precious metals products and compares them with Collect Pure's spot prices and bids.
 
+## Task Management
+
+### System
+
+- **`TASKS.md`** — The task board. All pending work lives here (Active / Short Term / Medium Term / Backlog / Testing). No completed items — delete them when done. Git history is the archive.
+- **`.sessions/<name>.md`** — Session files for active epics only. Each starts with a status header. Delete when the epic ships.
+- **`AGENTS.md`** — Symlink to `CLAUDE.md` for multi-agent compatibility.
+
+### Rules for Agents
+
+1. **Read `TASKS.md` first** at the start of any task-oriented session to understand current priorities.
+2. **Update `TASKS.md` as you work:**
+   - Check off / delete items when complete.
+   - Add new items you discover in the appropriate section — inform the user when you do.
+   - Keep the file under 150 lines. If it grows past that, consolidate or split into an epic.
+3. **Session files** (`.sessions/<name>.md`):
+   - Create only for multi-session epics (3+ sessions expected).
+   - Always start with: `> **Status:** In Progress | Complete | Paused`
+   - Link from TASKS.md Active section.
+   - Delete when the epic is complete.
+4. **No archive directories.** Git history preserves everything.
+
 ## Tech Stack
 
 - **Framework**: React Router 7 (migrated from Next.js)
@@ -80,26 +102,37 @@ This project was recently migrated from Next.js to React Router 7 + Vite. Some r
 
 ## Environment Setup
 
-### Convex Deployment Strategy
+### Deployment Strategy
 
-**Production-Only Setup**: This project uses a single Convex production deployment for both development and production.
+This project uses **separate dev and prod environments**:
 
-**Rationale**:
+| Environment     | Convex Deployment | Railway Service | Use Case            |
+| --------------- | ----------------- | --------------- | ------------------- |
+| Local dev       | Dev               | -               | Development         |
+| Railway Preview | Dev               | Preview         | PR reviews, testing |
+| Railway Prod    | Prod              | Prod            | Production          |
 
-- Read-only dashboard with public API data
-- Semi-manual product mappings shouldn't be duplicated
-- No user-generated data (yet)
-- Simplifies workflow and prevents environment drift
-- **Market price data**: Gold API fetches run every 5 minutes and build 24h history - duplicating across environments would waste API calls and create inconsistent data
+**Key points:**
 
-**Important**: Always use the production deployment URL in `.env.local`. Never use `npx convex dev` which creates a separate dev deployment. Use `npx convex dev --once` to push changes, or better yet, use the production deployment directly.
-
-**When to reconsider**: When implementing user authentication and settings persistence, a separate dev environment may be beneficial for testing with mock users.
+- Clerk and Stripe have separate test/prod API keys
+- API keys (Unwrangle, Pure, Gold API, FMP) are shared across environments
+- Cron jobs only run in Convex prod (`ENABLE_CRONS=true`)
 
 ### Environment Variables
 
+See **[docs/environment-variables.md](docs/environment-variables.md)** for comprehensive documentation including:
+
+- Complete variable reference with descriptions
+- Environment matrix (what goes where)
+- Setup checklists for local dev and Railway preview
+- Troubleshooting guide
+
+**Quick reference:**
+
 - `.env.template` - Template file with empty values (committed to git)
-- `.env.local` - Actual values with API keys and production deployment URL (gitignored)
+- `.env.local` - Actual values for local dev (gitignored)
+- Convex Dashboard - API keys and backend secrets
+- Railway Dashboard - Runtime and build-time variables
 
 ### Validation
 
@@ -406,7 +439,7 @@ bun run test && bun run test:browser
 
 Convex is configured to use the production deployment (`effervescent-dog-80`) for all development and production work.
 
-**Authentication**: Clerk auth is currently disabled in `convex/auth.config.ts` until ready for implementation (see TODO.md).
+**Authentication**: Clerk auth is enabled in production. See `.sessions/alerts.md` for the full auth/subscription rollout history.
 
 To run Convex in development:
 
@@ -708,10 +741,8 @@ This provides optimal performance with instant page loads and real-time reactivi
 
 ### Future Enhancements
 
-See `TODO.md` for planned features including:
+See `TASKS.md` for planned features including:
 
-- Clerk authentication integration
-- User settings persistence
 - Price history charts
 - Favorites/watchlist
 - Product comparison tools
@@ -872,4 +903,7 @@ For Railway/Docker deployment, ensure:
   - React Hook Form integration with real-time validation
   - Sonner toast notifications for user feedback
   - Confirmation dialogs for destructive actions (delete/reset)
-  - Ready for database migration when auth is enabled
+- ✅ Clerk authentication enabled in production
+- ✅ User data migration (localStorage → Convex) complete
+- ✅ Stripe subscription integration (checkout, webhooks, entitlements)
+- ✅ Alert system core (schema, CRUD, evaluation engine, email delivery) — production rollout pending

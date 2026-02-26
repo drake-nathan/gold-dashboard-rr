@@ -9,11 +9,7 @@ interface SwipeableCardProps {
   onDelete?: () => void;
 }
 
-export const SwipeableCard = ({
-  children,
-  className,
-  onDelete,
-}: SwipeableCardProps) => {
+export const SwipeableCard = ({ children, className, onDelete }: SwipeableCardProps) => {
   const [translateX, setTranslateX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const startX = useRef(0);
@@ -60,10 +56,7 @@ export const SwipeableCard = ({
 
       {/* Card content */}
       <div
-        className={cn(
-          "transition-transform",
-          isSwiping ? "duration-0" : "duration-200",
-        )}
+        className={cn("transition-transform", isSwiping ? "duration-0" : "duration-200")}
         onTouchEnd={handleTouchEnd}
         onTouchMove={handleTouchMove}
         onTouchStart={handleTouchStart}

@@ -19,9 +19,7 @@ const isAdmin = (userId: null | string): boolean => {
 };
 
 // Helper to get authenticated user ID from context
-const getAuthenticatedUserId = async (
-  ctx: QueryCtx,
-): Promise<null | string> => {
+const getAuthenticatedUserId = async (ctx: QueryCtx): Promise<null | string> => {
   const identity = await ctx.auth.getUserIdentity();
   return identity?.subject ?? null;
 };
@@ -48,9 +46,7 @@ export const getProductsForReview = query({
 
     // Fetch all Pure products for joining
     const pureProducts = await ctx.db.query("pureProducts").collect();
-    const pureProductsMap = new Map(
-      pureProducts.map((p) => [p.pureProductId, p]),
-    );
+    const pureProductsMap = new Map(pureProducts.map((p) => [p.pureProductId, p]));
 
     // Group by match status
     const grouped = {
@@ -81,10 +77,7 @@ export const getProductsForReview = query({
 
     // Enrich with Pure product info
     const enrichProduct = (product: (typeof products)[0]) => {
-      const pureProduct =
-        product.pureProductId ?
-          pureProductsMap.get(product.pureProductId)
-        : null;
+      const pureProduct = product.pureProductId ? pureProductsMap.get(product.pureProductId) : null;
 
       return {
         _id: product._id,
@@ -153,9 +146,7 @@ export const getTopMatches = query({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -166,9 +157,7 @@ export const getTopMatches = query({
 
     // Get fallback Pure product info
     const fallbackPureId =
-      weightInOz ?
-        getFallbackPureId(costcoProduct.metalType, weightInOz)
-      : null;
+      weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
 
     let fallbackPureProduct = null;
     if (fallbackPureId) {
@@ -181,9 +170,7 @@ export const getTopMatches = query({
     // Get all Pure products for this metal type
     const pureProducts = await ctx.db
       .query("pureProducts")
-      .withIndex("by_metal_type", (q) =>
-        q.eq("metalType", costcoProduct.metalType),
-      )
+      .withIndex("by_metal_type", (q) => q.eq("metalType", costcoProduct.metalType))
       .collect();
 
     if (pureProducts.length === 0) {
@@ -251,10 +238,7 @@ export const getTopMatches = query({
       // 2. MANUFACTURER MATCH
       if (pureProduct.manufacturer) {
         const manufacturer = pureProduct.manufacturer.toLowerCase();
-        const manufacturerVariants = [
-          manufacturer,
-          manufacturer.replaceAll(/\s+/g, ""),
-        ];
+        const manufacturerVariants = [manufacturer, manufacturer.replaceAll(/\s+/g, "")];
 
         const hasManufacturer = manufacturerVariants.some((variant) =>
           costcoNameLower.includes(variant),
@@ -305,10 +289,7 @@ export const getTopMatches = query({
         ) {
           score += 75;
           matchDetails.push(`phrase:"${threeWord}"`);
-        } else if (
-          !genericPhrases.includes(twoWord) &&
-          costcoNameLower.includes(twoWord)
-        ) {
+        } else if (!genericPhrases.includes(twoWord) && costcoNameLower.includes(twoWord)) {
           score += 40;
           matchDetails.push(`phrase:"${twoWord}"`);
         }
@@ -421,9 +402,7 @@ export const searchPureProducts = query({
     if (args.metalType) {
       pureProducts = await ctx.db
         .query("pureProducts")
-        .withIndex("by_metal_type", (q) =>
-          q.eq("metalType", args.metalType ?? "gold"),
-        )
+        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType ?? "gold"))
         .collect();
     } else {
       pureProducts = await ctx.db.query("pureProducts").collect();
@@ -471,9 +450,7 @@ export const selectMatch = mutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -517,9 +494,7 @@ export const confirmMatch = mutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -561,9 +536,7 @@ export const approveMatch = mutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -609,9 +582,7 @@ export const useFallback = mutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -621,9 +592,7 @@ export const useFallback = mutation({
     // Get weight-specific fallback if available
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
     const fallbackPureId =
-      weightInOz ?
-        getFallbackPureId(costcoProduct.metalType, weightInOz)
-      : null;
+      weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
 
     // Update to use fallback
     await ctx.db.patch(costcoProduct._id, {
@@ -677,12 +646,9 @@ export const rematchProduct = action({
     }
 
     // Run the matching algorithm
-    const result = await ctx.runMutation(
-      internal.costco.matchCostcoProductToPure,
-      {
-        costcoProductId: args.costcoProductId,
-      },
-    );
+    const result = await ctx.runMutation(internal.costco.matchCostcoProductToPure, {
+      costcoProductId: args.costcoProductId,
+    });
 
     return result;
   },
@@ -705,9 +671,7 @@ export const clearManualMatch = internalMutation({
   handler: async (ctx, args) => {
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -740,9 +704,7 @@ export const getAllPureProducts = query({
     if (args.metalType) {
       pureProducts = await ctx.db
         .query("pureProducts")
-        .withIndex("by_metal_type", (q) =>
-          q.eq("metalType", args.metalType ?? "gold"),
-        )
+        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType ?? "gold"))
         .collect();
     } else {
       pureProducts = await ctx.db.query("pureProducts").collect();
@@ -864,9 +826,7 @@ export const fetchAndAddPureProduct = action({
           );
 
           if (!response.ok) {
-            console.warn(
-              `Failed to fetch ${material} products: ${response.status}`,
-            );
+            console.warn(`Failed to fetch ${material} products: ${response.status}`);
             break;
           }
 
@@ -888,13 +848,8 @@ export const fetchAndAddPureProduct = action({
       }
 
       // Transform the product data
-      const metalType = foundProduct.material.toLowerCase() as
-        | "gold"
-        | "silver";
-      const weightOz = parseWeightToOz(
-        foundProduct.weight,
-        foundProduct.weightGrams,
-      );
+      const metalType = foundProduct.material.toLowerCase() as "gold" | "silver";
+      const weightOz = parseWeightToOz(foundProduct.weight, foundProduct.weightGrams);
       const productType = extractProductType(foundProduct);
       const bidPrice = foundProduct.variants[0]?.highestOffer?.price ?? null;
       const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;

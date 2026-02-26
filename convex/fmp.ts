@@ -87,9 +87,7 @@ export const fetchSP500 = internalAction({
       const quote = data[0];
 
       if (!quote.price || typeof quote.price !== "number") {
-        throw new Error(
-          `Invalid price data received: ${JSON.stringify(quote)}`,
-        );
+        throw new Error(`Invalid price data received: ${JSON.stringify(quote)}`);
       }
 
       // FMP provides changePercentage directly (previous close to current)
@@ -173,9 +171,7 @@ export const upsertSP500Price = internalMutation({
     const thirtyDaysAgo = args.timestamp - 30 * 24 * 60 * 60 * 1000;
     const oldRecords = await ctx.db
       .query("marketPriceHistory")
-      .withIndex("by_symbol_and_time", (q) =>
-        q.eq("symbol", symbol).lt("timestamp", thirtyDaysAgo),
-      )
+      .withIndex("by_symbol_and_time", (q) => q.eq("symbol", symbol).lt("timestamp", thirtyDaysAgo))
       .collect();
 
     for (const record of oldRecords) {

@@ -37,9 +37,7 @@ export const getStats = query({
 
     // Get all Pure products for JOIN
     const pureProducts = await ctx.db.query("pureProducts").collect();
-    const pureProductsMap = new Map(
-      pureProducts.map((p) => [p.pureProductId, p]),
-    );
+    const pureProductsMap = new Map(pureProducts.map((p) => [p.pureProductId, p]));
 
     // Helper to calculate spread with fresh Pure bid prices
     const calculateSpread = (
@@ -91,9 +89,7 @@ export const getStats = query({
       const bidPrice = pureBidPricePerOz ?? fallbackBidPrice;
 
       const spread =
-        bidPrice && product.currentPricePerOunce ?
-          product.currentPricePerOunce - bidPrice
-        : null;
+        bidPrice && product.currentPricePerOunce ? product.currentPricePerOunce - bidPrice : null;
       const spreadPercentage =
         spread && product.currentPricePerOunce ?
           (spread / product.currentPricePerOunce) * 100
@@ -155,9 +151,7 @@ export const getStats = query({
       goldProducts: {
         bestSpread: goldWithSpreads, // Return ALL products sorted by spread
         bestValue: goldProducts.sort(
-          (a, b) =>
-            (a.currentPricePerOunce ?? Infinity) -
-            (b.currentPricePerOunce ?? Infinity),
+          (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
         ),
         inStock: goldProducts.filter((p) => p.currentInStock).length,
         total: goldProducts.length,
@@ -175,9 +169,7 @@ export const getStats = query({
       silverProducts: {
         bestSpread: silverWithSpreads, // Return ALL products sorted by spread
         bestValue: silverProducts.sort(
-          (a, b) =>
-            (a.currentPricePerOunce ?? Infinity) -
-            (b.currentPricePerOunce ?? Infinity),
+          (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
         ),
         inStock: silverProducts.filter((p) => p.currentInStock).length,
         total: silverProducts.length,

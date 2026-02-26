@@ -117,16 +117,12 @@ export const fetchNewData = internalAction({
       const data = validateApiResponse(rawData);
 
       if (!data.success) {
-        throw new Error(
-          `API request failed. Credits remaining: ${data.remaining_credits}`,
-        );
+        throw new Error(`API request failed. Credits remaining: ${data.remaining_credits}`);
       }
 
       // Filter for precious metals category
       const preciousMetalsProducts = data.results.filter((product) =>
-        product.categories.includes(
-          "https://www.costco.com/precious-metals.html",
-        ),
+        product.categories.includes("https://www.costco.com/precious-metals.html"),
       );
 
       // Process and filter valid metal products
@@ -137,15 +133,14 @@ export const fetchNewData = internalAction({
       console.info(
         `Found ${processedProducts.length} metal products (${
           processedProducts.filter((p) => p.metalType === "gold").length
-        } gold, ${
-          processedProducts.filter((p) => p.metalType === "silver").length
-        } silver)`,
+        } gold, ${processedProducts.filter((p) => p.metalType === "silver").length} silver)`,
       );
 
       // Track statistics
       let productsUpdated = 0;
       let priceChanges = 0;
       let stockChanges = 0;
+      const updatedProductIds = new Set<string>();
 
       // Collect all product IDs seen in this fetch
       const seenProductIds = new Set(processedProducts.map((p) => p.id));
@@ -157,7 +152,10 @@ export const fetchNewData = internalAction({
           timestamp,
         });
 
-        if (result.updated) productsUpdated++;
+        if (result.updated) {
+          productsUpdated++;
+          updatedProductIds.add(product.id);
+        }
         if (result.priceChanged) priceChanges++;
         if (result.stockChanged) stockChanges++;
 
@@ -168,16 +166,25 @@ export const fetchNewData = internalAction({
       }
 
       // Mark products not returned as out of stock
-      const outOfStockResult = await ctx.runMutation(
-        internal.costco.markUnseenProductsOutOfStock,
-        {
-          seenProductIds: Array.from(seenProductIds),
-          timestamp,
-        },
-      );
+      const outOfStockResult = await ctx.runMutation(internal.costco.markUnseenProductsOutOfStock, {
+        seenProductIds: Array.from(seenProductIds),
+        timestamp,
+      });
 
       stockChanges += outOfStockResult.stockChanges;
       productsUpdated += outOfStockResult.productsUpdated;
+      for (const productId of outOfStockResult.updatedProductIds) {
+        updatedProductIds.add(productId);
+      }
+
+      // Evaluate alerts for products that changed in this fetch cycle.
+      if (updatedProductIds.size > 0) {
+        await ctx.runMutation(internal.alerts.evaluateAlertsForProducts, {
+          evaluatedAt: timestamp,
+          productIds: [...updatedProductIds],
+          source: "costco_search",
+        });
+      }
 
       // Log fetch run
       fetchRunId = await ctx.runMutation(internal.costco.logFetchRun, {
@@ -264,18 +271,13 @@ export const upsertProduct = internalMutation({
       // 3. Search API is trying to say it's IN stock
       // This prevents Search API from incorrectly marking "Delivery Out of Stock" products as available
       const verificationAge =
-        existing.lastVerifiedAt ?
-          args.timestamp - existing.lastVerifiedAt
-        : Infinity;
-      const isWithinVerificationWindow =
-        verificationAge < VERIFICATION_WINDOW_MS;
+        existing.lastVerifiedAt ? args.timestamp - existing.lastVerifiedAt : Infinity;
+      const isWithinVerificationWindow = verificationAge < VERIFICATION_WINDOW_MS;
       const productApiSaysOutOfStock = existing.verifiedInStock === false;
       const searchApiSaysInStock = product.in_stock;
 
       const shouldTrustProductApi =
-        isWithinVerificationWindow &&
-        productApiSaysOutOfStock &&
-        searchApiSaysInStock;
+        isWithinVerificationWindow && productApiSaysOutOfStock && searchApiSaysInStock;
 
       // Use Product API's stock status if it should be trusted, otherwise use Search API
       const effectiveInStock = shouldTrustProductApi ? false : product.in_stock;
@@ -299,8 +301,7 @@ export const upsertProduct = internalMutation({
       }
 
       // Check if metalWeight changed (e.g., count multiplier fix)
-      const weightChanged =
-        existing.metalWeight !== (product.metalWeight ?? null);
+      const weightChanged = existing.metalWeight !== (product.metalWeight ?? null);
 
       // Update product if anything changed
       if (priceChanged || stockChanged || weightChanged) {
@@ -314,8 +315,7 @@ export const upsertProduct = internalMutation({
           ...(priceChanged && { lastPriceChange: args.timestamp }),
           ...(stockChanged && { lastStockChange: args.timestamp }),
           // Set lastInStockAt when product goes OUT of stock
-          ...(stockChanged &&
-            !effectiveInStock && { lastInStockAt: args.timestamp }),
+          ...(stockChanged && !effectiveInStock && { lastInStockAt: args.timestamp }),
         });
         updated = true;
       }
@@ -382,13 +382,12 @@ export const markUnseenProductsOutOfStock = internalMutation({
   handler: async (ctx, args) => {
     let stockChanges = 0;
     let productsUpdated = 0;
+    const updatedProductIds: string[] = [];
 
     // Get all currently in-stock products
     const inStockProducts = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_metal_and_stock", (q) =>
-        q.eq("metalType", "gold").eq("currentInStock", true),
-      )
+      .withIndex("by_metal_and_stock", (q) => q.eq("metalType", "gold").eq("currentInStock", true))
       .collect();
 
     const silverInStock = await ctx.db
@@ -422,14 +421,13 @@ export const markUnseenProductsOutOfStock = internalMutation({
 
         stockChanges++;
         productsUpdated++;
+        updatedProductIds.push(product.productId);
 
-        console.info(
-          `Marked product ${product.name} (${product.productId}) as out of stock`,
-        );
+        console.info(`Marked product ${product.name} (${product.productId}) as out of stock`);
       }
     }
 
-    return { productsUpdated, stockChanges };
+    return { productsUpdated, stockChanges, updatedProductIds };
   },
 });
 
@@ -491,9 +489,7 @@ export const getCurrentPrices = query({
 
     // Sort by price per ounce for value comparison
     const sorted = results.sort(
-      (a, b) =>
-        (a.currentPricePerOunce ?? Infinity) -
-        (b.currentPricePerOunce ?? Infinity),
+      (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
     );
 
     return args.limit ? sorted.slice(0, args.limit) : sorted;
@@ -510,9 +506,7 @@ export const getPriceHistory = query({
 
     const history = await ctx.db
       .query("priceHistory")
-      .withIndex("by_product_and_time", (q) =>
-        q.eq("productId", args.productId),
-      )
+      .withIndex("by_product_and_time", (q) => q.eq("productId", args.productId))
       .filter((q) => q.gte(q.field("timestamp"), cutoff))
       .take(1000); // Limit history queries
 
@@ -530,9 +524,7 @@ export const getStockHistory = query({
 
     const history = await ctx.db
       .query("stockHistory")
-      .withIndex("by_product_and_time", (q) =>
-        q.eq("productId", args.productId),
-      )
+      .withIndex("by_product_and_time", (q) => q.eq("productId", args.productId))
       .filter((q) => q.gte(q.field("timestamp"), cutoff))
       .take(1000); // Limit history queries
 
@@ -555,15 +547,11 @@ export const matchCostcoProductToPure = internalMutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
-      console.warn(
-        `Costco product ${args.costcoProductId} not found for matching`,
-      );
+      console.warn(`Costco product ${args.costcoProductId} not found for matching`);
       return { matched: false };
     }
 
@@ -578,9 +566,7 @@ export const matchCostcoProductToPure = internalMutation({
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
 
     if (!weightInOz) {
-      console.warn(
-        `Could not extract weight for ${costcoProduct.name} (${args.costcoProductId})`,
-      );
+      console.warn(`Could not extract weight for ${costcoProduct.name} (${args.costcoProductId})`);
 
       // No weight available - can't match to Pure product
       await ctx.db.patch(costcoProduct._id, {
@@ -591,10 +577,7 @@ export const matchCostcoProductToPure = internalMutation({
     }
 
     // Try to get a weight-specific fallback Pure product
-    const fallbackPureId = getFallbackPureId(
-      costcoProduct.metalType,
-      weightInOz,
-    );
+    const fallbackPureId = getFallbackPureId(costcoProduct.metalType, weightInOz);
     let fallbackPureProduct = null;
 
     if (fallbackPureId) {
@@ -607,15 +590,11 @@ export const matchCostcoProductToPure = internalMutation({
     // Get all Pure products for this metal type
     const pureProducts = await ctx.db
       .query("pureProducts")
-      .withIndex("by_metal_type", (q) =>
-        q.eq("metalType", costcoProduct.metalType),
-      )
+      .withIndex("by_metal_type", (q) => q.eq("metalType", costcoProduct.metalType))
       .collect();
 
     if (pureProducts.length === 0) {
-      console.warn(
-        `No Pure products found for ${costcoProduct.metalType}, using fallback`,
-      );
+      console.warn(`No Pure products found for ${costcoProduct.metalType}, using fallback`);
 
       if (fallbackPureProduct) {
         console.info(
@@ -733,10 +712,7 @@ export const matchCostcoProductToPure = internalMutation({
         ) {
           score += 75; // Strong match for 3-word phrase
           matchDetails.push(`phrase:"${threeWord}"`);
-        } else if (
-          !genericPhrases.includes(twoWord) &&
-          costcoNameLower.includes(twoWord)
-        ) {
+        } else if (!genericPhrases.includes(twoWord) && costcoNameLower.includes(twoWord)) {
           score += 40; // Good match for 2-word phrase
           matchDetails.push(`phrase:"${twoWord}"`);
         }
@@ -761,9 +737,7 @@ export const matchCostcoProductToPure = internalMutation({
       console.info(
         `❌ NO MATCH for Costco product: ${costcoProduct.name} (${args.costcoProductId})`,
       );
-      console.info(
-        `   Weight: ${weightInOz} oz, Metal: ${costcoProduct.metalType}`,
-      );
+      console.info(`   Weight: ${weightInOz} oz, Metal: ${costcoProduct.metalType}`);
       console.info(`   Available Pure products: ${pureProducts.length}`);
 
       if (fallbackPureProduct) {
@@ -794,22 +768,16 @@ export const matchCostcoProductToPure = internalMutation({
       console.info(
         `⚠️  NEEDS REVIEW for Costco product: ${costcoProduct.name} (${args.costcoProductId})`,
       );
-      console.info(
-        `   Found ${matches.length} potential matches, top score: ${bestMatch.score}`,
-      );
+      console.info(`   Found ${matches.length} potential matches, top score: ${bestMatch.score}`);
       console.info(`   Top candidates:`);
       matches.slice(0, 3).forEach((m, i) => {
-        console.info(
-          `     ${i + 1}. ${m.product.productName} (ID: ${m.product.pureProductId})`,
-        );
+        console.info(`     ${i + 1}. ${m.product.productName} (ID: ${m.product.pureProductId})`);
         console.info(`        Score: ${m.score} | Matched: ${m.details}`);
       });
 
       // Use fallback instead of guessing
       if (fallbackPureProduct) {
-        console.info(
-          `   Using fallback Pure product instead: ${fallbackPureProduct.productName}`,
-        );
+        console.info(`   Using fallback Pure product instead: ${fallbackPureProduct.productName}`);
         await ctx.db.patch(costcoProduct._id, {
           matchStatus: "needs_review",
           pureProductId: fallbackPureId,
@@ -835,15 +803,9 @@ export const matchCostcoProductToPure = internalMutation({
     }
 
     // High confidence match (score >= 250 and only one match)
-    console.info(
-      `✅ AUTO MATCHED: ${costcoProduct.name} (${args.costcoProductId})`,
-    );
-    console.info(
-      `   → ${bestMatch.product.productName} (${bestMatch.product.pureProductId})`,
-    );
-    console.info(
-      `   Score: ${bestMatch.score} | Matched: ${bestMatch.details}`,
-    );
+    console.info(`✅ AUTO MATCHED: ${costcoProduct.name} (${args.costcoProductId})`);
+    console.info(`   → ${bestMatch.product.productName} (${bestMatch.product.pureProductId})`);
+    console.info(`   Score: ${bestMatch.score} | Matched: ${bestMatch.details}`);
 
     await ctx.db.patch(costcoProduct._id, {
       matchStatus: "auto_matched",
@@ -869,9 +831,7 @@ export const manuallyMatchProduct = internalMutation({
     // Get the Costco product
     const costcoProduct = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_product_id", (q) =>
-        q.eq("productId", args.costcoProductId),
-      )
+      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
       .first();
 
     if (!costcoProduct) {
@@ -894,9 +854,7 @@ export const manuallyMatchProduct = internalMutation({
       pureProductId: args.pureProductId,
     });
 
-    console.info(
-      `🔧 MANUAL MATCH: ${costcoProduct.name} → ${pureProduct.productName}`,
-    );
+    console.info(`🔧 MANUAL MATCH: ${costcoProduct.name} → ${pureProduct.productName}`);
 
     return {
       costcoProduct: costcoProduct.name,
@@ -926,10 +884,7 @@ export const matchAllCostcoProducts = internalAction({
     needsReview: number;
     total: number;
   }> => {
-    const costcoProducts = await ctx.runMutation(
-      internal.costco.getAllProductsForMatching,
-      {},
-    );
+    const costcoProducts = await ctx.runMutation(internal.costco.getAllProductsForMatching, {});
 
     let matched = 0;
     let needsReview = 0;
@@ -937,12 +892,9 @@ export const matchAllCostcoProducts = internalAction({
     let manualMatches = 0;
 
     for (const product of costcoProducts) {
-      const result = await ctx.runMutation(
-        internal.costco.matchCostcoProductToPure,
-        {
-          costcoProductId: product.productId,
-        },
-      );
+      const result = await ctx.runMutation(internal.costco.matchCostcoProductToPure, {
+        costcoProductId: product.productId,
+      });
 
       if (result.status === "auto_matched") matched++;
       else if (result.status === "needs_review") needsReview++;
@@ -998,9 +950,7 @@ export const fetchProductDetails = internalAction({
     const data = (await response.json()) as ProductApiResponse;
 
     if (!data.success) {
-      throw new Error(
-        `Product API request failed. Credits remaining: ${data.remaining_credits}`,
-      );
+      throw new Error(`Product API request failed. Credits remaining: ${data.remaining_credits}`);
     }
 
     // Stock status: Check top-level in_stock and availability first
@@ -1011,15 +961,11 @@ export const fetchProductDetails = internalAction({
 
     // If top-level in_stock is explicitly null AND availability is null, treat as out of stock
     // This catches the "Delivery Out of Stock" case that variants don't reflect
-    const isDeliveryOutOfStock =
-      topLevelInStock === null && availability === null;
+    const isDeliveryOutOfStock = topLevelInStock === null && availability === null;
 
     // Only fall back to variant stock if top-level fields are populated
     const variantInStock = data.detail.variants?.[0]?.in_stock;
-    const inStock =
-      isDeliveryOutOfStock ? false : (
-        (topLevelInStock ?? variantInStock ?? false)
-      );
+    const inStock = isDeliveryOutOfStock ? false : (topLevelInStock ?? variantInStock ?? false);
 
     // Log stock detection for debugging
     if (isDeliveryOutOfStock) {
@@ -1047,9 +993,7 @@ export const getInStockProductsForVerification = internalMutation({
   handler: async (ctx) => {
     const goldInStock = await ctx.db
       .query("costcoProducts")
-      .withIndex("by_metal_and_stock", (q) =>
-        q.eq("metalType", "gold").eq("currentInStock", true),
-      )
+      .withIndex("by_metal_and_stock", (q) => q.eq("metalType", "gold").eq("currentInStock", true))
       .collect();
 
     const silverInStock = await ctx.db
@@ -1130,8 +1074,7 @@ export const updateProductFromVerification = internalMutation({
 
     // Always update verification fields, plus any changes
     const weightInOz = extractWeightInOz(product.metalWeight);
-    const newPricePerOunce =
-      args.price !== null && weightInOz ? args.price / weightInOz : null;
+    const newPricePerOunce = args.price !== null && weightInOz ? args.price / weightInOz : null;
 
     await ctx.db.patch(product._id, {
       // Always set verification fields - Product API is authoritative for stock status
@@ -1181,10 +1124,7 @@ export const verifyInStockProducts = internalAction({
         name: string;
         productId: string;
         url: string;
-      }[] = await ctx.runMutation(
-        internal.costco.getInStockProductsForVerification,
-        {},
-      );
+      }[] = await ctx.runMutation(internal.costco.getInStockProductsForVerification, {});
 
       if (inStockProducts.length === 0) {
         console.info("[Product API] No in-stock products to verify");
@@ -1196,40 +1136,36 @@ export const verifyInStockProducts = internalAction({
         };
       }
 
-      console.info(
-        `[Product API] Verifying ${inStockProducts.length} in-stock products`,
-      );
+      console.info(`[Product API] Verifying ${inStockProducts.length} in-stock products`);
 
       let priceChanges = 0;
       let stockChanges = 0;
       let creditsRemaining = 0;
+      const updatedProductIds = new Set<string>();
 
       // Fetch each product's details
       for (const product of inStockProducts) {
         try {
-          const details = await ctx.runAction(
-            internal.costco.fetchProductDetails,
-            {
-              productId: product.productId,
-              productUrl: product.url,
-            },
-          );
+          const details = await ctx.runAction(internal.costco.fetchProductDetails, {
+            productId: product.productId,
+            productUrl: product.url,
+          });
 
           creditsRemaining = details.creditsRemaining;
 
           // Update product with verified data
-          const result = await ctx.runMutation(
-            internal.costco.updateProductFromVerification,
-            {
-              inStock: details.inStock,
-              price: details.price,
-              productId: product.productId,
-              timestamp,
-            },
-          );
+          const result = await ctx.runMutation(internal.costco.updateProductFromVerification, {
+            inStock: details.inStock,
+            price: details.price,
+            productId: product.productId,
+            timestamp,
+          });
 
           if (result.priceChanged) priceChanges++;
           if (result.stockChanged) stockChanges++;
+          if (result.updated) {
+            updatedProductIds.add(product.productId);
+          }
         } catch (error) {
           console.error(
             `[Product API] Error verifying ${product.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -1248,6 +1184,14 @@ export const verifyInStockProducts = internalAction({
         stockChanges,
         timestamp,
       });
+
+      if (updatedProductIds.size > 0) {
+        await ctx.runMutation(internal.alerts.evaluateAlertsForProducts, {
+          evaluatedAt: timestamp,
+          productIds: [...updatedProductIds],
+          source: "costco_verify",
+        });
+      }
 
       console.info(
         `[Product API] Verification complete: ${inStockProducts.length} verified, ${priceChanges} price changes, ${stockChanges} stock changes. Credits remaining: ${creditsRemaining}`,

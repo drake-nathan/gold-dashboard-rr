@@ -34,8 +34,7 @@ const TestComponent = ({
     setCostcoMembershipEnabled: (enabled: boolean) => Promise<void>;
   }) => void;
 }) => {
-  const { costcoMembershipEnabled, isLoading, setCostcoMembershipEnabled } =
-    useUserSettings();
+  const { costcoMembershipEnabled, isLoading, setCostcoMembershipEnabled } = useUserSettings();
 
   useEffect(() => {
     if (!isLoading) {
@@ -49,9 +48,7 @@ const TestComponent = ({
   return (
     <div>
       <div data-testid="loading">{isLoading ? "loading" : "ready"}</div>
-      <div data-testid="costco-enabled">
-        {costcoMembershipEnabled ? "enabled" : "disabled"}
-      </div>
+      <div data-testid="costco-enabled">{costcoMembershipEnabled ? "enabled" : "disabled"}</div>
     </div>
   );
 };

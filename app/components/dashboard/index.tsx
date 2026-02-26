@@ -12,11 +12,7 @@ import { FeatureAnnouncementModal } from "@/components/feature-announcement-moda
 import { ProductCard } from "@/components/product-card";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
-import {
-  filterProducts,
-  shouldAutoFlipToOutOfStock,
-  sortProducts,
-} from "@/utils/product-filters";
+import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "@/utils/product-filters";
 
 import type { MetalFilter, SortOption } from "./filter-types";
 
@@ -69,10 +65,8 @@ export const Dashboard = ({ stats }: DashboardProps) => {
   }, [isMigrating]);
 
   // Derive filter state directly from URL params
-  const metalFilter =
-    (searchParams.get("metal") as MetalFilter | null) ?? "all";
-  const sortOption =
-    (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
+  const metalFilter = (searchParams.get("metal") as MetalFilter | null) ?? "all";
+  const sortOption = (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
   const urlShowOutOfStock = searchParams.get("showOOS") === "true";
 
   // Local state for instant UI updates (synced with URL)
@@ -91,9 +85,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
 
     // Check if URL has any filter params (meaning user is navigating, not initial load)
     const hasFilterParams =
-      searchParams.has("metal") ||
-      searchParams.has("sort") ||
-      searchParams.has("showOOS");
+      searchParams.has("metal") || searchParams.has("sort") || searchParams.has("showOOS");
 
     // If user already has params set, don't auto-flip
     if (hasFilterParams) {
@@ -118,12 +110,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
     }
 
     hasAutoFlipped.current = true;
-  }, [
-    searchParams,
-    setSearchParams,
-    stats.goldProducts.inStock,
-    stats.silverProducts.inStock,
-  ]);
+  }, [searchParams, setSearchParams, stats.goldProducts.inStock, stats.silverProducts.inStock]);
 
   // Update URL params (only set non-default values)
   // Debounced to prevent rapid URL updates during quick filter changes
@@ -242,12 +229,8 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         {sortedProducts.length === 0 ?
           <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
             <div className="text-center">
-              <p className="text-lg font-medium text-muted-foreground">
-                No products found
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Try adjusting your filters
-              </p>
+              <p className="text-lg font-medium text-muted-foreground">No products found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
             </div>
           </div>
         : <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>

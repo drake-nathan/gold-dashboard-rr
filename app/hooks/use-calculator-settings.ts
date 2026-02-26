@@ -22,10 +22,7 @@ export interface CalculatorSettingsState {
 }
 
 export interface CalculatorSettingsActions {
-  handleCardsChange: (
-    newCards: CreditCard[],
-    selectCardId?: string,
-  ) => Promise<void>;
+  handleCardsChange: (newCards: CreditCard[], selectCardId?: string) => Promise<void>;
   handleResetAll: () => Promise<void>;
   updateCalculatorSettings: (settings: CalculatorSettings) => Promise<void>;
 }
@@ -44,8 +41,7 @@ export interface CalculatorSettingsActions {
  * - No Effects for localStorage writes (done in event handlers)
  * - Derived state computed during render (selected card synced with availableCards)
  */
-export const useCalculatorSettings = (): CalculatorSettingsActions &
-  CalculatorSettingsState => {
+export const useCalculatorSettings = (): CalculatorSettingsActions & CalculatorSettingsState => {
   // User data hooks (handle auth-aware data source selection)
   const {
     addCard,
@@ -97,10 +93,7 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
   );
 
   // Handle card changes from manager
-  const handleCardsChange = async (
-    newCards: CreditCard[],
-    selectCardId?: string,
-  ) => {
+  const handleCardsChange = async (newCards: CreditCard[], selectCardId?: string) => {
     // Find which cards were added, updated, or deleted
     const existingIds = new Set(availableCards.map((c) => c.id));
     const newIds = new Set(newCards.map((c) => c.id));
@@ -127,8 +120,7 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
             existingCard.pointsPerDollar !== card.pointsPerDollar ||
             existingCard.valuePerPoint !== card.valuePerPoint ||
             existingCard.cardType !== card.cardType ||
-            JSON.stringify(existingCard.signupBonus) !==
-              JSON.stringify(card.signupBonus);
+            JSON.stringify(existingCard.signupBonus) !== JSON.stringify(card.signupBonus);
 
           if (hasChanges) {
             await updateCardData(card.id, card);
@@ -172,8 +164,7 @@ export const useCalculatorSettings = (): CalculatorSettingsActions &
 
   // Calculate total cashback percentage
   const totalCashbackPercentage =
-    (costcoMembershipEnabled ? 2 : 0) +
-    calculateCashbackPercentage(selectedCard);
+    (costcoMembershipEnabled ? 2 : 0) + calculateCashbackPercentage(selectedCard);
 
   const isLoading = isCardsLoading || isSettingsLoading;
 

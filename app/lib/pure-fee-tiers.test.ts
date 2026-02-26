@@ -65,9 +65,7 @@ test("loadPureFeeTier: returns stored tier when localStorage has valid data", ()
 test("loadPureFeeTier: returns default tier when localStorage has invalid JSON", () => {
   localStorage.setItem("dashboard-gold-pure-fee-tier", "invalid json");
 
-  const consoleSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
   const tierId = loadPureFeeTier();
 
   expect(tierId).toBe(PURE_FEE_TIERS[0].id);
@@ -91,14 +89,9 @@ test("loadPureFeeTier: returns default tier when stored tier ID doesn't exist", 
 });
 
 test("loadPureFeeTier: returns default tier when localStorage has invalid schema", () => {
-  localStorage.setItem(
-    "dashboard-gold-pure-fee-tier",
-    JSON.stringify({ wrongKey: "value" }),
-  );
+  localStorage.setItem("dashboard-gold-pure-fee-tier", JSON.stringify({ wrongKey: "value" }));
 
-  const consoleSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
   const tierId = loadPureFeeTier();
 
   expect(tierId).toBe(PURE_FEE_TIERS[0].id);
@@ -122,9 +115,7 @@ test("savePureFeeTier: successfully saves tier ID to localStorage", () => {
 });
 
 test("savePureFeeTier: throws error when data fails validation", () => {
-  const consoleSpy = vi
-    .spyOn(console, "error")
-    .mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
   // Mock setItem to throw
   const originalSetItem = localStorage.setItem;
@@ -156,33 +147,25 @@ test("getFeeRateForMetal: returns bullion rate for Gold (capitalized)", () => {
 test("getFeeRateForMetal: returns silver/plat/palladium rate for silver", () => {
   const tier = PURE_FEE_TIERS[0];
 
-  expect(getFeeRateForMetal(tier, "silver")).toBe(
-    tier.silverPlatPalladiumFeeRate,
-  );
+  expect(getFeeRateForMetal(tier, "silver")).toBe(tier.silverPlatPalladiumFeeRate);
 });
 
 test("getFeeRateForMetal: returns silver/plat/palladium rate for Silver", () => {
   const tier = PURE_FEE_TIERS[0];
 
-  expect(getFeeRateForMetal(tier, "Silver")).toBe(
-    tier.silverPlatPalladiumFeeRate,
-  );
+  expect(getFeeRateForMetal(tier, "Silver")).toBe(tier.silverPlatPalladiumFeeRate);
 });
 
 test("getFeeRateForMetal: returns silver/plat/palladium rate for Platinum", () => {
   const tier = PURE_FEE_TIERS[0];
 
-  expect(getFeeRateForMetal(tier, "Platinum")).toBe(
-    tier.silverPlatPalladiumFeeRate,
-  );
+  expect(getFeeRateForMetal(tier, "Platinum")).toBe(tier.silverPlatPalladiumFeeRate);
 });
 
 test("getFeeRateForMetal: returns silver/plat/palladium rate for Palladium", () => {
   const tier = PURE_FEE_TIERS[0];
 
-  expect(getFeeRateForMetal(tier, "Palladium")).toBe(
-    tier.silverPlatPalladiumFeeRate,
-  );
+  expect(getFeeRateForMetal(tier, "Palladium")).toBe(tier.silverPlatPalladiumFeeRate);
 });
 
 // Test formatTierDisplay

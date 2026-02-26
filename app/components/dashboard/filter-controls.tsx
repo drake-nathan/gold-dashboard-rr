@@ -33,21 +33,11 @@ export const FilterControls = ({
 
   return (
     <div className={containerClass}>
-      <div
-        className={
-          isMobile ?
-            "flex items-center justify-between"
-          : "flex items-center gap-2"
-        }
-      >
+      <div className={isMobile ? "flex items-center justify-between" : "flex items-center gap-2"}>
         <Label className={isMobile ? "text-sm" : ""} htmlFor="show-oos">
           Show Out of Stock
         </Label>
-        <Switch
-          checked={showOutOfStock}
-          id="show-oos"
-          onCheckedChange={setShowOutOfStock}
-        />
+        <Switch checked={showOutOfStock} id="show-oos" onCheckedChange={setShowOutOfStock} />
       </div>
 
       <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
@@ -60,10 +50,7 @@ export const FilterControls = ({
           }}
           value={metalFilter}
         >
-          <SelectTrigger
-            className={isMobile ? "w-full" : "min-w-20"}
-            id="metal-filter"
-          >
+          <SelectTrigger className={isMobile ? "w-full" : "min-w-20"} id="metal-filter">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

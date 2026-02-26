@@ -38,14 +38,10 @@ export const useUserSettings = (): UseUserSettingsReturn => {
   const [localCostcoEnabled, setLocalCostcoEnabled] = useState(true);
 
   // Convex query/mutation (only run when authenticated)
-  const convexSettings = useQuery(
-    api.userSettings.getSettings,
-    isSignedIn ? {} : "skip",
-  );
+  const convexSettings = useQuery(api.userSettings.getSettings, isSignedIn ? {} : "skip");
   const updateSettingsMutation = useMutation(api.userSettings.updateSettings);
 
-  const isLoading =
-    !isAuthLoaded || (isSignedIn && convexSettings === undefined);
+  const isLoading = !isAuthLoaded || (isSignedIn && convexSettings === undefined);
 
   // Get current value
   const costcoMembershipEnabled: boolean = (() => {

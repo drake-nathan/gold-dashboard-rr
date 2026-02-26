@@ -153,10 +153,7 @@ test("needsMigration returns true for new user", async () => {
   const t = convexTest(schema, modules);
   const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
 
-  const needsMigration = await asUser.query(
-    api.userSettings.needsMigration,
-    {},
-  );
+  const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
   expect(needsMigration).toBe(true);
 });
@@ -170,10 +167,7 @@ test("needsMigration returns true when not migrated", async () => {
     costcoMembershipEnabled: true,
   });
 
-  const needsMigration = await asUser.query(
-    api.userSettings.needsMigration,
-    {},
-  );
+  const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
   expect(needsMigration).toBe(true);
 });
@@ -184,10 +178,7 @@ test("needsMigration returns false after marking complete", async () => {
 
   await asUser.mutation(api.userSettings.markMigrationComplete, {});
 
-  const needsMigration = await asUser.query(
-    api.userSettings.needsMigration,
-    {},
-  );
+  const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
   expect(needsMigration).toBe(false);
 });
@@ -200,10 +191,7 @@ test("markMigrationComplete sets flag for new user", async () => {
   const t = convexTest(schema, modules);
   const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
 
-  const result = await asUser.mutation(
-    api.userSettings.markMigrationComplete,
-    {},
-  );
+  const result = await asUser.mutation(api.userSettings.markMigrationComplete, {});
 
   expect(result).toStrictEqual({ success: true });
 

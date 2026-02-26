@@ -12,15 +12,8 @@ const Table = ({ className, ...props }: React.ComponentProps<"table">) => (
   </div>
 );
 
-const TableHeader = ({
-  className,
-  ...props
-}: React.ComponentProps<"thead">) => (
-  <thead
-    className={cn("[&_tr]:border-b", className)}
-    data-slot="table-header"
-    {...props}
-  />
+const TableHeader = ({ className, ...props }: React.ComponentProps<"thead">) => (
+  <thead className={cn("[&_tr]:border-b", className)} data-slot="table-header" {...props} />
 );
 
 const TableBody = ({ className, ...props }: React.ComponentProps<"tbody">) => (
@@ -31,15 +24,9 @@ const TableBody = ({ className, ...props }: React.ComponentProps<"tbody">) => (
   />
 );
 
-const TableFooter = ({
-  className,
-  ...props
-}: React.ComponentProps<"tfoot">) => (
+const TableFooter = ({ className, ...props }: React.ComponentProps<"tfoot">) => (
   <tfoot
-    className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0",
-      className,
-    )}
+    className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
     data-slot="table-footer"
     {...props}
   />
@@ -78,10 +65,7 @@ const TableCell = ({ className, ...props }: React.ComponentProps<"td">) => (
   />
 );
 
-const TableCaption = ({
-  className,
-  ...props
-}: React.ComponentProps<"caption">) => (
+const TableCaption = ({ className, ...props }: React.ComponentProps<"caption">) => (
   <caption
     className={cn("mt-4 text-sm text-muted-foreground", className)}
     data-slot="table-caption"
@@ -89,13 +73,4 @@ const TableCaption = ({
   />
 );
 
-export {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-};
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow };

@@ -22,15 +22,11 @@ const deserializer = (value: string): CreditCardsStorage => {
     // Merge with presets to ensure they're always available
     const presetIds = new Set(DEFAULT_PRESET_CARDS.map((c) => c.id));
     const customCards = validated.cards.filter((c) => !presetIds.has(c.id));
-    const userModifiedPresets = validated.cards.filter((c) =>
-      presetIds.has(c.id),
-    );
+    const userModifiedPresets = validated.cards.filter((c) => presetIds.has(c.id));
 
     // Use user-modified preset values if they exist, otherwise use defaults
     const mergedPresets = DEFAULT_PRESET_CARDS.map((defaultCard) => {
-      const userModified = userModifiedPresets.find(
-        (c) => c.id === defaultCard.id,
-      );
+      const userModified = userModifiedPresets.find((c) => c.id === defaultCard.id);
       return userModified ?? defaultCard;
     });
 

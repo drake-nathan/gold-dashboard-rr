@@ -40,18 +40,14 @@ test("complete migration flow works end-to-end", async () => {
   const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
 
   // Step 1: Check if migration is needed (should be true for new user)
-  const needsMigration = await asUser.query(
-    api.userSettings.needsMigration,
-    {},
-  );
+  const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
   expect(needsMigration).toBe(true);
 
   // Step 2: Migrate cards from localStorage
-  const migrateResult = await asUser.mutation(
-    api.userCards.migrateFromLocalStorage,
-    { cards: localStorageCards },
-  );
+  const migrateResult = await asUser.mutation(api.userCards.migrateFromLocalStorage, {
+    cards: localStorageCards,
+  });
 
   expect(migrateResult).toStrictEqual({
     imported: 2,
@@ -69,10 +65,7 @@ test("complete migration flow works end-to-end", async () => {
   await asUser.mutation(api.userSettings.markMigrationComplete, {});
 
   // Verify: Migration should no longer be needed
-  const needsMigrationAfter = await asUser.query(
-    api.userSettings.needsMigration,
-    {},
-  );
+  const needsMigrationAfter = await asUser.query(api.userSettings.needsMigration, {});
 
   expect(needsMigrationAfter).toBe(false);
 
@@ -96,18 +89,16 @@ test("running migration twice does not duplicate cards", async () => {
   const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
 
   // First migration
-  const firstResult = await asUser.mutation(
-    api.userCards.migrateFromLocalStorage,
-    { cards: localStorageCards },
-  );
+  const firstResult = await asUser.mutation(api.userCards.migrateFromLocalStorage, {
+    cards: localStorageCards,
+  });
 
   expect(firstResult).toStrictEqual({ imported: 2, skipped: 0, success: true });
 
   // Second migration (same cards)
-  const secondResult = await asUser.mutation(
-    api.userCards.migrateFromLocalStorage,
-    { cards: localStorageCards },
-  );
+  const secondResult = await asUser.mutation(api.userCards.migrateFromLocalStorage, {
+    cards: localStorageCards,
+  });
 
   expect(secondResult).toStrictEqual({
     imported: 0,

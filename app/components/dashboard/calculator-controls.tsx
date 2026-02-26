@@ -20,11 +20,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -59,18 +55,12 @@ export const CalculatorControls = ({
 }: CalculatorControlsProps) => {
   const [comboboxOpen, setComboboxOpen] = useState(false);
 
-  const hasSignupBonus =
-    calculatorSettings.creditCard.signupBonus?.enabled ?? false;
+  const hasSignupBonus = calculatorSettings.creditCard.signupBonus?.enabled ?? false;
 
   return (
     <>
       {/* Quantity Selector */}
-      <div
-        className={cn(
-          "flex items-center gap-2",
-          isMobile && "flex-col items-stretch",
-        )}
-      >
+      <div className={cn("flex items-center gap-2", isMobile && "flex-col items-stretch")}>
         <Label className={isMobile ? "text-sm" : ""} htmlFor="quantity">
           Quantity:
         </Label>
@@ -123,12 +113,7 @@ export const CalculatorControls = ({
         Settings
       </Button>
 
-      <div
-        className={cn(
-          "flex items-center gap-2",
-          isMobile && "flex-col items-stretch",
-        )}
-      >
+      <div className={cn("flex items-center gap-2", isMobile && "flex-col items-stretch")}>
         <Label className={isMobile ? "text-sm" : ""} htmlFor="credit-card">
           Credit Card:
         </Label>
@@ -154,8 +139,7 @@ export const CalculatorControls = ({
                     {calculatorSettings.creditCard.name} (
                     {hasSignupBonus ?
                       `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
-                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`
-                    }
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
                     )
                   </SelectValue>
                 </SelectTrigger>
@@ -168,27 +152,17 @@ export const CalculatorControls = ({
                           <span>
                             {card.name}
                             {card.issuer ?
-                              <span className="text-muted-foreground">
-                                {" "}
-                                · {card.issuer}
-                              </span>
+                              <span className="text-muted-foreground"> · {card.issuer}</span>
                             : null}
                           </span>
-                          <span className="text-muted-foreground">
-                            {cashback.toFixed(2)}%
-                          </span>
+                          <span className="text-muted-foreground">{cashback.toFixed(2)}%</span>
                         </div>
                       </SelectItem>
                     );
                   })}
                 </SelectContent>
               </Select>
-              <Button
-                className="w-full"
-                onClick={onOpenCardManager}
-                size="sm"
-                variant="outline"
-              >
+              <Button className="w-full" onClick={onOpenCardManager} size="sm" variant="outline">
                 <CreditCardIcon className="size-4" />
                 Manage Cards
               </Button>
@@ -207,8 +181,7 @@ export const CalculatorControls = ({
                     {calculatorSettings.creditCard.name} (
                     {hasSignupBonus ?
                       `${calculateTotalCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}% with SUB`
-                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`
-                    }
+                    : `${calculateCashbackPercentage(calculatorSettings.creditCard).toFixed(2)}%`}
                     )
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -249,9 +222,7 @@ export const CalculatorControls = ({
                             <div className="flex-1">
                               <div className="font-medium">{card.name}</div>
                               {card.issuer ?
-                                <div className="text-xs text-muted-foreground">
-                                  {card.issuer}
-                                </div>
+                                <div className="text-xs text-muted-foreground">{card.issuer}</div>
                               : null}
                             </div>
                             <div className="text-xs text-muted-foreground">

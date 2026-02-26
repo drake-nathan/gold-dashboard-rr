@@ -60,15 +60,12 @@ export const PURE_FALLBACK_IDS: Record<string, Record<string, string>> = {
  * @param metalWeight - Weight string from product attributes
  * @returns Weight in troy ounces, or null if cannot parse
  */
-export const extractWeightInOz = (
-  metalWeight: null | string,
-): null | number => {
+export const extractWeightInOz = (metalWeight: null | string): null | number => {
   if (!metalWeight) return null;
 
-  const weightMatch =
-    /(?<weight>\d+(?:\.\d+)?)\s*(?:troy\s+)?(?<unit>gram|g|ounce|oz)/i.exec(
-      metalWeight,
-    );
+  const weightMatch = /(?<weight>\d+(?:\.\d+)?)\s*(?:troy\s+)?(?<unit>gram|g|ounce|oz)/i.exec(
+    metalWeight,
+  );
 
   if (weightMatch?.groups?.weight && weightMatch.groups.unit) {
     const weight = parseFloat(weightMatch.groups.weight);
@@ -141,17 +138,13 @@ export const extractCountMultiplier = (name: string): number => {
   const lowerName = name.toLowerCase();
 
   // Match patterns like "20-count", "20 count", "20-pack", "20 pack"
-  const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/i.exec(
-    lowerName,
-  );
+  const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/i.exec(lowerName);
   if (countMatch?.groups?.count) {
     return parseInt(countMatch.groups.count, 10);
   }
 
   // Match patterns like "box of 20", "set of 20"
-  const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/i.exec(
-    lowerName,
-  );
+  const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/i.exec(lowerName);
   if (ofMatch?.groups?.count) {
     return parseInt(ofMatch.groups.count, 10);
   }
@@ -172,9 +165,7 @@ export const extractCountMultiplier = (name: string): number => {
  * @param product - Raw product data from API
  * @returns Processed product with metal attributes, or null if not a metal product
  */
-export const extractMetalAttributes = (
-  product: RawProduct,
-): null | ProcessedProduct => {
+export const extractMetalAttributes = (product: RawProduct): null | ProcessedProduct => {
   const name = product.name.toLowerCase();
 
   // Determine metal type
@@ -200,8 +191,7 @@ export const extractMetalAttributes = (
 
   // Extract weight string from attributes
   const rawMetalWeight = product.attributes.find(
-    (attr) =>
-      attr.key === "Metal Weight" || attr.key.toLowerCase().includes("weight"),
+    (attr) => attr.key === "Metal Weight" || attr.key.toLowerCase().includes("weight"),
   )?.value;
 
   // Extract count multiplier from product name (e.g., "20-count" -> 20)

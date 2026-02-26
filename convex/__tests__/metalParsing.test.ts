@@ -135,25 +135,19 @@ test("getFallbackPureId: matches gold 1oz exactly", () => {
 test("getFallbackPureId: matches gold 5g (0.1607 oz)", () => {
   const weightInOz = 5 / 31.1035; // ~0.1607 oz
 
-  expect(getFallbackPureId("gold", weightInOz)).toBe(
-    PURE_FALLBACK_IDS.gold["5g"],
-  );
+  expect(getFallbackPureId("gold", weightInOz)).toBe(PURE_FALLBACK_IDS.gold["5g"]);
 });
 
 test("getFallbackPureId: matches gold 20g (0.643 oz)", () => {
   const weightInOz = 20 / 31.1035; // ~0.643 oz
 
-  expect(getFallbackPureId("gold", weightInOz)).toBe(
-    PURE_FALLBACK_IDS.gold["20g"],
-  );
+  expect(getFallbackPureId("gold", weightInOz)).toBe(PURE_FALLBACK_IDS.gold["20g"]);
 });
 
 test("getFallbackPureId: matches gold 100g (3.215 oz)", () => {
   const weightInOz = 100 / 31.1035; // ~3.215 oz
 
-  expect(getFallbackPureId("gold", weightInOz)).toBe(
-    PURE_FALLBACK_IDS.gold["100g"],
-  );
+  expect(getFallbackPureId("gold", weightInOz)).toBe(PURE_FALLBACK_IDS.gold["100g"]);
 });
 
 // Gold weights - within tolerance
@@ -165,9 +159,7 @@ test("getFallbackPureId: matches gold 1oz within 0.05 tolerance", () => {
 test("getFallbackPureId: matches gold 5g with slight variation", () => {
   const weightInOz = 5.2 / 31.1035; // Slightly more than 5g
 
-  expect(getFallbackPureId("gold", weightInOz)).toBe(
-    PURE_FALLBACK_IDS.gold["5g"],
-  );
+  expect(getFallbackPureId("gold", weightInOz)).toBe(PURE_FALLBACK_IDS.gold["5g"]);
 });
 
 // Gold weights - outside tolerance
@@ -183,34 +175,22 @@ test("getFallbackPureId: returns null for gold 50g (no match)", () => {
 
 // Silver weights - exact matches
 test("getFallbackPureId: matches silver 10oz exactly", () => {
-  expect(getFallbackPureId("silver", 10)).toBe(
-    PURE_FALLBACK_IDS.silver["10oz"],
-  );
+  expect(getFallbackPureId("silver", 10)).toBe(PURE_FALLBACK_IDS.silver["10oz"]);
 });
 
 test("getFallbackPureId: matches silver 1000oz exactly", () => {
-  expect(getFallbackPureId("silver", 1000)).toBe(
-    PURE_FALLBACK_IDS.silver["1000oz"],
-  );
+  expect(getFallbackPureId("silver", 1000)).toBe(PURE_FALLBACK_IDS.silver["1000oz"]);
 });
 
 // Silver weights - within tolerance
 test("getFallbackPureId: matches silver 10oz within 0.5 tolerance", () => {
-  expect(getFallbackPureId("silver", 10.4)).toBe(
-    PURE_FALLBACK_IDS.silver["10oz"],
-  );
-  expect(getFallbackPureId("silver", 9.6)).toBe(
-    PURE_FALLBACK_IDS.silver["10oz"],
-  );
+  expect(getFallbackPureId("silver", 10.4)).toBe(PURE_FALLBACK_IDS.silver["10oz"]);
+  expect(getFallbackPureId("silver", 9.6)).toBe(PURE_FALLBACK_IDS.silver["10oz"]);
 });
 
 test("getFallbackPureId: matches silver 1000oz within 10 tolerance", () => {
-  expect(getFallbackPureId("silver", 1005)).toBe(
-    PURE_FALLBACK_IDS.silver["1000oz"],
-  );
-  expect(getFallbackPureId("silver", 995)).toBe(
-    PURE_FALLBACK_IDS.silver["1000oz"],
-  );
+  expect(getFallbackPureId("silver", 1005)).toBe(PURE_FALLBACK_IDS.silver["1000oz"]);
+  expect(getFallbackPureId("silver", 995)).toBe(PURE_FALLBACK_IDS.silver["1000oz"]);
 });
 
 // Silver weights - outside tolerance
@@ -265,9 +245,7 @@ test("pURE_FALLBACK_IDS: all IDs are valid UUIDs", () => {
 
 // Standard count formats
 test("extractCountMultiplier: parses '20-count' format", () => {
-  expect(
-    extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count"),
-  ).toBe(20);
+  expect(extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count")).toBe(20);
 });
 
 test("extractCountMultiplier: parses '20 count' format with space", () => {
@@ -340,10 +318,6 @@ test("extractCountMultiplier: doesn't confuse weight with count", () => {
 });
 
 test("extractCountMultiplier: handles real Costco product names", () => {
-  expect(
-    extractCountMultiplier("2025 1 oz American Eagle Silver Coin, 20-count"),
-  ).toBe(20);
-  expect(
-    extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count"),
-  ).toBe(20);
+  expect(extractCountMultiplier("2025 1 oz American Eagle Silver Coin, 20-count")).toBe(20);
+  expect(extractCountMultiplier("1 oz PAMP Lady of Liberty Silver Bar, 20-count")).toBe(20);
 });

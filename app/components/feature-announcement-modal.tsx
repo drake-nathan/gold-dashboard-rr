@@ -59,11 +59,7 @@ export const FeatureAnnouncementModal = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Derive whether to show from current state (no effect needed)
-  const shouldShow =
-    isClient &&
-    isLoaded &&
-    !isDismissed &&
-    checkShouldShow(Boolean(isSignedIn));
+  const shouldShow = isClient && isLoaded && !isDismissed && checkShouldShow(Boolean(isSignedIn));
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_KEY, "true");
@@ -107,9 +103,8 @@ export const FeatureAnnouncementModal = () => {
             <div>
               <p className="font-medium">Keep your custom cards</p>
               <p className="text-sm text-muted-foreground">
-                Create a free account and your existing credit cards—including
-                any custom points values you&apos;ve set—will automatically
-                migrate.
+                Create a free account and your existing credit cards—including any custom points
+                values you&apos;ve set—will automatically migrate.
               </p>
             </div>
           </div>
@@ -119,16 +114,16 @@ export const FeatureAnnouncementModal = () => {
             <div>
               <p className="font-medium">Access on any device</p>
               <p className="text-sm text-muted-foreground">
-                Your cards and calculator settings stay in sync whether
-                you&apos;re on your phone, tablet, or computer.
+                Your cards and calculator settings stay in sync whether you&apos;re on your phone,
+                tablet, or computer.
               </p>
             </div>
           </div>
 
           <div className="rounded-md bg-muted/50 p-3">
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Coming soon:</span>{" "}
-              Custom price alerts so you never miss a deal.
+              <span className="font-medium text-foreground">Coming soon:</span> Custom price alerts
+              so you never miss a deal.
             </p>
           </div>
         </div>
@@ -137,20 +132,10 @@ export const FeatureAnnouncementModal = () => {
           <Button className="w-full" onClick={handleSignUp} size="lg">
             Create Free Account
           </Button>
-          <Button
-            className="w-full"
-            onClick={handleSignIn}
-            size="lg"
-            variant="outline"
-          >
+          <Button className="w-full" onClick={handleSignIn} size="lg" variant="outline">
             I Already Have an Account
           </Button>
-          <Button
-            className="w-full"
-            onClick={handleDismiss}
-            size="lg"
-            variant="ghost"
-          >
+          <Button className="w-full" onClick={handleDismiss} size="lg" variant="ghost">
             Maybe Later
           </Button>
         </DialogFooter>

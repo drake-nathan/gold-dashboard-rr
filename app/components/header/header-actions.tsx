@@ -1,15 +1,15 @@
-import { SignedIn, SignedOut, useClerk, UserButton } from "@clerk/react-router";
+import { SignedIn, SignedOut, useClerk } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Settings } from "lucide-react";
+import { Bell, Settings } from "lucide-react";
 import { Link } from "react-router";
 
+import { UpgradeButton } from "@/components/subscription";
 import { Button } from "@/components/ui/button";
 
-export const AuthButtons = () => {
+export const HeaderActions = () => {
   const { openSignIn, openSignUp } = useClerk();
 
-  // Check if current user is admin
   const adminCheck = useQuery(api.admin.checkIsAdmin);
   const isAdmin = adminCheck?.isAdmin ?? false;
 
@@ -20,6 +20,7 @@ export const AuthButtons = () => {
           onClick={() => {
             openSignIn();
           }}
+          size="sm"
           variant="outline"
         >
           Sign In
@@ -28,6 +29,7 @@ export const AuthButtons = () => {
           onClick={() => {
             openSignUp();
           }}
+          size="sm"
           variant="default"
         >
           Sign Up
@@ -35,14 +37,20 @@ export const AuthButtons = () => {
       </SignedOut>
       <SignedIn>
         {isAdmin ?
-          <Button asChild size="sm" variant="ghost">
+          <Button asChild size="sm" variant="outline">
             <Link to="/admin">
               <Settings className="h-4 w-4" />
               <span className="ml-1.5">Admin</span>
             </Link>
           </Button>
         : null}
-        <UserButton />
+        <Button asChild size="sm" variant="outline">
+          <Link to="/alerts">
+            <Bell className="h-4 w-4" />
+            <span className="ml-1.5">Alerts</span>
+          </Link>
+        </Button>
+        <UpgradeButton size="sm" />
       </SignedIn>
     </>
   );

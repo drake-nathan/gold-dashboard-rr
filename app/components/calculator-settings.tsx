@@ -64,8 +64,7 @@ export const CalculatorSettingsDialog = ({
   onSettingsChange,
   settings,
 }: CalculatorSettingsDialogProps) => {
-  const [localSettings, setLocalSettings] =
-    useState<CalculatorSettings>(settings);
+  const [localSettings, setLocalSettings] = useState<CalculatorSettings>(settings);
 
   const handleCardChange = (cardId: string) => {
     const card = availableCards.find((c) => c.id === cardId);
@@ -82,9 +81,7 @@ export const CalculatorSettingsDialog = ({
     onSettingsChange(newSettings);
   };
 
-  const cashbackPercentage = calculateCashbackPercentage(
-    localSettings.creditCard,
-  );
+  const cashbackPercentage = calculateCashbackPercentage(localSettings.creditCard);
 
   return (
     <Dialog>
@@ -114,20 +111,12 @@ export const CalculatorSettingsDialog = ({
             <div className="flex items-center justify-between">
               <Label htmlFor="credit-card">Credit Card</Label>
               {onOpenCardManager ?
-                <Button
-                  onClick={onOpenCardManager}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
+                <Button onClick={onOpenCardManager} size="sm" type="button" variant="ghost">
                   Manage Cards
                 </Button>
               : null}
             </div>
-            <Select
-              onValueChange={handleCardChange}
-              value={localSettings.creditCard.id}
-            >
+            <Select onValueChange={handleCardChange} value={localSettings.creditCard.id}>
               <SelectTrigger id="credit-card">
                 <SelectValue placeholder="Select a credit card" />
               </SelectTrigger>
@@ -147,19 +136,14 @@ export const CalculatorSettingsDialog = ({
           <div className="rounded-lg bg-muted p-3 text-sm">
             <div className="font-medium">Current Settings:</div>
             <div className="mt-1 text-muted-foreground">
-              Costco Executive:{" "}
-              {localSettings.costcoMembershipEnabled ? "2%" : "0%"}
+              Costco Executive: {localSettings.costcoMembershipEnabled ? "2%" : "0%"}
             </div>
             <div className="text-muted-foreground">
               Credit Card: {cashbackPercentage.toFixed(2)}%
             </div>
             <div className="mt-2 font-medium">
               Total Cashback:{" "}
-              {(
-                (localSettings.costcoMembershipEnabled ? 2 : 0) +
-                cashbackPercentage
-              ).toFixed(2)}
-              %
+              {((localSettings.costcoMembershipEnabled ? 2 : 0) + cashbackPercentage).toFixed(2)}%
             </div>
           </div>
         </div>

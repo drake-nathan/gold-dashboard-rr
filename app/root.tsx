@@ -21,13 +21,7 @@ import {
 import type { Route } from "./+types/root";
 
 import { Button } from "./components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Toaster } from "./components/ui/sonner";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
@@ -95,30 +89,28 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Validate env vars at module scope (fails fast during SSR bootstrap)
+const convexUrl = import.meta.env.VITE_CONVEX_URL;
+const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
+const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
+
+if (!convexUrl) {
+  throw new Error("VITE_CONVEX_URL environment variable is not set");
+}
+if (!clerkApiKey) {
+  throw new Error("VITE_CLERK_PUBLISHABLE_KEY environment variable is not set");
+}
+if (!posthogKey || !posthogHost) {
+  throw new Error(
+    "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
+  );
+}
+
+// Singleton — keeps Convex WebSocket alive and query cache warm across navigations
+const convex = new ConvexReactClient(convexUrl);
+
 const App = ({ loaderData }: Route.ComponentProps) => {
-  const convexUrl = import.meta.env.VITE_CONVEX_URL;
-  const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
-  const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
-
-  if (!convexUrl) {
-    throw new Error("VITE_CONVEX_URL environment variable is not set");
-  }
-
-  if (!clerkApiKey) {
-    throw new Error(
-      "VITE_CLERK_PUBLISHABLE_KEY environment variable is not set",
-    );
-  }
-
-  if (!posthogKey || !posthogHost) {
-    throw new Error(
-      "VITE_PUBLIC_POSTHOG_KEY or VITE_PUBLIC_POSTHOG_HOST environment variable is not set",
-    );
-  }
-
-  const convex = new ConvexReactClient(convexUrl);
-
   return (
     <PostHogProvider
       apiKey={posthogKey}
@@ -181,9 +173,7 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
                 <CardContent className="space-y-4">
                   {error.data ?
                     <div className="rounded-md bg-muted p-4">
-                      <p className="text-sm text-muted-foreground">
-                        {String(error.data)}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{String(error.data)}</p>
                     </div>
                   : null}
                   <div className="flex gap-2">
@@ -234,21 +224,17 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-destructive" />
-                  <CardTitle className="text-destructive">
-                    Application Error
-                  </CardTitle>
+                  <CardTitle className="text-destructive">Application Error</CardTitle>
                 </div>
                 <CardDescription>
-                  An error occurred while initializing the application. This is
-                  typically caused by a configuration issue.
+                  An error occurred while initializing the application. This is typically caused by
+                  a configuration issue.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-md bg-muted p-4">
                   <p className="mb-2 text-sm font-medium">Error details:</p>
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {errorMessage}
-                  </p>
+                  <p className="font-mono text-xs text-muted-foreground">{errorMessage}</p>
                   {import.meta.env.MODE === "development" && errorStack ?
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
