@@ -78,14 +78,16 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
           : null}
         </div>
 
-        <div className="mt-3">
-          <Button asChild className="w-full" size="sm" variant="secondary">
-            <Link to={alertLink}>
-              <BellPlus className="size-4" />
-              Create In-Stock Alert
-            </Link>
-          </Button>
-        </div>
+        {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
+          <div className="mt-3">
+            <Button asChild className="w-full" size="sm" variant="secondary">
+              <Link to={alertLink}>
+                <BellPlus className="size-4" />
+                Create In-Stock Alert
+              </Link>
+            </Button>
+          </div>
+        : null}
       </CardHeader>
 
       <CardContent className="flex-1 space-y-2 text-sm">
