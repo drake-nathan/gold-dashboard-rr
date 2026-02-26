@@ -11,6 +11,83 @@ export interface PureProduct {
   title: string;
 }
 
+// v2 API spot price item shape
+export interface PureSpotPriceV2 {
+  ask: number;
+  bid: number;
+  changePositive: boolean;
+  changePrice: number;
+  material: string;
+}
+
+// Transformed spot price for our mutations
+export interface SpotPriceEntry {
+  askPrice: number;
+  bidPrice: number;
+  metalType: "gold" | "palladium" | "platinum" | "silver";
+  spotPrice: number;
+}
+
+export interface PureProductVariantWithOffer {
+  highestOffer?: null | {
+    price: number;
+  };
+}
+
+type PreciousMetal = "gold" | "palladium" | "platinum" | "silver";
+
+const METAL_MAP: Partial<Record<string, PreciousMetal>> = {
+  gold: "gold",
+  palladium: "palladium",
+  platinum: "platinum",
+  silver: "silver",
+};
+
+/**
+ * Transform v2 spot prices array into entries ready for upsertSpotPrice.
+ * Filters out Bitcoin and unknown materials.
+ */
+export const transformSpotPricesV2 = (data: PureSpotPriceV2[]): SpotPriceEntry[] => {
+  const entries: SpotPriceEntry[] = [];
+  for (const item of data) {
+    const metalType = METAL_MAP[item.material.toLowerCase()];
+    if (metalType) {
+      entries.push({
+        askPrice: item.ask,
+        bidPrice: item.bid,
+        metalType,
+        spotPrice: item.bid,
+      });
+    }
+  }
+  return entries;
+};
+
+/**
+ * Check if there are more pages to fetch based on offset and total count.
+ */
+export const hasMorePages = (offset: number, batchSize: number, total: number): boolean => {
+  return offset + batchSize < total;
+};
+
+/**
+ * Get the highest available offer price across all product variants.
+ */
+export const getHighestOfferPrice = (variants: PureProductVariantWithOffer[]): null | number => {
+  let highest: null | number = null;
+
+  for (const variant of variants) {
+    const price = variant.highestOffer?.price;
+    if (typeof price !== "number") continue;
+
+    if (highest === null || price > highest) {
+      highest = price;
+    }
+  }
+
+  return highest;
+};
+
 /**
  * Parse weight string or grams to troy ounces
  *

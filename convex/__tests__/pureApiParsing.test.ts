@@ -1,6 +1,14 @@
 import { expect, test } from "vitest";
 
-import { extractProductType, parseWeightToOz, type PureProduct } from "../lib/pureApiParsing";
+import {
+  extractProductType,
+  getHighestOfferPrice,
+  hasMorePages,
+  parseWeightToOz,
+  type PureProduct,
+  type PureSpotPriceV2,
+  transformSpotPricesV2,
+} from "../lib/pureApiParsing";
 
 // ============================================================================
 // parseWeightToOz TESTS
@@ -232,4 +240,173 @@ test("extractProductType: bullion without bar/coin uses subCategory", () => {
   });
 
   expect(extractProductType(product)).toBe("bars");
+});
+
+// ============================================================================
+// transformSpotPricesV2 TESTS
+// ============================================================================
+
+test("transformSpotPricesV2: transforms gold and silver spot prices", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "Gold" },
+    { ask: 30.5, bid: 30, changePositive: false, changePrice: -0.5, material: "Silver" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(2);
+  expect(result[0]).toStrictEqual({
+    askPrice: 2010,
+    bidPrice: 2000,
+    metalType: "gold",
+    spotPrice: 2000,
+  });
+  expect(result[1]).toStrictEqual({
+    askPrice: 30.5,
+    bidPrice: 30,
+    metalType: "silver",
+    spotPrice: 30,
+  });
+});
+
+test("transformSpotPricesV2: excludes Bitcoin", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "Gold" },
+    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "Bitcoin" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(1);
+  expect(result[0].metalType).toBe("gold");
+});
+
+test("transformSpotPricesV2: skips unknown materials", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 100, bid: 90, changePositive: true, changePrice: 1, material: "Unobtainium" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(0);
+});
+
+test("transformSpotPricesV2: handles empty array", () => {
+  const result = transformSpotPricesV2([]);
+
+  expect(result).toStrictEqual([]);
+});
+
+test("transformSpotPricesV2: includes all four precious metals", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "Gold" },
+    { ask: 30.5, bid: 30, changePositive: false, changePrice: -0.5, material: "Silver" },
+    { ask: 1000, bid: 990, changePositive: true, changePrice: 5, material: "Platinum" },
+    { ask: 1200, bid: 1180, changePositive: false, changePrice: -10, material: "Palladium" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(4);
+  expect(result.map((r) => r.metalType)).toStrictEqual(["gold", "silver", "platinum", "palladium"]);
+});
+
+test("transformSpotPricesV2: handles case-insensitive material names", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "GOLD" },
+    { ask: 30.5, bid: 30, changePositive: false, changePrice: -0.5, material: "silver" },
+    { ask: 1000, bid: 990, changePositive: true, changePrice: 5, material: "Platinum" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(3);
+  expect(result.map((r) => r.metalType)).toStrictEqual(["gold", "silver", "platinum"]);
+});
+
+test("transformSpotPricesV2: excludes bitcoin regardless of casing", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "BITCOIN" },
+    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "bitcoin" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result).toHaveLength(0);
+});
+
+test("transformSpotPricesV2: uses bid as spotPrice", () => {
+  const data: PureSpotPriceV2[] = [
+    { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "Gold" },
+  ];
+
+  const result = transformSpotPricesV2(data);
+
+  expect(result[0].spotPrice).toBe(result[0].bidPrice);
+});
+
+// ============================================================================
+// getHighestOfferPrice TESTS
+// ============================================================================
+
+test("getHighestOfferPrice: returns highest offer across variants", () => {
+  const result = getHighestOfferPrice([
+    { highestOffer: { price: 2500 } },
+    { highestOffer: { price: 2525 } },
+    { highestOffer: { price: 2490 } },
+  ]);
+
+  expect(result).toBe(2525);
+});
+
+test("getHighestOfferPrice: ignores null offers", () => {
+  const result = getHighestOfferPrice([
+    { highestOffer: null },
+    { highestOffer: { price: 1800 } },
+    { highestOffer: null },
+  ]);
+
+  expect(result).toBe(1800);
+});
+
+test("getHighestOfferPrice: returns null when no offers", () => {
+  const result = getHighestOfferPrice([{ highestOffer: null }, {}]);
+
+  expect(result).toBeNull();
+});
+
+test("getHighestOfferPrice: returns null for empty variants", () => {
+  const result = getHighestOfferPrice([]);
+
+  expect(result).toBeNull();
+});
+
+// ============================================================================
+// hasMorePages TESTS
+// ============================================================================
+
+test("hasMorePages: returns true when more pages available", () => {
+  expect(hasMorePages(0, 100, 250)).toBe(true);
+});
+
+test("hasMorePages: returns true when exactly one more page", () => {
+  expect(hasMorePages(100, 100, 250)).toBe(true);
+});
+
+test("hasMorePages: returns false when on last page", () => {
+  expect(hasMorePages(200, 100, 250)).toBe(false);
+});
+
+test("hasMorePages: returns false when offset equals total", () => {
+  expect(hasMorePages(200, 100, 200)).toBe(false);
+});
+
+test("hasMorePages: returns false when total is 0", () => {
+  expect(hasMorePages(0, 100, 0)).toBe(false);
+});
+
+test("hasMorePages: works with server-capped page size smaller than requested", () => {
+  // Requested 100 but server returned 50
+  expect(hasMorePages(0, 50, 200)).toBe(true);
+  expect(hasMorePages(150, 50, 200)).toBe(false);
 });

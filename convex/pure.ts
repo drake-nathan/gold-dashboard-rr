@@ -8,10 +8,17 @@ import {
   internalQuery,
   query,
 } from "./_generated/server";
-import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
+import {
+  extractProductType,
+  getHighestOfferPrice,
+  hasMorePages,
+  parseWeightToOz,
+  type PureSpotPriceV2,
+  transformSpotPricesV2,
+} from "./lib/pureApiParsing";
 
-// Pure API configuration
-const PURE_API_BASE_URL = "https://public.api.collectpure.com";
+// Pure API v2 configuration
+const PURE_API_BASE_URL = "https://api.collectpure.com";
 
 // Generic fallback products (not marked "Stocked by Costco" but needed for matching)
 // These are SKUs from Pure API (full URL slugs from product URLs)
@@ -23,22 +30,16 @@ const GENERIC_FALLBACK_SKUS = [
   "100-gram-gold-bar-9999-fine-accredited-brands000101", // 100 gram gold bar - generic
 ];
 
-// Type definitions for Pure API responses
-interface PureSpotPrice {
-  ask: number;
-  bid: number;
-  changePercent: number;
-  changePrice: number;
-  marketOpen: boolean;
-  updatedAt: string;
+// Type definitions for Pure API v2 responses
+interface PureSpotPricesResponseV2 {
+  data: PureSpotPriceV2[];
 }
 
-interface PureSpotPricesResponse {
-  Bitcoin?: PureSpotPrice;
-  Gold?: PureSpotPrice;
-  Palladium?: PureSpotPrice;
-  Platinum?: PureSpotPrice;
-  Silver?: PureSpotPrice;
+interface PureProductsResponseV2 {
+  data: PureProduct[];
+  limit: number;
+  offset: number;
+  total: number;
 }
 
 interface PureProductOffer {
@@ -53,7 +54,7 @@ interface PureProductOffer {
 }
 
 interface PureProductVariant {
-  highestOffer?: PureProductOffer;
+  highestOffer?: null | PureProductOffer;
   images?: string[];
   lowestListing?: PureProductOffer;
   title: string;
@@ -106,8 +107,8 @@ export const fetchNewData = internalAction({
     try {
       console.info("Fetching Collect Pure data from API");
 
-      // Step 1: Fetch spot prices for fallback
-      const spotResponse = await fetch(`${PURE_API_BASE_URL}/v1/spot-prices`, {
+      // Step 1: Fetch spot prices for fallback (v2 endpoint)
+      const spotResponse = await fetch(`${PURE_API_BASE_URL}/marketplace/get-spot-price/v1`, {
         headers: {
           Accept: "application/json",
           "x-api-key": apiKey,
@@ -118,32 +119,22 @@ export const fetchNewData = internalAction({
         throw new Error(`Spot prices API responded with status: ${spotResponse.status}`);
       }
 
-      const spotData = (await spotResponse.json()) as PureSpotPricesResponse;
+      const spotData = (await spotResponse.json()) as PureSpotPricesResponseV2;
 
-      // Store spot prices
-      const metalMap: Record<string, "gold" | "palladium" | "platinum" | "silver"> = {
-        Gold: "gold",
-        Palladium: "palladium",
-        Platinum: "platinum",
-        Silver: "silver",
-      };
+      // Transform and store spot prices
+      const spotEntries = transformSpotPricesV2(spotData.data);
 
       let spotPricesStored = 0;
-      for (const [metalName, prices] of Object.entries(spotData)) {
-        if (metalName === "Bitcoin") continue; // Skip Bitcoin
-
-        const metalType = metalMap[metalName];
-        if (prices) {
-          await ctx.runMutation(internal.pure.upsertSpotPrice, {
-            askPrice: prices.ask,
-            bidPrice: prices.bid,
-            isMock: false,
-            metalType,
-            spotPrice: prices.bid, // Using bid as the spot price
-            timestamp,
-          });
-          spotPricesStored++;
-        }
+      for (const entry of spotEntries) {
+        await ctx.runMutation(internal.pure.upsertSpotPrice, {
+          askPrice: entry.askPrice,
+          bidPrice: entry.bidPrice,
+          isMock: false,
+          metalType: entry.metalType,
+          spotPrice: entry.spotPrice,
+          timestamp,
+        });
+        spotPricesStored++;
       }
 
       // Step 2: Get existing product IDs from our database
@@ -169,7 +160,7 @@ export const fetchNewData = internalAction({
             });
 
             const productsResponse = await fetch(
-              `${PURE_API_BASE_URL}/v1/products?${searchParams.toString()}`,
+              `${PURE_API_BASE_URL}/products/get-products/v2?${searchParams.toString()}`,
               {
                 headers: {
                   Accept: "application/json",
@@ -185,7 +176,8 @@ export const fetchNewData = internalAction({
               break;
             }
 
-            const products = (await productsResponse.json()) as PureProduct[];
+            const responseBody = (await productsResponse.json()) as PureProductsResponseV2;
+            const products = responseBody.data;
             totalProductsFetched += products.length;
 
             console.info(`Fetched ${products.length} ${material} products at offset ${offset}`);
@@ -196,6 +188,10 @@ export const fetchNewData = internalAction({
             // - Products already in our database (manually added)
             const productBatch = products
               .filter((product) => {
+                const normalizedMaterial = product.material.toLowerCase();
+                const isSupportedMetal =
+                  normalizedMaterial === "gold" || normalizedMaterial === "silver";
+
                 // Include products with "Stocked by Costco" attribute
                 const isStockedByCostco = product.attributes.some((attr: string) =>
                   attr.toLowerCase().includes("stocked by costco"),
@@ -207,7 +203,7 @@ export const fetchNewData = internalAction({
                 // Also include products already in our database (e.g., manually added)
                 const existsInDb = existingIdsSet.has(product.id);
 
-                return isStockedByCostco || isGenericFallback || existsInDb;
+                return isSupportedMetal && (isStockedByCostco || isGenericFallback || existsInDb);
               })
               .map((product) => {
                 const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(product.sku);
@@ -215,8 +211,8 @@ export const fetchNewData = internalAction({
                 const weightOz = parseWeightToOz(product.weight, product.weightGrams);
                 const productType = extractProductType(product);
 
-                // Get bid price if available, otherwise null
-                const bidPrice = product.variants[0]?.highestOffer?.price ?? null;
+                // Use highest bid across all variants when available
+                const bidPrice = getHighestOfferPrice(product.variants);
                 const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
 
                 return {
@@ -247,11 +243,12 @@ export const fetchNewData = internalAction({
               );
             }
 
-            // Check if there are more pages
-            if (products.length < 100) {
-              hasMore = false;
+            // Advance by actual page size returned (server may cap below requested limit)
+            const pageSize = products.length;
+            if (pageSize > 0 && hasMorePages(offset, pageSize, responseBody.total)) {
+              offset += pageSize;
             } else {
-              offset += 100;
+              hasMore = false;
             }
           }
         } catch (error) {

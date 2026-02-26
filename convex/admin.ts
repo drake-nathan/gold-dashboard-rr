@@ -5,7 +5,12 @@ import type { QueryCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
-import { extractProductType, parseWeightToOz } from "./lib/pureApiParsing";
+import {
+  extractProductType,
+  getHighestOfferPrice,
+  hasMorePages,
+  parseWeightToOz,
+} from "./lib/pureApiParsing";
 
 // Helper to check if a user is an admin
 const isAdmin = (userId: null | string): boolean => {
@@ -737,8 +742,8 @@ export const checkIsAdmin = query({
   },
 });
 
-// Pure API configuration
-const PURE_API_BASE_URL = "https://public.api.collectpure.com";
+// Pure API v2 configuration
+const PURE_API_BASE_URL = "https://api.collectpure.com";
 
 // Type for Pure API product response
 interface PureApiProduct {
@@ -754,7 +759,7 @@ interface PureApiProduct {
   };
   title: string;
   variants: {
-    highestOffer?: {
+    highestOffer?: null | {
       price: number;
     };
   }[];
@@ -816,7 +821,7 @@ export const fetchAndAddPureProduct = action({
           searchParams.set("offset", offset.toString());
 
           const response = await fetch(
-            `${PURE_API_BASE_URL}/v1/products?${searchParams.toString()}`,
+            `${PURE_API_BASE_URL}/products/get-products/v2?${searchParams.toString()}`,
             {
               headers: {
                 Accept: "application/json",
@@ -830,15 +835,21 @@ export const fetchAndAddPureProduct = action({
             break;
           }
 
-          const products = (await response.json()) as PureApiProduct[];
+          const responseBody = (await response.json()) as {
+            data: PureApiProduct[];
+            total: number;
+          };
+          const products = responseBody.data;
 
           // Look for the matching SKU
           foundProduct = products.find((p) => p.sku === args.sku) ?? null;
 
-          if (products.length < 100) {
-            hasMore = false;
+          // Advance by actual page size returned (server may cap below requested limit)
+          const pageSize = products.length;
+          if (pageSize > 0 && hasMorePages(offset, pageSize, responseBody.total)) {
+            offset += pageSize;
           } else {
-            offset += 100;
+            hasMore = false;
           }
         }
       }
@@ -851,7 +862,7 @@ export const fetchAndAddPureProduct = action({
       const metalType = foundProduct.material.toLowerCase() as "gold" | "silver";
       const weightOz = parseWeightToOz(foundProduct.weight, foundProduct.weightGrams);
       const productType = extractProductType(foundProduct);
-      const bidPrice = foundProduct.variants[0]?.highestOffer?.price ?? null;
+      const bidPrice = getHighestOfferPrice(foundProduct.variants);
       const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
 
       const productData = {
