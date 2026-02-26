@@ -75,12 +75,14 @@ export const MobileMenu = () => {
           </DropdownMenuItem>
         </SignedOut>
         <SignedIn>
-          <DropdownMenuItem asChild>
-            <Link to="/alerts">
-              <Bell className="mr-2 h-4 w-4" />
-              Alerts
-            </Link>
-          </DropdownMenuItem>
+          {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
+            <DropdownMenuItem asChild>
+              <Link to="/alerts">
+                <Bell className="mr-2 h-4 w-4" />
+                Alerts
+              </Link>
+            </DropdownMenuItem>
+          : null}
           <div className="px-2 py-1.5">
             <UpgradeButton className="w-full justify-start" size="sm" />
           </div>

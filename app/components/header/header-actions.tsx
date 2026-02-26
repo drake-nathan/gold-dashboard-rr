@@ -44,12 +44,14 @@ export const HeaderActions = () => {
             </Link>
           </Button>
         : null}
-        <Button asChild size="sm" variant="outline">
-          <Link to="/alerts">
-            <Bell className="h-4 w-4" />
-            <span className="ml-1.5">Alerts</span>
-          </Link>
-        </Button>
+        {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
+          <Button asChild size="sm" variant="outline">
+            <Link to="/alerts">
+              <Bell className="h-4 w-4" />
+              <span className="ml-1.5">Alerts</span>
+            </Link>
+          </Button>
+        : null}
         <UpgradeButton size="sm" />
       </SignedIn>
     </>
