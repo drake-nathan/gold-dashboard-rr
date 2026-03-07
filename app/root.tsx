@@ -1,6 +1,6 @@
 import { ClerkProvider, useAuth } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
-import { shadcn } from "@clerk/themes";
+import { shadcn } from "@clerk/ui/themes";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
@@ -122,7 +122,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       }}
     >
       <ClerkProvider
-        appearance={{ baseTheme: shadcn }}
+        appearance={{ theme: shadcn }}
         loaderData={loaderData}
         publishableKey={clerkApiKey}
       >

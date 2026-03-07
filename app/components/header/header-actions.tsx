@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, useClerk } from "@clerk/react-router";
+import { Show, useClerk } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Bell, Settings } from "lucide-react";
@@ -15,7 +15,7 @@ export const HeaderActions = () => {
 
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <Button
           onClick={() => {
             openSignIn();
@@ -34,8 +34,8 @@ export const HeaderActions = () => {
         >
           Sign Up
         </Button>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         {isAdmin ?
           <Button asChild size="sm" variant="outline">
             <Link to="/admin">
@@ -53,7 +53,7 @@ export const HeaderActions = () => {
           </Button>
         : null}
         <UpgradeButton size="sm" />
-      </SignedIn>
+      </Show>
     </>
   );
 };

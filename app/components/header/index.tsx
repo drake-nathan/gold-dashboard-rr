@@ -1,4 +1,4 @@
-import { SignedIn } from "@clerk/react-router";
+import { Show } from "@clerk/react-router";
 
 import { HeaderActions } from "./header-actions";
 import { Logo } from "./logo";
@@ -16,9 +16,9 @@ export const Header = () => {
         <div className="hidden items-center gap-2 sm:flex">
           <HeaderActions />
           <ThemeToggle />
-          <SignedIn>
+          <Show when="signed-in">
             <UserButtonWithPro avatarSize="size-[32px]" />
-          </SignedIn>
+          </Show>
         </div>
 
         {/* Mobile: Hamburger menu */}

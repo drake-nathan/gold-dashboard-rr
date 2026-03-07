@@ -1,4 +1,4 @@
-import { SignedIn, SignedOut, useClerk } from "@clerk/react-router";
+import { Show, useClerk } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Bell, LogIn, Menu, Settings, UserPlus } from "lucide-react";
@@ -56,7 +56,7 @@ export const MobileMenu = () => {
 
         {/* Auth Section */}
         <DropdownMenuSeparator />
-        <SignedOut>
+        <Show when="signed-out">
           <DropdownMenuItem
             onClick={() => {
               openSignIn();
@@ -73,8 +73,8 @@ export const MobileMenu = () => {
             <UserPlus className="mr-2 h-4 w-4" />
             Sign Up
           </DropdownMenuItem>
-        </SignedOut>
-        <SignedIn>
+        </Show>
+        <Show when="signed-in">
           {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
             <DropdownMenuItem asChild>
               <Link to="/alerts">
@@ -95,7 +95,7 @@ export const MobileMenu = () => {
               : null}
             </span>
           </div>
-        </SignedIn>
+        </Show>
       </DropdownMenuContent>
     </DropdownMenu>
   );
