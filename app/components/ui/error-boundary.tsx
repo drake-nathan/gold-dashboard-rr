@@ -1,4 +1,5 @@
 /* eslint-disable react/destructuring-assignment */
+import * as Sentry from "@sentry/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
@@ -56,6 +57,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (import.meta.env.MODE === "development") {
       console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
+
+    Sentry.captureException(error, {
+      contexts: { react: { componentStack: errorInfo.componentStack } },
+    });
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);

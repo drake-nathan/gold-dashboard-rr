@@ -1,6 +1,7 @@
 import { ClerkProvider, useAuth } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { shadcn } from "@clerk/ui/themes";
+import * as Sentry from "@sentry/react-router";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
@@ -116,8 +117,8 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       apiKey={posthogKey}
       options={{
         api_host: posthogHost,
-        capture_exceptions: true,
-        debug: import.meta.env.MODE === "development",
+        capture_exceptions: false, // Sentry handles error tracking
+        debug: false,
         defaults: "2025-05-24",
       }}
     >
@@ -208,6 +209,10 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   const isError = error instanceof Error;
   const errorMessage = isError ? error.message : "An unexpected error occurred";
   const errorStack = isError ? error.stack : undefined;
+
+  if (error && error instanceof Error) {
+    Sentry.captureException(error);
+  }
 
   return (
     <html lang="en">

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-router";
 import { api } from "convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import { usePreloadedQuery } from "convex/react";
@@ -154,6 +155,9 @@ export const ErrorBoundary = () => {
 
   // JavaScript errors (data loading failures, rendering errors, etc.)
   const isError = error instanceof Error;
+  if (isError) {
+    Sentry.captureException(error);
+  }
   const errorMessage = isError ? error.message : "An unexpected error occurred";
   const errorStack = isError ? error.stack : undefined;
 

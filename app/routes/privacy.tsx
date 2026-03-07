@@ -90,11 +90,12 @@ const Privacy = () => {
             </h2>
 
             <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">4.1 PostHog</h3>
-            <p>We use PostHog for analytics and error tracking. PostHog collects:</p>
+            <p>
+              We use PostHog for product analytics and user experience research. PostHog collects:
+            </p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
               <li>Page views and user interactions</li>
-              <li>Technical errors and exceptions</li>
-              <li>Session recordings (anonymized)</li>
+              <li>Session recordings (anonymized) for heatmaps and UX analysis</li>
               <li>Feature usage statistics</li>
             </ul>
             <p className="mt-2">
@@ -109,23 +110,23 @@ const Privacy = () => {
               </a>
             </p>
 
-            <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">4.2 Google AdSense</h3>
-            <p>We use Google AdSense to display ads on our site. Google AdSense:</p>
+            <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">4.2 Sentry</h3>
+            <p>We use Sentry for error tracking and performance monitoring. Sentry collects:</p>
             <ul className="mt-2 ml-6 list-disc space-y-1">
-              <li>Uses cookies to serve ads based on your browsing history</li>
-              <li>May collect non-personally identifiable information</li>
-              <li>Allows you to opt out via Google&apos;s Ads Settings</li>
-              <li>Is governed by Google&apos;s privacy policy</li>
+              <li>Technical errors and exceptions</li>
+              <li>Performance data (page load times, API response times)</li>
+              <li>Session replays when errors occur (anonymized, limited to error context)</li>
+              <li>Device and browser information for debugging</li>
             </ul>
             <p className="mt-2">
-              Learn more:{" "}
+              Sentry data is used solely for identifying and fixing technical issues. Learn more:{" "}
               <a
                 className="text-primary hover:underline"
-                href="https://policies.google.com/technologies/ads"
+                href="https://sentry.io/privacy/"
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                Google Ads Privacy Policy
+                Sentry Privacy Policy
               </a>
             </p>
           </section>
@@ -178,7 +179,10 @@ const Privacy = () => {
                 <strong>Convex:</strong> Database and backend services
               </li>
               <li>
-                <strong>PostHog:</strong> Analytics and error tracking
+                <strong>PostHog:</strong> Product analytics and session recordings
+              </li>
+              <li>
+                <strong>Sentry:</strong> Error tracking and performance monitoring
               </li>
               <li>
                 <strong>Google AdSense:</strong> Display advertising
