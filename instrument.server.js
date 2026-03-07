@@ -19,12 +19,23 @@ Sentry.init({
     const isSerializedRouteMiss =
       typeof serializedMessage === "string" &&
       serializedMessage.startsWith('Error: No route matches URL "');
+    const isMethodNotAllowedStatus = serializedObject?.status === 405;
+    const isMissingActionPostRoot =
+      typeof errorMessage === "string" &&
+      errorMessage.includes('You made a POST request to "/"') &&
+      errorMessage.includes("did not provide an `action`");
+    const isSerializedMissingActionPostRoot =
+      typeof serializedMessage === "string" &&
+      serializedMessage.includes('You made a POST request to "/"') &&
+      serializedMessage.includes("did not provide an `action`");
 
     if (
       error?.type === "NotFoundException" ||
       isNotFoundStatus ||
       isRouteMiss ||
-      isSerializedRouteMiss
+      isSerializedRouteMiss ||
+      (isMethodNotAllowedStatus &&
+        (isMissingActionPostRoot || isSerializedMissingActionPostRoot))
     ) {
       return null;
     }
