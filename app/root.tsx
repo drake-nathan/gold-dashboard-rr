@@ -30,6 +30,7 @@ export const links: Route.LinksFunction = () => [
   // Favicon
   { href: "/favicon.ico", rel: "icon", sizes: "48x48" },
   { href: "/favicon.svg", rel: "icon", type: "image/svg+xml" },
+  { href: "/apple-touch-icon.png", rel: "apple-touch-icon", sizes: "180x180" },
   { href: "/manifest.json", rel: "manifest" },
 
   // Fonts
