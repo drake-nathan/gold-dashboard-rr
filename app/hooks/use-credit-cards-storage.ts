@@ -7,14 +7,14 @@ import {
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 
-const defaultValue: CreditCardsStorage = {
+export const defaultCreditCardsStorage: CreditCardsStorage = {
   cards: DEFAULT_PRESET_CARDS,
   lastSelectedId: DEFAULT_PRESET_CARDS[0].id,
 };
 
 // Custom deserializer with Zod validation and preset merging
 // Defined outside component to maintain stable reference
-const deserializer = (value: string): CreditCardsStorage => {
+export const deserializeCreditCardsStorage = (value: string): CreditCardsStorage => {
   try {
     const parsed = JSON.parse(value);
     const validated = creditCardsStorageSchema.parse(parsed);
@@ -36,8 +36,21 @@ const deserializer = (value: string): CreditCardsStorage => {
     };
   } catch (error) {
     console.error("Failed to load credit cards from localStorage:", error);
-    return defaultValue;
+    return defaultCreditCardsStorage;
   }
+};
+
+export const loadCreditCardsStorageFromLocalStorage = (): CreditCardsStorage => {
+  if (typeof window === "undefined") {
+    return defaultCreditCardsStorage;
+  }
+
+  const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
+  if (!stored) {
+    return defaultCreditCardsStorage;
+  }
+
+  return deserializeCreditCardsStorage(stored);
 };
 
 // Custom serializer with Zod validation
@@ -64,13 +77,11 @@ const serializer = (value: CreditCardsStorage): string => {
 export const useCreditCardsStorage = () => {
   const [storage, setStorage] = useLocalStorage<CreditCardsStorage>(
     CREDIT_CARDS_STORAGE_KEY,
-    defaultValue,
+    defaultCreditCardsStorage,
     {
-      deserializer,
-      // Read localStorage immediately on mount.
-      // Components using this hook should be wrapped with client-only
-      // rendering (e.g., useIsClient check) to prevent SSR mismatch.
-      initializeWithValue: true,
+      deserializer: deserializeCreditCardsStorage,
+      // Match SSR output on the first client render, then hydrate from localStorage.
+      initializeWithValue: false,
       serializer,
     },
   );

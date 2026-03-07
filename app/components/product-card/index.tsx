@@ -3,6 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 
 import { BellPlus, ExternalLink } from "lucide-react";
 import { Link } from "react-router";
+import { useIsClient } from "usehooks-ts";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ calculatorSettings, marketPrices, product }: ProductCardProps) => {
+  const isClient = useIsClient();
+
   // Calculate all metrics using utility function
   const calc = calculateProductMetrics(product, marketPrices, calculatorSettings);
 
@@ -62,7 +65,7 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
                   </span>
                 : null}
               </div>
-              {!product.currentInStock && product.lastInStockAt ?
+              {!product.currentInStock && product.lastInStockAt && isClient ?
                 <span className="text-xs text-muted-foreground italic">
                   Last in stock {formatRelativeTime(product.lastInStockAt)}
                 </span>

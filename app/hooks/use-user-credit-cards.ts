@@ -19,7 +19,10 @@ import {
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 
-import { useCreditCardsStorage } from "./use-credit-cards-storage";
+import {
+  loadCreditCardsStorageFromLocalStorage,
+  useCreditCardsStorage,
+} from "./use-credit-cards-storage";
 
 interface UseUserCreditCardsReturn {
   /**
@@ -101,8 +104,8 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
   const markMigrationCompleteMutation = useMutation(api.userSettings.markMigrationComplete);
 
   // Helper to check if localStorage has custom data worth merging
-  const getCardsToMerge = useCallback(() => {
-    const cardsToMerge = localStorageData.cards
+  const getCardsToMerge = useCallback((cards: CreditCard[]) => {
+    const cardsToMerge = cards
       .filter((card) => {
         if (!card.isPreset) return true; // Always merge custom cards
 
@@ -129,7 +132,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
       }));
 
     return cardsToMerge;
-  }, [localStorageData.cards]);
+  }, []);
 
   // Run migration/merge when user authenticates
   // - First device: full migration, mark complete, clear localStorage
@@ -146,7 +149,10 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
         return;
       }
 
-      const cardsToMerge = getCardsToMerge();
+      const migrationSource =
+        typeof window === "undefined" ? localStorageData : loadCreditCardsStorageFromLocalStorage();
+
+      const cardsToMerge = getCardsToMerge(migrationSource.cards);
       const hasDataToMerge = cardsToMerge.length > 0;
 
       // Case 1: First device - needs full migration
@@ -167,7 +173,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
 
           // Migrate settings
           await updateSettingsMutation({
-            lastSelectedCardId: localStorageData.lastSelectedId,
+            lastSelectedCardId: migrationSource.lastSelectedId,
           });
 
           // Mark migration complete
@@ -231,7 +237,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     isSignedIn,
     needsMigration,
     isMigrating,
-    localStorageData.lastSelectedId,
+    localStorageData,
     getCardsToMerge,
     migrateFromLocalStorageMutation,
     updateSettingsMutation,

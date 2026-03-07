@@ -1,6 +1,9 @@
 import { Link } from "react-router";
+import { useIsClient } from "usehooks-ts";
 
 export const Footer = () => {
+  const isClient = useIsClient();
+
   return (
     <footer className="mt-12 border-t bg-muted/50 py-8">
       <div className="container mx-auto px-4">
@@ -26,7 +29,10 @@ export const Footer = () => {
           </div>
 
           <div className="text-center sm:text-right">
-            <p>&copy; {new Date().getFullYear()} Dashboard.Gold</p>
+            <p>
+              &copy; {isClient ? `${new Date().getFullYear()} ` : null}
+              Dashboard.Gold
+            </p>
             <p className="mt-1 text-xs">Not financial advice. Verify all prices independently.</p>
           </div>
         </div>

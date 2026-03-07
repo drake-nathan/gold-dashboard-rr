@@ -1,6 +1,8 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
+import { useIsClient } from "usehooks-ts";
+
 import { StatCard } from "./stat-card";
 
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
@@ -15,6 +17,8 @@ interface StatsProps {
 }
 
 export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: StatsProps) => {
+  const isClient = useIsClient();
+
   // Find each asset in market prices
   const gold = marketPrices.find((p) => p.assetType === "gold");
   const silver = marketPrices.find((p) => p.assetType === "silver");
@@ -29,7 +33,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
           <StatCard
             label="Gold (XAU)"
             percentChange={gold.percentChange}
-            value={`$${gold.currentPrice.toLocaleString(undefined, {
+            value={`$${gold.currentPrice.toLocaleString("en-US", {
               maximumFractionDigits: 2,
               minimumFractionDigits: 2,
             })}`}
@@ -42,7 +46,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
           <StatCard
             label="Silver (XAG)"
             percentChange={silver.percentChange}
-            value={`$${silver.currentPrice.toLocaleString(undefined, {
+            value={`$${silver.currentPrice.toLocaleString("en-US", {
               maximumFractionDigits: 2,
               minimumFractionDigits: 2,
             })}`}
@@ -55,7 +59,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
           <StatCard
             label="Bitcoin (BTC)"
             percentChange={bitcoin.percentChange}
-            value={`$${bitcoin.currentPrice.toLocaleString(undefined, {
+            value={`$${bitcoin.currentPrice.toLocaleString("en-US", {
               maximumFractionDigits: 0,
               minimumFractionDigits: 0,
             })}`}
@@ -68,7 +72,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
           <StatCard
             label="S&P 500"
             percentChange={sp500.percentChange}
-            value={`$${sp500.currentPrice.toLocaleString(undefined, {
+            value={`$${sp500.currentPrice.toLocaleString("en-US", {
               maximumFractionDigits: 2,
               minimumFractionDigits: 2,
             })}`}
@@ -90,8 +94,8 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
         <StatCard
           label="Last Update"
           value={
-            lastFetch ?
-              new Date(lastFetch.timestamp).toLocaleTimeString(undefined, {
+            isClient && lastFetch ?
+              new Date(lastFetch.timestamp).toLocaleTimeString("en-US", {
                 hour: "numeric",
                 minute: "2-digit",
               })

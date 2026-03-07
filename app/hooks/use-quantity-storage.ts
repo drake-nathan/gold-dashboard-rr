@@ -53,10 +53,8 @@ const serializer = (value: QuantityStorage): string => {
 export const useQuantityStorage = () => {
   const [storage, setStorage] = useLocalStorage<QuantityStorage>(STORAGE_KEY, defaultValue, {
     deserializer,
-    // Read localStorage immediately on mount.
-    // Components using this hook should be wrapped with client-only
-    // rendering (e.g., useIsClient check) to prevent SSR mismatch.
-    initializeWithValue: true,
+    // Match SSR output on the first client render, then hydrate from localStorage.
+    initializeWithValue: false,
     serializer,
   });
 
