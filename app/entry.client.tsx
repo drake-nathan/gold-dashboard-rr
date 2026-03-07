@@ -3,6 +3,7 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
+const consoleLogging = Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] });
 const tracing = Sentry.reactRouterTracingIntegration({ useInstrumentationAPI: true });
 const browserProfiling = Sentry.browserProfilingIntegration();
 
@@ -10,7 +11,7 @@ Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   enableLogs: true,
   environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
-  integrations: [tracing, browserProfiling, Sentry.replayIntegration()],
+  integrations: [tracing, browserProfiling, consoleLogging, Sentry.replayIntegration()],
   // Session Replay: buffer mode (error-only)
   // Records in memory but only uploads when an error occurs (~60s pre-error context)
   // PostHog handles all-session replays for heatmaps

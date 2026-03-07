@@ -1,6 +1,8 @@
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
 import * as Sentry from "@sentry/react-router";
 
+const consoleLogging = Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] });
+
 Sentry.init({
   // Set up performance monitoring
   beforeSend: (event) => {
@@ -38,7 +40,7 @@ Sentry.init({
     process.env.VITE_SENTRY_ENVIRONMENT ||
     (process.env.NODE_ENV === "production" ? "production" : "development"),
 
-  integrations: [nodeProfilingIntegration()],
+  integrations: [nodeProfilingIntegration(), consoleLogging],
   profileLifecycle: "trace",
   // 100% sampling — intentional for low-traffic app. Reduce if volume grows.
   profileSessionSampleRate: 1,

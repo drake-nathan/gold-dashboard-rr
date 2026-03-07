@@ -70,6 +70,7 @@
 - [ ] Data freshness indicators
 - [ ] Fallback UI when market prices fail
 - [ ] Pure product match logging/monitoring service
+- [ ] Sentry: add intentional structured logs for alerts, checkout, and auth flows
 - [ ] Match status UI (currently manual via Convex dashboard)
 
 ## Medium Term
