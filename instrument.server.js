@@ -4,13 +4,29 @@ import * as Sentry from "@sentry/react-router";
 Sentry.init({
   // Set up performance monitoring
   beforeSend: (event) => {
-    // Filter out 404s from error reporting
-    if (event.exception) {
-      const error = event.exception.values?.[0];
-      if (error?.type === "NotFoundException" || error?.value?.includes("404")) {
-        return null;
-      }
+    // Filter out framework-generated 404s for missing routes/assets and scanner noise.
+    const error = event.exception?.values?.[0];
+    const serialized = event.extra?.__serialized__;
+    const errorMessage = error?.value ?? "";
+    const serializedObject = serialized && typeof serialized === "object" ? serialized : null;
+    const serializedMessage =
+      typeof serializedObject?.data === "string" ? serializedObject.data : "";
+    const isNotFoundStatus = serializedObject?.status === 404;
+    const isRouteMiss =
+      typeof errorMessage === "string" && errorMessage.startsWith('No route matches URL "');
+    const isSerializedRouteMiss =
+      typeof serializedMessage === "string" &&
+      serializedMessage.startsWith('Error: No route matches URL "');
+
+    if (
+      error?.type === "NotFoundException" ||
+      isNotFoundStatus ||
+      isRouteMiss ||
+      isSerializedRouteMiss
+    ) {
+      return null;
     }
+
     return event;
   },
 

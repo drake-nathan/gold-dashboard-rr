@@ -96,10 +96,20 @@ test("does not show error toast on successful URL response", async () => {
     .fn()
     .mockResolvedValue({ url: "https://billing.stripe.com/portal/123" });
 
-  const screen = await render(<TestComponent />);
-  await screen.getByTestId("manage-button").click();
+  // Prevent actual navigation which breaks the Vitest browser iframe
+  const preventNav = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+  };
+  window.addEventListener("beforeunload", preventNav);
 
-  expect(toast.error).not.toHaveBeenCalled();
+  try {
+    const screen = await render(<TestComponent />);
+    await screen.getByTestId("manage-button").click();
+
+    expect(toast.error).not.toHaveBeenCalled();
+  } finally {
+    window.removeEventListener("beforeunload", preventNav);
+  }
 });
 
 // =============================================================================
