@@ -89,6 +89,9 @@ test("disables button when user is not signed in", async () => {
 });
 
 test("calls createCheckout when clicked", async () => {
+  // Return no URL to prevent window.location.href navigation which kills the Vitest iframe
+  mockSubscription.createCheckout = vi.fn().mockResolvedValue({});
+
   const screen = await render(<UpgradeButton />);
 
   const button = screen.getByRole("button", { name: /upgrade to pro/i });
