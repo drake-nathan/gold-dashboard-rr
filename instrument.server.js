@@ -23,8 +23,9 @@ Sentry.init({
     (process.env.NODE_ENV === "production" ? "production" : "development"),
 
   integrations: [nodeProfilingIntegration()],
+  profileLifecycle: "trace",
   // 100% sampling — intentional for low-traffic app. Reduce if volume grows.
-  profilesSampleRate: 1,
+  profileSessionSampleRate: 1,
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,

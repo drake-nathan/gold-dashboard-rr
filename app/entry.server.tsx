@@ -73,6 +73,7 @@ const handleRequest = async (
           const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set("Content-Type", "text/html");
+          responseHeaders.set("Document-Policy", "js-profiling");
 
           pipe(Sentry.getMetaTagTransformer(body));
 
