@@ -270,7 +270,7 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
     const allCards = [...defaultPresets, ...convexCards];
 
     // Sort: presets first, then custom, alphabetically
-    return allCards.sort((a, b) => {
+    return allCards.toSorted((a, b) => {
       if (a.isPreset !== b.isPreset) {
         return a.isPreset ? -1 : 1;
       }

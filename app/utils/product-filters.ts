@@ -55,7 +55,7 @@ export const sortProducts = (
 
   switch (sortOption) {
     case "last-in-stock": {
-      sorted = withBids.sort((a, b) => {
+      sorted = withBids.toSorted((a, b) => {
         // Sort by lastInStockAt descending (most recent first)
         // Products without lastInStockAt (still in stock or never OOS) go to end
         const aTime = a.lastInStockAt ?? -Infinity;
@@ -65,15 +65,15 @@ export const sortProducts = (
       break;
     }
     case "price-asc": {
-      sorted = withBids.sort((a, b) => a.currentPrice - b.currentPrice);
+      sorted = withBids.toSorted((a, b) => a.currentPrice - b.currentPrice);
       break;
     }
     case "price-desc": {
-      sorted = withBids.sort((a, b) => b.currentPrice - a.currentPrice);
+      sorted = withBids.toSorted((a, b) => b.currentPrice - a.currentPrice);
       break;
     }
     case "profit-asc": {
-      sorted = withBids.sort((a, b) => {
+      sorted = withBids.toSorted((a, b) => {
         const aSpread = a.spreadPercentage ?? -999;
         const bSpread = b.spreadPercentage ?? -999;
         return bSpread - aSpread;
@@ -81,7 +81,7 @@ export const sortProducts = (
       break;
     }
     case "profit-desc": {
-      sorted = withBids.sort((a, b) => {
+      sorted = withBids.toSorted((a, b) => {
         const aSpread = a.spreadPercentage ?? 999;
         const bSpread = b.spreadPercentage ?? 999;
         return aSpread - bSpread;

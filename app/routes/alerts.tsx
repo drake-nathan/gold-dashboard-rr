@@ -654,7 +654,7 @@ const AlertsPage = () => {
       ]),
     );
 
-    return [...unique.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return [...unique.values()].toSorted((a, b) => a.name.localeCompare(b.name));
   }, [stats]);
 
   const hasValidationError = getFormValidationError(formValues);

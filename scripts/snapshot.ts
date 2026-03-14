@@ -191,8 +191,8 @@ const getSnapshots = (): string[] => {
   return readdirSync(SEED_DIR)
     .filter((f) => f.startsWith("prod-snapshot-") && f.endsWith(".json"))
     .map((f) => join(SEED_DIR, f))
-    .sort()
-    .reverse(); // Newest first
+    .toSorted()
+    .toReversed(); // Newest first
 };
 
 const cleanOldSnapshots = (): number => {

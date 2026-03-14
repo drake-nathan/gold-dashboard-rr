@@ -243,7 +243,7 @@ export const resetPresetCard = (cards: CreditCard[], cardId: string): CreditCard
 
 // Sort cards alphabetically (presets first, then custom)
 export const sortCards = (cards: CreditCard[]): CreditCard[] => {
-  const presets = cards.filter((c) => c.isPreset).sort((a, b) => a.name.localeCompare(b.name));
-  const custom = cards.filter((c) => !c.isPreset).sort((a, b) => a.name.localeCompare(b.name));
+  const presets = cards.filter((c) => c.isPreset).toSorted((a, b) => a.name.localeCompare(b.name));
+  const custom = cards.filter((c) => !c.isPreset).toSorted((a, b) => a.name.localeCompare(b.name));
   return [...presets, ...custom];
 };

@@ -556,7 +556,7 @@ export const getAlerts = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    return alerts.sort((a, b) => b.updatedAt - a.updatedAt);
+    return alerts.toSorted((a, b) => b.updatedAt - a.updatedAt);
   },
 });
 

@@ -97,9 +97,7 @@ test("does not show error toast on successful URL response", async () => {
     .mockResolvedValue({ url: "https://billing.stripe.com/portal/123" });
 
   // Prevent actual navigation which breaks the Vitest browser iframe
-  const preventNav = (e: BeforeUnloadEvent) => {
-    e.preventDefault();
-  };
+  const preventNav = (e: BeforeUnloadEvent) => e.preventDefault();
   window.addEventListener("beforeunload", preventNav);
 
   try {

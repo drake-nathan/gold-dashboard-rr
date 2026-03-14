@@ -22,6 +22,7 @@ export default defineConfig({
       rules: {
         "jsdoc/check-tag-names": "off",
         "typescript/unbound-method": "off",
+        "unicorn/consistent-function-scoping": "off",
       },
     },
   ],
@@ -43,6 +44,8 @@ export default defineConfig({
     "jest/no-conditional-expect": "off",
     "jest/require-to-throw-message": "off",
     "react/react-in-jsx-scope": "off",
+    "import/no-unassigned-import": "off",
+    "typescript/no-unsafe-type-assertion": "off",
   },
   settings: {
     react: {

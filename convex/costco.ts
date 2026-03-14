@@ -478,16 +478,16 @@ export const getCurrentPrices = query({
     if (isMetalType(metal) && args.inStockOnly) {
       q = q.withIndex(
         "by_metal_and_stock",
-        (q) => q.eq("metalType", metal).eq("currentInStock", true),
+        (idx) => idx.eq("metalType", metal).eq("currentInStock", true),
       ) as any;
     } else if (isMetalType(metal)) {
-      q = q.withIndex("by_metal_type", (q) => q.eq("metalType", metal)) as any;
+      q = q.withIndex("by_metal_type", (idx) => idx.eq("metalType", metal)) as any;
     }
 
     const results = await q.take(5000); // Limit results to prevent excessive document reads
 
     // Sort by price per ounce for value comparison
-    const sorted = results.sort(
+    const sorted = results.toSorted(
       (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
     );
 
@@ -509,7 +509,7 @@ export const getPriceHistory = query({
       .filter((q) => q.gte(q.field("timestamp"), cutoff))
       .take(1000); // Limit history queries
 
-    return history.sort((a, b) => a.timestamp - b.timestamp);
+    return history.toSorted((a, b) => a.timestamp - b.timestamp);
   },
 });
 
@@ -527,7 +527,7 @@ export const getStockHistory = query({
       .filter((q) => q.gte(q.field("timestamp"), cutoff))
       .take(1000); // Limit history queries
 
-    return history.sort((a, b) => a.timestamp - b.timestamp);
+    return history.toSorted((a, b) => a.timestamp - b.timestamp);
   },
 });
 

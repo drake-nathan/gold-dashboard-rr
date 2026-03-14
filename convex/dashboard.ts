@@ -110,7 +110,7 @@ export const getStats = query({
     // Calculate spreads for ALL gold products (including out of stock)
     const goldWithSpreads = goldProducts
       .map((p) => calculateSpread(p, collectPureGold?.bidPrice ?? null))
-      .sort((a, b) => {
+      .toSorted((a, b) => {
         // Sort by spread percentage, putting items without price per oz at the end
         const aSpread = a.spreadPercentage ?? 999;
         const bSpread = b.spreadPercentage ?? 999;
@@ -120,7 +120,7 @@ export const getStats = query({
     // Calculate spreads for ALL silver products (including out of stock)
     const silverWithSpreads = silverProducts
       .map((p) => calculateSpread(p, collectPureSilver?.bidPrice ?? null))
-      .sort((a, b) => {
+      .toSorted((a, b) => {
         // Sort by spread percentage, putting items without price per oz at the end
         const aSpread = a.spreadPercentage ?? 999;
         const bSpread = b.spreadPercentage ?? 999;
@@ -148,7 +148,7 @@ export const getStats = query({
       },
       goldProducts: {
         bestSpread: goldWithSpreads, // Return ALL products sorted by spread
-        bestValue: goldProducts.sort(
+        bestValue: goldProducts.toSorted(
           (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
         ),
         inStock: goldProducts.filter((p) => p.currentInStock).length,
@@ -165,7 +165,7 @@ export const getStats = query({
       marketPrices,
       silverProducts: {
         bestSpread: silverWithSpreads, // Return ALL products sorted by spread
-        bestValue: silverProducts.sort(
+        bestValue: silverProducts.toSorted(
           (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
         ),
         inStock: silverProducts.filter((p) => p.currentInStock).length,
