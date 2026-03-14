@@ -37,16 +37,16 @@ const TABLES = [
 // ============================================================================
 
 const colors = {
-  blue: "\x1b[34m",
-  bold: "\x1b[1m",
-  cyan: "\x1b[36m",
-  dim: "\x1b[2m",
-  gray: "\x1b[90m",
-  green: "\x1b[32m",
-  magenta: "\x1b[35m",
-  red: "\x1b[31m",
-  reset: "\x1b[0m",
-  yellow: "\x1b[33m",
+  blue: "\u001B[34m",
+  bold: "\u001B[1m",
+  cyan: "\u001B[36m",
+  dim: "\u001B[2m",
+  gray: "\u001B[90m",
+  green: "\u001B[32m",
+  magenta: "\u001B[35m",
+  red: "\u001B[31m",
+  reset: "\u001B[0m",
+  yellow: "\u001B[33m",
 };
 
 const symbols = {
@@ -344,7 +344,7 @@ const exportSnapshot = async (): Promise<boolean> => {
 
 const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
   const startTime = Date.now();
-  const snapshotFile = snapshotPath || getLatestSnapshot();
+  const snapshotFile = snapshotPath ?? getLatestSnapshot();
 
   if (!snapshotFile) {
     console.log(`${colors.red}${symbols.error} No snapshot found in ${SEED_DIR}${colors.reset}`);

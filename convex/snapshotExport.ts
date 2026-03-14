@@ -11,7 +11,7 @@ import { query } from "./_generated/server";
 export const exportCostcoProducts = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("costcoProducts").collect();
+    return ctx.db.query("costcoProducts").collect();
   },
 });
 
@@ -19,7 +19,7 @@ export const exportCostcoProducts = query({
 export const exportPureProducts = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("pureProducts").collect();
+    return ctx.db.query("pureProducts").collect();
   },
 });
 
@@ -27,7 +27,7 @@ export const exportPureProducts = query({
 export const exportMarketPrices = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("marketPrices").collect();
+    return ctx.db.query("marketPrices").collect();
   },
 });
 

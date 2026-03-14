@@ -64,7 +64,7 @@ test("loadPureFeeTier: returns stored tier when localStorage has valid data", ()
 test("loadPureFeeTier: returns default tier when localStorage has invalid JSON", () => {
   localStorage.setItem("dashboard-gold-pure-fee-tier", "invalid json");
 
-  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   const tierId = loadPureFeeTier();
 
   expect(tierId).toBe(PURE_FEE_TIERS[0].id);
@@ -90,7 +90,7 @@ test("loadPureFeeTier: returns default tier when stored tier ID doesn't exist", 
 test("loadPureFeeTier: returns default tier when localStorage has invalid schema", () => {
   localStorage.setItem("dashboard-gold-pure-fee-tier", JSON.stringify({ wrongKey: "value" }));
 
-  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   const tierId = loadPureFeeTier();
 
   expect(tierId).toBe(PURE_FEE_TIERS[0].id);
@@ -114,7 +114,7 @@ test("savePureFeeTier: successfully saves tier ID to localStorage", () => {
 });
 
 test("savePureFeeTier: throws error when data fails validation", () => {
-  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
   // Mock setItem to throw
   const originalSetItem = localStorage.setItem;

@@ -10,7 +10,7 @@ const browserProfiling = Sentry.browserProfilingIntegration();
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   enableLogs: true,
-  environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
+  environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? import.meta.env.MODE,
   integrations: [tracing, browserProfiling, consoleLogging, Sentry.replayIntegration()],
   // Session Replay: buffer mode (error-only)
   // Records in memory but only uploads when an error occurs (~60s pre-error context)

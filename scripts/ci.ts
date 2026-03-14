@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
 
-const resetColor = "\x1b[0m";
-const boldText = "\x1b[1m";
-const greenText = "\x1b[32m";
-const redText = "\x1b[31m";
+const resetColor = "\u001B[0m";
+const boldText = "\u001B[1m";
+const greenText = "\u001B[32m";
+const redText = "\u001B[31m";
 
 const printHeader = () => {
   console.log(`\n${boldText}====== CI CHECKS (Turbo) ======${resetColor}\n`);

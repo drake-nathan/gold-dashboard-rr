@@ -47,7 +47,7 @@ Sentry.init({
   // Enable logs to be sent to Sentry
   enableLogs: true,
   environment:
-    process.env.VITE_SENTRY_ENVIRONMENT ||
+    process.env.VITE_SENTRY_ENVIRONMENT ??
     (process.env.NODE_ENV === "production" ? "production" : "development"),
 
   integrations: [nodeProfilingIntegration(), consoleLogging],

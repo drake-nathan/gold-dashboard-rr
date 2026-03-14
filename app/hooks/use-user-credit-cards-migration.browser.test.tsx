@@ -96,7 +96,7 @@ vi.mock("convex/react", () => ({
   },
   useQuery: (queryRef: unknown, args: unknown) => {
     // Skip queries when args is "skip"
-    if (args === "skip") return undefined;
+    if (args === "skip") return;
 
     const index = queryCallIndex++;
     // Queries are called in order in the hook:
@@ -104,7 +104,6 @@ vi.mock("convex/react", () => ({
     if (index === 0) return mockConvexCards;
     if (index === 1) return mockConvexSettings;
     if (index === 2) return mockNeedsMigration;
-    return undefined;
   },
 }));
 
@@ -233,7 +232,7 @@ test("migration only migrates custom cards and modified presets", async () => {
     }),
   );
 
-  await render(<TestComponent onStateChange={() => undefined} />);
+  await render(<TestComponent onStateChange={() => {}} />);
 
   const migrationCompleted = await waitForMigration();
 
@@ -271,7 +270,7 @@ test("migration skips when user has no custom data", async () => {
     }),
   );
 
-  await render(<TestComponent onStateChange={() => undefined} />);
+  await render(<TestComponent onStateChange={() => {}} />);
 
   const migrationCompleted = await waitForMigration();
 
@@ -307,7 +306,7 @@ test("merge runs when needsMigration is false but localStorage has custom data",
     }),
   );
 
-  await render(<TestComponent onStateChange={() => undefined} />);
+  await render(<TestComponent onStateChange={() => {}} />);
 
   // Wait for merge to complete
   await new Promise<void>((resolve) => {
@@ -353,7 +352,7 @@ test("migration handles preset with signupBonus as modified", async () => {
     }),
   );
 
-  await render(<TestComponent onStateChange={() => undefined} />);
+  await render(<TestComponent onStateChange={() => {}} />);
 
   const migrationCompleted = await waitForMigration();
 
@@ -392,9 +391,9 @@ test("migration preserves localStorage when migration fails", async () => {
   );
 
   // Suppress console.error for this test
-  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-  await render(<TestComponent onStateChange={() => undefined} />);
+  await render(<TestComponent onStateChange={() => {}} />);
 
   // Give time for migration to attempt and fail
   await new Promise<void>((resolve) => {

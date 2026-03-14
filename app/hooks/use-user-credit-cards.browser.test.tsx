@@ -29,7 +29,7 @@ vi.mock("@clerk/react-router", () => ({
 // Mock Convex - return undefined for all queries since user is not signed in
 vi.mock("convex/react", () => ({
   useMutation: () => vi.fn(),
-  useQuery: () => undefined,
+  useQuery: () => {},
 }));
 
 // Test component that exposes the hook's state and actions
@@ -164,7 +164,7 @@ test("returns default preset cards when localStorage is empty", async () => {
   // Clear localStorage
   localStorage.removeItem(CREDIT_CARDS_STORAGE_KEY);
 
-  const screen = await render(<TestComponent onReady={() => undefined} />);
+  const screen = await render(<TestComponent onReady={() => {}} />);
 
   // Wait for hook to initialize
   await expect.element(screen.getByText("ready")).toBeInTheDocument();

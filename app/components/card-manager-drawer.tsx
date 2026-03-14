@@ -92,7 +92,7 @@ export const CardManagerDrawer = ({
     title: string;
     variant?: "danger" | "default";
   }>({
-    action: () => undefined,
+    action: () => {},
     description: "",
     open: false,
     title: "",
@@ -160,7 +160,7 @@ export const CardManagerDrawer = ({
   const handleStartEdit = (card: CreditCard) => {
     form.reset({
       cardType: card.cardType,
-      issuer: card.issuer || "",
+      issuer: card.issuer ?? "",
       name: card.name,
       pointsPerDollar: card.pointsPerDollar,
       signupBonusEnabled: card.signupBonus?.enabled ?? false,
@@ -190,7 +190,7 @@ export const CardManagerDrawer = ({
         const newCard = addCustomCard({
           cardType: values.cardType,
           isCustomizable: false,
-          issuer: values.issuer || undefined,
+          issuer: values.issuer ?? undefined,
           name: values.name,
           pointsPerDollar: values.pointsPerDollar,
           signupBonus,
@@ -203,7 +203,7 @@ export const CardManagerDrawer = ({
       } else if (editMode?.type === "edit") {
         const updatedCards = updateCard(cards, editMode.cardId, {
           cardType: values.cardType,
-          issuer: values.issuer || undefined,
+          issuer: values.issuer ?? undefined,
           name: values.name,
           pointsPerDollar: values.pointsPerDollar,
           signupBonus,
@@ -324,7 +324,7 @@ export const CardManagerDrawer = ({
             <Form {...form}>
               <form
                 className="space-y-4 rounded-lg border border-primary bg-primary/5 p-4"
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={(e) => void form.handleSubmit(onSubmit)(e)}
               >
                 <h3 className="text-sm font-semibold">
                   {editMode.type === "create" ? "Add New Card" : "Edit Card"}

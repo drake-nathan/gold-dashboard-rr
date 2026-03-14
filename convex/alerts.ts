@@ -1140,7 +1140,7 @@ export const listPendingAlertBatches = internalQuery({
       throw new Error("limit must be greater than 0");
     }
 
-    return await ctx.db
+    return ctx.db
       .query("alertBatches")
       .withIndex("by_pending", (q) => q.eq("sent", false).lte("scheduledFor", now))
       .order("asc")

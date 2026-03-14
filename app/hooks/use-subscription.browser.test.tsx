@@ -25,7 +25,7 @@ vi.mock("convex/react", () => ({
   useAction: () => mockActionFn,
   useQuery: (_query: unknown, args: unknown) => {
     // Return undefined when query is skipped
-    if (args === "skip") return undefined;
+    if (args === "skip") return;
     return mockQueryResult;
   },
 }));

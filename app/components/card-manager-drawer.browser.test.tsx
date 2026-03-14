@@ -8,15 +8,15 @@ import { CardManagerDrawer } from "./card-manager-drawer";
 // Helper to render CardManagerDrawer with default props
 const renderCardManagerDrawer = async (
   cards: CreditCard[] = [...DEFAULT_PRESET_CARDS],
-  onCardsChange = () => undefined,
+  onCardsChange = () => {},
   open = true,
-  onResetAll = () => Promise.resolve(undefined),
+  onResetAll = () => Promise.resolve(),
 ) => {
   return render(
     <CardManagerDrawer
       cards={cards}
       onCardsChange={onCardsChange}
-      onClose={() => undefined}
+      onClose={() => {}}
       onResetAll={onResetAll}
       open={open}
     />,
@@ -151,7 +151,7 @@ test("adds a custom card with valid data", async () => {
   expect(newCards).toHaveLength(DEFAULT_PRESET_CARDS.length + 1);
 
   // Verify new card has correct values
-  const newCard = newCards[newCards.length - 1];
+  const newCard = newCards.at(-1)!;
 
   expect(newCard.name).toBe("Test Custom Card");
   expect(newCard.issuer).toBe("Test Bank");
@@ -245,7 +245,7 @@ test("resets all cards to defaults", async () => {
   const onResetAll = vi.fn().mockResolvedValue(undefined);
   const screen = await renderCardManagerDrawer(
     [...DEFAULT_PRESET_CARDS, customCard],
-    () => undefined,
+    () => {},
     true,
     onResetAll,
   );

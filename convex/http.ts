@@ -94,6 +94,7 @@ const verifyUnsubscribeToken = async (token: string, secret: string): Promise<nu
 
   let mismatch = 0;
   for (let i = 0; i < providedSignature.length; i++) {
+    // oxlint-disable-next-line unicorn/prefer-code-point -- charCodeAt is required here; codePointAt returns undefined which breaks bitwise XOR
     mismatch |= providedSignature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
   }
 

@@ -209,7 +209,7 @@ export const CalculatorControls = ({
                             });
                             setComboboxOpen(false);
                           }}
-                          value={`${card.name} ${card.issuer || ""}`}
+                          value={`${card.name} ${card.issuer ?? ""}`}
                         >
                           <Check
                             className={cn(

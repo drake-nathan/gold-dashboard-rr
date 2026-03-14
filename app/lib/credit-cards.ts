@@ -153,7 +153,7 @@ export const loadCreditCards = (): CreditCardsStorage => {
 
     return {
       cards: [...mergedPresets, ...customCards],
-      lastSelectedId: validated.lastSelectedId || DEFAULT_PRESET_CARDS[0].id,
+      lastSelectedId: validated.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id,
     };
   } catch (error) {
     console.error("Failed to load credit cards from localStorage:", error);
@@ -199,7 +199,7 @@ export const addCustomCard = (
   const newCard: CreditCard = {
     ...card,
     cardType: card.cardType ?? "cashback", // Default to cashback if not specified
-    id: `custom-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+    id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     isCustomizable: false,
     isPreset: false,
   };

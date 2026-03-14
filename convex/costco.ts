@@ -445,7 +445,7 @@ export const logFetchRun = internalMutation({
     timestamp: v.number(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.insert("fetchRuns", {
+    return ctx.db.insert("fetchRuns", {
       creditsRemaining: args.creditsRemaining ?? null,
       error: args.error ?? null,
       priceChanges: args.priceChanges,
@@ -862,7 +862,7 @@ export const manuallyMatchProduct = internalMutation({
 export const getAllProductsForMatching = internalMutation({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("costcoProducts").collect();
+    return ctx.db.query("costcoProducts").collect();
   },
 });
 

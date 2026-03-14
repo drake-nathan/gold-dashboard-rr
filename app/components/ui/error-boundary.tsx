@@ -125,7 +125,7 @@ export const ErrorFallback = ({
       <AlertTriangle className="mx-auto mb-2 h-8 w-8 text-destructive" />
       <p className="mb-1 font-medium text-destructive">Error</p>
       <p className="mb-4 text-sm text-muted-foreground">
-        {typeof error === "string" ? error : error?.message || "An unexpected error occurred"}
+        {typeof error === "string" ? error : (error?.message ?? "An unexpected error occurred")}
       </p>
       {onReset ? (
         <Button onClick={onReset} size="sm" variant="outline">

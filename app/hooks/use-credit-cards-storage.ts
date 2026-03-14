@@ -32,7 +32,7 @@ export const deserializeCreditCardsStorage = (value: string): CreditCardsStorage
 
     return {
       cards: [...mergedPresets, ...customCards],
-      lastSelectedId: validated.lastSelectedId || DEFAULT_PRESET_CARDS[0].id,
+      lastSelectedId: validated.lastSelectedId ?? DEFAULT_PRESET_CARDS[0].id,
     };
   } catch (error) {
     console.error("Failed to load credit cards from localStorage:", error);

@@ -22,7 +22,7 @@ vi.mock("@clerk/react-router", () => ({
 // Mock Convex - return undefined for all queries since user is not signed in
 vi.mock("convex/react", () => ({
   useMutation: () => vi.fn(),
-  useQuery: () => undefined,
+  useQuery: () => {},
 }));
 
 // Test component that exposes the hook's state and actions
@@ -54,7 +54,7 @@ const TestComponent = ({
 };
 
 test("defaults to costco membership enabled (true)", async () => {
-  const screen = await render(<TestComponent onReady={() => undefined} />);
+  const screen = await render(<TestComponent onReady={() => {}} />);
 
   // Wait for hook to initialize
   await expect.element(screen.getByText("ready")).toBeInTheDocument();
@@ -94,7 +94,7 @@ test("setCostcoMembershipEnabled toggles the value", async () => {
 });
 
 test("isLoading is false for anonymous users", async () => {
-  const screen = await render(<TestComponent onReady={() => undefined} />);
+  const screen = await render(<TestComponent onReady={() => {}} />);
 
   // Should immediately show ready (not loading) for anonymous users
   await expect.element(screen.getByText("ready")).toBeInTheDocument();

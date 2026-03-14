@@ -463,7 +463,7 @@ export const getLatestPrices = query({
     const metals = ["gold", "silver", "platinum", "palladium"] as const;
     const latestPrices = await Promise.all(
       metals.map(async (metal) => {
-        return await ctx.db
+        return ctx.db
           .query("collectPurePrices")
           .withIndex("by_metal", (q) => q.eq("metalType", metal))
           .order("desc")
@@ -483,13 +483,13 @@ export const getAllPureProducts = query({
   handler: async (ctx, args) => {
     if (args.metalType) {
       const metalType = args.metalType; // Narrow the type for TypeScript
-      return await ctx.db
+      return ctx.db
         .query("pureProducts")
         .withIndex("by_metal_type", (q) => q.eq("metalType", metalType))
         .collect();
     }
 
-    return await ctx.db.query("pureProducts").collect();
+    return ctx.db.query("pureProducts").collect();
   },
 });
 
@@ -513,6 +513,6 @@ export const manualFetchPrices = action({
     success: boolean;
     timestamp: number;
   }> => {
-    return await ctx.runAction(internal.pure.fetchNewData);
+    return ctx.runAction(internal.pure.fetchNewData);
   },
 });
