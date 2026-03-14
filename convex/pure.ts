@@ -22,13 +22,13 @@ const PURE_API_BASE_URL = "https://api.collectpure.com";
 
 // Generic fallback products (not marked "Stocked by Costco" but needed for matching)
 // These are SKUs from Pure API (full URL slugs from product URLs)
-const GENERIC_FALLBACK_SKUS = [
+const GENERIC_FALLBACK_SKUS = new Set([
   "10-oz-silver-bars-999-fine-accredited-brands000092", // 10 oz silver bars - generic
   "random-brand-1-oz-gold-bar-9999-fine-in-card000087", // 1 oz gold bar - generic
   "10-gram-gold-bar-9999-fine-accredited-brands000098", // 10 gram gold bar - generic
   "50-gram-gold-bar-9999-fine-accredited-brands000100", // 50 gram gold bar - generic
   "100-gram-gold-bar-9999-fine-accredited-brands000101", // 100 gram gold bar - generic
-];
+]);
 
 // Type definitions for Pure API v2 responses
 interface PureSpotPricesResponseV2 {
@@ -198,7 +198,7 @@ export const fetchNewData = internalAction({
                 );
 
                 // Also include generic fallback products (matched by SKU)
-                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(product.sku);
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.has(product.sku);
 
                 // Also include products already in our database (e.g., manually added)
                 const existsInDb = existingIdsSet.has(product.id);
@@ -206,7 +206,7 @@ export const fetchNewData = internalAction({
                 return isSupportedMetal && (isStockedByCostco || isGenericFallback || existsInDb);
               })
               .map((product) => {
-                const isGenericFallback = GENERIC_FALLBACK_SKUS.includes(product.sku);
+                const isGenericFallback = GENERIC_FALLBACK_SKUS.has(product.sku);
                 const metalType = product.material.toLowerCase() as "gold" | "silver";
                 const weightOz = parseWeightToOz(product.weight, product.weightGrams);
                 const productType = extractProductType(product);

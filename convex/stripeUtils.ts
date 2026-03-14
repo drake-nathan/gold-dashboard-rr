@@ -48,7 +48,7 @@ export interface AlertEntitlements {
   shouldPauseEnabledAlerts: boolean;
 }
 
-const alertEntitlementsStatuses: AlertEntitlementsStatus[] = [
+const alertEntitlementsStatuses = new Set<AlertEntitlementsStatus>([
   "active",
   "anonymous",
   "canceled",
@@ -56,7 +56,7 @@ const alertEntitlementsStatuses: AlertEntitlementsStatus[] = [
   "past_due",
   "trialing",
   "unpaid",
-];
+]);
 
 /**
  * Determines subscription status from an array of subscriptions.
@@ -191,7 +191,7 @@ export const determineAlertEntitlements = (status: AlertEntitlementsStatus): Ale
  */
 export const toAlertEntitlementsStatus = (status: string): AlertEntitlementsStatus | undefined => {
   const normalizedStatus = status as AlertEntitlementsStatus;
-  if (alertEntitlementsStatuses.includes(normalizedStatus)) {
+  if (alertEntitlementsStatuses.has(normalizedStatus)) {
     return normalizedStatus;
   }
   return undefined;

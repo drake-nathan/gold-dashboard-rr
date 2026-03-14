@@ -74,7 +74,7 @@ export const ThemeProvider = ({
   }, [theme]);
 
   const value = {
-    setTheme, // useLocalStorage handles both state and localStorage
+    setTheme,
     theme,
   };
 

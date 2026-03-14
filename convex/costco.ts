@@ -692,7 +692,7 @@ export const matchCostcoProductToPure = internalMutation({
             : null;
 
         // Skip common/generic phrases
-        const genericPhrases = [
+        const genericPhrases = new Set([
           "gold bar",
           "silver bar",
           "gold coin",
@@ -702,16 +702,16 @@ export const matchCostcoProductToPure = internalMutation({
           "troy ounce",
           "in assay",
           "new in",
-        ];
+        ]);
 
         if (
           threeWord &&
-          !genericPhrases.includes(threeWord) &&
+          !genericPhrases.has(threeWord) &&
           costcoNameLower.includes(threeWord)
         ) {
           score += 75; // Strong match for 3-word phrase
           matchDetails.push(`phrase:"${threeWord}"`);
-        } else if (!genericPhrases.includes(twoWord) && costcoNameLower.includes(twoWord)) {
+        } else if (!genericPhrases.has(twoWord) && costcoNameLower.includes(twoWord)) {
           score += 40; // Good match for 2-word phrase
           matchDetails.push(`phrase:"${twoWord}"`);
         }

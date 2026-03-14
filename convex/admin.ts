@@ -266,7 +266,7 @@ export const getTopMatches = query({
 
       // 4. PHRASE MATCHING
       const pureWords = pureNameLower.split(/\s+/);
-      const genericPhrases = [
+      const genericPhrases = new Set([
         "gold bar",
         "silver bar",
         "gold coin",
@@ -276,7 +276,7 @@ export const getTopMatches = query({
         "troy ounce",
         "in assay",
         "new in",
-      ];
+      ]);
 
       for (let i = 0; i < pureWords.length - 1; i++) {
         const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
@@ -287,12 +287,12 @@ export const getTopMatches = query({
 
         if (
           threeWord &&
-          !genericPhrases.includes(threeWord) &&
+          !genericPhrases.has(threeWord) &&
           costcoNameLower.includes(threeWord)
         ) {
           score += 75;
           matchDetails.push(`phrase:"${threeWord}"`);
-        } else if (!genericPhrases.includes(twoWord) && costcoNameLower.includes(twoWord)) {
+        } else if (!genericPhrases.has(twoWord) && costcoNameLower.includes(twoWord)) {
           score += 40;
           matchDetails.push(`phrase:"${twoWord}"`);
         }
