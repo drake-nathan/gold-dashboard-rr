@@ -4,8 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
 import devtoolsJson from "vite-plugin-devtools-json";
-import tsconfigPaths from "vite-tsconfig-paths";
-
 export default defineConfig((config) => ({
   optimizeDeps: {
     exclude: ["@sentry/react-router"],
@@ -14,7 +12,6 @@ export default defineConfig((config) => ({
   plugins: [
     tailwindcss(),
     reactRouter(),
-    tsconfigPaths(),
     babel({
       babelConfig: {
         plugins: [["babel-plugin-react-compiler", {}]],
@@ -32,6 +29,10 @@ export default defineConfig((config) => ({
       config,
     ),
   ],
+
+  resolve: {
+    tsconfigPaths: true,
+  },
 
   ssr: {
     noExternal: ["posthog-js/react"],

@@ -34,8 +34,7 @@ Sentry.init({
       isNotFoundStatus ||
       isRouteMiss ||
       isSerializedRouteMiss ||
-      (isMethodNotAllowedStatus &&
-        (isMissingActionPostRoot || isSerializedMissingActionPostRoot))
+      (isMethodNotAllowedStatus && (isMissingActionPostRoot || isSerializedMissingActionPostRoot))
     ) {
       return null;
     }
