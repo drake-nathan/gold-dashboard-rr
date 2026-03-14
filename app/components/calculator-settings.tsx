@@ -18,8 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import type { CreditCard } from "@/lib/credit-cards";
-import { calculateCashbackPercentage } from "@/lib/credit-cards";
+import { type CreditCard, calculateCashbackPercentage } from "@/lib/credit-cards";
 import type { PureFeeTier } from "@/lib/pure-fee-tiers";
 
 // Legacy type for backward compatibility

@@ -1,7 +1,6 @@
 import { test } from "vitest";
 
-import type { ProductCardData } from "./product-filters";
-import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
+import { type ProductCardData, filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
 
 // Mock product data helpers
 const createMockProduct = (overrides: Partial<ProductCardData> = {}): ProductCardData => {

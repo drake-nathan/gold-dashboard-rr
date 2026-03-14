@@ -175,8 +175,8 @@ test("getUserSendAlertPermissions reflects subscription status transitions", asy
   });
 
   expect(activePermissions.status).toBe("active");
-  expect(activePermissions.isPro).toBe(true);
-  expect(activePermissions.alertEntitlements.canSendAlerts).toBe(true);
+  expect(activePermissions.isPro).toBeTruthy();
+  expect(activePermissions.alertEntitlements.canSendAlerts).toBeTruthy();
 
   await t.mutation(components.stripe.private.handleSubscriptionUpdated, {
     cancelAtPeriodEnd: false,
@@ -193,8 +193,8 @@ test("getUserSendAlertPermissions reflects subscription status transitions", asy
   });
 
   expect(pastDuePermissions.status).toBe("past_due");
-  expect(pastDuePermissions.isPro).toBe(false);
-  expect(pastDuePermissions.alertEntitlements.canSendAlerts).toBe(false);
+  expect(pastDuePermissions.isPro).toBeFalsy();
+  expect(pastDuePermissions.alertEntitlements.canSendAlerts).toBeFalsy();
   expect(pastDuePermissions.alertEntitlements.pauseReason).toBe("billing_hold");
 });
 
@@ -258,7 +258,7 @@ test("pauseAlertsForUser pauses only enabled alerts for the target user", async 
 
     const pausedAlert = user1Alerts.find((alert) => alert.name === "User 1 enabled alert");
 
-    expect(pausedAlert?.enabled).toBe(false);
+    expect(pausedAlert?.enabled).toBeFalsy();
     expect(pausedAlert?.pauseReason).toBe("billing_hold");
     expect(pausedAlert?.pausedAt).toBeTypeOf("number");
 
@@ -266,7 +266,7 @@ test("pauseAlertsForUser pauses only enabled alerts for the target user", async 
       (alert) => alert.name === "User 1 already paused",
     );
 
-    expect(alreadyDisabledAlert?.enabled).toBe(false);
+    expect(alreadyDisabledAlert?.enabled).toBeFalsy();
     expect(alreadyDisabledAlert?.pauseReason).toBeUndefined();
 
     const user2Alerts = await ctx.db
@@ -275,7 +275,7 @@ test("pauseAlertsForUser pauses only enabled alerts for the target user", async 
       .collect();
 
     expect(user2Alerts).toHaveLength(1);
-    expect(user2Alerts[0].enabled).toBe(true);
+    expect(user2Alerts[0].enabled).toBeTruthy();
     expect(user2Alerts[0].pauseReason).toBeUndefined();
   });
 });
@@ -356,7 +356,7 @@ test("subscription transition active -> past_due -> active pauses once", async (
       .collect();
 
     expect(alerts).toHaveLength(1);
-    expect(alerts[0].enabled).toBe(false);
+    expect(alerts[0].enabled).toBeFalsy();
     expect(alerts[0].pauseReason).toBe("billing_hold");
   });
 });
@@ -397,7 +397,7 @@ test("subscription transition active(cancel-end) -> canceled uses inactive pause
       .collect();
 
     expect(alerts).toHaveLength(1);
-    expect(alerts[0].enabled).toBe(false);
+    expect(alerts[0].enabled).toBeFalsy();
     expect(alerts[0].pauseReason).toBe("inactive_subscription");
   });
 });
@@ -495,7 +495,7 @@ test("evaluateAlertsForProducts queues history and batch for active SKU alerts",
       .collect();
 
     expect(batches).toHaveLength(1);
-    expect(batches[0].sent).toBe(false);
+    expect(batches[0].sent).toBeFalsy();
     expect(batches[0].alerts).toHaveLength(1);
     expect(batches[0].alerts[0].alertId).toStrictEqual(created.alertId);
 
@@ -763,7 +763,7 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
 
     expect(processResult.sentBatches).toBe(1);
     expect(processResult.failedSends).toBe(0);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledOnce();
 
     const fetchCall = fetchMock.mock.calls[0];
     const requestInit = fetchCall[1] as RequestInit;
@@ -788,7 +788,7 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
         .collect();
 
       expect(batches).toHaveLength(1);
-      expect(batches[0].sent).toBe(true);
+      expect(batches[0].sent).toBeTruthy();
       expect(batches[0].sentAt).toBeTypeOf("number");
 
       const history = await ctx.db
@@ -797,7 +797,7 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
         .collect();
 
       expect(history).toHaveLength(1);
-      expect(history[0].notificationSent).toBe(true);
+      expect(history[0].notificationSent).toBeTruthy();
       expect(history[0].notificationError).toBeUndefined();
     });
   } finally {
@@ -879,7 +879,7 @@ test("processPendingAlertBatches skips batches for non-entitled users", async ()
       .collect();
 
     expect(batches).toHaveLength(1);
-    expect(batches[0].sent).toBe(true);
+    expect(batches[0].sent).toBeTruthy();
 
     const history = await ctx.db
       .query("alertHistory")
@@ -887,7 +887,7 @@ test("processPendingAlertBatches skips batches for non-entitled users", async ()
       .collect();
 
     expect(history).toHaveLength(1);
-    expect(history[0].notificationSent).toBe(false);
+    expect(history[0].notificationSent).toBeFalsy();
     expect(history[0].notificationError).toContain("subscription status free");
   });
 });
@@ -951,7 +951,7 @@ test("processPendingAlertBatches defers pending batches when delivery config is 
         .collect();
 
       expect(batches).toHaveLength(1);
-      expect(batches[0].sent).toBe(false);
+      expect(batches[0].sent).toBeFalsy();
       expect(batches[0].scheduledFor).toBeGreaterThan(now + 20 * 60 * 1000);
       expect(batches[0].lastAttemptError).toContain("missing RESEND_API_KEY");
     });
@@ -1045,12 +1045,12 @@ test("processPendingAlertBatches retries failed sends then gives up after max at
         expect(batch.sendAttempts).toBe(attempt);
 
         if (attempt < 5) {
-          expect(batch.sent).toBe(false);
+          expect(batch.sent).toBeFalsy();
           expect(batch.scheduledFor).toBeGreaterThan(processNow);
 
           processNow = batch.scheduledFor + 1;
         } else {
-          expect(batch.sent).toBe(true);
+          expect(batch.sent).toBeTruthy();
           expect(batch.terminalFailureAt).toBeTypeOf("number");
         }
       });
@@ -1068,7 +1068,7 @@ test("processPendingAlertBatches retries failed sends then gives up after max at
         .collect();
 
       expect(history).toHaveLength(1);
-      expect(history[0].notificationSent).toBe(false);
+      expect(history[0].notificationSent).toBeFalsy();
       expect(history[0].notificationError).toContain("failed after 5 attempts");
     });
   } finally {

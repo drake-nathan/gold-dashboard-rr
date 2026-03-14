@@ -73,7 +73,7 @@ test("extractMetalAttributes: gold with multiple weight attributes", () => {
       { key: "Packaging Weight", value: "12 oz" },
     ],
     name: "10 oz Gold Bar",
-    price: 25000,
+    price: 25_000,
   });
 
   const result = extractMetalAttributes(product);
@@ -87,7 +87,7 @@ test("extractMetalAttributes: gold with lowercase weight attribute", () => {
   const product = createProduct({
     attributes: [{ key: "weight", value: "5 oz" }],
     name: "5 oz Gold Bar",
-    price: 12500,
+    price: 12_500,
   });
 
   const result = extractMetalAttributes(product);
@@ -258,7 +258,7 @@ test("extractMetalAttributes: accepts gold with 'bar' keyword", () => {
   const product = createProduct({
     attributes: [{ key: "Metal Weight", value: "10 oz" }],
     name: "PAMP Gold Bar 10oz",
-    price: 25000,
+    price: 25_000,
   });
 
   const result = extractMetalAttributes(product);
@@ -380,8 +380,8 @@ test("extractMetalAttributes: preserves all original product fields", () => {
   expect(result?.brand).toBe("Test Brand");
   expect(result?.categories).toStrictEqual(["metals", "gold"]);
   expect(result?.currency).toBe("USD");
-  expect(result?.in_stock).toBe(true);
-  expect(result?.is_member_only).toBe(true);
+  expect(result?.in_stock).toBeTruthy();
+  expect(result?.is_member_only).toBeTruthy();
   expect(result?.marketing_features).toStrictEqual(["Best Value"]);
   expect(result?.rating).toBe(4.5);
   expect(result?.short_description).toBe("High quality gold");

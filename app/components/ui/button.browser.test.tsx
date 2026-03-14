@@ -22,7 +22,7 @@ test("button click interaction", async () => {
 
   await button.click();
 
-  expect(clicked).toBe(true);
+  expect(clicked).toBeTruthy();
 });
 
 test("button can be disabled", async () => {

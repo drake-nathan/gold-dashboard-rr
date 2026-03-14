@@ -422,8 +422,8 @@ export const upsertSpotPrice = internalMutation({
     // Only insert if price has changed significantly or it's been more than 1 hour
     const shouldInsert =
       !existing ||
-      Math.abs(existing.spotPrice - args.spotPrice) > 1.0 ||
-      Math.abs(existing.bidPrice - args.bidPrice) > 1.0 ||
+      Math.abs(existing.spotPrice - args.spotPrice) > 1 ||
+      Math.abs(existing.bidPrice - args.bidPrice) > 1 ||
       args.timestamp - existing.timestamp > 60 * 60 * 1000;
 
     if (shouldInsert) {

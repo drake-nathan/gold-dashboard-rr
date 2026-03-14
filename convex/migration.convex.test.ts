@@ -42,7 +42,7 @@ test("complete migration flow works end-to-end", async () => {
   // Step 1: Check if migration is needed (should be true for new user)
   const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
-  expect(needsMigration).toBe(true);
+  expect(needsMigration).toBeTruthy();
 
   // Step 2: Migrate cards from localStorage
   const migrateResult = await asUser.mutation(api.userCards.migrateFromLocalStorage, {
@@ -67,7 +67,7 @@ test("complete migration flow works end-to-end", async () => {
   // Verify: Migration should no longer be needed
   const needsMigrationAfter = await asUser.query(api.userSettings.needsMigration, {});
 
-  expect(needsMigrationAfter).toBe(false);
+  expect(needsMigrationAfter).toBeFalsy();
 
   // Verify: Cards should be accessible
   const cards = await asUser.query(api.userCards.getUserCards, {});

@@ -1,8 +1,7 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import type { QueryCtx } from "./_generated/server";
-import { action, internalMutation, mutation, query } from "./_generated/server";
+import { type QueryCtx, action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
 import {
   extractProductType,

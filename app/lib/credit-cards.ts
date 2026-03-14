@@ -45,7 +45,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isPreset: true,
     issuer: "Citi",
     name: "Costco Anywhere Visa",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01, // 1 cent per point
   },
   {
@@ -65,7 +65,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isPreset: true,
     issuer: "Capital One",
     name: "Capital One Venture X",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.0185, // 1.85 cents per point
   },
   {
@@ -75,7 +75,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isPreset: true,
     issuer: "Citi",
     name: "Strata Premier",
-    pointsPerDollar: 1.0,
+    pointsPerDollar: 1,
     valuePerPoint: 0.019, // 1.9 cents per point
   },
   {
@@ -85,7 +85,7 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
     isPreset: true,
     issuer: "Robinhood",
     name: "Robinhood Gold Card",
-    pointsPerDollar: 3.0,
+    pointsPerDollar: 3,
     valuePerPoint: 0.01, // 1 cent per point (flat cashback)
   },
 ];

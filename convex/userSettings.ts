@@ -7,8 +7,7 @@
 
 import { v } from "convex/values";
 
-import type { MutationCtx, QueryCtx } from "./_generated/server";
-import { mutation, query } from "./_generated/server";
+import { type MutationCtx, type QueryCtx, mutation, query } from "./_generated/server";
 
 // Helper to get authenticated user ID (throws if not authenticated)
 const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {

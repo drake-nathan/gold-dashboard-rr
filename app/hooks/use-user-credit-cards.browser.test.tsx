@@ -252,7 +252,7 @@ test("deleteCard removes custom card from localStorage", async () => {
     isPreset: false,
     issuer: "Test Bank",
     name: "Card To Delete",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01,
   };
 
@@ -308,7 +308,7 @@ test("updateCard modifies card in localStorage", async () => {
     isPreset: false,
     issuer: "Old Bank",
     name: "Old Card Name",
-    pointsPerDollar: 1.0,
+    pointsPerDollar: 1,
     valuePerPoint: 0.01,
   };
 
@@ -335,7 +335,7 @@ test("updateCard modifies card in localStorage", async () => {
   // Update the card
   await verifiedActions.updateCard("card-to-update", {
     name: "New Card Name",
-    pointsPerDollar: 3.0,
+    pointsPerDollar: 3,
   });
 
   // Verify card is updated in UI
@@ -352,7 +352,7 @@ test("updateCard modifies card in localStorage", async () => {
   const updatedCard = parsed.cards.find((c) => c.id === "card-to-update");
 
   expect(updatedCard?.name).toBe("New Card Name");
-  expect(updatedCard?.pointsPerDollar).toBe(3.0);
+  expect(updatedCard?.pointsPerDollar).toBe(3);
 });
 
 test("resetAllCards clears all cards and resets to defaults", async () => {
@@ -364,7 +364,7 @@ test("resetAllCards clears all cards and resets to defaults", async () => {
     isPreset: false,
     issuer: "Custom Bank",
     name: "Custom Card",
-    pointsPerDollar: 5.0,
+    pointsPerDollar: 5,
     valuePerPoint: 0.02,
   };
 
@@ -408,7 +408,7 @@ test("resetAllCards clears all cards and resets to defaults", async () => {
   const parsed = JSON.parse(stored) as { cards: CreditCard[] };
 
   expect(parsed.cards).toHaveLength(DEFAULT_PRESET_CARDS.length);
-  expect(parsed.cards.every((c) => c.isPreset)).toBe(true);
+  expect(parsed.cards.every((c) => c.isPreset)).toBeTruthy();
 });
 
 test("lastSelectedId persists across operations", async () => {

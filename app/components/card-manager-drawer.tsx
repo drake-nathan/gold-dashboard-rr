@@ -107,7 +107,7 @@ export const CardManagerDrawer = ({
       signupBonusEnabled: false,
       signupBonusPoints: 0,
       signupBonusSpend: 0,
-      valuePerPointCents: 1.0,
+      valuePerPointCents: 1,
     },
     resolver: zodResolver(cardFormSchema),
   });
@@ -152,7 +152,7 @@ export const CardManagerDrawer = ({
       signupBonusEnabled: false,
       signupBonusPoints: 0,
       signupBonusSpend: 0,
-      valuePerPointCents: 1.0,
+      valuePerPointCents: 1,
     });
     setEditMode({ type: "create" });
   };

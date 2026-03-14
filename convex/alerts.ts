@@ -2,16 +2,17 @@ import { v } from "convex/values";
 
 import { components, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
-import type { ActionCtx, MutationCtx, QueryCtx } from "./_generated/server";
 import {
+  type ActionCtx,
+  type MutationCtx,
+  type QueryCtx,
   internalAction,
   internalMutation,
   internalQuery,
   mutation,
   query,
 } from "./_generated/server";
-import type { AlertPauseReason } from "./stripeUtils";
-import { getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
+import { type AlertPauseReason, getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements } from "./subscriptionEntitlements";
 
 const alertTypeValidator = v.union(v.literal("sku"), v.literal("category"), v.literal("threshold"));

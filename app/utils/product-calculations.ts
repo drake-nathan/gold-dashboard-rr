@@ -132,7 +132,7 @@ export const calculateProductMetrics = (
   // === COLOR CODING ===
   const positiveColor = "text-red-600 dark:text-red-400";
   const negativeColor = "text-green-600 dark:text-green-400";
-  const profitColor = netProfit === null ? "" : netProfit > 0 ? negativeColor : positiveColor;
+  const profitColor = netProfit === null ? "" : (netProfit > 0 ? negativeColor : positiveColor);
 
   // === POINTS ANALYSIS (for travel cards) ===
   // Points scale with quantity

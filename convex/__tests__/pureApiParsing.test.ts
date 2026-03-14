@@ -272,7 +272,7 @@ test("transformSpotPricesV2: transforms gold and silver spot prices", () => {
 test("transformSpotPricesV2: excludes Bitcoin", () => {
   const data: PureSpotPriceV2[] = [
     { ask: 2010, bid: 2000, changePositive: true, changePrice: 15, material: "Gold" },
-    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "Bitcoin" },
+    { ask: 65_000, bid: 64_000, changePositive: true, changePrice: 500, material: "Bitcoin" },
   ];
 
   const result = transformSpotPricesV2(data);
@@ -326,8 +326,8 @@ test("transformSpotPricesV2: handles case-insensitive material names", () => {
 
 test("transformSpotPricesV2: excludes bitcoin regardless of casing", () => {
   const data: PureSpotPriceV2[] = [
-    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "BITCOIN" },
-    { ask: 65000, bid: 64000, changePositive: true, changePrice: 500, material: "bitcoin" },
+    { ask: 65_000, bid: 64_000, changePositive: true, changePrice: 500, material: "BITCOIN" },
+    { ask: 65_000, bid: 64_000, changePositive: true, changePrice: 500, material: "bitcoin" },
   ];
 
   const result = transformSpotPricesV2(data);
@@ -386,27 +386,27 @@ test("getHighestOfferPrice: returns null for empty variants", () => {
 // ============================================================================
 
 test("hasMorePages: returns true when more pages available", () => {
-  expect(hasMorePages(0, 100, 250)).toBe(true);
+  expect(hasMorePages(0, 100, 250)).toBeTruthy();
 });
 
 test("hasMorePages: returns true when exactly one more page", () => {
-  expect(hasMorePages(100, 100, 250)).toBe(true);
+  expect(hasMorePages(100, 100, 250)).toBeTruthy();
 });
 
 test("hasMorePages: returns false when on last page", () => {
-  expect(hasMorePages(200, 100, 250)).toBe(false);
+  expect(hasMorePages(200, 100, 250)).toBeFalsy();
 });
 
 test("hasMorePages: returns false when offset equals total", () => {
-  expect(hasMorePages(200, 100, 200)).toBe(false);
+  expect(hasMorePages(200, 100, 200)).toBeFalsy();
 });
 
 test("hasMorePages: returns false when total is 0", () => {
-  expect(hasMorePages(0, 100, 0)).toBe(false);
+  expect(hasMorePages(0, 100, 0)).toBeFalsy();
 });
 
 test("hasMorePages: works with server-capped page size smaller than requested", () => {
   // Requested 100 but server returned 50
-  expect(hasMorePages(0, 50, 200)).toBe(true);
-  expect(hasMorePages(150, 50, 200)).toBe(false);
+  expect(hasMorePages(0, 50, 200)).toBeTruthy();
+  expect(hasMorePages(150, 50, 200)).toBeFalsy();
 });

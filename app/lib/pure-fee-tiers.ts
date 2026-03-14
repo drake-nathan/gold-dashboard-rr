@@ -31,21 +31,21 @@ export const PURE_FEE_TIERS: PureFeeTier[] = [
     bullionFeeRate: 0.007, // 0.7%
     id: "pure-silver",
     name: "Pure Silver",
-    requiredQuarterlySales: 50000,
+    requiredQuarterlySales: 50_000,
     silverPlatPalladiumFeeRate: 0.0093, // 0.93%
   },
   {
-    bullionFeeRate: 0.00625, // 0.625%
+    bullionFeeRate: 0.006_25, // 0.625%
     id: "pure-gold",
     name: "Pure Gold",
-    requiredQuarterlySales: 300000,
+    requiredQuarterlySales: 300_000,
     silverPlatPalladiumFeeRate: 0.0083, // 0.83%
   },
   {
     bullionFeeRate: 0.005, // 0.5%
     id: "pure-plum",
     name: "Pure Plum",
-    requiredQuarterlySales: 1200000,
+    requiredQuarterlySales: 1_200_000,
     silverPlatPalladiumFeeRate: 0.0065, // 0.65%
   },
 ];

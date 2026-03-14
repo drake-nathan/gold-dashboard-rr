@@ -148,7 +148,7 @@ test("addCard supports signup bonus", async () => {
     ...testCard,
     signupBonus: {
       enabled: true,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 4000,
     },
   };
@@ -159,7 +159,7 @@ test("addCard supports signup bonus", async () => {
 
   expect(cards[0].signupBonus).toStrictEqual({
     enabled: true,
-    pointsBonus: 60000,
+    pointsBonus: 60_000,
     spendRequirement: 4000,
   });
 });
@@ -225,7 +225,7 @@ test("updateCard can update signupBonus", async () => {
     cardId: testCard.cardId,
     signupBonus: {
       enabled: true,
-      pointsBonus: 75000,
+      pointsBonus: 75_000,
       spendRequirement: 5000,
     },
   });
@@ -234,7 +234,7 @@ test("updateCard can update signupBonus", async () => {
 
   expect(cards[0].signupBonus).toStrictEqual({
     enabled: true,
-    pointsBonus: 75000,
+    pointsBonus: 75_000,
     spendRequirement: 5000,
   });
 });

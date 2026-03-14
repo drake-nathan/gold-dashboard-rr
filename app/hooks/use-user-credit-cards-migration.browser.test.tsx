@@ -177,7 +177,7 @@ test("migration runs when user signs in with custom cards in localStorage", asyn
   // Wait for migration to complete
   const migrationCompleted = await waitForMigration();
 
-  expect(migrationCompleted).toBe(true);
+  expect(migrationCompleted).toBeTruthy();
 
   // Verify migrateFromLocalStorage was called with the custom card
   expect(mockMutationCalls.migrateFromLocalStorage).toHaveLength(1);
@@ -186,7 +186,7 @@ test("migration runs when user signs in with custom cards in localStorage", asyn
     cards: { cardId: string }[];
   };
 
-  expect(migratedCards.cards.some((c) => c.cardId === "custom-migrate-test")).toBe(true);
+  expect(migratedCards.cards.some((c) => c.cardId === "custom-migrate-test")).toBeTruthy();
 
   // Verify updateSettings was called with lastSelectedCardId
   expect(mockMutationCalls.updateSettings).toHaveLength(1);
@@ -236,7 +236,7 @@ test("migration only migrates custom cards and modified presets", async () => {
 
   const migrationCompleted = await waitForMigration();
 
-  expect(migrationCompleted).toBe(true);
+  expect(migrationCompleted).toBeTruthy();
 
   // Verify only modified preset and custom card were migrated
   const migratedCards = mockMutationCalls.migrateFromLocalStorage[0][0] as {
@@ -247,14 +247,14 @@ test("migration only migrates custom cards and modified presets", async () => {
   expect(migratedCards.cards).toHaveLength(2);
 
   // Verify the custom card is included
-  expect(migratedCards.cards.some((c) => c.cardId === "custom-card-123")).toBe(true);
+  expect(migratedCards.cards.some((c) => c.cardId === "custom-card-123")).toBeTruthy();
 
   // Verify the modified preset is included
-  expect(migratedCards.cards.some((c) => c.cardId === defaultPreset.id)).toBe(true);
+  expect(migratedCards.cards.some((c) => c.cardId === defaultPreset.id)).toBeTruthy();
 
   // Verify unmodified presets are NOT included
   for (const preset of unmodifiedPresets) {
-    expect(migratedCards.cards.some((c) => c.cardId === preset.id)).toBe(false);
+    expect(migratedCards.cards.some((c) => c.cardId === preset.id)).toBeFalsy();
   }
 });
 
@@ -274,7 +274,7 @@ test("migration skips when user has no custom data", async () => {
 
   const migrationCompleted = await waitForMigration();
 
-  expect(migrationCompleted).toBe(true);
+  expect(migrationCompleted).toBeTruthy();
 
   // migrateFromLocalStorage should NOT be called (no custom data)
   expect(mockMutationCalls.migrateFromLocalStorage).toHaveLength(0);
@@ -339,7 +339,7 @@ test("migration handles preset with signupBonus as modified", async () => {
     ...DEFAULT_PRESET_CARDS[0],
     signupBonus: {
       enabled: true,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 4000,
     },
   };
@@ -356,7 +356,7 @@ test("migration handles preset with signupBonus as modified", async () => {
 
   const migrationCompleted = await waitForMigration();
 
-  expect(migrationCompleted).toBe(true);
+  expect(migrationCompleted).toBeTruthy();
 
   // Verify the preset with signupBonus was migrated
   const migratedCards = mockMutationCalls.migrateFromLocalStorage[0][0] as {
@@ -414,7 +414,7 @@ test("migration preserves localStorage when migration fails", async () => {
   // Verify the custom card is still in localStorage
   const parsed = JSON.parse(stored ?? "{}") as { cards: { id: string }[] };
 
-  expect(parsed.cards.some((c) => c.id === "card-for-failed-migration")).toBe(true);
+  expect(parsed.cards.some((c) => c.id === "card-for-failed-migration")).toBeTruthy();
 
   consoleSpy.mockRestore();
 });

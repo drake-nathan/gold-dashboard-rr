@@ -32,7 +32,7 @@ test("validates valid credit card", () => {
 
   const result = creditCardSchema.safeParse(validCard);
 
-  expect(result.success).toBe(true);
+  expect(result.success).toBeTruthy();
 });
 
 test("rejects card with missing name", () => {
@@ -48,7 +48,7 @@ test("rejects card with missing name", () => {
 
   const result = creditCardSchema.safeParse(invalidCard);
 
-  expect(result.success).toBe(false);
+  expect(result.success).toBeFalsy();
 });
 
 test("rejects card with name too long", () => {
@@ -64,7 +64,7 @@ test("rejects card with name too long", () => {
 
   const result = creditCardSchema.safeParse(invalidCard);
 
-  expect(result.success).toBe(false);
+  expect(result.success).toBeFalsy();
 });
 
 test("rejects card with points per dollar out of range", () => {
@@ -80,7 +80,7 @@ test("rejects card with points per dollar out of range", () => {
 
   const result = creditCardSchema.safeParse(invalidCard);
 
-  expect(result.success).toBe(false);
+  expect(result.success).toBeFalsy();
 });
 
 test("rejects card with negative points per dollar", () => {
@@ -96,7 +96,7 @@ test("rejects card with negative points per dollar", () => {
 
   const result = creditCardSchema.safeParse(invalidCard);
 
-  expect(result.success).toBe(false);
+  expect(result.success).toBeFalsy();
 });
 
 test("rejects card with value per point out of range", () => {
@@ -112,7 +112,7 @@ test("rejects card with value per point out of range", () => {
 
   const result = creditCardSchema.safeParse(invalidCard);
 
-  expect(result.success).toBe(false);
+  expect(result.success).toBeFalsy();
 });
 
 test("accepts card with optional issuer", () => {
@@ -129,7 +129,7 @@ test("accepts card with optional issuer", () => {
 
   const result = creditCardSchema.safeParse(validCard);
 
-  expect(result.success).toBe(true);
+  expect(result.success).toBeTruthy();
 });
 
 // ============================================================================
@@ -207,8 +207,8 @@ test("adds custom card with auto-generated ID", () => {
   });
 
   expect(newCard.id).toMatch(/^custom-/);
-  expect(newCard.isPreset).toBe(false);
-  expect(newCard.isCustomizable).toBe(false);
+  expect(newCard.isPreset).toBeFalsy();
+  expect(newCard.isCustomizable).toBeFalsy();
   expect(newCard.name).toBe("My Custom Card");
   expect(newCard.pointsPerDollar).toBe(1.5);
   expect(newCard.valuePerPoint).toBe(0.02);
@@ -274,11 +274,11 @@ test("updates card points and value", () => {
   ];
 
   const updated = updateCard(cards, "test-1", {
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.025,
   });
 
-  expect(updated[0].pointsPerDollar).toBe(2.0);
+  expect(updated[0].pointsPerDollar).toBe(2);
   expect(updated[0].valuePerPoint).toBe(0.025);
 });
 
@@ -299,7 +299,7 @@ test("does not modify other cards when updating one", () => {
       isCustomizable: false,
       isPreset: false,
       name: "Card 2",
-      pointsPerDollar: 2.0,
+      pointsPerDollar: 2,
       valuePerPoint: 0.01,
     },
   ];
@@ -361,7 +361,7 @@ test("prevents deletion of preset cards", () => {
       isPreset: true,
       issuer: "Citi",
       name: "Costco Visa",
-      pointsPerDollar: 2.0,
+      pointsPerDollar: 2,
       valuePerPoint: 0.01,
     },
   ];
@@ -386,7 +386,7 @@ test("only deletes specified card", () => {
       isCustomizable: false,
       isPreset: false,
       name: "Card 2",
-      pointsPerDollar: 2.0,
+      pointsPerDollar: 2,
       valuePerPoint: 0.01,
     },
   ];
@@ -409,7 +409,7 @@ test("resets modified preset card to defaults", () => {
     isPreset: true,
     issuer: "Citi",
     name: "Costco Visa (Modified)",
-    pointsPerDollar: 3.0, // Modified
+    pointsPerDollar: 3, // Modified
     valuePerPoint: 0.02, // Modified
   };
 
@@ -421,7 +421,7 @@ test("resets modified preset card to defaults", () => {
   expect(defaultCostcoCard).toBeDefined();
 
   expect(result[0]).toStrictEqual(defaultCostcoCard);
-  expect(result[0].pointsPerDollar).toBe(2.0); // Reset to default
+  expect(result[0].pointsPerDollar).toBe(2); // Reset to default
   expect(result[0].valuePerPoint).toBe(0.01); // Reset to default
 });
 
@@ -488,15 +488,15 @@ test("sorts cards with presets first, then custom", () => {
   const sorted = sortCards(cards);
 
   // First two should be presets (alphabetically sorted)
-  expect(sorted[0].isPreset).toBe(true);
+  expect(sorted[0].isPreset).toBeTruthy();
   expect(sorted[0].name).toBe("Alpha Preset");
-  expect(sorted[1].isPreset).toBe(true);
+  expect(sorted[1].isPreset).toBeTruthy();
   expect(sorted[1].name).toBe("Beta Preset");
 
   // Last two should be custom (alphabetically sorted)
-  expect(sorted[2].isPreset).toBe(false);
+  expect(sorted[2].isPreset).toBeFalsy();
   expect(sorted[2].name).toBe("Apple Custom");
-  expect(sorted[3].isPreset).toBe(false);
+  expect(sorted[3].isPreset).toBeFalsy();
   expect(sorted[3].name).toBe("Zebra Card");
 });
 
@@ -552,7 +552,7 @@ test("default preset cards are valid", () => {
   DEFAULT_PRESET_CARDS.forEach((card) => {
     const result = creditCardSchema.safeParse(card);
 
-    expect(result.success).toBe(true);
+    expect(result.success).toBeTruthy();
   });
 });
 
@@ -565,7 +565,7 @@ test("default preset cards have unique IDs", () => {
 
 test("default preset cards are all marked as presets", () => {
   DEFAULT_PRESET_CARDS.forEach((card) => {
-    expect(card.isPreset).toBe(true);
+    expect(card.isPreset).toBeTruthy();
   });
 });
 
@@ -587,7 +587,7 @@ test("calculates SUB bonus percentage correctly", () => {
     pointsPerDollar: 1.5,
     signupBonus: {
       enabled: true,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 4000,
     },
     valuePerPoint: 0.021, // 2.1 cents per point
@@ -610,7 +610,7 @@ test("returns 0 when SUB is not enabled", () => {
     pointsPerDollar: 1.5,
     signupBonus: {
       enabled: false,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 4000,
     },
     valuePerPoint: 0.02,
@@ -668,7 +668,7 @@ test("returns 0 when SUB has zero spend requirement", () => {
     pointsPerDollar: 1.5,
     signupBonus: {
       enabled: true,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 0,
     },
     valuePerPoint: 0.02,
@@ -689,7 +689,7 @@ test("calculates total cashback percentage correctly with SUB", () => {
     pointsPerDollar: 1.5,
     signupBonus: {
       enabled: true,
-      pointsBonus: 60000,
+      pointsBonus: 60_000,
       spendRequirement: 4000,
     },
     valuePerPoint: 0.021, // 2.1 cents per point
@@ -713,15 +713,15 @@ test("total cashback equals base cashback when no SUB", () => {
     isCustomizable: false,
     isPreset: false,
     name: "Test Card",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01, // 1 cent per point = 2% cashback
   };
 
   const baseCashback = calculateCashbackPercentage(card);
   const totalCashback = calculateTotalCashbackPercentage(card);
 
-  expect(baseCashback).toBe(2.0);
-  expect(totalCashback).toBe(2.0);
+  expect(baseCashback).toBe(2);
+  expect(totalCashback).toBe(2);
 });
 
 test("calculates SUB bonus with high-value card", () => {
@@ -731,10 +731,10 @@ test("calculates SUB bonus with high-value card", () => {
     isCustomizable: false,
     isPreset: false,
     name: "Premium Card",
-    pointsPerDollar: 3.0,
+    pointsPerDollar: 3,
     signupBonus: {
       enabled: true,
-      pointsBonus: 100000,
+      pointsBonus: 100_000,
       spendRequirement: 5000,
     },
     valuePerPoint: 0.02, // 2 cents per point
@@ -745,11 +745,11 @@ test("calculates SUB bonus with high-value card", () => {
   const totalCashback = calculateTotalCashbackPercentage(card);
 
   // Base: 3.0 * 0.02 * 100 = 6%
-  expect(baseCashback).toBeCloseTo(6.0, 2);
+  expect(baseCashback).toBeCloseTo(6, 2);
 
   // SUB: (100000 / 5000) * 0.02 * 100 = 40%
-  expect(subBonus).toBeCloseTo(40.0, 2);
+  expect(subBonus).toBeCloseTo(40, 2);
 
   // Total: 6% + 40% = 46%
-  expect(totalCashback).toBeCloseTo(46.0, 2);
+  expect(totalCashback).toBeCloseTo(46, 2);
 });

@@ -1,6 +1,5 @@
 import { registerRoutes } from "@convex-dev/stripe";
-import type { GenericActionCtx, GenericDataModel } from "convex/server";
-import { httpRouter } from "convex/server";
+import { type GenericActionCtx, type GenericDataModel, httpRouter } from "convex/server";
 
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";

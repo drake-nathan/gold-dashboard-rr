@@ -150,7 +150,7 @@ test("returns pro status for user with active subscription", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: true };
   mockQueryResult = {
     cancelAtPeriodEnd: false,
-    currentPeriodEnd: 1735689600000,
+    currentPeriodEnd: 1_735_689_600_000,
     isPro: true,
     status: "active",
     userId: "user_123",

@@ -157,7 +157,7 @@ test("adds a custom card with valid data", async () => {
   expect(newCard.issuer).toBe("Test Bank");
   expect(newCard.pointsPerDollar).toBe(2.5);
   expect(newCard.valuePerPoint).toBe(0.015); // 1.5 cents = 0.015 dollars
-  expect(newCard.isPreset).toBe(false);
+  expect(newCard.isPreset).toBeFalsy();
 });
 
 test("deletes a custom card with confirmation", async () => {
@@ -168,7 +168,7 @@ test("deletes a custom card with confirmation", async () => {
     isPreset: false,
     issuer: "Test Bank",
     name: "Test Card",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01,
   };
 
@@ -208,7 +208,7 @@ test("cancels delete when clicking cancel in confirmation dialog", async () => {
     isPreset: false,
     issuer: "Test Bank",
     name: "Test Card",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01,
   };
 
@@ -238,7 +238,7 @@ test("resets all cards to defaults", async () => {
     isPreset: false,
     issuer: "Test Bank",
     name: "Test Card",
-    pointsPerDollar: 2.0,
+    pointsPerDollar: 2,
     valuePerPoint: 0.01,
   };
 

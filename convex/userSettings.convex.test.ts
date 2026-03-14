@@ -122,7 +122,7 @@ test("updateSettings preserves migration flag", async () => {
 
   const settings = await asUser.query(api.userSettings.getSettings, {});
 
-  expect(settings?.localStorageMigrated).toBe(true);
+  expect(settings?.localStorageMigrated).toBeTruthy();
 });
 
 test("updateSettings with empty object preserves existing settings", async () => {
@@ -141,7 +141,7 @@ test("updateSettings with empty object preserves existing settings", async () =>
   // Settings should be unchanged
   const settings = await asUser.query(api.userSettings.getSettings, {});
 
-  expect(settings?.costcoMembershipEnabled).toBe(true);
+  expect(settings?.costcoMembershipEnabled).toBeTruthy();
   expect(settings?.lastSelectedCardId).toBe("card-1");
 });
 
@@ -155,7 +155,7 @@ test("needsMigration returns true for new user", async () => {
 
   const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
-  expect(needsMigration).toBe(true);
+  expect(needsMigration).toBeTruthy();
 });
 
 test("needsMigration returns true when not migrated", async () => {
@@ -169,7 +169,7 @@ test("needsMigration returns true when not migrated", async () => {
 
   const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
-  expect(needsMigration).toBe(true);
+  expect(needsMigration).toBeTruthy();
 });
 
 test("needsMigration returns false after marking complete", async () => {
@@ -180,7 +180,7 @@ test("needsMigration returns false after marking complete", async () => {
 
   const needsMigration = await asUser.query(api.userSettings.needsMigration, {});
 
-  expect(needsMigration).toBe(false);
+  expect(needsMigration).toBeFalsy();
 });
 
 // ============================================================================

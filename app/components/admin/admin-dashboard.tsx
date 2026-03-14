@@ -299,8 +299,9 @@ const UrlParserCard = () => {
       } else {
         setError(result.error ?? "Failed to fetch product from Pure");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add product");
+      // oxlint-disable-next-line eslint/no-shadow -- catch-error-name requires "error", but outer scope has error state
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to add product");
     } finally {
       setIsAdding(false);
     }

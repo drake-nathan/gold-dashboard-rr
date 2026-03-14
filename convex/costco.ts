@@ -167,7 +167,7 @@ export const fetchNewData = internalAction({
 
       // Mark products not returned as out of stock
       const outOfStockResult = await ctx.runMutation(internal.costco.markUnseenProductsOutOfStock, {
-        seenProductIds: Array.from(seenProductIds),
+        seenProductIds: [...seenProductIds],
         timestamp,
       });
 
@@ -285,7 +285,7 @@ export const upsertProduct = internalMutation({
 
       if (shouldTrustProductApi) {
         console.info(
-          `[Search API] Ignoring in_stock=true for ${product.name} - Product API verified as OOS ${Math.round(verificationAge / 60000)} min ago`,
+          `[Search API] Ignoring in_stock=true for ${product.name} - Product API verified as OOS ${Math.round(verificationAge / 60_000)} min ago`,
         );
       }
 

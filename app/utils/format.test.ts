@@ -36,9 +36,9 @@ test("formatCurrency formats negative numbers", () => {
 });
 
 test("formatCurrency formats large numbers with thousands separators", () => {
-  expect(formatCurrency(1000000)).toBe("$1,000,000.00");
-  expect(formatCurrency(1234567.89)).toBe("$1,234,567.89");
-  expect(formatCurrency(999999.99)).toBe("$999,999.99");
+  expect(formatCurrency(1_000_000)).toBe("$1,000,000.00");
+  expect(formatCurrency(1_234_567.89)).toBe("$1,234,567.89");
+  expect(formatCurrency(999_999.99)).toBe("$999,999.99");
 });
 
 test("formatCurrency formats very small positive numbers", () => {
@@ -75,11 +75,11 @@ test("formatPercentage formats negative percentages", () => {
 });
 
 test("formatPercentage respects custom decimal places", () => {
-  expect(formatPercentage(5.12345, 0)).toBe("5%");
-  expect(formatPercentage(5.12345, 1)).toBe("5.1%");
-  expect(formatPercentage(5.12345, 2)).toBe("5.12%");
-  expect(formatPercentage(5.12345, 3)).toBe("5.123%");
-  expect(formatPercentage(5.12345, 4)).toBe("5.1235%"); // toFixed uses banker's rounding
+  expect(formatPercentage(5.123_45, 0)).toBe("5%");
+  expect(formatPercentage(5.123_45, 1)).toBe("5.1%");
+  expect(formatPercentage(5.123_45, 2)).toBe("5.12%");
+  expect(formatPercentage(5.123_45, 3)).toBe("5.123%");
+  expect(formatPercentage(5.123_45, 4)).toBe("5.1235%"); // toFixed uses banker's rounding
 });
 
 test("formatPercentage rounds correctly with custom decimals", () => {
@@ -106,7 +106,7 @@ test("formatPercentage formats very small percentages", () => {
 test("formatPercentage formats very large percentages", () => {
   expect(formatPercentage(1000)).toBe("1000.00%");
   expect(formatPercentage(9999.99)).toBe("9999.99%");
-  expect(formatPercentage(12345.6789, 3)).toBe("12345.679%");
+  expect(formatPercentage(12_345.6789, 3)).toBe("12345.679%");
 });
 
 // formatWeight tests
