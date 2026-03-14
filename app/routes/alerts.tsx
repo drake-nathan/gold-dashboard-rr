@@ -624,7 +624,7 @@ const AlertsPage = () => {
     initialType === "sku" || initialType === "category" ? initialType : "threshold";
 
   const [isSaving, setIsSaving] = useState(false);
-  const [editingAlert, setEditingAlert] = useState<Doc<"alerts"> | null>(null);
+  const [editingAlert, setEditingAlert] = useState<Doc<"alerts">>(null);
   const [formValues, setFormValues] = useState<AlertFormValues>(() => ({
     ...defaultFormValues,
     formType: initialFormType,

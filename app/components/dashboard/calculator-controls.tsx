@@ -170,6 +170,7 @@ export const CalculatorControls = ({
           <Popover onOpenChange={setComboboxOpen} open={comboboxOpen}>
             <PopoverTrigger asChild>
               <Button
+                aria-controls="credit-card"
                 aria-expanded={comboboxOpen}
                 className="min-w-80 justify-between rounded-md"
                 id="credit-card"
