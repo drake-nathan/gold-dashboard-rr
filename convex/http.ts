@@ -94,7 +94,6 @@ const verifyUnsubscribeToken = async (token: string, secret: string): Promise<nu
 
   let mismatch = 0;
   for (let i = 0; i < providedSignature.length; i++) {
-    // eslint-disable-next-line no-bitwise
     mismatch |= providedSignature.charCodeAt(i) ^ expectedSignature.charCodeAt(i);
   }
 

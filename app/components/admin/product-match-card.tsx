@@ -415,10 +415,11 @@ const MatchSelector = ({
     <div className="space-y-4">
       {/* URL Paste Section */}
       <div>
-        <label className="text-sm font-medium">Paste Pure URL</label>
+        <label className="text-sm font-medium" htmlFor="pure-url-input">Paste Pure URL</label>
         <div className="mt-1 flex gap-2">
           <input
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            id="pure-url-input"
             onChange={(e) => {
               setPureUrl(e.target.value);
               setParsedSku(null);
@@ -453,9 +454,10 @@ const MatchSelector = ({
 
       {/* Search Section */}
       <div>
-        <label className="text-sm font-medium">Search Pure Products</label>
+        <label className="text-sm font-medium" htmlFor="pure-search-input">Search Pure Products</label>
         <input
           className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          id="pure-search-input"
           onChange={(e) => {
             setSearchQuery(e.target.value);
           }}

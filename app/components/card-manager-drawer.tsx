@@ -324,7 +324,6 @@ export const CardManagerDrawer = ({
             <Form {...form}>
               <form
                 className="space-y-4 rounded-lg border border-primary bg-primary/5 p-4"
-                // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onSubmit={form.handleSubmit(onSubmit)}
               >
                 <h3 className="text-sm font-semibold">

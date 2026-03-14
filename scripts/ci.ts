@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { spawn } from "node:child_process";
 
 const resetColor = "\x1b[0m";

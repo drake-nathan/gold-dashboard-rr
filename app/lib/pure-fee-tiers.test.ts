@@ -21,7 +21,6 @@ const localStorageMock = (() => {
     },
     getItem: (key: string) => store[key] || null,
     removeItem: (key: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete store[key];
     },
     setItem: (key: string, value: string) => {

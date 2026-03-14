@@ -7,7 +7,6 @@ import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./prod
 const createMockProduct = (overrides: Partial<ProductCardData> = {}): ProductCardData => {
   return {
     _creationTime: Date.now(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _id: `mock-id-${Math.random()}` as any,
     brand: "Test Brand",
     categories: [],

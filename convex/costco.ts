@@ -479,10 +479,8 @@ export const getCurrentPrices = query({
       q = q.withIndex(
         "by_metal_and_stock",
         (q) => q.eq("metalType", metal).eq("currentInStock", true),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ) as any;
     } else if (isMetalType(metal)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       q = q.withIndex("by_metal_type", (q) => q.eq("metalType", metal)) as any;
     }
 

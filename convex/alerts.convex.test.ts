@@ -1,7 +1,6 @@
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 
-// eslint-disable-next-line import-x/no-relative-packages -- Stripe does not export component schema path
 import stripeComponentSchema from "../node_modules/@convex-dev/stripe/dist/component/schema.js";
 import { api, components, internal } from "./_generated/api";
 import schema from "./schema";

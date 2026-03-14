@@ -78,7 +78,6 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   // const stats = useQuery(api.dashboard.getStats);
 
   // Check if there's actually no data
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center">

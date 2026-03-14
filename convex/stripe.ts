@@ -109,7 +109,6 @@ export const createPortalSession = action({
         returnUrl: siteUrl,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- session.url can be null
       return { url: session.url ?? undefined };
     } catch (error) {
       console.error("Error creating portal session:", error);

@@ -232,7 +232,6 @@ test("addCard followed by setLastSelectedId preserves the new card", async () =>
 
   expect(stored).toBeDefined();
 
-  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing after assertion
   if (!stored) throw new Error("Storage should exist");
 
   const parsed = JSON.parse(stored) as {
@@ -292,7 +291,6 @@ test("deleteCard removes custom card from localStorage", async () => {
 
   expect(stored).toBeDefined();
 
-  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
   if (!stored) throw new Error("Storage should exist");
 
   const parsed = JSON.parse(stored) as { cards: { id: string }[] };
@@ -346,7 +344,6 @@ test("updateCard modifies card in localStorage", async () => {
   // Verify card is updated in localStorage
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
 
-  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
   if (!stored) throw new Error("Storage should exist");
 
   const parsed = JSON.parse(stored) as {
@@ -406,7 +403,6 @@ test("resetAllCards clears all cards and resets to defaults", async () => {
   // Verify localStorage is reset
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
 
-  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
   if (!stored) throw new Error("Storage should exist");
 
   const parsed = JSON.parse(stored) as { cards: CreditCard[] };
@@ -440,7 +436,6 @@ test("lastSelectedId persists across operations", async () => {
   // Verify selection is in localStorage
   const stored = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
 
-  // eslint-disable-next-line vitest/no-conditional-in-test -- Type narrowing
   if (!stored) throw new Error("Storage should exist");
 
   const parsed = JSON.parse(stored) as { lastSelectedId: string };

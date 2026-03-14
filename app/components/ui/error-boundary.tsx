@@ -1,4 +1,3 @@
-/* eslint-disable react/destructuring-assignment */
 import * as Sentry from "@sentry/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";

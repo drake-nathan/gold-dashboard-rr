@@ -279,7 +279,6 @@ test("calculates correctly with high-value credit card", () => {
 
   const settings: CalculatorSettings = {
     costcoMembershipEnabled: true,
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     creditCard: robinhoodCard!, // 3 pts @ 1¢ = 3%
     pureFeeTier: PURE_FEE_TIERS[0],
     quantity: 1,

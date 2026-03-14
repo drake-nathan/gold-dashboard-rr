@@ -91,5 +91,4 @@ const handleRequest = async (
 
 export default Sentry.wrapSentryHandleRequest(handleRequest);
 
-// eslint-disable-next-line camelcase -- Required by React Router's instrumentation API
 export const unstable_instrumentations = [Sentry.createSentryServerInstrumentation()];
