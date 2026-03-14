@@ -18,9 +18,8 @@ const renderTrendBadge = (percentChange: null | number) => {
 
   const isPositive = percentChange >= 0;
   const Icon = isPositive ? TrendingUp : TrendingDown;
-  const colorClass =
-    isPositive ?
-      "bg-green-600/10 text-green-600 border-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:border-green-400/20"
+  const colorClass = isPositive
+    ? "bg-green-600/10 text-green-600 border-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:border-green-400/20"
     : "bg-red-600/10 text-red-600 border-red-600/20 dark:bg-red-400/10 dark:text-red-400 dark:border-red-400/20";
 
   return (
@@ -43,9 +42,9 @@ export const StatCard = ({
 }: StatCardProps) => {
   // Responsive sizing: equal width on mobile, variant-specific on desktop
   const widthClass =
-    variant === "market" ?
-      "min-w-[140px] flex-1 xl:flex-none xl:w-[180px]"
-    : "min-w-[140px] flex-1 xl:flex-none xl:w-[140px]";
+    variant === "market"
+      ? "min-w-[140px] flex-1 xl:flex-none xl:w-[180px]"
+      : "min-w-[140px] flex-1 xl:flex-none xl:w-[140px]";
 
   return (
     <Card className={`${widthClass} py-4`}>

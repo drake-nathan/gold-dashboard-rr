@@ -24,38 +24,41 @@ export const SubscriptionPageContent = () => {
           <div>
             <p className="font-medium">{isPro ? "Dashboard.Gold Pro" : "Free Plan"}</p>
             <p className="text-sm text-neutral-500">
-              {isPro ?
-                subscription.status === "trialing" ?
-                  "Trial period"
-                : "Active subscription"
-              : "Upgrade for premium features"}
+              {isPro
+                ? subscription.status === "trialing"
+                  ? "Trial period"
+                  : "Active subscription"
+                : "Upgrade for premium features"}
             </p>
           </div>
-          {isPro ?
+          {isPro ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-1 text-sm font-medium text-amber-600 dark:text-amber-400">
               <Crown className="size-3.5" />
               Pro
             </span>
-          : null}
+          ) : null}
         </div>
       </div>
 
-      {isPro ?
+      {isPro ? (
         <Button
           className="w-full"
           disabled={isActionLoading}
           onClick={() => void handleManagePortal()}
           variant="outline"
         >
-          {isActionLoading ?
+          {isActionLoading ? (
             <Loader2 className="size-4 animate-spin" />
-          : <ExternalLink className="size-4" />}
+          ) : (
+            <ExternalLink className="size-4" />
+          )}
           Manage on Stripe
         </Button>
-      : <p className="text-center text-sm text-neutral-500">
+      ) : (
+        <p className="text-center text-sm text-neutral-500">
           Use the &quot;Upgrade to Pro&quot; button in the header to subscribe.
         </p>
-      }
+      )}
     </div>
   );
 };

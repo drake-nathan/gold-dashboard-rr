@@ -36,22 +36,22 @@ export const HeaderActions = () => {
         </Button>
       </Show>
       <Show when="signed-in">
-        {isAdmin ?
+        {isAdmin ? (
           <Button asChild size="sm" variant="outline">
             <Link to="/admin">
               <Settings className="h-4 w-4" />
               <span className="ml-1.5">Admin</span>
             </Link>
           </Button>
-        : null}
-        {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
+        ) : null}
+        {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
           <Button asChild size="sm" variant="outline">
             <Link to="/alerts">
               <Bell className="h-4 w-4" />
               <span className="ml-1.5">Alerts</span>
             </Link>
           </Button>
-        : null}
+        ) : null}
         <UpgradeButton size="sm" />
       </Show>
     </>

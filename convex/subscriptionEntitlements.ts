@@ -1,6 +1,5 @@
-import type { QueryCtx } from "./_generated/server";
-
 import { components } from "./_generated/api";
+import type { QueryCtx } from "./_generated/server";
 import {
   type AlertEntitlements,
   determineAlertEntitlements,

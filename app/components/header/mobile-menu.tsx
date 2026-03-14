@@ -42,7 +42,7 @@ export const MobileMenu = () => {
         <ThemeMenuItems />
 
         {/* Admin Link */}
-        {isAdmin ?
+        {isAdmin ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -52,7 +52,7 @@ export const MobileMenu = () => {
               </Link>
             </DropdownMenuItem>
           </>
-        : null}
+        ) : null}
 
         {/* Auth Section */}
         <DropdownMenuSeparator />
@@ -75,14 +75,14 @@ export const MobileMenu = () => {
           </DropdownMenuItem>
         </Show>
         <Show when="signed-in">
-          {import.meta.env.VITE_STRIPE_ENABLED === "true" ?
+          {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
             <DropdownMenuItem asChild>
               <Link to="/alerts">
                 <Bell className="mr-2 h-4 w-4" />
                 Alerts
               </Link>
             </DropdownMenuItem>
-          : null}
+          ) : null}
           <div className="px-2 py-1.5">
             <UpgradeButton className="w-full justify-start" size="sm" />
           </div>
@@ -90,9 +90,7 @@ export const MobileMenu = () => {
             <UserButtonWithPro avatarSize="size-[28px]" />
             <span className="text-sm">
               Account
-              {isPro ?
-                <span className="ml-1 text-amber-500">Pro</span>
-              : null}
+              {isPro ? <span className="ml-1 text-amber-500">Pro</span> : null}
             </span>
           </div>
         </Show>

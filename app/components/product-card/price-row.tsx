@@ -23,7 +23,7 @@ export const PriceRow = ({
     <div className={`flex justify-between ${className ?? ""}`}>
       <span className={labelClassName ?? "text-muted-foreground"}>
         {label}
-        {tooltip ?
+        {tooltip ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -38,7 +38,7 @@ export const PriceRow = ({
               <p>{tooltip}</p>
             </TooltipContent>
           </Tooltip>
-        : null}
+        ) : null}
       </span>
       <span className={`text-right ${valueClassName ?? "font-medium"}`}>{value}</span>
     </div>

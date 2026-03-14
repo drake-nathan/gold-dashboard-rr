@@ -3,8 +3,6 @@ import { useState } from "react";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { CreditCard } from "@/lib/credit-cards";
-
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,11 +13,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-
-import type { MetalFilter, SortOption } from "./filter-types";
+import type { CreditCard } from "@/lib/credit-cards";
 
 import { CalculatorControls } from "./calculator-controls";
 import { FilterControls } from "./filter-controls";
+import type { MetalFilter, SortOption } from "./filter-types";
 
 /** Skeleton placeholder for calculator controls during SSR */
 const CalculatorControlsSkeleton = () => (
@@ -101,7 +99,7 @@ export const Filters = ({
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold">Calculator</h3>
                 <div className="space-y-3">
-                  {isClientReady ?
+                  {isClientReady ? (
                     <CalculatorControls
                       availableCards={availableCards}
                       calculatorSettings={calculatorSettings}
@@ -110,7 +108,9 @@ export const Filters = ({
                       onOpenSettings={onOpenSettings}
                       setCalculatorSettings={setCalculatorSettings}
                     />
-                  : <CalculatorControlsSkeleton />}
+                  ) : (
+                    <CalculatorControlsSkeleton />
+                  )}
                 </div>
               </div>
             </div>
@@ -138,7 +138,7 @@ export const Filters = ({
 
         {/* Right Side - Calculator (skeleton during SSR, real controls on client) */}
         <div className="flex flex-wrap items-center gap-4">
-          {isClientReady ?
+          {isClientReady ? (
             <CalculatorControls
               availableCards={availableCards}
               calculatorSettings={calculatorSettings}
@@ -146,7 +146,9 @@ export const Filters = ({
               onOpenSettings={onOpenSettings}
               setCalculatorSettings={setCalculatorSettings}
             />
-          : <CalculatorControlsSkeleton />}
+          ) : (
+            <CalculatorControlsSkeleton />
+          )}
         </div>
       </div>
     </div>

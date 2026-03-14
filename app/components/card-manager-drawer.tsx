@@ -138,9 +138,9 @@ export const CardManagerDrawer = ({
 
   const baseCashback = pointsPerDollar * (valuePerPointCents / 100) * 100;
   const subBonus =
-    signupBonusEnabled && signupBonusSpend > 0 ?
-      (signupBonusPoints / signupBonusSpend) * (valuePerPointCents / 100) * 100
-    : 0;
+    signupBonusEnabled && signupBonusSpend > 0
+      ? (signupBonusPoints / signupBonusSpend) * (valuePerPointCents / 100) * 100
+      : 0;
   const totalCashback = baseCashback + subBonus;
 
   const handleStartCreate = () => {
@@ -178,9 +178,8 @@ export const CardManagerDrawer = ({
 
   const onSubmit = (values: CardFormValues) => {
     try {
-      const signupBonus =
-        values.signupBonusEnabled ?
-          {
+      const signupBonus = values.signupBonusEnabled
+        ? {
             enabled: true,
             pointsBonus: values.signupBonusPoints,
             spendRequirement: values.signupBonusSpend,
@@ -321,7 +320,7 @@ export const CardManagerDrawer = ({
 
         <div className="space-y-4 px-4 pb-4">
           {/* Create/Edit Form */}
-          {editMode ?
+          {editMode ? (
             <Form {...form}>
               <form
                 className="space-y-4 rounded-lg border border-primary bg-primary/5 p-4"
@@ -485,7 +484,7 @@ export const CardManagerDrawer = ({
                       )}
                     />
 
-                    {signupBonusEnabled ?
+                    {signupBonusEnabled ? (
                       <>
                         <FormField
                           control={form.control}
@@ -555,7 +554,7 @@ export const CardManagerDrawer = ({
                           )}
                         />
                       </>
-                    : null}
+                    ) : null}
                   </div>
 
                   {/* Cashback Summary */}
@@ -565,7 +564,7 @@ export const CardManagerDrawer = ({
                         <span>Base Cashback:</span>
                         <strong>{baseCashback.toFixed(2)}%</strong>
                       </div>
-                      {signupBonusEnabled && subBonus > 0 ?
+                      {signupBonusEnabled && subBonus > 0 ? (
                         <>
                           <div className="flex justify-between text-primary">
                             <span>SUB Bonus:</span>
@@ -576,7 +575,7 @@ export const CardManagerDrawer = ({
                             <span className="text-primary">{totalCashback.toFixed(2)}%</span>
                           </div>
                         </>
-                      : null}
+                      ) : null}
                     </div>
                   )}
                 </div>
@@ -591,7 +590,7 @@ export const CardManagerDrawer = ({
                 </div>
               </form>
             </Form>
-          : null}
+          ) : null}
 
           {/* Add Card Button and Reset All Button */}
           {!editMode && (
@@ -610,13 +609,14 @@ export const CardManagerDrawer = ({
           {/* Cards List */}
           <div className="space-y-2">
             <h3 className="text-sm font-semibold text-muted-foreground">Your Cards</h3>
-            {sortedCards.length === 0 ?
+            {sortedCards.length === 0 ? (
               <div className="rounded-lg border border-dashed p-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   No cards yet. Add a custom card or use the preset cards above.
                 </p>
               </div>
-            : sortedCards.map((card) => {
+            ) : (
+              sortedCards.map((card) => {
                 const cashback = calculateCashbackPercentage(card);
                 const isEditing = editMode?.type === "edit" && editMode.cardId === card.id;
 
@@ -624,11 +624,11 @@ export const CardManagerDrawer = ({
                   <SwipeableCard
                     key={card.id}
                     onDelete={
-                      !card.isPreset ?
-                        () => {
-                          handleDelete(card.id);
-                        }
-                      : undefined
+                      !card.isPreset
+                        ? () => {
+                            handleDelete(card.id);
+                          }
+                        : undefined
                     }
                   >
                     <div
@@ -640,28 +640,26 @@ export const CardManagerDrawer = ({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <div className="truncate text-sm font-semibold">{card.name}</div>
-                            {card.isPreset ?
-                              <Badge variant="secondary">Preset</Badge>
-                            : null}
+                            {card.isPreset ? <Badge variant="secondary">Preset</Badge> : null}
                           </div>
-                          {card.issuer ?
+                          {card.issuer ? (
                             <div className="text-xs text-muted-foreground">{card.issuer}</div>
-                          : null}
+                          ) : null}
                           <div className="mt-1.5 text-xs text-muted-foreground">
                             {card.pointsPerDollar}x @ {(card.valuePerPoint * 100).toFixed(2)}¢ ={" "}
                             <span className="font-bold text-primary">{cashback.toFixed(2)}%</span>
-                            {card.signupBonus?.enabled ?
+                            {card.signupBonus?.enabled ? (
                               <span className="ml-1 text-primary">
                                 (SUB: +{calculateSubBonusPercentage(card).toFixed(2)}% ={" "}
                                 {calculateTotalCashbackPercentage(card).toFixed(2)}
                                 %)
                               </span>
-                            : null}
+                            ) : null}
                           </div>
                         </div>
 
                         <div className="flex shrink-0 gap-1">
-                          {card.isCustomizable || !card.isPreset ?
+                          {card.isCustomizable || !card.isPreset ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -678,8 +676,8 @@ export const CardManagerDrawer = ({
                               </TooltipTrigger>
                               <TooltipContent>Edit card</TooltipContent>
                             </Tooltip>
-                          : null}
-                          {card.isPreset && card.isCustomizable ?
+                          ) : null}
+                          {card.isPreset && card.isCustomizable ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
@@ -696,7 +694,7 @@ export const CardManagerDrawer = ({
                               </TooltipTrigger>
                               <TooltipContent>Reset to default</TooltipContent>
                             </Tooltip>
-                          : null}
+                          ) : null}
                           {!card.isPreset && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -721,7 +719,7 @@ export const CardManagerDrawer = ({
                   </SwipeableCard>
                 );
               })
-            }
+            )}
           </div>
         </div>
       </SheetContent>

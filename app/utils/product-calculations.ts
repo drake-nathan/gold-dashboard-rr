@@ -3,7 +3,6 @@ import type { FunctionReturnType } from "convex/server";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
 import type { ProductCardData } from "@/components/dashboard";
-
 import { calculateCashbackPercentage, calculateSubBonusPercentage } from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
 
@@ -73,14 +72,15 @@ export const calculateProductMetrics = (
   // (Percentage stays the same regardless of quantity)
   const marketPrice = marketPrices.find((p) => p.assetType === product.metalType);
   const aboveSpotPercentage =
-    product.currentPricePerOunce && marketPrice?.currentPrice ?
-      ((product.currentPricePerOunce - marketPrice.currentPrice) / marketPrice.currentPrice) * 100
-    : null;
+    product.currentPricePerOunce && marketPrice?.currentPrice
+      ? ((product.currentPricePerOunce - marketPrice.currentPrice) / marketPrice.currentPrice) * 100
+      : null;
 
   // === CASHBACK BREAKDOWN ===
   // (Percentages stay the same, dollar amounts scale with quantity)
-  const costcoCashbackPercentage =
-    calculatorSettings.costcoMembershipEnabled ? COSTCO_EXECUTIVE_PERCENTAGE : 0;
+  const costcoCashbackPercentage = calculatorSettings.costcoMembershipEnabled
+    ? COSTCO_EXECUTIVE_PERCENTAGE
+    : 0;
 
   // Base credit card cashback
   const baseCreditCardCashbackPercentage =
@@ -107,9 +107,9 @@ export const calculateProductMetrics = (
   const spendRequirement = calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0;
   const spendProgress = hasSignupBonus && spendRequirement > 0 ? unitPrice * quantity : null;
   const spendProgressPercentage =
-    spendProgress !== null && spendRequirement > 0 ?
-      (spendProgress / spendRequirement) * 100
-    : null;
+    spendProgress !== null && spendRequirement > 0
+      ? (spendProgress / spendRequirement) * 100
+      : null;
 
   // === IMMEDIATE CASH FLOW ===
   // All dollar amounts scale with quantity
@@ -132,10 +132,7 @@ export const calculateProductMetrics = (
   // === COLOR CODING ===
   const positiveColor = "text-red-600 dark:text-red-400";
   const negativeColor = "text-green-600 dark:text-green-400";
-  const profitColor =
-    netProfit === null ? ""
-    : netProfit > 0 ? negativeColor
-    : positiveColor;
+  const profitColor = netProfit === null ? "" : netProfit > 0 ? negativeColor : positiveColor;
 
   // === POINTS ANALYSIS (for travel cards) ===
   // Points scale with quantity
@@ -144,9 +141,9 @@ export const calculateProductMetrics = (
   // SUB bonus points (proportional to this purchase)
   const signupBonusPointsTotal = calculatorSettings.creditCard.signupBonus?.pointsBonus ?? 0;
   const signupBonusPoints =
-    hasSignupBonus && spendRequirement > 0 ?
-      (signupBonusPointsTotal / spendRequirement) * unitPrice * quantity
-    : 0;
+    hasSignupBonus && spendRequirement > 0
+      ? (signupBonusPointsTotal / spendRequirement) * unitPrice * quantity
+      : 0;
 
   const pointsEarned = basePointsEarned + signupBonusPoints;
 
@@ -154,9 +151,9 @@ export const calculateProductMetrics = (
     initialCashLoss !== null ? initialCashLoss - costcoCashback : null;
   // Price per point stays the same regardless of quantity (linear scaling)
   const pricePerPoint =
-    netCostAfterCostcoCashback !== null && pointsEarned > 0 ?
-      netCostAfterCostcoCashback / pointsEarned
-    : null;
+    netCostAfterCostcoCashback !== null && pointsEarned > 0
+      ? netCostAfterCostcoCashback / pointsEarned
+      : null;
 
   return {
     aboveSpotPercentage,

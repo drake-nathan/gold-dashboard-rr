@@ -8,7 +8,6 @@ import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
 import { PostHogProvider } from "posthog-js/react";
 
 import "./app.css";
-
 import {
   isRouteErrorResponse,
   Link,
@@ -20,7 +19,6 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Toaster } from "./components/ui/sonner";
@@ -167,17 +165,17 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
                     </CardTitle>
                   </div>
                   <CardDescription>
-                    {error.status === 404 ?
-                      "The page you're looking for doesn't exist."
-                    : "An error occurred while loading the application."}
+                    {error.status === 404
+                      ? "The page you're looking for doesn't exist."
+                      : "An error occurred while loading the application."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {error.data ?
+                  {error.data ? (
                     <div className="rounded-md bg-muted p-4">
                       <p className="text-sm text-muted-foreground">{String(error.data)}</p>
                     </div>
-                  : null}
+                  ) : null}
                   <div className="flex gap-2">
                     <Button asChild size="sm" variant="outline">
                       <Link to="/">
@@ -241,7 +239,7 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
                 <div className="rounded-md bg-muted p-4">
                   <p className="mb-2 text-sm font-medium">Error details:</p>
                   <p className="font-mono text-xs text-muted-foreground">{errorMessage}</p>
-                  {import.meta.env.MODE === "development" && errorStack ?
+                  {import.meta.env.MODE === "development" && errorStack ? (
                     <details className="mt-2">
                       <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                         Stack trace
@@ -250,7 +248,7 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
                         {errorStack}
                       </pre>
                     </details>
-                  : null}
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
                   <Button asChild size="sm" variant="outline">

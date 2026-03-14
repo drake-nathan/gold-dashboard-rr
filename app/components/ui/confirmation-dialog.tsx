@@ -40,9 +40,9 @@ export const ConfirmationDialog = ({
         <AlertDialogCancel onClick={onCancel}>{cancelText}</AlertDialogCancel>
         <AlertDialogAction
           className={
-            variant === "danger" ?
-              "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            : undefined
+            variant === "danger"
+              ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              : undefined
           }
           onClick={onConfirm}
         >

@@ -1,6 +1,5 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
@@ -14,10 +13,9 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { useCalculatorSettings } from "@/hooks/use-calculator-settings";
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "@/utils/product-filters";
 
-import type { MetalFilter, SortOption } from "./filter-types";
-
 import { Footer } from "../footer";
 import { Header } from "../header";
+import type { MetalFilter, SortOption } from "./filter-types";
 import { Filters } from "./filters";
 import { Stats } from "./stats";
 
@@ -226,14 +224,15 @@ export const Dashboard = ({ stats }: DashboardProps) => {
         />
 
         {/* Product Grid */}
-        {sortedProducts.length === 0 ?
+        {sortedProducts.length === 0 ? (
           <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
             <div className="text-center">
               <p className="text-lg font-medium text-muted-foreground">No products found</p>
               <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
             </div>
           </div>
-        : <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
+        ) : (
+          <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
               {sortedProducts.map((product) => (
                 <ProductCard
@@ -245,7 +244,7 @@ export const Dashboard = ({ stats }: DashboardProps) => {
               ))}
             </div>
           </ErrorBoundary>
-        }
+        )}
       </main>
 
       <Footer />

@@ -186,15 +186,15 @@ export const useSubscription = (): UseSubscriptionReturn => {
 
   const isLoading = !isAuthLoaded || (isSignedIn && effectiveQuery === undefined);
 
-  const fallbackAlertEntitlements =
-    isSignedIn ? inactiveAlertEntitlements : anonymousAlertEntitlements;
+  const fallbackAlertEntitlements = isSignedIn
+    ? inactiveAlertEntitlements
+    : anonymousAlertEntitlements;
 
   const queryAlertEntitlements = effectiveQuery?.alertEntitlements;
 
   // Default subscription status for anonymous/loading states
-  const subscription: SubscriptionStatus =
-    effectiveQuery ?
-      {
+  const subscription: SubscriptionStatus = effectiveQuery
+    ? {
         ...effectiveQuery,
         alertEntitlements: queryAlertEntitlements ?? fallbackAlertEntitlements,
       }

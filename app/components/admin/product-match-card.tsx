@@ -52,13 +52,13 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
       <CardHeader className="pb-3">
         <div className="flex items-start gap-4">
           {/* Product Image */}
-          {product.thumbnail ?
+          {product.thumbnail ? (
             <img
               alt={product.name}
               className="h-16 w-16 rounded-md border bg-white object-contain"
               src={product.thumbnail}
             />
-          : null}
+          ) : null}
 
           {/* Product Info */}
           <div className="min-w-0 flex-1">
@@ -69,9 +69,9 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                   <Badge variant={product.metalType === "gold" ? "default" : "secondary"}>
                     {product.metalType}
                   </Badge>
-                  {product.metalWeight ?
+                  {product.metalWeight ? (
                     <span className="text-sm text-muted-foreground">{product.metalWeight}</span>
-                  : null}
+                  ) : null}
                   <Badge variant={product.currentInStock ? "outline" : "destructive"}>
                     {product.currentInStock ? "In Stock" : "Out of Stock"}
                   </Badge>
@@ -92,9 +92,9 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
         {/* Current Match */}
         <div
           className={`flex items-center justify-between rounded-md border p-3 ${
-            product.matchStatus === "pending_approval" ?
-              "border-purple-500/50 bg-purple-500/10"
-            : "bg-muted/50"
+            product.matchStatus === "pending_approval"
+              ? "border-purple-500/50 bg-purple-500/10"
+              : "bg-muted/50"
           }`}
         >
           <div className="min-w-0 flex-1">
@@ -106,22 +106,24 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                 </Badge>
               )}
             </p>
-            {product.pureProduct ?
+            {product.pureProduct ? (
               <div>
                 <p className="text-sm font-medium">{product.pureProduct.productName}</p>
                 <p className="text-xs text-muted-foreground">
                   {product.pureProduct.weight} oz • {product.pureProduct.manufacturer ?? "Generic"}
                   {product.pureProduct.isGenericFallback ? " (Fallback)" : null}
-                  {product.pureProduct.currentBidPrice ?
-                    ` • Bid: ${formatCurrency(product.pureProduct.currentBidPrice)}`
-                  : null}
+                  {product.pureProduct.currentBidPrice
+                    ? ` • Bid: ${formatCurrency(product.pureProduct.currentBidPrice)}`
+                    : null}
                 </p>
               </div>
-            : <p className="text-sm text-muted-foreground italic">No match assigned</p>}
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No match assigned</p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            {product.pureProduct?.sku ?
+            {product.pureProduct?.sku ? (
               <Button asChild size="sm" variant="ghost">
                 <a
                   href={`https://www.collectpure.com/marketplace/product/${product.pureProduct.sku}`}
@@ -131,7 +133,7 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </Button>
-            : null}
+            ) : null}
             <Dialog onOpenChange={setShowChangeDialog} open={showChangeDialog}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
@@ -168,12 +170,10 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
             variant="ghost"
           >
             <span>View Top Matches & Actions</span>
-            {expanded ?
-              <ChevronUp className="h-4 w-4" />
-            : <ChevronDown className="h-4 w-4" />}
+            {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
 
-          {expanded ?
+          {expanded ? (
             <div className="mt-3 space-y-3">
               <TopMatchesList
                 costcoProductId={product.productId}
@@ -195,7 +195,7 @@ export const ProductMatchCard = ({ product }: { product: ProductForReview }) => 
                 </Button>
               </div>
             </div>
-          : null}
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -270,15 +270,16 @@ const TopMatchesList = ({
         Top Matches (Score-based)
       </p>
 
-      {topMatches.matches.length === 0 ?
+      {topMatches.matches.length === 0 ? (
         <p className="text-sm text-muted-foreground italic">No matches found</p>
-      : <div className="space-y-1">
+      ) : (
+        <div className="space-y-1">
           {topMatches.matches.map((match, index) => (
             <div
               className={`flex items-center justify-between rounded-md border p-2 text-sm ${
-                match.pureProductId === currentPureProductId ?
-                  "border-green-500/50 bg-green-500/10"
-                : "hover:bg-muted/50"
+                match.pureProductId === currentPureProductId
+                  ? "border-green-500/50 bg-green-500/10"
+                  : "hover:bg-muted/50"
               }`}
               key={match.pureProductId}
             >
@@ -310,26 +311,28 @@ const TopMatchesList = ({
                 size="sm"
                 variant="ghost"
               >
-                {match.pureProductId === currentPureProductId ?
+                {match.pureProductId === currentPureProductId ? (
                   <Check className="h-4 w-4 text-green-600" />
-                : "Select"}
+                ) : (
+                  "Select"
+                )}
               </Button>
             </div>
           ))}
         </div>
-      }
+      )}
 
       {/* Fallback Option */}
-      {topMatches.fallback ?
+      {topMatches.fallback ? (
         <div className="mt-3 border-t pt-3">
           <p className="mb-2 text-xs tracking-wide text-muted-foreground uppercase">
             Weight-based Fallback
           </p>
           <div
             className={`flex items-center justify-between rounded-md border p-2 text-sm ${
-              topMatches.fallback.pureProductId === currentPureProductId ?
-                "border-green-500/50 bg-green-500/10"
-              : "hover:bg-muted/50"
+              topMatches.fallback.pureProductId === currentPureProductId
+                ? "border-green-500/50 bg-green-500/10"
+                : "hover:bg-muted/50"
             }`}
           >
             <div>
@@ -344,13 +347,15 @@ const TopMatchesList = ({
               size="sm"
               variant="ghost"
             >
-              {topMatches.fallback.pureProductId === currentPureProductId ?
+              {topMatches.fallback.pureProductId === currentPureProductId ? (
                 <Check className="h-4 w-4 text-green-600" />
-              : "Use Fallback"}
+              ) : (
+                "Use Fallback"
+              )}
             </Button>
           </div>
         </div>
-      : null}
+      ) : null}
     </div>
   );
 };
@@ -425,7 +430,7 @@ const MatchSelector = ({
             Find
           </Button>
         </div>
-        {pureProductFromUrl ?
+        {pureProductFromUrl ? (
           <div className="mt-2 flex items-center justify-between rounded-md border bg-green-500/10 p-2">
             <div>
               <p className="text-sm font-medium">{pureProductFromUrl.productName}</p>
@@ -440,10 +445,10 @@ const MatchSelector = ({
               Use This
             </Button>
           </div>
-        : null}
-        {parsedSku && pureProductFromUrl === null ?
+        ) : null}
+        {parsedSku && pureProductFromUrl === null ? (
           <p className="mt-2 text-sm text-destructive">Product not found in database</p>
-        : null}
+        ) : null}
       </div>
 
       {/* Search Section */}
@@ -458,7 +463,7 @@ const MatchSelector = ({
           value={searchQuery}
         />
 
-        {searchResults && searchResults.length > 0 ?
+        {searchResults && searchResults.length > 0 ? (
           <div className="mt-2 max-h-60 space-y-1 overflow-y-auto">
             {searchResults.map((product) => (
               <div
@@ -469,9 +474,9 @@ const MatchSelector = ({
                   <p className="text-sm font-medium">{product.productName}</p>
                   <p className="text-xs text-muted-foreground">
                     {product.weight} oz • {product.manufacturer ?? "Generic"}
-                    {product.currentBidPrice ?
-                      ` • Bid: ${formatCurrency(product.currentBidPrice)}`
-                    : null}
+                    {product.currentBidPrice
+                      ? ` • Bid: ${formatCurrency(product.currentBidPrice)}`
+                      : null}
                   </p>
                 </div>
                 <Button
@@ -484,7 +489,7 @@ const MatchSelector = ({
               </div>
             ))}
           </div>
-        : null}
+        ) : null}
 
         {searchQuery.length >= 2 && searchResults?.length === 0 && (
           <p className="mt-2 text-sm text-muted-foreground">No products found</p>
@@ -561,9 +566,11 @@ const ApproveButton = ({
         onClick={() => void handleConfirm()}
         size="sm"
       >
-        {loading ?
+        {loading ? (
           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-        : <Check className="mr-1 h-3 w-3" />}
+        ) : (
+          <Check className="mr-1 h-3 w-3" />
+        )}
         Confirm Match
       </Button>
     );
@@ -575,9 +582,11 @@ const ApproveButton = ({
       onClick={() => void handleApprove()}
       size="sm"
     >
-      {loading ?
+      {loading ? (
         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-      : <Check className="mr-1 h-3 w-3" />}
+      ) : (
+        <Check className="mr-1 h-3 w-3" />
+      )}
       Approve Match
     </Button>
   );

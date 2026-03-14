@@ -1,10 +1,8 @@
 import { v } from "convex/values";
 
+import { components, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import type { ActionCtx, MutationCtx, QueryCtx } from "./_generated/server";
-import type { AlertPauseReason } from "./stripeUtils";
-
-import { components, internal } from "./_generated/api";
 import {
   internalAction,
   internalMutation,
@@ -12,6 +10,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import type { AlertPauseReason } from "./stripeUtils";
 import { getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements } from "./subscriptionEntitlements";
 
@@ -413,9 +412,9 @@ const getAlertDeliveryConfig = (): AlertDeliveryConfig | null => {
 
   const configuredReplyToEmail = process.env.RESEND_REPLY_TO_EMAIL?.trim();
   const replyToEmail =
-    configuredReplyToEmail && configuredReplyToEmail.length > 0 ?
-      configuredReplyToEmail
-    : defaultReplyToEmail;
+    configuredReplyToEmail && configuredReplyToEmail.length > 0
+      ? configuredReplyToEmail
+      : defaultReplyToEmail;
   const siteUrl = process.env.SITE_URL;
   return {
     apiKey,
@@ -994,8 +993,9 @@ export const evaluateAlertsForProducts = internalMutation({
         }
 
         const fallbackBid = fallbackBidByMetal.get(product.metalType) ?? null;
-        const matchedPureBid =
-          product.pureProductId ? (pureBidByProductId.get(product.pureProductId) ?? null) : null;
+        const matchedPureBid = product.pureProductId
+          ? (pureBidByProductId.get(product.pureProductId) ?? null)
+          : null;
         const bidPerOunce = matchedPureBid ?? fallbackBid;
         if (!bidPerOunce) {
           continue;
@@ -1009,8 +1009,9 @@ export const evaluateAlertsForProducts = internalMutation({
           ((product.currentPricePerOunce - bidPerOunce) / bidPerOunce) * 100;
 
         const estimatedWeight = getEstimatedWeightOz(product);
-        const estimatedProfit =
-          estimatedWeight ? bidPerOunce * estimatedWeight - product.currentPrice : undefined;
+        const estimatedProfit = estimatedWeight
+          ? bidPerOunce * estimatedWeight - product.currentPrice
+          : undefined;
 
         const aboveSpotMet =
           alert.aboveSpotThreshold !== undefined && aboveSpotPercentage <= alert.aboveSpotThreshold;
@@ -1081,12 +1082,12 @@ export const evaluateAlertsForProducts = internalMutation({
         let nextAlerts = pendingBatch.alerts;
         if (existingEntry) {
           nextAlerts = pendingBatch.alerts.map((entry) =>
-            entry.alertId === alert._id ?
-              {
-                ...entry,
-                products: mergeAlertProducts(entry.products, mergedTriggeredProducts),
-              }
-            : entry,
+            entry.alertId === alert._id
+              ? {
+                  ...entry,
+                  products: mergeAlertProducts(entry.products, mergedTriggeredProducts),
+                }
+              : entry,
           );
         } else {
           nextAlerts = [...pendingBatch.alerts, alertPayload];
@@ -1181,8 +1182,9 @@ export const markAlertBatchProcessed = internalMutation({
     await Promise.all(
       matchedHistory.map((history: AlertHistoryDoc) =>
         ctx.db.patch(history._id, {
-          notificationError:
-            shouldMarkSent ? undefined : (args.errorMessage ?? "Alert delivery skipped"),
+          notificationError: shouldMarkSent
+            ? undefined
+            : (args.errorMessage ?? "Alert delivery skipped"),
           notificationSent: shouldMarkSent,
         }),
       ),
@@ -1190,8 +1192,9 @@ export const markAlertBatchProcessed = internalMutation({
 
     await ctx.db.patch(batch._id, {
       lastAttemptedAt: args.processedAt,
-      lastAttemptError:
-        shouldMarkSent ? undefined : (args.errorMessage ?? "Alert delivery skipped"),
+      lastAttemptError: shouldMarkSent
+        ? undefined
+        : (args.errorMessage ?? "Alert delivery skipped"),
       sent: true,
       sentAt: args.processedAt,
       terminalFailureAt: shouldMarkSent ? undefined : args.processedAt,

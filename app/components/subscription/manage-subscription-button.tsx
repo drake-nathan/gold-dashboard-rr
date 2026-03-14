@@ -44,9 +44,7 @@ export const ManageSubscriptionButton = ({
       size={size}
       variant={variant}
     >
-      {isActionLoading ?
-        <Loader2 className="animate-spin" />
-      : <Settings className="size-4" />}
+      {isActionLoading ? <Loader2 className="animate-spin" /> : <Settings className="size-4" />}
       {text}
     </Button>
   );

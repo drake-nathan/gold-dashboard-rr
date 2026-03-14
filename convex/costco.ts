@@ -270,8 +270,9 @@ export const upsertProduct = internalMutation({
       // 2. Product API said it's OUT of stock (verifiedInStock === false)
       // 3. Search API is trying to say it's IN stock
       // This prevents Search API from incorrectly marking "Delivery Out of Stock" products as available
-      const verificationAge =
-        existing.lastVerifiedAt ? args.timestamp - existing.lastVerifiedAt : Infinity;
+      const verificationAge = existing.lastVerifiedAt
+        ? args.timestamp - existing.lastVerifiedAt
+        : Infinity;
       const isWithinVerificationWindow = verificationAge < VERIFICATION_WINDOW_MS;
       const productApiSaysOutOfStock = existing.verifiedInStock === false;
       const searchApiSaysInStock = product.in_stock;
@@ -688,9 +689,9 @@ export const matchCostcoProductToPure = internalMutation({
       for (let i = 0; i < pureWords.length - 1; i++) {
         const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
         const threeWord =
-          i < pureWords.length - 2 ?
-            `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
-          : null;
+          i < pureWords.length - 2
+            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
+            : null;
 
         // Skip common/generic phrases
         const genericPhrases = [

@@ -91,9 +91,9 @@ export const getStats = query({
       const spread =
         bidPrice && product.currentPricePerOunce ? product.currentPricePerOunce - bidPrice : null;
       const spreadPercentage =
-        spread && product.currentPricePerOunce ?
-          (spread / product.currentPricePerOunce) * 100
-        : null;
+        spread && product.currentPricePerOunce
+          ? (spread / product.currentPricePerOunce) * 100
+          : null;
 
       return {
         ...product,
@@ -129,18 +129,16 @@ export const getStats = query({
 
     return {
       collectPure: {
-        gold:
-          collectPureGold ?
-            {
+        gold: collectPureGold
+          ? {
               bidPrice: collectPureGold.bidPrice,
               isMock: collectPureGold.isMock,
               spotPrice: collectPureGold.spotPrice,
               timestamp: collectPureGold.timestamp,
             }
           : null,
-        silver:
-          collectPureSilver ?
-            {
+        silver: collectPureSilver
+          ? {
               bidPrice: collectPureSilver.bidPrice,
               isMock: collectPureSilver.isMock,
               spotPrice: collectPureSilver.spotPrice,
@@ -156,9 +154,8 @@ export const getStats = query({
         inStock: goldProducts.filter((p) => p.currentInStock).length,
         total: goldProducts.length,
       },
-      lastFetch:
-        lastFetch ?
-          {
+      lastFetch: lastFetch
+        ? {
             priceChanges: lastFetch.priceChanges,
             productsFound: lastFetch.productsFound,
             stockChanges: lastFetch.stockChanges,

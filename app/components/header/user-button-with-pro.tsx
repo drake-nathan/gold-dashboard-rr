@@ -40,7 +40,7 @@ export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?:
           },
         }}
       >
-        {isPro ?
+        {isPro ? (
           <UserButton.MenuItems>
             <UserButton.Action
               label="Manage subscription"
@@ -48,7 +48,7 @@ export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?:
               onClick={() => void handleManagePortal()}
             />
           </UserButton.MenuItems>
-        : null}
+        ) : null}
         <UserButton.UserProfilePage
           label="Subscription"
           labelIcon={<Crown className="size-4" />}

@@ -118,17 +118,17 @@ export const ErrorBoundary = () => {
               </CardTitle>
             </div>
             <CardDescription>
-              {error.status === 404 ?
-                "The page you're looking for doesn't exist."
-              : "An error occurred while loading this page."}
+              {error.status === 404
+                ? "The page you're looking for doesn't exist."
+                : "An error occurred while loading this page."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error.data ?
+            {error.data ? (
               <div className="rounded-md bg-muted p-4">
                 <p className="text-sm text-muted-foreground">{String(error.data)}</p>
               </div>
-            : null}
+            ) : null}
             <div className="flex gap-2">
               <Button asChild size="sm" variant="outline">
                 <Link to="/">
@@ -178,7 +178,7 @@ export const ErrorBoundary = () => {
           <div className="rounded-md bg-muted p-4">
             <p className="mb-2 text-sm font-medium">Error details:</p>
             <p className="font-mono text-xs text-muted-foreground">{errorMessage}</p>
-            {import.meta.env.MODE === "development" && errorStack ?
+            {import.meta.env.MODE === "development" && errorStack ? (
               <details className="mt-2">
                 <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                   Stack trace
@@ -187,7 +187,7 @@ export const ErrorBoundary = () => {
                   {errorStack}
                 </pre>
               </details>
-            : null}
+            ) : null}
           </div>
           <div className="flex gap-2">
             <Button asChild size="sm" variant="outline">

@@ -48,11 +48,11 @@ export const SwipeableCard = ({ children, className, onDelete }: SwipeableCardPr
   return (
     <div className={cn("relative overflow-hidden rounded-lg", className)}>
       {/* Delete background - shows when swiping */}
-      {onDelete ?
+      {onDelete ? (
         <div className="absolute inset-0 flex items-center justify-end bg-destructive px-4">
           <Trash2 className="h-4 w-4 text-destructive-foreground" />
         </div>
-      : null}
+      ) : null}
 
       {/* Card content */}
       <div

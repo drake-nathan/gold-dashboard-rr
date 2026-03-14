@@ -90,13 +90,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {this.props.showDetails && this.state.error ?
+            {this.props.showDetails && this.state.error ? (
               <div className="rounded-md bg-muted p-4">
                 <p className="font-mono text-xs text-muted-foreground">
                   {this.state.error.message}
                 </p>
               </div>
-            : null}
+            ) : null}
             <Button onClick={this.handleReset} size="sm" variant="outline">
               <RefreshCw className="mr-2 h-4 w-4" />
               Try again
@@ -128,12 +128,12 @@ export const ErrorFallback = ({
       <p className="mb-4 text-sm text-muted-foreground">
         {typeof error === "string" ? error : error?.message || "An unexpected error occurred"}
       </p>
-      {onReset ?
+      {onReset ? (
         <Button onClick={onReset} size="sm" variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Try again
         </Button>
-      : null}
+      ) : null}
     </div>
   </div>
 );

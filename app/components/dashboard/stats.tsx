@@ -1,6 +1,5 @@
 import type { api } from "convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-
 import { useIsClient } from "usehooks-ts";
 
 import { StatCard } from "./stat-card";
@@ -29,7 +28,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
     <div className="mb-6 flex flex-wrap justify-center gap-3 xl:justify-between">
       {/* Market Prices - grouped on desktop */}
       <div className="contents xl:flex xl:flex-wrap xl:gap-3">
-        {gold ?
+        {gold ? (
           <StatCard
             label="Gold (XAU)"
             percentChange={gold.percentChange}
@@ -40,9 +39,9 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
             valueColor="text-xl font-bold text-yellow-600 dark:text-yellow-400"
             variant="market"
           />
-        : null}
+        ) : null}
 
-        {silver ?
+        {silver ? (
           <StatCard
             label="Silver (XAG)"
             percentChange={silver.percentChange}
@@ -53,9 +52,9 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
             valueColor="text-xl font-bold text-slate-500 dark:text-slate-400"
             variant="market"
           />
-        : null}
+        ) : null}
 
-        {bitcoin ?
+        {bitcoin ? (
           <StatCard
             label="Bitcoin (BTC)"
             percentChange={bitcoin.percentChange}
@@ -66,9 +65,9 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
             valueColor="text-xl font-bold text-orange-600 dark:text-orange-400"
             variant="market"
           />
-        : null}
+        ) : null}
 
-        {sp500 ?
+        {sp500 ? (
           <StatCard
             label="S&P 500"
             percentChange={sp500.percentChange}
@@ -79,7 +78,7 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
             valueColor="text-xl font-bold text-blue-600 dark:text-blue-400"
             variant="market"
           />
-        : null}
+        ) : null}
       </div>
 
       {/* Cashback and Timestamp - grouped on desktop */}
@@ -94,12 +93,12 @@ export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: Stat
         <StatCard
           label="Last Update"
           value={
-            isClient && lastFetch ?
-              new Date(lastFetch.timestamp).toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-              })
-            : "--:--"
+            isClient && lastFetch
+              ? new Date(lastFetch.timestamp).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })
+              : "--:--"
           }
           valueColor="text-lg font-bold"
           variant="info"

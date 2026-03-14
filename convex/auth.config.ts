@@ -6,9 +6,8 @@ import type { AuthConfig } from "convex/server";
 const issuerDomain = process.env.CLERK_JWT_ISSUER_DOMAIN ?? "";
 
 export default {
-  providers:
-    issuerDomain ?
-      [
+  providers: issuerDomain
+    ? [
         {
           applicationID: "convex",
           domain: issuerDomain,

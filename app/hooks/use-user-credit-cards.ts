@@ -348,9 +348,9 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
         setLocalStorageData((current) => {
           const filteredCards = current.cards.filter((c) => c.id !== cardId);
           const newSelectedId =
-            current.lastSelectedId === cardId ?
-              (filteredCards[0]?.id ?? DEFAULT_PRESET_CARDS[0].id)
-            : current.lastSelectedId;
+            current.lastSelectedId === cardId
+              ? (filteredCards[0]?.id ?? DEFAULT_PRESET_CARDS[0].id)
+              : current.lastSelectedId;
           return {
             cards: filteredCards,
             lastSelectedId: newSelectedId,

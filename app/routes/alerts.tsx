@@ -1,7 +1,6 @@
-import type { Doc, Id } from "convex/_generated/dataModel";
-
 import { SignIn, useAuth } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
+import type { Doc, Id } from "convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import {
   Bell,
@@ -245,7 +244,7 @@ const AlertFormFields = ({
       </Select>
     </div>
 
-    {values.formType === "sku" ?
+    {values.formType === "sku" ? (
       <>
         <div className="space-y-1.5">
           <Label htmlFor="alert-product">Product</Label>
@@ -288,9 +287,9 @@ const AlertFormFields = ({
           </Select>
         </div>
       </>
-    : null}
+    ) : null}
 
-    {values.formType === "category" ?
+    {values.formType === "category" ? (
       <>
         <div className="space-y-1.5">
           <Label htmlFor="alert-category-trigger">Trigger On</Label>
@@ -358,9 +357,9 @@ const AlertFormFields = ({
           />
         </div>
       </>
-    : null}
+    ) : null}
 
-    {values.formType === "threshold" ?
+    {values.formType === "threshold" ? (
       <>
         <div className="space-y-1.5">
           <Label htmlFor="alert-above-spot">Above Spot Threshold (%)</Label>
@@ -388,7 +387,7 @@ const AlertFormFields = ({
           />
         </div>
       </>
-    : null}
+    ) : null}
 
     <div className="space-y-1.5">
       <Label htmlFor="alert-cooldown">Cooldown (minutes)</Label>
@@ -492,9 +491,7 @@ const EditAlertDialog = ({
               void handleSave();
             }}
           >
-            {isSaving ?
-              <Loader2 className="size-4 animate-spin" />
-            : null}
+            {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
             Save Changes
           </Button>
         </DialogFooter>
@@ -583,11 +580,11 @@ const AlertCard = ({
           <Clock className="size-3" />
           {alert.cooldownMinutes}m
         </Badge>
-        {alert.pauseReason ?
+        {alert.pauseReason ? (
           <Badge variant="destructive">
             {alert.pauseReason === "billing_hold" ? "Billing issue" : "Subscription inactive"}
           </Badge>
-        : null}
+        ) : null}
       </div>
     </div>
   );
@@ -634,9 +631,9 @@ const AlertsPage = () => {
     name: searchParams.get("name") ?? "",
     skuProductId: searchParams.get("productId") ?? "",
     skuTriggerOn:
-      searchParams.get("triggerOn") === "price_drop" ?
-        ("price_drop" as const)
-      : ("in_stock" as const),
+      searchParams.get("triggerOn") === "price_drop"
+        ? ("price_drop" as const)
+        : ("in_stock" as const),
   }));
 
   const productOptions = useMemo(() => {
@@ -778,9 +775,9 @@ const AlertsPage = () => {
             {/* Status pill */}
             <div
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium${
-                alertEntitlements.canSendAlerts ?
-                  " border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : " border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                alertEntitlements.canSendAlerts
+                  ? " border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : " border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
               }`}
             >
               <span
@@ -794,7 +791,7 @@ const AlertsPage = () => {
         </div>
 
         {/* ---- Upgrade prompt ---- */}
-        {!canCreate ?
+        {!canCreate ? (
           <div className="mb-8 flex flex-col gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2.5">
               <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-500" />
@@ -805,7 +802,7 @@ const AlertsPage = () => {
             </div>
             <UpgradeButton size="sm" />
           </div>
-        : null}
+        ) : null}
 
         {/* ---- Two-column layout ---- */}
         <div className="grid gap-8 lg:grid-cols-[1fr_1.25fr]">
@@ -849,9 +846,11 @@ const AlertsPage = () => {
                     void onCreateAlert();
                   }}
                 >
-                  {isSaving ?
+                  {isSaving ? (
                     <Loader2 className="size-4 animate-spin" />
-                  : <Plus className="size-4" />}
+                  ) : (
+                    <Plus className="size-4" />
+                  )}
                   Create Alert
                 </Button>
               </CardContent>
@@ -862,14 +861,14 @@ const AlertsPage = () => {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-base font-semibold">Your Alerts</h2>
-              {totalCount > 0 ?
+              {totalCount > 0 ? (
                 <span className="text-xs text-muted-foreground tabular-nums">
                   {enabledCount} of {totalCount} active
                 </span>
-              : null}
+              ) : null}
             </div>
 
-            {alerts === undefined ?
+            {alerts === undefined ? (
               /* Loading state */
               <Card>
                 <CardContent className="flex items-center justify-center py-12">
@@ -879,7 +878,7 @@ const AlertsPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            : alerts.length === 0 ?
+            ) : alerts.length === 0 ? (
               /* Empty state */
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -892,7 +891,8 @@ const AlertsPage = () => {
                   </p>
                 </CardContent>
               </Card>
-            : /* Alert cards */
+            ) : (
+              /* Alert cards */
               <div className="space-y-3">
                 {alerts.map((alert) => (
                   <AlertCard
@@ -904,14 +904,14 @@ const AlertsPage = () => {
                   />
                 ))}
               </div>
-            }
+            )}
           </div>
         </div>
       </main>
 
       <Footer />
 
-      {editingAlert ?
+      {editingAlert ? (
         <EditAlertDialog
           alert={editingAlert}
           onClose={() => {
@@ -920,7 +920,7 @@ const AlertsPage = () => {
           onSave={onEditAlert}
           productOptions={productOptions}
         />
-      : null}
+      ) : null}
     </div>
   );
 };

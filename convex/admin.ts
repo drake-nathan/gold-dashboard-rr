@@ -1,8 +1,7 @@
 import { v } from "convex/values";
 
-import type { QueryCtx } from "./_generated/server";
-
 import { internal } from "./_generated/api";
+import type { QueryCtx } from "./_generated/server";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
 import {
@@ -96,9 +95,8 @@ export const getProductsForReview = query({
         metalWeight: product.metalWeight,
         name: product.name,
         productId: product.productId,
-        pureProduct:
-          pureProduct ?
-            {
+        pureProduct: pureProduct
+          ? {
               currentBidPrice: pureProduct.currentBidPrice,
               isGenericFallback: pureProduct.isGenericFallback,
               manufacturer: pureProduct.manufacturer,
@@ -161,8 +159,9 @@ export const getTopMatches = query({
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
 
     // Get fallback Pure product info
-    const fallbackPureId =
-      weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
+    const fallbackPureId = weightInOz
+      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
+      : null;
 
     let fallbackPureProduct = null;
     if (fallbackPureId) {
@@ -187,9 +186,8 @@ export const getTopMatches = query({
           productId: costcoProduct.productId,
           weightInOz,
         },
-        fallback:
-          fallbackPureProduct ?
-            {
+        fallback: fallbackPureProduct
+          ? {
               currentBidPrice: fallbackPureProduct.currentBidPrice,
               isGenericFallback: fallbackPureProduct.isGenericFallback,
               manufacturer: fallbackPureProduct.manufacturer,
@@ -283,9 +281,9 @@ export const getTopMatches = query({
       for (let i = 0; i < pureWords.length - 1; i++) {
         const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
         const threeWord =
-          i < pureWords.length - 2 ?
-            `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
-          : null;
+          i < pureWords.length - 2
+            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
+            : null;
 
         if (
           threeWord &&
@@ -336,9 +334,8 @@ export const getTopMatches = query({
         productId: costcoProduct.productId,
         weightInOz,
       },
-      fallback:
-        fallbackPureProduct ?
-          {
+      fallback: fallbackPureProduct
+        ? {
             currentBidPrice: fallbackPureProduct.currentBidPrice,
             isGenericFallback: fallbackPureProduct.isGenericFallback,
             manufacturer: fallbackPureProduct.manufacturer,
@@ -596,8 +593,9 @@ export const useFallback = mutation({
 
     // Get weight-specific fallback if available
     const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-    const fallbackPureId =
-      weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
+    const fallbackPureId = weightInOz
+      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
+      : null;
 
     // Update to use fallback
     await ctx.db.patch(costcoProduct._id, {

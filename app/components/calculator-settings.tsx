@@ -1,8 +1,5 @@
 import { useState } from "react";
 
-import type { CreditCard } from "@/lib/credit-cards";
-import type { PureFeeTier } from "@/lib/pure-fee-tiers";
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,7 +18,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import type { CreditCard } from "@/lib/credit-cards";
 import { calculateCashbackPercentage } from "@/lib/credit-cards";
+import type { PureFeeTier } from "@/lib/pure-fee-tiers";
 
 // Legacy type for backward compatibility
 export interface LegacyCreditCard {
@@ -110,11 +109,11 @@ export const CalculatorSettingsDialog = ({
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="credit-card">Credit Card</Label>
-              {onOpenCardManager ?
+              {onOpenCardManager ? (
                 <Button onClick={onOpenCardManager} size="sm" type="button" variant="ghost">
                   Manage Cards
                 </Button>
-              : null}
+              ) : null}
             </div>
             <Select onValueChange={handleCardChange} value={localSettings.creditCard.id}>
               <SelectTrigger id="credit-card">

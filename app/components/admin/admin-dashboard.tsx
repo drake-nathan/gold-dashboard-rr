@@ -146,48 +146,54 @@ export const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent className="mt-6 space-y-4" value="needs_review">
-            {productsData.needs_review.length === 0 && productsData.pending_approval.length === 0 ?
+            {productsData.needs_review.length === 0 &&
+            productsData.pending_approval.length === 0 ? (
               <EmptyState message="No products need action" />
-            : [...productsData.pending_approval, ...productsData.needs_review].map((product) => (
+            ) : (
+              [...productsData.pending_approval, ...productsData.needs_review].map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
-            }
+            )}
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="auto_matched">
-            {productsData.auto_matched.length === 0 ?
+            {productsData.auto_matched.length === 0 ? (
               <EmptyState message="No auto-matched products" />
-            : productsData.auto_matched.map((product) => (
+            ) : (
+              productsData.auto_matched.map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
-            }
+            )}
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="fallback">
-            {productsData.fallback.length === 0 ?
+            {productsData.fallback.length === 0 ? (
               <EmptyState message="No products using fallback" />
-            : productsData.fallback.map((product) => (
+            ) : (
+              productsData.fallback.map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
-            }
+            )}
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="manual_matched">
-            {productsData.manual_matched.length === 0 ?
+            {productsData.manual_matched.length === 0 ? (
               <EmptyState message="No approved products" />
-            : productsData.manual_matched.map((product) => (
+            ) : (
+              productsData.manual_matched.map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
-            }
+            )}
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="unmatched">
-            {productsData.unmatched.length === 0 ?
+            {productsData.unmatched.length === 0 ? (
               <EmptyState message="No unmatched products" />
-            : productsData.unmatched.map((product) => (
+            ) : (
+              productsData.unmatched.map((product) => (
                 <ProductMatchCard key={product.productId} product={product} />
               ))
-            }
+            )}
           </TabsContent>
         </Tabs>
       </main>
@@ -325,11 +331,9 @@ const UrlParserCard = () => {
           </Button>
         </div>
 
-        {error ?
-          <p className="mt-2 text-sm text-destructive">{error}</p>
-        : null}
+        {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
 
-        {parsedSku ?
+        {parsedSku ? (
           <div className="mt-3 rounded-md border bg-muted/50 p-3">
             <p className="text-sm">
               <span className="text-muted-foreground">SKU:</span>{" "}
@@ -352,12 +356,14 @@ const UrlParserCard = () => {
                   size="sm"
                   variant="secondary"
                 >
-                  {isAdding ?
+                  {isAdding ? (
                     <>
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       Fetching from Pure...
                     </>
-                  : "Add from Pure API"}
+                  ) : (
+                    "Add from Pure API"
+                  )}
                 </Button>
               </div>
             )}
@@ -366,11 +372,11 @@ const UrlParserCard = () => {
               if (!product) return null;
               return (
                 <div className="mt-2 space-y-1">
-                  {addedProduct && !pureProduct ?
+                  {addedProduct && !pureProduct ? (
                     <Badge className="mb-1 border-green-500/30 bg-green-500/10 text-green-600">
                       Added from Pure API
                     </Badge>
-                  : null}
+                  ) : null}
                   <p className="text-sm font-medium">{product.productName}</p>
                   <p className="text-sm">
                     <span className="text-muted-foreground">UUID:</span>{" "}
@@ -391,15 +397,15 @@ const UrlParserCard = () => {
                   <p className="text-sm text-muted-foreground">
                     {product.weight} oz {product.metalType} •{" "}
                     {product.manufacturer ?? "Unknown manufacturer"}
-                    {product.currentBidPrice ?
-                      ` • Bid: $${product.currentBidPrice.toLocaleString()}`
-                    : null}
+                    {product.currentBidPrice
+                      ? ` • Bid: $${product.currentBidPrice.toLocaleString()}`
+                      : null}
                   </p>
                 </div>
               );
             })()}
           </div>
-        : null}
+        ) : null}
       </CardContent>
     </Card>
   );
