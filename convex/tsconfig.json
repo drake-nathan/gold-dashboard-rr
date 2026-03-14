@@ -9,7 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "lib": ["ES2021", "dom"],
+    "lib": ["ES2023", "dom"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,

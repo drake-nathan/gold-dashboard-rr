@@ -476,9 +476,8 @@ export const getCurrentPrices = query({
 
     // FIXME: a problem for future me: remove the `any`
     if (isMetalType(metal) && args.inStockOnly) {
-      q = q.withIndex(
-        "by_metal_and_stock",
-        (idx) => idx.eq("metalType", metal).eq("currentInStock", true),
+      q = q.withIndex("by_metal_and_stock", (idx) =>
+        idx.eq("metalType", metal).eq("currentInStock", true),
       ) as any;
     } else if (isMetalType(metal)) {
       q = q.withIndex("by_metal_type", (idx) => idx.eq("metalType", metal)) as any;
@@ -704,11 +703,7 @@ export const matchCostcoProductToPure = internalMutation({
           "new in",
         ]);
 
-        if (
-          threeWord &&
-          !genericPhrases.has(threeWord) &&
-          costcoNameLower.includes(threeWord)
-        ) {
+        if (threeWord && !genericPhrases.has(threeWord) && costcoNameLower.includes(threeWord)) {
           score += 75; // Strong match for 3-word phrase
           matchDetails.push(`phrase:"${threeWord}"`);
         } else if (!genericPhrases.has(twoWord) && costcoNameLower.includes(twoWord)) {

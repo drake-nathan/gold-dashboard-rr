@@ -2,13 +2,13 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "jsx": "react-jsx",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
     "module": "ES2022",
     "moduleResolution": "bundler",
     "noEmit": true,
     "paths": {
       "@/*": ["./app/*"],
-      "convex/_generated/*": ["./convex/_generated/*"],
+      "convex/_generated/*": ["./convex/_generated/*"]
     },
     "resolveJsonModule": true,
     "rootDirs": [".", "./.react-router/types"],
@@ -16,7 +16,7 @@
     "strict": true,
     "target": "ES2022",
     "types": ["bun", "node", "vite/client"],
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": true
   },
   "exclude": ["convex"],
   "include": [
@@ -26,6 +26,6 @@
     "scripts/**/*",
     ".react-router/types/**/*",
     "*.config.ts",
-    "*.config.js",
-  ],
+    "*.config.js"
+  ]
 }

@@ -285,11 +285,7 @@ export const getTopMatches = query({
             ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
             : null;
 
-        if (
-          threeWord &&
-          !genericPhrases.has(threeWord) &&
-          costcoNameLower.includes(threeWord)
-        ) {
+        if (threeWord && !genericPhrases.has(threeWord) && costcoNameLower.includes(threeWord)) {
           score += 75;
           matchDetails.push(`phrase:"${threeWord}"`);
         } else if (!genericPhrases.has(twoWord) && costcoNameLower.includes(twoWord)) {
