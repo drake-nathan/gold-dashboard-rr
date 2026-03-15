@@ -3,10 +3,9 @@ import { defineConfig } from "oxlint";
 export default defineConfig({
   categories: {
     correctness: "warn",
-    // nursery: "warn",
+    nursery: "warn",
     pedantic: "warn",
     perf: "warn",
-    // restriction: "warn",
     style: "warn",
     suspicious: "warn",
   },
@@ -18,9 +17,11 @@ export default defineConfig({
   },
   overrides: [
     {
-      files: ["**/*.test.{ts,tsx}", "**/*.convex.test.{ts,tsx}"],
+      files: ["**/*.test.{ts,tsx}", "**/*.browser.test.{ts,tsx}", "**/*.convex.test.{ts,tsx}"],
       rules: {
         "eslint/no-loop-func": "off",
+        "typescript/consistent-return": "off",
+        "typescript/strict-void-return": "off",
         "jest/require-hook": "off",
         "jsdoc/check-tag-names": "off",
         "typescript/unbound-method": "off",
@@ -34,7 +35,13 @@ export default defineConfig({
       },
     },
     {
-      files: ["app/routes/**", "app/root.tsx", "app/entry.*.tsx", "app/providers/**", "app/components/ui/**"],
+      files: [
+        "app/routes/**",
+        "app/root.tsx",
+        "app/entry.*.tsx",
+        "app/providers/**",
+        "app/components/ui/**",
+      ],
       rules: {
         "react/only-export-components": "off",
       },
@@ -65,6 +72,7 @@ export default defineConfig({
     "eslint/max-params": "off",
     "eslint/max-statements": "off",
     "eslint/no-await-in-loop": "off",
+    "eslint/no-undef": "off",
     "eslint/no-continue": "off",
     "eslint/no-inline-comments": "off",
     "eslint/no-magic-numbers": "off",
@@ -73,6 +81,8 @@ export default defineConfig({
     "eslint/no-ternary": "off",
     "eslint/no-warning-comments": "off",
     "eslint/prefer-destructuring": "off",
+    "eslint/prefer-readonly-parameter-types": "off",
+    "typescript/prefer-readonly-parameter-types": "off",
     "eslint/require-await": "off",
     "eslint/sort-imports": "off",
     "eslint/sort-keys": "off",

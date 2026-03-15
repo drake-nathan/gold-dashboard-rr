@@ -59,7 +59,7 @@ export const FeatureAnnouncementModal = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Derive whether to show from current state (no effect needed)
-  const shouldShow = isClient && isLoaded && !isDismissed && checkShouldShow(Boolean(isSignedIn));
+  const shouldShow = isClient && isLoaded && !isDismissed && checkShouldShow(isSignedIn);
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_KEY, "true");

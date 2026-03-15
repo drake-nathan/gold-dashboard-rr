@@ -109,7 +109,7 @@ export const createPortalSession = action({
         returnUrl: siteUrl,
       });
 
-      return { url: session.url ?? undefined };
+      return { url: session.url };
     } catch (error) {
       console.error("Error creating portal session:", error);
       return {

@@ -77,7 +77,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   const stats = usePreloadedQuery(loaderData.preloadedStats);
   // const stats = useQuery(api.dashboard.getStats);
 
-  // Check if there's actually no data
+  // oxlint-disable-next-line eslint/no-unnecessary-condition -- defense-in-depth: runtime data could be undefined despite type
   if (!stats) {
     return (
       <div className="flex h-screen items-center justify-center">

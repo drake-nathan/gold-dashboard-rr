@@ -22,7 +22,7 @@ interface ThemeProviderState {
 }
 
 const initialState: ThemeProviderState = {
-  setTheme: () => null,
+  setTheme: () => {},
   theme: "system",
 };
 
@@ -71,6 +71,7 @@ export const ThemeProvider = ({
     }
 
     root.classList.add(theme);
+    return undefined;
   }, [theme]);
 
   const value = {
@@ -85,12 +86,4 @@ export const ThemeProvider = ({
   );
 };
 
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
-
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-
-  return context;
-};
+export const useTheme = () => useContext(ThemeProviderContext);
