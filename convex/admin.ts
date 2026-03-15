@@ -266,15 +266,15 @@ export const getTopMatches = query({
       // 4. PHRASE MATCHING
       const pureWords = pureNameLower.split(/\s+/);
       const genericPhrases = new Set([
-        "gold bar",
-        "silver bar",
-        "gold coin",
-        "silver coin",
         "fine gold",
         "fine silver",
-        "troy ounce",
+        "gold bar",
+        "gold coin",
         "in assay",
         "new in",
+        "silver bar",
+        "silver coin",
+        "troy ounce",
       ]);
 
       for (let i = 0; i < pureWords.length - 1; i++) {

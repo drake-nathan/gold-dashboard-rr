@@ -23,11 +23,11 @@ const PURE_API_BASE_URL = "https://api.collectpure.com";
 // Generic fallback products (not marked "Stocked by Costco" but needed for matching)
 // These are SKUs from Pure API (full URL slugs from product URLs)
 const GENERIC_FALLBACK_SKUS = new Set([
-  "10-oz-silver-bars-999-fine-accredited-brands000092", // 10 oz silver bars - generic
-  "random-brand-1-oz-gold-bar-9999-fine-in-card000087", // 1 oz gold bar - generic
   "10-gram-gold-bar-9999-fine-accredited-brands000098", // 10 gram gold bar - generic
+  "10-oz-silver-bars-999-fine-accredited-brands000092", // 10 oz silver bars - generic
   "50-gram-gold-bar-9999-fine-accredited-brands000100", // 50 gram gold bar - generic
   "100-gram-gold-bar-9999-fine-accredited-brands000101", // 100 gram gold bar - generic
+  "random-brand-1-oz-gold-bar-9999-fine-in-card000087", // 1 oz gold bar - generic
 ]);
 
 // Type definitions for Pure API v2 responses

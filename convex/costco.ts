@@ -692,15 +692,15 @@ export const matchCostcoProductToPure = internalMutation({
 
         // Skip common/generic phrases
         const genericPhrases = new Set([
-          "gold bar",
-          "silver bar",
-          "gold coin",
-          "silver coin",
           "fine gold",
           "fine silver",
-          "troy ounce",
+          "gold bar",
+          "gold coin",
           "in assay",
           "new in",
+          "silver bar",
+          "silver coin",
+          "troy ounce",
         ]);
 
         if (threeWord && !genericPhrases.has(threeWord) && costcoNameLower.includes(threeWord)) {

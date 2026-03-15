@@ -292,44 +292,22 @@ bun run test         # Run unit tests (one-off)
 bun run test:watch   # Run tests in watch mode
 bun run test:browser # Run browser-mode tests (vitest-example/)
 bun run typecheck    # Run TypeScript checks
-bun run lint         # Run ESLint
-bun run lint:fix     # Run ESLint with auto-fix
-bun run format       # Format with Prettier
+bun run lint         # Run OXLint (type-aware)
+bun run lint:fix     # Run OXLint with auto-fix
+bun run format       # Format with oxfmt
 bun run format:check # Check formatting without fixing
 ```
 
 ### CI Script
 
-A custom TypeScript CI script (`scripts/ci.ts`) with a visual status dashboard:
+A CI script (`scripts/ci.ts`) that runs all checks via Turbo for parallel execution:
 
 - **Command**: `bun run ci`
-- **Checks**: Runs `format`, `lint:fix`, `typecheck`, `test`, and `test:browser` sequentially
-- **Features**:
-  - Real-time status updates with color-coded output
-  - Individual timing for each check
-  - Total run time summary
-  - Continues running all checks even if one fails (to see all issues)
-  - Exits with error code if any check fails
+- **Checks**: `format`, `lint:fix`, `typecheck`, `typecheck:convex`, `test`, `test:convex`, `test:browser`
+- **Engine**: Turbo handles parallelism and caching
+- Exits with error code if any check fails
 
-**Example Output**:
-
-```
-====== CI CHECKS ======
-
-format       : SUCCESS (1.57s)
-lint         : SUCCESS (3.44s)
-typecheck    : SUCCESS (2.72s)
-test         : SUCCESS (0.95s)
-test:browser : SUCCESS (1.31s)
-
-✓ All checks passed successfully!
-
-Total run time: 10.00s
-```
-
-Sequential execution avoids race conditions with React Router's typegen and provides clear error isolation.
-
-Use this before pushing to main to ensure code quality without the overhead of a full CI/CD pipeline during MVP phase.
+Use this before pushing to main to ensure code quality.
 
 ## Testing
 
