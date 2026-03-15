@@ -878,7 +878,7 @@ const AlertsPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            ) : (alerts.length === 0 ? (
+            ) : alerts.length === 0 ? (
               /* Empty state */
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-16 text-center">
@@ -904,7 +904,7 @@ const AlertsPage = () => {
                   />
                 ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
       </main>

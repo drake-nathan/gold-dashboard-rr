@@ -25,9 +25,9 @@ export const SubscriptionPageContent = () => {
             <p className="font-medium">{isPro ? "Dashboard.Gold Pro" : "Free Plan"}</p>
             <p className="text-sm text-neutral-500">
               {isPro
-                ? (subscription.status === "trialing"
+                ? subscription.status === "trialing"
                   ? "Trial period"
-                  : "Active subscription")
+                  : "Active subscription"
                 : "Upgrade for premium features"}
             </p>
           </div>
