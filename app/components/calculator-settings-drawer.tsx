@@ -89,7 +89,8 @@ export const CalculatorSettingsDrawer = ({
                       rel="noopener noreferrer"
                       target="_blank"
                     >
-                      Learn more <ExternalLink className="inline h-3 w-3" />
+                      Learn more about Pure selling tiers{" "}
+                      <ExternalLink className="inline h-3 w-3" />
                     </a>
                   </p>
                 </div>

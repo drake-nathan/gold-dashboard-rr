@@ -549,11 +549,11 @@ test("sorts cards alphabetically within each group", () => {
 // ============================================================================
 
 test("default preset cards are valid", () => {
-  DEFAULT_PRESET_CARDS.forEach((card) => {
+  for (const card of DEFAULT_PRESET_CARDS) {
     const result = creditCardSchema.safeParse(card);
 
     expect(result.success).toBeTruthy();
-  });
+  }
 });
 
 test("default preset cards have unique IDs", () => {
@@ -564,9 +564,9 @@ test("default preset cards have unique IDs", () => {
 });
 
 test("default preset cards are all marked as presets", () => {
-  DEFAULT_PRESET_CARDS.forEach((card) => {
+  for (const card of DEFAULT_PRESET_CARDS) {
     expect(card.isPreset).toBeTruthy();
-  });
+  }
 });
 
 test("costco Visa is first in default presets", () => {

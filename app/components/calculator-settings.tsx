@@ -30,7 +30,7 @@ export interface LegacyCreditCard {
   pointValue: number;
 }
 
-// Convert new CreditCard to legacy format
+// oxlint-disable-next-line react/only-export-components -- legacy compatibility helper co-located with legacy types
 export const toLegacyCard = (card: CreditCard): LegacyCreditCard => ({
   cashbackPercentage: calculateCashbackPercentage(card),
   earnRate: card.pointsPerDollar,

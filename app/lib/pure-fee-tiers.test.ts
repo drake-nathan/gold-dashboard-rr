@@ -195,11 +195,11 @@ test("pURE_FEE_TIERS: has correct number of tiers", () => {
 });
 
 test("pURE_FEE_TIERS: all tiers have required properties", () => {
-  PURE_FEE_TIERS.forEach((tier) => {
+  for (const tier of PURE_FEE_TIERS) {
     expect(tier).toHaveProperty("id");
     expect(tier).toHaveProperty("name");
     expect(tier).toHaveProperty("bullionFeeRate");
     expect(tier).toHaveProperty("silverPlatPalladiumFeeRate");
     expect(tier).toHaveProperty("requiredQuarterlySales");
-  });
+  }
 });

@@ -110,7 +110,7 @@ export const parseWeightToOz = (weight: string, weightGrams?: number): number =>
   const weightMatch = /(?<value>\d+(?:\.\d+)?)\s*(?<unit>troy ounce|ounce|oz|gram|g)/i.exec(weight);
 
   if (weightMatch?.groups?.value && weightMatch.groups.unit) {
-    const value = parseFloat(weightMatch.groups.value);
+    const value = Number.parseFloat(weightMatch.groups.value);
     const unit = weightMatch.groups.unit.toLowerCase();
 
     if (unit.includes("oz") || unit.includes("ounce")) {

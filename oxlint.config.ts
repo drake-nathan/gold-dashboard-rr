@@ -27,6 +27,18 @@ export default defineConfig({
         "unicorn/consistent-function-scoping": "off",
       },
     },
+    {
+      files: ["scripts/**"],
+      rules: {
+        "eslint/no-console": "off",
+      },
+    },
+    {
+      files: ["app/routes/**", "app/root.tsx", "app/entry.*.tsx", "app/providers/**", "app/components/ui/**"],
+      rules: {
+        "react/only-export-components": "off",
+      },
+    },
   ],
   plugins: [
     "eslint",
@@ -107,6 +119,13 @@ export default defineConfig({
     "vitest/prefer-called-once": "off",
     "vitest/prefer-called-times": "off",
     "vitest/prefer-import-in-mock": "off",
+    // --- cherry-picked from restriction ---
+    "eslint/no-console": ["warn", { allow: ["error", "info", "warn"] }],
+    "eslint/no-explicit-any": "warn",
+    "jsx-a11y/anchor-ambiguous-text": "warn",
+    "react/only-export-components": "warn",
+    "unicorn/no-array-for-each": "warn",
+    "unicorn/prefer-number-properties": "warn",
   },
   settings: {
     react: {

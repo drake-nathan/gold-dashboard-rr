@@ -764,10 +764,10 @@ export const matchCostcoProductToPure = internalMutation({
       );
       console.info(`   Found ${matches.length} potential matches, top score: ${bestMatch.score}`);
       console.info(`   Top candidates:`);
-      matches.slice(0, 3).forEach((m, i) => {
+      for (const [i, m] of matches.slice(0, 3).entries()) {
         console.info(`     ${i + 1}. ${m.product.productName} (ID: ${m.product.pureProductId})`);
         console.info(`        Score: ${m.score} | Matched: ${m.details}`);
-      });
+      }
 
       // Use fallback instead of guessing
       if (fallbackPureProduct) {
