@@ -166,11 +166,8 @@ export const Dashboard = ({ stats }: DashboardProps) => {
       <main className="container mx-auto flex-1 px-4 py-6">
         <ErrorBoundary showDetails={import.meta.env.MODE === "development"}>
           <Stats
-            collectPure={stats.collectPure}
-            goldProducts={stats.goldProducts.bestSpread}
             lastFetch={stats.lastFetch}
             marketPrices={stats.marketPrices}
-            silverProducts={stats.silverProducts.bestSpread}
             totalCashbackPercentage={totalCashbackPercentage}
           />
         </ErrorBoundary>

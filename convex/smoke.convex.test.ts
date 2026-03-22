@@ -15,7 +15,6 @@ test("dashboard.getStats returns empty data when database is empty", async () =>
   const stats = await t.query(api.dashboard.getStats, {});
 
   expect(stats).toMatchObject({
-    collectPure: { gold: null, silver: null },
     goldProducts: { bestSpread: [], inStock: 0, total: 0 },
     lastFetch: null,
     marketPrices: [],

@@ -1,5 +1,59 @@
 import { query } from "./_generated/server";
 
+const toDashboardMarketPrice = (price: {
+  assetType: "bitcoin" | "gold" | "silver" | "sp500";
+  currentPrice: number;
+  percentChange: null | number;
+  symbol: string;
+}) => ({
+  assetType: price.assetType,
+  currentPrice: price.currentPrice,
+  percentChange: price.percentChange,
+  symbol: price.symbol,
+});
+
+const toDashboardProduct = (
+  product: {
+    currentInStock: boolean;
+    currentPrice: number;
+    currentPricePerOunce: null | number;
+    lastInStockAt?: null | number;
+    metalType: "gold" | "silver";
+    metalWeight: null | string;
+    name: string;
+    productId: string;
+    thumbnail: null | string;
+    url: string;
+  },
+  spreadData: {
+    isUsingGenericFallback: boolean;
+    pureBidPrice: null | number;
+    pureBidPricePerOz: null | number;
+    pureProductName: null | string;
+    pureProductSku: null | string;
+    spread: null | number;
+    spreadPercentage: null | number;
+  },
+) => ({
+  currentInStock: product.currentInStock,
+  currentPrice: product.currentPrice,
+  currentPricePerOunce: product.currentPricePerOunce,
+  isUsingGenericFallback: spreadData.isUsingGenericFallback,
+  lastInStockAt: product.lastInStockAt ?? null,
+  metalType: product.metalType,
+  metalWeight: product.metalWeight,
+  name: product.name,
+  productId: product.productId,
+  pureBidPrice: spreadData.pureBidPrice,
+  pureBidPricePerOz: spreadData.pureBidPricePerOz,
+  pureProductName: spreadData.pureProductName,
+  pureProductSku: spreadData.pureProductSku,
+  spread: spreadData.spread,
+  spreadPercentage: spreadData.spreadPercentage,
+  thumbnail: product.thumbnail,
+  url: product.url,
+});
+
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
@@ -107,9 +161,11 @@ export const getStats = query({
       };
     };
 
-    // Calculate spreads for ALL gold products (including out of stock)
+    // Calculate spreads for all products and project to the smaller UI shape.
     const goldWithSpreads = goldProducts
-      .map((p) => calculateSpread(p, collectPureGold?.bidPrice ?? null))
+      .map((product) =>
+        toDashboardProduct(product, calculateSpread(product, collectPureGold?.bidPrice ?? null)),
+      )
       .toSorted((a, b) => {
         // Sort by spread percentage, putting items without price per oz at the end
         const aSpread = a.spreadPercentage ?? 999;
@@ -117,9 +173,10 @@ export const getStats = query({
         return aSpread - bSpread;
       });
 
-    // Calculate spreads for ALL silver products (including out of stock)
     const silverWithSpreads = silverProducts
-      .map((p) => calculateSpread(p, collectPureSilver?.bidPrice ?? null))
+      .map((product) =>
+        toDashboardProduct(product, calculateSpread(product, collectPureSilver?.bidPrice ?? null)),
+      )
       .toSorted((a, b) => {
         // Sort by spread percentage, putting items without price per oz at the end
         const aSpread = a.spreadPercentage ?? 999;
@@ -128,29 +185,8 @@ export const getStats = query({
       });
 
     return {
-      collectPure: {
-        gold: collectPureGold
-          ? {
-              bidPrice: collectPureGold.bidPrice,
-              isMock: collectPureGold.isMock,
-              spotPrice: collectPureGold.spotPrice,
-              timestamp: collectPureGold.timestamp,
-            }
-          : null,
-        silver: collectPureSilver
-          ? {
-              bidPrice: collectPureSilver.bidPrice,
-              isMock: collectPureSilver.isMock,
-              spotPrice: collectPureSilver.spotPrice,
-              timestamp: collectPureSilver.timestamp,
-            }
-          : null,
-      },
       goldProducts: {
-        bestSpread: goldWithSpreads, // Return ALL products sorted by spread
-        bestValue: goldProducts.toSorted(
-          (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
-        ),
+        bestSpread: goldWithSpreads,
         inStock: goldProducts.filter((p) => p.currentInStock).length,
         total: goldProducts.length,
       },
@@ -162,12 +198,9 @@ export const getStats = query({
             timestamp: lastFetch.timestamp,
           }
         : null,
-      marketPrices,
+      marketPrices: marketPrices.map(toDashboardMarketPrice),
       silverProducts: {
-        bestSpread: silverWithSpreads, // Return ALL products sorted by spread
-        bestValue: silverProducts.toSorted(
-          (a, b) => (a.currentPricePerOunce ?? Infinity) - (b.currentPricePerOunce ?? Infinity),
-        ),
+        bestSpread: silverWithSpreads,
         inStock: silverProducts.filter((p) => p.currentInStock).length,
         total: silverProducts.length,
       },

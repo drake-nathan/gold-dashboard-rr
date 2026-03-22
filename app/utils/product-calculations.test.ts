@@ -12,50 +12,40 @@ import { calculateProductMetrics } from "./product-calculations";
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 type MarketPrices = GetStats["marketPrices"];
 
-// Test fixtures - cast to proper types for testing
-const mockMarketPrices = [
+const mockMarketPrices: MarketPrices = [
   {
-    _creationTime: Date.now(),
-    _id: "market-gold" as MarketPrices[0]["_id"],
-    assetType: "gold" as const,
+    assetType: "gold",
     currentPrice: 2000,
-    lastUpdated: Date.now(),
     percentChange: 1.5,
     symbol: "XAU",
   },
   {
-    _creationTime: Date.now(),
-    _id: "market-silver" as MarketPrices[0]["_id"],
-    assetType: "silver" as const,
+    assetType: "silver",
     currentPrice: 25,
-    lastUpdated: Date.now(),
     percentChange: 0.8,
     symbol: "XAG",
   },
-] as MarketPrices;
+];
 
-const mockGoldProduct = {
-  _creationTime: Date.now(),
-  _id: "test-product-1",
-  brand: "Test Brand",
-  categories: ["Precious Metals", "Gold"],
+const mockGoldProduct: ProductCardData = {
   currentInStock: true,
   currentPrice: 4000,
   currentPricePerOunce: 2100, // $100 above spot
+  isUsingGenericFallback: false,
+  lastInStockAt: null,
   metalType: "gold",
   metalWeight: "2 oz",
   name: "Test Gold Bar 2oz",
   productId: "test-123",
   pureBidPrice: 3900, // Product-specific bid
   pureBidPricePerOz: 1950,
-  pureProductId: "pure-123",
   pureProductName: "Test Gold Bar",
   pureProductSku: "GOLD-2OZ",
   spread: 150,
   spreadPercentage: 7.5,
   thumbnail: "https://example.com/image.jpg",
   url: "https://costco.com/test",
-} as ProductCardData;
+};
 
 const mockCalculatorSettings: CalculatorSettings = {
   costcoMembershipEnabled: true, // 2% cashback

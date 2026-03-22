@@ -7,11 +7,8 @@ import { StatCard } from "./stat-card";
 type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 
 interface StatsProps {
-  collectPure: GetStats["collectPure"];
-  goldProducts: GetStats["goldProducts"]["bestSpread"];
   lastFetch: GetStats["lastFetch"];
   marketPrices: GetStats["marketPrices"];
-  silverProducts: GetStats["silverProducts"]["bestSpread"];
   totalCashbackPercentage: number;
 }
 
