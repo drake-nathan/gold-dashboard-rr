@@ -22,8 +22,9 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:browser": "vitest run --config=vitest.browser.config.ts --coverage",
     "test:watch": "vitest",
-    "typecheck": "react-router typegen && tsc",
-    "typecheck:convex": "tsc -p convex/tsconfig.json"
+    "typecheck": "tsc",
+    "typecheck:convex": "tsc -p convex/tsconfig.json",
+    "typegen": "react-router typegen"
   },
   "dependencies": {
     "@clerk/react-router": "3.0.6",
