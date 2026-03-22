@@ -11,29 +11,29 @@ import {
 } from "./lib/pureApiParsing";
 
 // Helper to check if a user is an admin
-const isAdmin = (userId: null | string): boolean => {
-  if (!userId) return false;
+const isAdmin = (tokenIdentifier: null | string): boolean => {
+  if (!tokenIdentifier) return false;
 
   const adminUserIds = process.env.ADMIN_USER_IDS;
   if (!adminUserIds) return false;
 
   const adminIds = adminUserIds.split(",").map((id) => id.trim());
-  return adminIds.includes(userId);
+  return adminIds.includes(tokenIdentifier);
 };
 
-// Helper to get authenticated user ID from context
-const getAuthenticatedUserId = async (ctx: QueryCtx): Promise<null | string> => {
+// Helper to get authenticated user token identifier from context
+const getAuthenticatedTokenIdentifier = async (ctx: QueryCtx): Promise<null | string> => {
   const identity = await ctx.auth.getUserIdentity();
-  return identity?.subject ?? null;
+  return identity?.tokenIdentifier ?? null;
 };
 
 // Helper to require admin access
 const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
-  const userId = await getAuthenticatedUserId(ctx);
-  if (!isAdmin(userId)) {
+  const tokenIdentifier = await getAuthenticatedTokenIdentifier(ctx);
+  if (!isAdmin(tokenIdentifier)) {
     throw new Error("Unauthorized: Admin access required");
   }
-  return userId ?? "";
+  return tokenIdentifier ?? "";
 };
 
 /**
@@ -727,10 +727,11 @@ export const getAllPureProducts = query({
 export const checkIsAdmin = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthenticatedUserId(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    const tokenIdentifier = identity?.tokenIdentifier ?? null;
     return {
-      isAdmin: isAdmin(userId),
-      userId,
+      isAdmin: isAdmin(tokenIdentifier),
+      userTokenIdentifier: tokenIdentifier,
     };
   },
 });

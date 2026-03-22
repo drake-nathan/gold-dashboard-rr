@@ -1,20 +1,32 @@
-import { type QueryCtx, type MutationCtx } from "../_generated/server";
+import { type ActionCtx, type MutationCtx, type QueryCtx } from "../_generated/server";
 
 export interface AuthUserIdentity {
+  email?: string;
+  name?: string;
   subject: string;
   tokenIdentifier: string;
 }
 
-export const requireAuthIdentity = async (
-  ctx: MutationCtx | QueryCtx,
-): Promise<AuthUserIdentity> => {
+type AuthContext = ActionCtx | MutationCtx | QueryCtx;
+
+export const requireAuthIdentity = async (ctx: AuthContext): Promise<AuthUserIdentity> => {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Authentication required");
   }
 
   return {
+    email: identity.email,
+    name: identity.name,
     subject: identity.subject,
     tokenIdentifier: identity.tokenIdentifier,
   };
+};
+
+export const getIdentityLookupKeys = (identity: AuthUserIdentity): string[] => {
+  if (identity.subject === identity.tokenIdentifier) {
+    return [identity.tokenIdentifier];
+  }
+
+  return [identity.tokenIdentifier, identity.subject];
 };

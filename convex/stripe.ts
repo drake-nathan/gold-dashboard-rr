@@ -2,7 +2,8 @@ import { StripeSubscriptions } from "@convex-dev/stripe";
 import { v } from "convex/values";
 
 import { components } from "./_generated/api";
-import { action, query } from "./_generated/server";
+import { type ActionCtx, action, query } from "./_generated/server";
+import { requireAuthIdentity } from "./lib/authIdentity";
 import {
   getAnonymousAlertEntitlements,
   getUserAlertEntitlements,
@@ -25,6 +26,33 @@ const getSiteUrl = (): string => {
   return siteUrl;
 };
 
+const getStripeCustomerForIdentity = async (
+  ctx: ActionCtx,
+  identity: Awaited<ReturnType<typeof requireAuthIdentity>>,
+) => {
+  for (const userId of [identity.tokenIdentifier, identity.subject]) {
+    const customer = await ctx.runQuery(components.stripe.public.getCustomerByUserId, { userId });
+    if (customer) {
+      return {
+        customerId: customer.stripeCustomerId,
+        userId,
+      };
+    }
+
+    if (userId === identity.subject) {
+      break;
+    }
+  }
+
+  const customer = await stripeClient.getOrCreateCustomer(ctx, {
+    email: identity.email,
+    name: identity.name,
+    userId: identity.tokenIdentifier,
+  });
+
+  return { customerId: customer.customerId, userId: identity.tokenIdentifier };
+};
+
 /**
  * Create a Stripe Checkout session for subscribing to Pro
  * Returns a URL to redirect the user to Stripe Checkout
@@ -35,12 +63,8 @@ export const createCheckoutSession = action({
     priceId: v.string(),
   },
   handler: async (ctx, args): Promise<{ error?: string; url?: string }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { error: "You must be logged in to subscribe" };
-    }
-
     try {
+      const identity = await requireAuthIdentity(ctx);
       const configuredPriceId = process.env.STRIPE_PRICE_ID;
       if (!configuredPriceId) {
         throw new Error("STRIPE_PRICE_ID environment variable is required for Stripe integration");
@@ -50,25 +74,20 @@ export const createCheckoutSession = action({
         console.warn("Ignoring client-provided Stripe priceId mismatch", {
           configuredPriceId,
           providedPriceId: args.priceId,
-          userId: identity.subject,
+          userId: identity.tokenIdentifier,
         });
       }
 
-      // Get or create a Stripe customer linked to this Clerk user
-      const customer = await stripeClient.getOrCreateCustomer(ctx, {
-        email: identity.email,
-        name: identity.name,
-        userId: identity.subject,
-      });
+      const { customerId } = await getStripeCustomerForIdentity(ctx, identity);
 
       // Create the checkout session
       const siteUrl = getSiteUrl();
       const session = await stripeClient.createCheckoutSession(ctx, {
         cancelUrl: `${siteUrl}?checkout=canceled`,
-        customerId: customer.customerId,
+        customerId,
         mode: "subscription",
         priceId: configuredPriceId,
-        subscriptionMetadata: { userId: identity.subject },
+        subscriptionMetadata: { userId: identity.tokenIdentifier },
         successUrl: `${siteUrl}?checkout=success`,
       });
 
@@ -89,23 +108,14 @@ export const createCheckoutSession = action({
 export const createPortalSession = action({
   args: {},
   handler: async (ctx): Promise<{ error?: string; url?: string }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { error: "You must be logged in to manage subscription" };
-    }
-
     try {
-      // Get the customer for this user
-      const customer = await stripeClient.getOrCreateCustomer(ctx, {
-        email: identity.email,
-        name: identity.name,
-        userId: identity.subject,
-      });
+      const identity = await requireAuthIdentity(ctx);
+      const { customerId } = await getStripeCustomerForIdentity(ctx, identity);
 
       // Create portal session
       const siteUrl = getSiteUrl();
       const session = await stripeClient.createCustomerPortalSession(ctx, {
-        customerId: customer.customerId,
+        customerId,
         returnUrl: siteUrl,
       });
 
@@ -135,15 +145,15 @@ export const getSubscriptionStatus = query({
       };
     }
 
-    const { alertEntitlements, subscriptionStatus } = await getUserAlertEntitlements(
-      ctx,
-      identity.subject,
-    );
+    const { alertEntitlements, subscriptionStatus } = await getUserAlertEntitlements(ctx, {
+      subject: identity.subject,
+      tokenIdentifier: identity.tokenIdentifier,
+    });
 
     return {
       alertEntitlements,
       ...subscriptionStatus,
-      userId: identity.subject,
+      userId: identity.tokenIdentifier,
     };
   },
 });

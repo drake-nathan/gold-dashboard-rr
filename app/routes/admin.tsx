@@ -78,7 +78,7 @@ const AdminPage = () => {
                 Signed in as: {user.primaryEmailAddress?.emailAddress}
               </p>
               <p className="mt-1 font-mono text-xs text-muted-foreground">
-                User ID: {adminCheck.userId}
+                Token ID: {adminCheck.userTokenIdentifier}
               </p>
             </div>
             <Button asChild variant="outline">
