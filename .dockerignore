@@ -38,7 +38,7 @@ README.md
 CLAUDE.md
 TODO.md
 .prompts/
-.sessions/
+.epics/
 
 # Deployment
 .vercel

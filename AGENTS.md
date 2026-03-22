@@ -6,22 +6,25 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 
 ### System
 
-- **`TASKS.md`** — The task board. All pending work lives here (Active / Short Term / Medium Term / Backlog / Testing). No completed items — delete them when done. Git history is the archive.
-- **`.sessions/<name>.md`** — Session files for active epics only. Each starts with a status header. Delete when the epic ships.
+- **`TASKS.md`** — Priority-ordered index. Sections: Now / Epics / Up Next / Later / Testing. No checkboxes — items are present (pending) or deleted (done). Git history is the archive.
+- **`.epics/<name>.md`** — Detailed plans for multi-session efforts. Each starts with a status header. Delete when the epic ships.
 - **`CLAUDE.md`** — Symlink to `AGENTS.md` for Claude Code compatibility.
 
 ### Rules for Agents
 
-1. **Read `TASKS.md` first** at the start of any task-oriented session to understand current priorities.
+1. **Read `TASKS.md` first** at the start of any task-oriented session. Start with the "Now" section.
 2. **Update `TASKS.md` as you work:**
-   - Check off / delete items when complete.
-   - Add new items you discover in the appropriate section — inform the user when you do.
-   - Keep the file under 150 lines. If it grows past that, consolidate or split into an epic.
-3. **Session files** (`.sessions/<name>.md`):
-   - Create only for multi-session epics (3+ sessions expected).
-   - Always start with: `> **Status:** In Progress | Complete | Paused`
-   - Link from TASKS.md Active section.
-   - Delete when the epic is complete.
+   - Delete items when done. No checkboxes, no ✅ — git history is the archive.
+   - Add discovered work to "Up Next" — inform the user when you do.
+   - Promote items to "Now" only with user approval.
+   - Keep under 80 lines. If a topic grows past 3-4 items, it's an epic.
+3. **Epic files** (`.epics/<name>.md`):
+   - Create for multi-session work (3+ sessions expected).
+   - Always start with: `> **Status:** In Progress | Paused | Blocked`
+   - Include: Goal (1 sentence), Plan (current + next steps only), Decisions (table), Notes.
+   - Prune completed phases — keep only current and upcoming work.
+   - Link from the Epics section in `TASKS.md`.
+   - Delete the file when the epic ships.
 4. **No archive directories.** Git history preserves everything.
 
 ## Tech Stack
