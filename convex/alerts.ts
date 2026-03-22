@@ -97,10 +97,11 @@ interface SendAlertEmailSuccess {
 }
 
 type SendAlertEmailResult = SendAlertEmailFailure | SendAlertEmailSuccess;
-type UserOwnedRecord = {
+
+interface UserOwnedRecord {
   userId: string;
   userTokenIdentifier?: string;
-};
+}
 
 const listAlertsForIdentity = async (
   ctx: MutationCtx | QueryCtx,
@@ -236,9 +237,8 @@ const findPendingBatchForUserKey = async (
   }
 
   return (
-    [...batches.values()].find(
-      (batch) => batch.scheduledFor === scheduleTime && batch.sent === false,
-    ) ?? null
+    [...batches.values()].find((batch) => batch.scheduledFor === scheduleTime && !batch.sent) ??
+    null
   );
 };
 
@@ -358,7 +358,7 @@ const getPendingAlertHistoryForBatch = async (
 
   return pendingHistory.filter(
     (history) =>
-      history.notificationSent === false &&
+      !history.notificationSent &&
       history.triggeredAt >= windowStart &&
       history.triggeredAt <= windowEnd &&
       alertIds.has(history.alertId),

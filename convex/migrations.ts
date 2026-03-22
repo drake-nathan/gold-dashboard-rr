@@ -15,7 +15,7 @@ const getCanonicalTokenIdentifier = (legacyUserId: string): string => {
   return `${issuer}|${legacyUserId}`;
 };
 
-const patchUserTokenIdentifier = (
+const getMissingUserTokenIdentifier = (
   doc: Pick<
     | Doc<"alertBatches">
     | Doc<"alertHistory">
@@ -24,36 +24,61 @@ const patchUserTokenIdentifier = (
     | Doc<"userSettings">,
     "userId" | "userTokenIdentifier"
   >,
-) => {
+): null | string => {
   if (doc.userTokenIdentifier) {
-    return;
+    return null;
   }
 
-  return { userTokenIdentifier: getCanonicalTokenIdentifier(doc.userId) };
+  return getCanonicalTokenIdentifier(doc.userId);
 };
 
 export const backfillAlertBatchesUserTokenIdentifier = migrations.define({
-  migrateOne: (_ctx, doc) => patchUserTokenIdentifier(doc),
+  migrateOne: async (ctx, doc) => {
+    const userTokenIdentifier = getMissingUserTokenIdentifier(doc);
+    if (userTokenIdentifier) {
+      await ctx.db.patch(doc._id, { userTokenIdentifier });
+    }
+  },
   table: "alertBatches",
 });
 
 export const backfillAlertHistoryUserTokenIdentifier = migrations.define({
-  migrateOne: (_ctx, doc) => patchUserTokenIdentifier(doc),
+  migrateOne: async (ctx, doc) => {
+    const userTokenIdentifier = getMissingUserTokenIdentifier(doc);
+    if (userTokenIdentifier) {
+      await ctx.db.patch(doc._id, { userTokenIdentifier });
+    }
+  },
   table: "alertHistory",
 });
 
 export const backfillAlertsUserTokenIdentifier = migrations.define({
-  migrateOne: (_ctx, doc) => patchUserTokenIdentifier(doc),
+  migrateOne: async (ctx, doc) => {
+    const userTokenIdentifier = getMissingUserTokenIdentifier(doc);
+    if (userTokenIdentifier) {
+      await ctx.db.patch(doc._id, { userTokenIdentifier });
+    }
+  },
   table: "alerts",
 });
 
 export const backfillUserCreditCardsUserTokenIdentifier = migrations.define({
-  migrateOne: (_ctx, doc) => patchUserTokenIdentifier(doc),
+  migrateOne: async (ctx, doc) => {
+    const userTokenIdentifier = getMissingUserTokenIdentifier(doc);
+    if (userTokenIdentifier) {
+      await ctx.db.patch(doc._id, { userTokenIdentifier });
+    }
+  },
   table: "userCreditCards",
 });
 
 export const backfillUserSettingsUserTokenIdentifier = migrations.define({
-  migrateOne: (_ctx, doc) => patchUserTokenIdentifier(doc),
+  migrateOne: async (ctx, doc) => {
+    const userTokenIdentifier = getMissingUserTokenIdentifier(doc);
+    if (userTokenIdentifier) {
+      await ctx.db.patch(doc._id, { userTokenIdentifier });
+    }
+  },
   table: "userSettings",
 });
 
