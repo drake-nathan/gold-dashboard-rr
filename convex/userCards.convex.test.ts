@@ -239,6 +239,44 @@ test("updateCard can update signupBonus", async () => {
   });
 });
 
+test("updateCard upserts when preset card not yet in Convex", async () => {
+  const t = convexTest(schema, modules);
+  const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
+
+  // "venture-x" is a default preset that exists in the frontend but NOT in Convex.
+  // When a user adds a SUB to it for the first time, the drawer calls updateCard.
+  // This should create the card (upsert), not throw "not found".
+  const cardsBeforeUpdate = await asUser.query(api.userCards.getUserCards, {});
+
+  expect(cardsBeforeUpdate).toHaveLength(0);
+
+  await asUser.mutation(api.userCards.updateCard, {
+    cardId: "venture-x",
+    cardType: "travel",
+    isCustomizable: true,
+    isPreset: true,
+    issuer: "Capital One",
+    name: "Capital One Venture X",
+    pointsPerDollar: 2,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 75_000,
+      spendRequirement: 4000,
+    },
+    valuePerPoint: 0.0185,
+  });
+
+  const cardsAfterUpdate = await asUser.query(api.userCards.getUserCards, {});
+
+  expect(cardsAfterUpdate).toHaveLength(1);
+  expect(cardsAfterUpdate[0].id).toBe("venture-x");
+  expect(cardsAfterUpdate[0].signupBonus).toStrictEqual({
+    enabled: true,
+    pointsBonus: 75_000,
+    spendRequirement: 4000,
+  });
+});
+
 // ============================================================================
 // deleteCard Tests
 // ============================================================================

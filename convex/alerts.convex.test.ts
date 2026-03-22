@@ -17,7 +17,7 @@ const withStripeComponent = () => {
 };
 
 const insertCostcoProduct = async (
-  t: ReturnType<typeof convexTest>,
+  t: ReturnType<typeof withStripeComponent>,
   {
     currentInStock = true,
     currentPrice = 1000,

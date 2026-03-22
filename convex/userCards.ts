@@ -107,6 +107,9 @@ export const updateCard = mutation({
   args: {
     cardId: v.string(),
     cardType: v.optional(v.union(v.literal("cashback"), v.literal("travel"))),
+    // Creation-only fields for upsert (preset cards may not exist in DB yet)
+    isCustomizable: v.optional(v.boolean()),
+    isPreset: v.optional(v.boolean()),
     issuer: v.optional(v.string()),
     name: v.optional(v.string()),
     pointsPerDollar: v.optional(v.number()),
@@ -121,12 +124,35 @@ export const updateCard = mutation({
       .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
       .first();
 
+    const now = Date.now();
+
     if (!card) {
-      throw new Error(`Card ${args.cardId} not found`);
+      // Upsert: card doesn't exist yet (e.g., default preset being customized for first time)
+      // Requires name and cardType at minimum to create
+      if (!args.name || !args.cardType) {
+        throw new Error(`Card ${args.cardId} not found`);
+      }
+
+      await ctx.db.insert("userCreditCards", {
+        cardId: args.cardId,
+        cardType: args.cardType,
+        createdAt: now,
+        isCustomizable: args.isCustomizable ?? false,
+        isPreset: args.isPreset ?? false,
+        issuer: args.issuer,
+        name: args.name,
+        pointsPerDollar: args.pointsPerDollar ?? 0,
+        signupBonus: args.signupBonus,
+        updatedAt: now,
+        userId,
+        valuePerPoint: args.valuePerPoint ?? 0,
+      });
+
+      return { success: true };
     }
 
     // Build update object with only provided fields
-    const updates: Record<string, unknown> = { updatedAt: Date.now() };
+    const updates: Record<string, unknown> = { updatedAt: now };
 
     if (args.name !== undefined) updates.name = args.name;
     if (args.issuer !== undefined) updates.issuer = args.issuer;

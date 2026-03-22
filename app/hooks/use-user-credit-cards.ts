@@ -322,6 +322,8 @@ export const useUserCreditCards = (): UseUserCreditCardsReturn => {
         await updateCardMutation({
           cardId,
           cardType: updates.cardType,
+          isCustomizable: updates.isCustomizable,
+          isPreset: updates.isPreset,
           issuer: updates.issuer,
           name: updates.name,
           pointsPerDollar: updates.pointsPerDollar,

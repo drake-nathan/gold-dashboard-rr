@@ -90,6 +90,18 @@ export const DEFAULT_PRESET_CARDS: CreditCard[] = [
   },
 ];
 
+// Build signupBonus object for saving (form values → persistable object)
+// Always returns a defined SignupBonus so Convex mutations receive the value
+// and actually persist the change (undefined optional args are ignored by Convex)
+export const buildSignupBonusForSave = (
+  enabled: boolean,
+  pointsBonus: number,
+  spendRequirement: number,
+): SignupBonus => {
+  if (!enabled) return { enabled: false, pointsBonus: 0, spendRequirement: 0 };
+  return { enabled: true, pointsBonus, spendRequirement };
+};
+
 // Calculate base cashback percentage (without SUB)
 export const calculateCashbackPercentage = (card: CreditCard): number =>
   card.pointsPerDollar * card.valuePerPoint * 100;

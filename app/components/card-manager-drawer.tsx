@@ -37,6 +37,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   addCustomCard,
+  buildSignupBonusForSave,
   calculateCashbackPercentage,
   calculateSubBonusPercentage,
   calculateTotalCashbackPercentage,
@@ -178,13 +179,11 @@ export const CardManagerDrawer = ({
 
   const onSubmit = (values: CardFormValues) => {
     try {
-      const signupBonus = values.signupBonusEnabled
-        ? {
-            enabled: true,
-            pointsBonus: values.signupBonusPoints,
-            spendRequirement: values.signupBonusSpend,
-          }
-        : undefined;
+      const signupBonus = buildSignupBonusForSave(
+        values.signupBonusEnabled,
+        values.signupBonusPoints,
+        values.signupBonusSpend,
+      );
 
       if (editMode?.type === "create") {
         const newCard = addCustomCard({

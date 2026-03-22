@@ -2,6 +2,7 @@ import { expect, test } from "vitest";
 
 import {
   addCustomCard,
+  buildSignupBonusForSave,
   calculateCashbackPercentage,
   calculateSubBonusPercentage,
   calculateTotalCashbackPercentage,
@@ -752,4 +753,45 @@ test("calculates SUB bonus with high-value card", () => {
 
   // Total: 6% + 40% = 46%
   expect(totalCashback).toBeCloseTo(46, 2);
+});
+
+// ============================================================================
+// BUILD SIGNUP BONUS FOR SAVE TESTS
+// ============================================================================
+
+test("buildSignupBonusForSave returns enabled bonus when enabled", () => {
+  const result = buildSignupBonusForSave(true, 60_000, 4000);
+
+  expect(result).toStrictEqual({
+    enabled: true,
+    pointsBonus: 60_000,
+    spendRequirement: 4000,
+  });
+});
+
+test("buildSignupBonusForSave returns defined object with enabled: false when disabled (not undefined)", () => {
+  // BUG: When user toggles off SUB, the drawer sends signupBonus: undefined.
+  // Convex mutations ignore undefined optional args, so the old SUB persists.
+  // The fix: always return a defined object with enabled: false.
+  const result = buildSignupBonusForSave(false, 60_000, 4000);
+
+  expect(result).toBeDefined();
+  expect(result.enabled).toBeFalsy();
+});
+
+test("buildSignupBonusForSave disabled result produces zero SUB calculation", () => {
+  const result = buildSignupBonusForSave(false, 60_000, 4000);
+
+  const card: CreditCard = {
+    cardType: "travel",
+    id: "test-card",
+    isCustomizable: false,
+    isPreset: false,
+    name: "Test Card",
+    pointsPerDollar: 2,
+    signupBonus: result,
+    valuePerPoint: 0.02,
+  };
+
+  expect(calculateSubBonusPercentage(card)).toBe(0);
 });
