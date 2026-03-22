@@ -21,16 +21,12 @@ Sentry.init({
   enableLogs: true,
   environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? import.meta.env.MODE,
   integrations: [tracing, browserProfiling, consoleLogging, Sentry.replayIntegration()],
-  // Session Replay: buffer mode (error-only)
-  // Records in memory but only uploads when an error occurs (~60s pre-error context)
-  // PostHog handles all-session replays for heatmaps
   profileLifecycle: "trace",
-  profileSessionSampleRate: 1,
+  profileSessionSampleRate: 0.5,
   replaysOnErrorSampleRate: 1,
   replaysSessionSampleRate: 0,
   sendDefaultPii: true,
   tracePropagationTargets: [/^\//],
-  // 100% sampling — intentional for low-traffic app. Reduce if volume grows.
   tracesSampleRate: 1,
 });
 

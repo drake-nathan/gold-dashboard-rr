@@ -15,8 +15,6 @@ Sentry.init({
   },
 
   dsn: process.env.VITE_SENTRY_DSN,
-
-  // Enable logs to be sent to Sentry
   enableLogs: true,
   environment:
     process.env.VITE_SENTRY_ENVIRONMENT ??
@@ -24,11 +22,9 @@ Sentry.init({
 
   integrations: [nodeProfilingIntegration(), consoleLogging],
   profileLifecycle: "trace",
-  // 100% sampling — intentional for low-traffic app. Reduce if volume grows.
-  profileSessionSampleRate: 1,
+  profileSessionSampleRate: 0.5,
   // Adds request headers and IP for users, for more info visit:
   // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
   sendDefaultPii: true,
-
   tracesSampleRate: 1,
 });

@@ -40,7 +40,7 @@ export type CreditCardsStorage = z.infer<typeof creditCardsStorageSchema>;
 // Default preset cards with the new structure
 // Costco card is first as it's the most relevant default for this dashboard
 export const DEFAULT_PRESET_CARDS: CreditCard[] = CREDIT_CARD_PRESETS.map((card) =>
-  ({ ...card}),
+  Object.assign({}, card),
 );
 
 // Build signupBonus object for saving (form values → persistable object)
