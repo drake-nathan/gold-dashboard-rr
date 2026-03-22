@@ -87,7 +87,7 @@ const shouldDropServerEvent = (event) => {
   const isStacklessGenericRootFailure =
     error?.type === "Error" &&
     errorMessage === "Unexpected Server Error" &&
-    (!error?.stacktrace) &&
+    !error.stacktrace &&
     (isTransaction(event, "POST /") || isBrowserName(event, "SentryUptimeBot"));
 
   if (isStacklessGenericRootFailure) {
