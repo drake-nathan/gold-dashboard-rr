@@ -14,11 +14,11 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 
 ## Decisions
 
-| Decision | Status | Notes |
-| --- | --- | --- |
+| Decision                                                            | Status   | Notes                                                                                   |
+| ------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------- |
 | Treat auth identity consistency as a correctness issue, not cleanup | Accepted | Current code uses `identity.subject` despite Convex guidance favoring `tokenIdentifier` |
-| Keep this as a dedicated high-priority epic | Accepted | Work crosses schema assumptions, query design, Stripe linkage, and tests |
-| Prefer targeted hardening over broad rewrites | Accepted | Scope is auth keys, hot queries, indexes, and coverage for affected flows |
+| Keep this as a dedicated high-priority epic                         | Accepted | Work crosses schema assumptions, query design, Stripe linkage, and tests                |
+| Prefer targeted hardening over broad rewrites                       | Accepted | Scope is auth keys, hot queries, indexes, and coverage for affected flows               |
 
 ## Notes
 
