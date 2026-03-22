@@ -51,6 +51,36 @@ test("getSettings returns settings after update", async () => {
   });
 });
 
+test("getSettings reads token-identifier keyed settings after subject changes", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("userSettings", {
+      costcoMembershipEnabled: true,
+      createdAt: Date.now(),
+      lastSelectedCardId: "stored-card",
+      localStorageMigrated: false,
+      updatedAt: Date.now(),
+      userId: "old_subject",
+      userTokenIdentifier: "clerk|stable-user",
+    });
+  });
+
+  const asUser = t.withIdentity({
+    name: "Test User",
+    subject: "new_subject",
+    tokenIdentifier: "clerk|stable-user",
+  });
+
+  const settings = await asUser.query(api.userSettings.getSettings, {});
+
+  expect(settings).toMatchObject({
+    costcoMembershipEnabled: true,
+    lastSelectedCardId: "stored-card",
+    localStorageMigrated: false,
+  });
+});
+
 // ============================================================================
 // updateSettings Tests
 // ============================================================================
@@ -222,5 +252,37 @@ test("markMigrationComplete updates existing settings", async () => {
     costcoMembershipEnabled: true,
     lastSelectedCardId: "my-card",
     localStorageMigrated: true,
+  });
+});
+
+test("markMigrationComplete backfills token identifier on legacy settings", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("userSettings", {
+      costcoMembershipEnabled: false,
+      createdAt: Date.now(),
+      localStorageMigrated: false,
+      updatedAt: Date.now(),
+      userId: "user_123",
+    });
+  });
+
+  const asUser = t.withIdentity({
+    name: "Test User",
+    subject: "user_123",
+    tokenIdentifier: "clerk|stable-user",
+  });
+
+  await asUser.mutation(api.userSettings.markMigrationComplete, {});
+
+  await t.run(async (ctx) => {
+    const stored = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", "user_123"))
+      .unique();
+
+    expect(stored?.localStorageMigrated).toBeTruthy();
+    expect(stored?.userTokenIdentifier).toBe("clerk|stable-user");
   });
 });

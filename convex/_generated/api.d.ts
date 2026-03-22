@@ -15,6 +15,7 @@ import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as fmp from "../fmp.js";
 import type * as http from "../http.js";
+import type * as lib_authIdentity from "../lib/authIdentity.js";
 import type * as lib_metalParsing from "../lib/metalParsing.js";
 import type * as lib_pureApiParsing from "../lib/pureApiParsing.js";
 import type * as marketPrices from "../marketPrices.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   dashboard: typeof dashboard;
   fmp: typeof fmp;
   http: typeof http;
+  "lib/authIdentity": typeof lib_authIdentity;
   "lib/metalParsing": typeof lib_metalParsing;
   "lib/pureApiParsing": typeof lib_pureApiParsing;
   marketPrices: typeof marketPrices;

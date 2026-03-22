@@ -25,6 +25,7 @@
 - Add composite indexes for alert batching/history lookup paths
 - Add route tests for dashboard filters, alerts flows, and admin access → [.tasks/route-test-coverage.md]
 - Add Convex tests for Stripe checkout, portal, and subscription status flows
+- Backfill `userTokenIdentifier` on Convex user-owned tables, then narrow schema/index reads
 - Replace hardcoded dashboard OG/site URL with the canonical site URL source
 - Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
 - Audit unconditional `checkIsAdmin` queries in header/mobile navigation → [.tasks/admin-check-callsite-audit.md]

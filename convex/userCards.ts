@@ -9,15 +9,7 @@ import { v } from "convex/values";
 
 import { CREDIT_CARD_PRESETS } from "../lib/credit-card-presets";
 import { type MutationCtx, type QueryCtx, mutation, query } from "./_generated/server";
-
-// Helper to get authenticated user ID (throws if not authenticated)
-const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Authentication required");
-  }
-  return identity.subject;
-};
+import { type AuthUserIdentity, requireAuthIdentity } from "./lib/authIdentity";
 
 // Signup bonus schema for validation
 const signupBonusValidator = v.object({
@@ -30,18 +22,64 @@ const presetCardsById = new Map<string, (typeof CREDIT_CARD_PRESETS)[number]>(
   CREDIT_CARD_PRESETS.map((card) => [card.id, card]),
 );
 
+const getCardsByIdentity = async (ctx: MutationCtx | QueryCtx, identity: AuthUserIdentity) => {
+  const cardsByToken = await ctx.db
+    .query("userCreditCards")
+    .withIndex("by_user_token_identifier", (q) =>
+      q.eq("userTokenIdentifier", identity.tokenIdentifier),
+    )
+    .collect();
+
+  const cardsBySubject =
+    identity.subject === identity.tokenIdentifier
+      ? []
+      : await ctx.db
+          .query("userCreditCards")
+          .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+          .collect();
+
+  const cards = new Map(cardsBySubject.map((card) => [card._id, card]));
+  for (const card of cardsByToken) {
+    cards.set(card._id, card);
+  }
+
+  return [...cards.values()];
+};
+
+const getCardByIdentityAndCardId = async (
+  ctx: MutationCtx | QueryCtx,
+  identity: AuthUserIdentity,
+  cardId: string,
+) => {
+  const cardByToken = await ctx.db
+    .query("userCreditCards")
+    .withIndex("by_user_token_identifier_and_card", (q) =>
+      q.eq("userTokenIdentifier", identity.tokenIdentifier).eq("cardId", cardId),
+    )
+    .unique();
+
+  if (cardByToken) {
+    return cardByToken;
+  }
+
+  if (identity.subject === identity.tokenIdentifier) {
+    return null;
+  }
+
+  return ctx.db
+    .query("userCreditCards")
+    .withIndex("by_user_and_card", (q) => q.eq("userId", identity.subject).eq("cardId", cardId))
+    .unique();
+};
+
 /**
  * Get all credit cards for the authenticated user
  */
 export const getUserCards = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-
-    const cards = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const identity = await requireAuthIdentity(ctx);
+    const cards = await getCardsByIdentity(ctx, identity);
 
     return cards.map((card) => ({
       cardType: card.cardType,
@@ -73,14 +111,11 @@ export const addCard = mutation({
     valuePerPoint: v.number(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
     const now = Date.now();
 
     // Check if card already exists for this user
-    const existing = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
-      .first();
+    const existing = await getCardByIdentityAndCardId(ctx, identity, args.cardId);
 
     if (existing) {
       throw new Error(`Card with ID ${args.cardId} already exists`);
@@ -97,7 +132,8 @@ export const addCard = mutation({
       pointsPerDollar: args.pointsPerDollar,
       signupBonus: args.signupBonus,
       updatedAt: now,
-      userId,
+      userId: identity.subject,
+      userTokenIdentifier: identity.tokenIdentifier,
       valuePerPoint: args.valuePerPoint,
     });
 
@@ -122,12 +158,8 @@ export const updateCard = mutation({
     valuePerPoint: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const card = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
-      .first();
+    const identity = await requireAuthIdentity(ctx);
+    const card = await getCardByIdentityAndCardId(ctx, identity, args.cardId);
 
     const now = Date.now();
 
@@ -151,7 +183,8 @@ export const updateCard = mutation({
         pointsPerDollar: args.pointsPerDollar ?? presetDefaults?.pointsPerDollar ?? 0,
         signupBonus: args.signupBonus,
         updatedAt: now,
-        userId,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
         valuePerPoint: args.valuePerPoint ?? presetDefaults?.valuePerPoint ?? 0,
       });
 
@@ -159,7 +192,11 @@ export const updateCard = mutation({
     }
 
     // Build update object with only provided fields
-    const updates: Record<string, unknown> = { updatedAt: now };
+    const updates: Record<string, unknown> = {
+      updatedAt: now,
+      userId: identity.subject,
+      userTokenIdentifier: identity.tokenIdentifier,
+    };
 
     if (args.name !== undefined) updates.name = args.name;
     if (args.issuer !== undefined) updates.issuer = args.issuer;
@@ -186,12 +223,8 @@ export const deleteCard = mutation({
     cardId: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const card = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
-      .first();
+    const identity = await requireAuthIdentity(ctx);
+    const card = await getCardByIdentityAndCardId(ctx, identity, args.cardId);
 
     if (!card) {
       throw new Error(`Card ${args.cardId} not found`);
@@ -216,12 +249,8 @@ export const resetPresetCard = mutation({
     cardId: v.string(),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-
-    const card = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) => q.eq("userId", userId).eq("cardId", args.cardId))
-      .first();
+    const identity = await requireAuthIdentity(ctx);
+    const card = await getCardByIdentityAndCardId(ctx, identity, args.cardId);
 
     if (!card) {
       throw new Error(`Card ${args.cardId} not found`);
@@ -245,12 +274,8 @@ export const resetPresetCard = mutation({
 export const resetAllCards = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-
-    const cards = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const identity = await requireAuthIdentity(ctx);
+    const cards = await getCardsByIdentity(ctx, identity);
 
     for (const card of cards) {
       await ctx.db.delete(card._id);
@@ -281,14 +306,11 @@ export const migrateFromLocalStorage = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
     const now = Date.now();
 
     // Get existing cards to avoid duplicates
-    const existingCards = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const existingCards = await getCardsByIdentity(ctx, identity);
 
     const existingIds = new Set(existingCards.map((c) => c.cardId));
 
@@ -312,7 +334,8 @@ export const migrateFromLocalStorage = mutation({
         pointsPerDollar: card.pointsPerDollar,
         signupBonus: card.signupBonus,
         updatedAt: now,
-        userId,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
         valuePerPoint: card.valuePerPoint,
       });
 

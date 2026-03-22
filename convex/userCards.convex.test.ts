@@ -101,6 +101,31 @@ test("getUserCards isolates cards between users", async () => {
   expect(user2Cards[0].name).toBe("User 2 Card");
 });
 
+test("getUserCards reads token-identifier keyed cards after subject changes", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("userCreditCards", {
+      ...testCard,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      userId: "old_subject",
+      userTokenIdentifier: "clerk|stable-user",
+    });
+  });
+
+  const asUser = t.withIdentity({
+    name: "Test User",
+    subject: "new_subject",
+    tokenIdentifier: "clerk|stable-user",
+  });
+
+  const cards = await asUser.query(api.userCards.getUserCards, {});
+
+  expect(cards).toHaveLength(1);
+  expect(cards[0].id).toBe(testCard.cardId);
+});
+
 // ============================================================================
 // addCard Tests
 // ============================================================================
@@ -236,6 +261,42 @@ test("updateCard can update signupBonus", async () => {
     enabled: true,
     pointsBonus: 75_000,
     spendRequirement: 5000,
+  });
+});
+
+test("updateCard backfills token identifier on legacy cards", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("userCreditCards", {
+      ...testCard,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      userId: "user_123",
+    });
+  });
+
+  const asUser = t.withIdentity({
+    name: "Test User",
+    subject: "user_123",
+    tokenIdentifier: "clerk|stable-user",
+  });
+
+  await asUser.mutation(api.userCards.updateCard, {
+    cardId: testCard.cardId,
+    name: "Updated Legacy Card",
+  });
+
+  await t.run(async (ctx) => {
+    const stored = await ctx.db
+      .query("userCreditCards")
+      .withIndex("by_user_and_card", (q) =>
+        q.eq("userId", "user_123").eq("cardId", testCard.cardId),
+      )
+      .unique();
+
+    expect(stored?.name).toBe("Updated Legacy Card");
+    expect(stored?.userTokenIdentifier).toBe("clerk|stable-user");
   });
 });
 

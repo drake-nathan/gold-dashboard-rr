@@ -8,14 +8,28 @@
 import { v } from "convex/values";
 
 import { type MutationCtx, type QueryCtx, mutation, query } from "./_generated/server";
+import { type AuthUserIdentity, requireAuthIdentity } from "./lib/authIdentity";
 
-// Helper to get authenticated user ID (throws if not authenticated)
-const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Authentication required");
+const getSettingsByIdentity = async (ctx: MutationCtx | QueryCtx, identity: AuthUserIdentity) => {
+  const settingsByToken = await ctx.db
+    .query("userSettings")
+    .withIndex("by_user_token_identifier", (q) =>
+      q.eq("userTokenIdentifier", identity.tokenIdentifier),
+    )
+    .unique();
+
+  if (settingsByToken) {
+    return settingsByToken;
   }
-  return identity.subject;
+
+  if (identity.subject === identity.tokenIdentifier) {
+    return null;
+  }
+
+  return ctx.db
+    .query("userSettings")
+    .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+    .unique();
 };
 
 /**
@@ -25,12 +39,8 @@ const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
 export const getSettings = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const identity = await requireAuthIdentity(ctx);
+    const settings = await getSettingsByIdentity(ctx, identity);
 
     if (!settings) {
       return null;
@@ -53,17 +63,17 @@ export const updateSettings = mutation({
     lastSelectedCardId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
     const now = Date.now();
-
-    const existing = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const existing = await getSettingsByIdentity(ctx, identity);
 
     if (existing) {
       // Update existing settings
-      const updates: Record<string, unknown> = { updatedAt: now };
+      const updates: Record<string, unknown> = {
+        updatedAt: now,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
+      };
 
       if (args.lastSelectedCardId !== undefined) {
         updates.lastSelectedCardId = args.lastSelectedCardId;
@@ -81,7 +91,8 @@ export const updateSettings = mutation({
         lastSelectedCardId: args.lastSelectedCardId,
         localStorageMigrated: false,
         updatedAt: now,
-        userId,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
       });
     }
 
@@ -95,18 +106,16 @@ export const updateSettings = mutation({
 export const markMigrationComplete = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
     const now = Date.now();
-
-    const existing = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const existing = await getSettingsByIdentity(ctx, identity);
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         localStorageMigrated: true,
         updatedAt: now,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
       });
     } else {
       // Create settings with migration marked complete
@@ -116,7 +125,8 @@ export const markMigrationComplete = mutation({
         lastSelectedCardId: undefined,
         localStorageMigrated: true,
         updatedAt: now,
-        userId,
+        userId: identity.subject,
+        userTokenIdentifier: identity.tokenIdentifier,
       });
     }
 
@@ -130,12 +140,8 @@ export const markMigrationComplete = mutation({
 export const needsMigration = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const identity = await requireAuthIdentity(ctx);
+    const settings = await getSettingsByIdentity(ctx, identity);
 
     // If no settings exist or migration not marked complete, migration is needed
     return !settings?.localStorageMigrated;

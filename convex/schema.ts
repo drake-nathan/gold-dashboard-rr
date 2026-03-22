@@ -269,11 +269,14 @@ export default defineSchema({
       }),
     ),
     updatedAt: v.number(),
-    userId: v.string(), // Clerk user ID
+    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
+    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
     valuePerPoint: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_user_and_card", ["userId", "cardId"]),
+    .index("by_user_and_card", ["userId", "cardId"])
+    .index("by_user_token_identifier", ["userTokenIdentifier"])
+    .index("by_user_token_identifier_and_card", ["userTokenIdentifier", "cardId"]),
 
   // User settings - calculator preferences and migration tracking
   userSettings: defineTable({
@@ -282,6 +285,9 @@ export default defineSchema({
     lastSelectedCardId: v.optional(v.string()), // Last selected credit card
     localStorageMigrated: v.boolean(), // Track if migration from localStorage is complete
     updatedAt: v.number(),
-    userId: v.string(), // Clerk user ID
-  }).index("by_user", ["userId"]),
+    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
+    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_token_identifier", ["userTokenIdentifier"]),
 });
