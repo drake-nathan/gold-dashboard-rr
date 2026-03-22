@@ -29,6 +29,7 @@
   "dependencies": {
     "@clerk/react-router": "3.0.6",
     "@clerk/ui": "1.2.3",
+    "@convex-dev/migrations": "0.3.1",
     "@convex-dev/stripe": "0.1.4",
     "@hookform/resolvers": "5.2.2",
     "@radix-ui/react-alert-dialog": "1.1.15",
