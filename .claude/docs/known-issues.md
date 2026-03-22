@@ -12,6 +12,7 @@ In React Router 7 with SSR:
 2. **Client-side** (Layout component): Receives env var from loader via `useRouteLoaderData("root")`
 
 This pattern exists because:
+
 - Layout runs during SSR (where `import.meta.env` isn't available)
 - Layout is also used in error boundaries (where loader data may be undefined)
 - Safe fallback used for error scenarios

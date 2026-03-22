@@ -10,7 +10,7 @@ source .env.local && docker build \
   .
 ```
 
-VITE_ variables must be passed as build args (embedded in client bundle at build time).
+VITE\_ variables must be passed as build args (embedded in client bundle at build time).
 
 ## Run
 
@@ -32,7 +32,7 @@ source .env.local && docker run -d \
   gold-dashboard:test
 ```
 
-VITE_ vars needed at BOTH build and runtime (client bundle + server-side loaders).
+VITE\_ vars needed at BOTH build and runtime (client bundle + server-side loaders).
 
 ## Test
 

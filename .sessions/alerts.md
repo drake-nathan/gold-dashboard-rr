@@ -72,6 +72,7 @@ Add alerts to Dashboard.Gold that notify users when:
 ### Code Review Follow-ups (2026-02-08)
 
 Completed:
+
 - [x] P0: Bounded retry policy for failed alert sends
 - [x] P1: Unified threshold math semantics across dashboard + alerts
 - [x] P1: Clean `useSubscription` data flow typing
@@ -81,6 +82,7 @@ Completed:
 - [x] P3: CI deploy guard for missing `CONVEX_DEPLOY_KEY`
 
 Outstanding:
+
 - [ ] P2: Extract shared `UserButton` configuration (desktop + mobile header menus)
 
 ---

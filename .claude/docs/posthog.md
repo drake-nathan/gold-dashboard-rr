@@ -15,6 +15,7 @@ VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 These must be present in:
+
 1. `.env.local` (dev)
 2. Railway env vars (prod)
 3. Dockerfile build args (lines 18-19, 23-24)
@@ -22,6 +23,7 @@ These must be present in:
 ## SSR Configuration
 
 In `vite.config.ts`:
+
 ```typescript
 ssr: {
   noExternal: ["posthog-js/react"],  // NOT @posthog/react
