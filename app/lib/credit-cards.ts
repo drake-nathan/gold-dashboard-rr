@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { CREDIT_CARD_PRESETS } from "../../lib/credit-card-presets";
+
 // Zod schema for signup bonus
 export const signupBonusSchema = z.object({
   enabled: z.boolean().default(false),
@@ -37,58 +39,9 @@ export type CreditCardsStorage = z.infer<typeof creditCardsStorageSchema>;
 
 // Default preset cards with the new structure
 // Costco card is first as it's the most relevant default for this dashboard
-export const DEFAULT_PRESET_CARDS: CreditCard[] = [
-  {
-    cardType: "cashback",
-    id: "costco-visa",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Citi",
-    name: "Costco Anywhere Visa",
-    pointsPerDollar: 2,
-    valuePerPoint: 0.01, // 1 cent per point
-  },
-  {
-    cardType: "travel",
-    id: "freedom-unlimited",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Chase",
-    name: "Freedom Unlimited",
-    pointsPerDollar: 1.5,
-    valuePerPoint: 0.021, // 2.1 cents per point
-  },
-  {
-    cardType: "travel",
-    id: "venture-x",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Capital One",
-    name: "Capital One Venture X",
-    pointsPerDollar: 2,
-    valuePerPoint: 0.0185, // 1.85 cents per point
-  },
-  {
-    cardType: "travel",
-    id: "strata-premier",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Citi",
-    name: "Strata Premier",
-    pointsPerDollar: 1,
-    valuePerPoint: 0.019, // 1.9 cents per point
-  },
-  {
-    cardType: "cashback",
-    id: "robinhood",
-    isCustomizable: true,
-    isPreset: true,
-    issuer: "Robinhood",
-    name: "Robinhood Gold Card",
-    pointsPerDollar: 3,
-    valuePerPoint: 0.01, // 1 cent per point (flat cashback)
-  },
-];
+export const DEFAULT_PRESET_CARDS: CreditCard[] = CREDIT_CARD_PRESETS.map((card) =>
+  ({ ...card}),
+);
 
 // Build signupBonus object for saving (form values → persistable object)
 // Always returns a defined SignupBonus so Convex mutations receive the value

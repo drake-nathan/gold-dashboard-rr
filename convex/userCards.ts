@@ -7,6 +7,7 @@
 
 import { v } from "convex/values";
 
+import { CREDIT_CARD_PRESETS } from "../lib/credit-card-presets";
 import { type MutationCtx, type QueryCtx, mutation, query } from "./_generated/server";
 
 // Helper to get authenticated user ID (throws if not authenticated)
@@ -24,6 +25,10 @@ const signupBonusValidator = v.object({
   pointsBonus: v.number(),
   spendRequirement: v.number(),
 });
+
+const presetCardsById = new Map<string, (typeof CREDIT_CARD_PRESETS)[number]>(
+  CREDIT_CARD_PRESETS.map((card) => [card.id, card]),
+);
 
 /**
  * Get all credit cards for the authenticated user
@@ -127,25 +132,27 @@ export const updateCard = mutation({
     const now = Date.now();
 
     if (!card) {
-      // Upsert: card doesn't exist yet (e.g., default preset being customized for first time)
-      // Requires name and cardType at minimum to create
-      if (!args.name || !args.cardType) {
+      const presetDefaults = args.isPreset ? presetCardsById.get(args.cardId) : undefined;
+
+      // Upsert: card doesn't exist yet (e.g., default preset being customized for first time).
+      // Preset cards can be hydrated from canonical defaults; non-presets must provide creation data.
+      if (!presetDefaults && (!args.name || !args.cardType)) {
         throw new Error(`Card ${args.cardId} not found`);
       }
 
       await ctx.db.insert("userCreditCards", {
         cardId: args.cardId,
-        cardType: args.cardType,
+        cardType: args.cardType ?? presetDefaults?.cardType ?? "cashback",
         createdAt: now,
-        isCustomizable: args.isCustomizable ?? false,
-        isPreset: args.isPreset ?? false,
-        issuer: args.issuer,
-        name: args.name,
-        pointsPerDollar: args.pointsPerDollar ?? 0,
+        isCustomizable: args.isCustomizable ?? presetDefaults?.isCustomizable ?? false,
+        isPreset: args.isPreset ?? presetDefaults?.isPreset ?? false,
+        issuer: args.issuer ?? presetDefaults?.issuer,
+        name: args.name ?? presetDefaults?.name ?? args.cardId,
+        pointsPerDollar: args.pointsPerDollar ?? presetDefaults?.pointsPerDollar ?? 0,
         signupBonus: args.signupBonus,
         updatedAt: now,
         userId,
-        valuePerPoint: args.valuePerPoint ?? 0,
+        valuePerPoint: args.valuePerPoint ?? presetDefaults?.valuePerPoint ?? 0,
       });
 
       return { success: true };

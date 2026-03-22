@@ -277,6 +277,40 @@ test("updateCard upserts when preset card not yet in Convex", async () => {
   });
 });
 
+test("updateCard upserts preset cards from canonical defaults when update is partial", async () => {
+  const t = convexTest(schema, modules);
+  const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });
+
+  await asUser.mutation(api.userCards.updateCard, {
+    cardId: "venture-x",
+    isPreset: true,
+    signupBonus: {
+      enabled: true,
+      pointsBonus: 90_000,
+      spendRequirement: 6000,
+    },
+  });
+
+  const cards = await asUser.query(api.userCards.getUserCards, {});
+
+  expect(cards).toHaveLength(1);
+  expect(cards[0]).toMatchObject({
+    cardType: "travel",
+    id: "venture-x",
+    isCustomizable: true,
+    isPreset: true,
+    issuer: "Capital One",
+    name: "Capital One Venture X",
+    pointsPerDollar: 2,
+    valuePerPoint: 0.0185,
+  });
+  expect(cards[0].signupBonus).toStrictEqual({
+    enabled: true,
+    pointsBonus: 90_000,
+    spendRequirement: 6000,
+  });
+});
+
 // ============================================================================
 // deleteCard Tests
 // ============================================================================
