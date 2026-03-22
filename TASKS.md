@@ -2,25 +2,34 @@
 
 ## Now
 
-- Reconcile docs/tooling drift (README mentions ESLint/Prettier, market-prices doc references twelve.ts)
-- Split `app/routes/alerts.tsx` into smaller modules
-- Split `app/components/admin/*` oversized files
-- Split `app/hooks/use-user-credit-cards.ts`
+- Convex auth + query hardening → [.epics/convex-auth-query-hardening.md]
+- Reconcile docs/tooling drift → [.tasks/docs-source-of-truth.md]
+- Split `app/routes/alerts.tsx` into smaller modules → [.tasks/split-alerts-route.md]
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 
 ## Epics
 
+- **Convex Auth + Query Hardening** — [.epics/convex-auth-query-hardening.md] — In Progress
 - **Alerts & Subscriptions** — [.epics/alerts.md] — In Progress
 - **Filters & Sorting** — weight, brand, price range, "only deals" toggle — Not Started
 
 ## Up Next
 
 - Convex integration tests (alerts CRUD, stripe webhooks)
-- Performance guardrails for `dashboard.getStats` and admin queries
+- Performance guardrails for `dashboard.getStats` and admin queries → [.tasks/query-performance-guardrails.md]
 - UI component tests: swipeable-card, filters, calculator-controls
 - Audit Convex auth: `identity.subject` vs `identity.tokenIdentifier` for user-owned records
 - Replace alerts page dependency on `dashboard.getStats` with a minimal product-options query
 - Guard unbounded `.collect()` in `dashboard.getStats` and `admin.getProductsForReview`
+- Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
+- Add composite indexes for alert batching/history lookup paths
+- Add route tests for dashboard filters, alerts flows, and admin access → [.tasks/route-test-coverage.md]
+- Add Convex tests for Stripe checkout, portal, and subscription status flows
+- Replace hardcoded dashboard OG/site URL with the canonical site URL source
+- Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
+- Audit unconditional `checkIsAdmin` queries in header/mobile navigation → [.tasks/admin-check-callsite-audit.md]
+- Split `app/components/admin/*` oversized files → [.tasks/split-admin-components.md]
+- Split `app/hooks/use-user-credit-cards.ts` → [.tasks/split-user-credit-cards-hook.md]
 - Loading skeletons instead of empty states
 - Error boundaries around product grid
 - Placeholder images for missing product thumbnails
@@ -34,6 +43,9 @@
 
 ## Later
 
+- Split `convex/alerts.ts` by public API, batching, and email delivery concerns
+- Split `convex/admin.ts` by review queries, matching workflows, and Pure ingestion
+- Split `app/components/card-manager-drawer.tsx` and `app/components/admin/product-match-card.tsx`
 - Price history charts for individual products
 - Stock availability notifications (extend alerts system)
 - Trending products (best spreads over time)
@@ -47,3 +59,7 @@
 - Multi-currency support
 - Credit card: more presets, color/icon customization, bulk import/export
 
+## Testing
+
+- Browser coverage for route modules excluded from coverage (`dashboard`, `alerts`, `admin`, `root`)
+- Performance regression fixtures for `dashboard.getStats` and admin review query shapes

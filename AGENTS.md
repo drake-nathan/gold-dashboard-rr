@@ -7,6 +7,7 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 ### System
 
 - **`TASKS.md`** — Priority-ordered index. Sections: Now / Epics / Up Next / Later / Testing. No checkboxes — items are present (pending) or deleted (done). Git history is the archive.
+- **`.tasks/<name>.md`** — Lightweight task briefs for medium-complexity work. Use when a one-line `TASKS.md` item needs scope, non-goals, acceptance criteria, or key-file pointers.
 - **`.epics/<name>.md`** — Detailed plans for multi-session efforts. Each starts with a status header. Delete when the epic ships.
 - **`CLAUDE.md`** — Symlink to `AGENTS.md` for Claude Code compatibility.
 
@@ -25,8 +26,17 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
    - Prune completed phases — keep only current and upcoming work.
    - Link from the Epics section in `TASKS.md`.
    - Delete the file when the epic ships.
-4. **Blocked items**: Append `(blocked: reason)` to any item that can't progress. Don't delete — the block may clear.
-5. **No archive directories.** Git history preserves everything.
+4. **Task brief files** (`.tasks/<name>.md`):
+   - Create for medium-complexity work when a one-line task would be too ambiguous for a cold-start agent.
+   - Always start with: `> **Status:** Ready | In Progress | Blocked`
+   - Include: Goal, Scope, Non-goals, Acceptance Criteria, Key Files, Notes.
+   - Link from `TASKS.md` using `→ [.tasks/<name>.md]`.
+   - Delete the file when the task ships or is absorbed into an epic.
+5. **Read linked context before starting:**
+   - If a `TASKS.md` item links to `.tasks/*.md`, read that brief before making changes.
+   - If a `TASKS.md` item links to `.epics/*.md`, read the epic before making changes.
+6. **Blocked items**: Append `(blocked: reason)` to any item that can't progress. Don't delete — the block may clear.
+7. **No archive directories.** Git history preserves everything.
 
 ## Tech Stack
 
