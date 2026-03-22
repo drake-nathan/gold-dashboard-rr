@@ -39,9 +39,8 @@ export type CreditCardsStorage = z.infer<typeof creditCardsStorageSchema>;
 
 // Default preset cards with the new structure
 // Costco card is first as it's the most relevant default for this dashboard
-export const DEFAULT_PRESET_CARDS: CreditCard[] = CREDIT_CARD_PRESETS.map((card) =>
-  ({ ...card}),
-);
+// oxlint-disable-next-line oxc/no-map-spread -- defensive copies required (copy-on-write)
+export const DEFAULT_PRESET_CARDS: CreditCard[] = CREDIT_CARD_PRESETS.map((card) => ({ ...card }));
 
 // Build signupBonus object for saving (form values → persistable object)
 // Always returns a defined SignupBonus so Convex mutations receive the value
