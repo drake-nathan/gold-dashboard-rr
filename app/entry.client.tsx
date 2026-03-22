@@ -3,11 +3,20 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
+import { shouldDropClientEvent } from "@/lib/sentry-event-filters";
+
 const consoleLogging = Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] });
 const tracing = Sentry.reactRouterTracingIntegration({ useInstrumentationAPI: true });
 const browserProfiling = Sentry.browserProfilingIntegration();
 
 Sentry.init({
+  beforeSend: (event) => {
+    if (shouldDropClientEvent(event)) {
+      return null;
+    }
+
+    return event;
+  },
   dsn: import.meta.env.VITE_SENTRY_DSN,
   enableLogs: true,
   environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? import.meta.env.MODE,
