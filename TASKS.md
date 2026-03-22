@@ -3,7 +3,9 @@
 ## Now
 
 - Reconcile docs/tooling drift (README mentions ESLint/Prettier, market-prices doc references twelve.ts)
-- Split oversized UI modules, starting with `app/routes/alerts.tsx`, then `app/components/admin/*`, then `app/hooks/use-user-credit-cards.ts`
+- Split `app/routes/alerts.tsx` into smaller modules
+- Split `app/components/admin/*` oversized files
+- Split `app/hooks/use-user-credit-cards.ts`
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 
 ## Epics
@@ -13,6 +15,9 @@
 
 ## Up Next
 
+- Convex integration tests (alerts CRUD, stripe webhooks)
+- Performance guardrails for `dashboard.getStats` and admin queries
+- UI component tests: swipeable-card, filters, calculator-controls
 - Audit Convex auth: `identity.subject` vs `identity.tokenIdentifier` for user-owned records
 - Replace alerts page dependency on `dashboard.getStats` with a minimal product-options query
 - Guard unbounded `.collect()` in `dashboard.getStats` and `admin.getProductsForReview`
@@ -42,10 +47,3 @@
 - Multi-currency support
 - Credit card: more presets, color/icon customization, bulk import/export
 
-## Testing
-
-- Coverage goal: 15-20% overall, 70%+ business logic
-- Browser tests for /alerts UI flows, dashboard, admin regression
-- Convex integration tests (alerts CRUD, stripe webhooks)
-- Performance guardrails for `dashboard.getStats` and admin queries
-- UI component tests: swipeable-card, filters, calculator-controls

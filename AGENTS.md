@@ -25,7 +25,8 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
    - Prune completed phases — keep only current and upcoming work.
    - Link from the Epics section in `TASKS.md`.
    - Delete the file when the epic ships.
-4. **No archive directories.** Git history preserves everything.
+4. **Blocked items**: Append `(blocked: reason)` to any item that can't progress. Don't delete — the block may clear.
+5. **No archive directories.** Git history preserves everything.
 
 ## Tech Stack
 
@@ -85,6 +86,7 @@ bun run format:check # Check formatting without fixing
 - **Browser tests**: `.browser.test.tsx` — Vitest Browser Mode with Playwright
 - **Convex tests**: `.convex.test.ts` — Convex function tests with `convexTest()` helper
 - **Pattern**: Simple `test()` calls (not `describe/it`). Focus on critical paths and edge cases.
+- **Coverage target**: 15–20% overall, 70%+ business logic
 - See `docs/browser-testing.md` for browser test API details
 
 ## Convex
