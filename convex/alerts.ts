@@ -12,8 +12,13 @@ import {
   mutation,
   query,
 } from "./_generated/server";
+import {
+  type AuthUserIdentity,
+  getIdentityLookupKeys,
+  requireAuthIdentity,
+} from "./lib/authIdentity";
 import { type AlertPauseReason, getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
-import { getUserAlertEntitlements } from "./subscriptionEntitlements";
+import { getUserAlertEntitlements, listSubscriptionsForIdentity } from "./subscriptionEntitlements";
 
 const alertTypeValidator = v.union(v.literal("sku"), v.literal("category"), v.literal("threshold"));
 
@@ -58,6 +63,7 @@ interface TriggeredAlertProduct {
 
 type AlertBatchDoc = Doc<"alertBatches">;
 type AlertHistoryDoc = Doc<"alertHistory">;
+type AlertDoc = Doc<"alerts">;
 
 interface AlertDigestContent {
   html: string;
@@ -91,13 +97,149 @@ interface SendAlertEmailSuccess {
 }
 
 type SendAlertEmailResult = SendAlertEmailFailure | SendAlertEmailSuccess;
+type UserOwnedRecord = {
+  userId: string;
+  userTokenIdentifier?: string;
+};
 
-const requireAuth = async (ctx: MutationCtx | QueryCtx): Promise<string> => {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Authentication required");
+const listAlertsForIdentity = async (
+  ctx: MutationCtx | QueryCtx,
+  identity: AuthUserIdentity,
+): Promise<AlertDoc[]> => {
+  const alertsByToken = await ctx.db
+    .query("alerts")
+    .withIndex("by_user_token_identifier", (q) =>
+      q.eq("userTokenIdentifier", identity.tokenIdentifier),
+    )
+    .collect();
+
+  const alertsBySubject =
+    identity.subject === identity.tokenIdentifier
+      ? []
+      : await ctx.db
+          .query("alerts")
+          .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+          .collect();
+
+  const alerts = new Map(alertsBySubject.map((alert) => [alert._id, alert]));
+  for (const alert of alertsByToken) {
+    alerts.set(alert._id, alert);
   }
-  return identity.subject;
+
+  return [...alerts.values()];
+};
+
+const getEnabledAlertsForIdentity = async (
+  ctx: MutationCtx,
+  identity: AuthUserIdentity,
+): Promise<AlertDoc[]> => {
+  const alertsByToken = await ctx.db
+    .query("alerts")
+    .withIndex("by_user_token_identifier_and_enabled", (q) =>
+      q.eq("userTokenIdentifier", identity.tokenIdentifier).eq("enabled", true),
+    )
+    .collect();
+
+  const alertsBySubject =
+    identity.subject === identity.tokenIdentifier
+      ? []
+      : await ctx.db
+          .query("alerts")
+          .withIndex("by_user_and_enabled", (q) =>
+            q.eq("userId", identity.subject).eq("enabled", true),
+          )
+          .collect();
+
+  const alerts = new Map(alertsBySubject.map((alert) => [alert._id, alert]));
+  for (const alert of alertsByToken) {
+    alerts.set(alert._id, alert);
+  }
+
+  return [...alerts.values()];
+};
+
+const getEnabledAlertsForUserKey = async (
+  ctx: MutationCtx,
+  userKey: string,
+): Promise<AlertDoc[]> => {
+  const alertsByLegacyKey = await ctx.db
+    .query("alerts")
+    .withIndex("by_user_and_enabled", (q) => q.eq("userId", userKey).eq("enabled", true))
+    .collect();
+
+  const alertsByTokenKey = await ctx.db
+    .query("alerts")
+    .withIndex("by_user_token_identifier_and_enabled", (q) =>
+      q.eq("userTokenIdentifier", userKey).eq("enabled", true),
+    )
+    .collect();
+
+  const alerts = new Map(alertsByLegacyKey.map((alert) => [alert._id, alert]));
+  for (const alert of alertsByTokenKey) {
+    alerts.set(alert._id, alert);
+  }
+
+  return [...alerts.values()];
+};
+
+const isAlertOwnedByIdentity = (alert: AlertDoc, identity: AuthUserIdentity): boolean =>
+  getIdentityLookupKeys(identity).includes(alert.userTokenIdentifier ?? alert.userId);
+
+const getStoredUserKey = (record: UserOwnedRecord): string =>
+  record.userTokenIdentifier ?? record.userId;
+
+const getStoredIdentity = (record: UserOwnedRecord): AuthUserIdentity => ({
+  subject: record.userId,
+  tokenIdentifier: record.userTokenIdentifier ?? record.userId,
+});
+
+const listAlertHistoryForUserKey = async (
+  ctx: MutationCtx,
+  userKey: string,
+): Promise<AlertHistoryDoc[]> => {
+  const historyByLegacyKey = await ctx.db
+    .query("alertHistory")
+    .withIndex("by_user", (q) => q.eq("userId", userKey))
+    .collect();
+
+  const historyByTokenKey = await ctx.db
+    .query("alertHistory")
+    .withIndex("by_user_token_identifier", (q) => q.eq("userTokenIdentifier", userKey))
+    .collect();
+
+  const history = new Map(historyByLegacyKey.map((entry) => [entry._id, entry]));
+  for (const entry of historyByTokenKey) {
+    history.set(entry._id, entry);
+  }
+
+  return [...history.values()];
+};
+
+const findPendingBatchForUserKey = async (
+  ctx: MutationCtx,
+  userKey: string,
+  scheduleTime: number,
+): Promise<AlertBatchDoc | null> => {
+  const batchesByLegacyKey = await ctx.db
+    .query("alertBatches")
+    .withIndex("by_user", (q) => q.eq("userId", userKey))
+    .collect();
+
+  const batchesByTokenKey = await ctx.db
+    .query("alertBatches")
+    .withIndex("by_user_token_identifier", (q) => q.eq("userTokenIdentifier", userKey))
+    .collect();
+
+  const batches = new Map(batchesByLegacyKey.map((batch) => [batch._id, batch]));
+  for (const batch of batchesByTokenKey) {
+    batches.set(batch._id, batch);
+  }
+
+  return (
+    [...batches.values()].find(
+      (batch) => batch.scheduledFor === scheduleTime && batch.sent === false,
+    ) ?? null
+  );
 };
 
 const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
@@ -138,13 +280,10 @@ const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
 
 const pauseEnabledAlertsForUser = async (
   ctx: MutationCtx,
-  userId: string,
+  userKey: string,
   pauseReason: AlertPauseReason,
 ): Promise<number> => {
-  const enabledAlerts = await ctx.db
-    .query("alerts")
-    .withIndex("by_user_and_enabled", (q) => q.eq("userId", userId).eq("enabled", true))
-    .collect();
+  const enabledAlerts = await getEnabledAlertsForUserKey(ctx, userKey);
 
   const pausedAt = Date.now();
   for (const alert of enabledAlerts) {
@@ -153,6 +292,28 @@ const pauseEnabledAlertsForUser = async (
       pausedAt,
       pauseReason,
       updatedAt: pausedAt,
+    });
+  }
+
+  return enabledAlerts.length;
+};
+
+const pauseEnabledAlertsForIdentity = async (
+  ctx: MutationCtx,
+  identity: AuthUserIdentity,
+  pauseReason: AlertPauseReason,
+): Promise<number> => {
+  const enabledAlerts = await getEnabledAlertsForIdentity(ctx, identity);
+
+  const pausedAt = Date.now();
+  for (const alert of enabledAlerts) {
+    await ctx.db.patch(alert._id, {
+      enabled: false,
+      pausedAt,
+      pauseReason,
+      updatedAt: pausedAt,
+      userId: identity.subject,
+      userTokenIdentifier: identity.tokenIdentifier,
     });
   }
 
@@ -193,19 +354,15 @@ const getPendingAlertHistoryForBatch = async (
   const windowStart = batch.createdAt - windowMs;
   const windowEnd = batch.createdAt + windowMs;
   const alertIds = new Set(batch.alerts.map((entry) => entry.alertId));
-  const pendingHistory = await ctx.db
-    .query("alertHistory")
-    .withIndex("by_user", (q) => q.eq("userId", batch.userId))
-    .filter((q) =>
-      q.and(
-        q.eq(q.field("notificationSent"), false),
-        q.gte(q.field("triggeredAt"), windowStart),
-        q.lte(q.field("triggeredAt"), windowEnd),
-      ),
-    )
-    .collect();
+  const pendingHistory = await listAlertHistoryForUserKey(ctx, getStoredUserKey(batch));
 
-  return pendingHistory.filter((history) => alertIds.has(history.alertId));
+  return pendingHistory.filter(
+    (history) =>
+      history.notificationSent === false &&
+      history.triggeredAt >= windowStart &&
+      history.triggeredAt <= windowEnd &&
+      alertIds.has(history.alertId),
+  );
 };
 
 const isAlertInCooldown = (
@@ -427,11 +584,9 @@ const getAlertDeliveryConfig = (): AlertDeliveryConfig | null => {
 
 const resolveAlertRecipientEmail = async (
   ctx: ActionCtx,
-  userId: string,
+  identity: AuthUserIdentity | string,
 ): Promise<string | undefined> => {
-  const subscriptions = await ctx.runQuery(components.stripe.public.listSubscriptionsByUserId, {
-    userId,
-  });
+  const subscriptions = await listSubscriptionsForIdentity(ctx, identity);
 
   let subscription: (typeof subscriptions)[number] | undefined;
   for (const candidate of subscriptions) {
@@ -550,12 +705,8 @@ const sendAlertEmail = async (
 export const getAlerts = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-
-    const alerts = await ctx.db
-      .query("alerts")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+    const identity = await requireAuthIdentity(ctx);
+    const alerts = await listAlertsForIdentity(ctx, identity);
 
     return alerts.toSorted((a, b) => b.updatedAt - a.updatedAt);
   },
@@ -576,8 +727,8 @@ export const createAlert = mutation({
     weight: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
-    const { alertEntitlements } = await getUserAlertEntitlements(ctx, userId);
+    const identity = await requireAuthIdentity(ctx);
+    const { alertEntitlements } = await getUserAlertEntitlements(ctx, identity);
 
     if (!alertEntitlements.canCreateAlerts) {
       throw new Error("Pro subscription required to create alerts");
@@ -604,7 +755,8 @@ export const createAlert = mutation({
       triggerOn: args.triggerOn,
       type: args.type,
       updatedAt: now,
-      userId,
+      userId: identity.subject,
+      userTokenIdentifier: identity.tokenIdentifier,
       ...(args.aboveSpotThreshold !== undefined && {
         aboveSpotThreshold: args.aboveSpotThreshold,
       }),
@@ -637,14 +789,14 @@ export const updateAlert = mutation({
     weight: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
 
     const alert = await ctx.db.get(args.alertId);
-    if (alert?.userId !== userId) {
+    if (!alert || !isAlertOwnedByIdentity(alert, identity)) {
       throw new Error("Alert not found");
     }
 
-    const { alertEntitlements } = await getUserAlertEntitlements(ctx, userId);
+    const { alertEntitlements } = await getUserAlertEntitlements(ctx, identity);
     if (!alertEntitlements.canManageAlerts) {
       throw new Error("Subscription required to manage alerts");
     }
@@ -672,6 +824,8 @@ export const updateAlert = mutation({
     const updatedAt = Date.now();
     const updates: Record<string, boolean | number | string | undefined> = {
       updatedAt,
+      userId: identity.subject,
+      userTokenIdentifier: identity.tokenIdentifier,
     };
 
     if (args.aboveSpotThreshold !== undefined) {
@@ -707,10 +861,10 @@ export const deleteAlert = mutation({
     alertId: v.id("alerts"),
   },
   handler: async (ctx, args) => {
-    const userId = await requireAuth(ctx);
+    const identity = await requireAuthIdentity(ctx);
 
     const alert = await ctx.db.get(args.alertId);
-    if (alert?.userId !== userId) {
+    if (!alert || !isAlertOwnedByIdentity(alert, identity)) {
       throw new Error("Alert not found");
     }
 
@@ -728,14 +882,18 @@ export const deleteAlert = mutation({
 export const syncAlertPauseState = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-    const { alertEntitlements } = await getUserAlertEntitlements(ctx, userId);
+    const identity = await requireAuthIdentity(ctx);
+    const { alertEntitlements } = await getUserAlertEntitlements(ctx, identity);
 
     if (!alertEntitlements.shouldPauseEnabledAlerts || !alertEntitlements.pauseReason) {
       return { pausedCount: 0, success: true };
     }
 
-    const pausedCount = await pauseEnabledAlertsForUser(ctx, userId, alertEntitlements.pauseReason);
+    const pausedCount = await pauseEnabledAlertsForIdentity(
+      ctx,
+      identity,
+      alertEntitlements.pauseReason,
+    );
 
     return {
       pausedCount,
@@ -940,11 +1098,12 @@ export const evaluateAlertsForProducts = internalMutation({
         continue;
       }
 
-      let canSendAlerts = sendEntitlementByUser.get(alert.userId);
+      const userKey = getStoredUserKey(alert);
+      let canSendAlerts = sendEntitlementByUser.get(userKey);
       if (canSendAlerts === undefined) {
-        const { alertEntitlements } = await getUserAlertEntitlements(ctx, alert.userId);
+        const { alertEntitlements } = await getUserAlertEntitlements(ctx, getStoredIdentity(alert));
         canSendAlerts = alertEntitlements.canSendAlerts;
-        sendEntitlementByUser.set(alert.userId, canSendAlerts);
+        sendEntitlementByUser.set(userKey, canSendAlerts);
       }
 
       if (!canSendAlerts) {
@@ -1052,6 +1211,7 @@ export const evaluateAlertsForProducts = internalMutation({
         products: mergedTriggeredProducts,
         triggeredAt: timestamp,
         userId: alert.userId,
+        userTokenIdentifier: alert.userTokenIdentifier,
       });
 
       await ctx.db.patch(alert._id, {
@@ -1059,16 +1219,10 @@ export const evaluateAlertsForProducts = internalMutation({
         updatedAt: timestamp,
       });
 
-      let pendingBatch = pendingBatchByUser.get(alert.userId);
+      let pendingBatch = pendingBatchByUser.get(userKey);
       if (pendingBatch === undefined) {
-        pendingBatch = await ctx.db
-          .query("alertBatches")
-          .withIndex("by_user", (q) => q.eq("userId", alert.userId))
-          .filter((q) =>
-            q.and(q.eq(q.field("scheduledFor"), scheduleTime), q.eq(q.field("sent"), false)),
-          )
-          .first();
-        pendingBatchByUser.set(alert.userId, pendingBatch ?? null);
+        pendingBatch = await findPendingBatchForUserKey(ctx, userKey, scheduleTime);
+        pendingBatchByUser.set(userKey, pendingBatch ?? null);
       }
 
       const alertPayload = {
@@ -1095,7 +1249,7 @@ export const evaluateAlertsForProducts = internalMutation({
         }
 
         await ctx.db.patch(pendingBatch._id, { alerts: nextAlerts });
-        pendingBatchByUser.set(alert.userId, {
+        pendingBatchByUser.set(userKey, {
           ...pendingBatch,
           alerts: nextAlerts,
         });
@@ -1107,11 +1261,12 @@ export const evaluateAlertsForProducts = internalMutation({
           sendAttempts: 0,
           sent: false,
           userId: alert.userId,
+          userTokenIdentifier: alert.userTokenIdentifier,
         });
 
         queueInserts++;
         const insertedBatch = await ctx.db.get(batchId);
-        pendingBatchByUser.set(alert.userId, insertedBatch);
+        pendingBatchByUser.set(userKey, insertedBatch);
       }
     }
 
@@ -1350,15 +1505,17 @@ export const processPendingAlertBatches: ReturnType<typeof internalAction> = int
 
     for (const batch of pendingBatches) {
       considered++;
+      const userKey = getStoredUserKey(batch);
 
-      const permissions = await ctx.runQuery(internal.alerts.getUserSendAlertPermissions, {
-        userId: batch.userId,
-      });
-      if (!permissions.alertEntitlements.canSendAlerts) {
+      const { alertEntitlements, subscriptionStatus } = await getUserAlertEntitlements(
+        ctx,
+        getStoredIdentity(batch),
+      );
+      if (!alertEntitlements.canSendAlerts) {
         skippedByEntitlement++;
         await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
           batchId: batch._id,
-          errorMessage: `Skipped: subscription status ${permissions.status} cannot receive alerts`,
+          errorMessage: `Skipped: subscription status ${subscriptionStatus.status} cannot receive alerts`,
           processedAt: now,
           status: "skipped",
         });
@@ -1377,7 +1534,7 @@ export const processPendingAlertBatches: ReturnType<typeof internalAction> = int
         continue;
       }
 
-      const recipientEmail = await resolveAlertRecipientEmail(ctx, batch.userId);
+      const recipientEmail = await resolveAlertRecipientEmail(ctx, getStoredIdentity(batch));
       if (!recipientEmail) {
         skippedByMissingRecipient++;
         await ctx.runMutation(internal.alerts.markAlertBatchProcessed, {
@@ -1389,7 +1546,7 @@ export const processPendingAlertBatches: ReturnType<typeof internalAction> = int
         continue;
       }
 
-      const unsubscribeUrl = await buildUnsubscribeUrl(batch.userId);
+      const unsubscribeUrl = await buildUnsubscribeUrl(userKey);
       const digest = formatAlertDigest(batch, deliveryConfig.siteUrl, unsubscribeUrl ?? undefined);
       const sendResult = await sendAlertEmail(deliveryConfig, {
         html: digest.html,

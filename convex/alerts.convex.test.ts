@@ -72,6 +72,36 @@ test("getAlerts requires authentication", async () => {
   await expect(t.query(api.alerts.getAlerts, {})).rejects.toThrow("Authentication required");
 });
 
+test("getAlerts reads token-identifier keyed alerts after subject changes", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("alerts", {
+      cooldownMinutes: 60,
+      createdAt: Date.now(),
+      enabled: true,
+      name: "Token-owned alert",
+      productId: "sku-token-1",
+      triggerOn: "in_stock",
+      type: "sku",
+      updatedAt: Date.now(),
+      userId: "old_subject",
+      userTokenIdentifier: "clerk|alerts-user",
+    });
+  });
+
+  const asUser = t.withIdentity({
+    name: "Alerts User",
+    subject: "new_subject",
+    tokenIdentifier: "clerk|alerts-user",
+  });
+
+  const alerts = await asUser.query(api.alerts.getAlerts, {});
+
+  expect(alerts).toHaveLength(1);
+  expect(alerts[0].name).toBe("Token-owned alert");
+});
+
 test("createAlert blocks free users without active subscription", async () => {
   const t = withStripeComponent();
   const asUser = t.withIdentity({ name: "Free User", subject: "user_free" });
@@ -306,6 +336,44 @@ test("pauseAlertsForUser is idempotent when user has no enabled alerts", async (
   expect(result).toMatchObject({ pausedCount: 0, success: true });
 });
 
+test("pauseAlertsForUser supports token-identifier keyed alerts", async () => {
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    const now = Date.now();
+    await ctx.db.insert("alerts", {
+      cooldownMinutes: 60,
+      createdAt: now,
+      enabled: true,
+      name: "Token keyed alert",
+      productId: "sku-token-pause",
+      triggerOn: "in_stock",
+      type: "sku",
+      updatedAt: now,
+      userId: "legacy_subject",
+      userTokenIdentifier: "clerk|pause-user",
+    });
+  });
+
+  const result = await t.mutation(internal.alerts.pauseAlertsForUser, {
+    pauseReason: "billing_hold",
+    userId: "clerk|pause-user",
+  });
+
+  expect(result).toMatchObject({ pausedCount: 1, success: true });
+
+  await t.run(async (ctx) => {
+    const alerts = await ctx.db
+      .query("alerts")
+      .withIndex("by_user_token_identifier", (q) => q.eq("userTokenIdentifier", "clerk|pause-user"))
+      .collect();
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0].enabled).toBeFalsy();
+    expect(alerts[0].pauseReason).toBe("billing_hold");
+  });
+});
+
 test("subscription transition active -> past_due -> active pauses once", async () => {
   const t = convexTest(schema, modules);
 
@@ -427,6 +495,54 @@ test("deleteAlert only allows deleting own alerts", async () => {
 
   await expect(asUser1.mutation(api.alerts.deleteAlert, { alertId })).resolves.toMatchObject({
     success: true,
+  });
+});
+
+test("updateAlert backfills token identifier on legacy alerts", async () => {
+  const t = withStripeComponent();
+  const now = Date.now();
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: now + 86_400_000,
+    metadata: { userId: "user_legacy_alert" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_legacy_alert",
+    stripeSubscriptionId: "sub_legacy_alert",
+  });
+
+  const alertId = await t.run(async (ctx) =>
+    ctx.db.insert("alerts", {
+      cooldownMinutes: 60,
+      createdAt: now,
+      enabled: true,
+      name: "Legacy alert",
+      productId: "sku-legacy",
+      triggerOn: "in_stock",
+      type: "sku",
+      updatedAt: now,
+      userId: "user_legacy_alert",
+    }),
+  );
+
+  const asUser = t.withIdentity({
+    name: "Legacy Alerts User",
+    subject: "user_legacy_alert",
+    tokenIdentifier: "clerk|legacy-alert-user",
+  });
+
+  await asUser.mutation(api.alerts.updateAlert, {
+    alertId,
+    name: "Updated legacy alert",
+  });
+
+  await t.run(async (ctx) => {
+    const alert = await ctx.db.get(alertId);
+
+    expect(alert?.name).toBe("Updated legacy alert");
+    expect(alert?.userTokenIdentifier).toBe("clerk|legacy-alert-user");
   });
 });
 

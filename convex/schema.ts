@@ -25,9 +25,11 @@ export default defineSchema({
     sentAt: v.optional(v.number()),
     terminalFailureAt: v.optional(v.number()),
     userId: v.string(),
+    userTokenIdentifier: v.optional(v.string()),
   })
     .index("by_pending", ["sent", "scheduledFor"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_token_identifier", ["userTokenIdentifier"]),
 
   alertHistory: defineTable({
     alertId: v.id("alerts"),
@@ -42,9 +44,11 @@ export default defineSchema({
     ),
     triggeredAt: v.number(),
     userId: v.string(),
+    userTokenIdentifier: v.optional(v.string()),
   })
     .index("by_alert", ["alertId"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_user_token_identifier", ["userTokenIdentifier"]),
 
   alerts: defineTable({
     // Threshold alert config
@@ -72,12 +76,15 @@ export default defineSchema({
 
     type: v.union(v.literal("sku"), v.literal("category"), v.literal("threshold")),
     updatedAt: v.number(),
-    userId: v.string(), // Clerk user ID
+    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
+    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
     weight: v.optional(v.number()), // Troy ounces
   })
     .index("by_enabled", ["enabled"])
     .index("by_user", ["userId"])
-    .index("by_user_and_enabled", ["userId", "enabled"]),
+    .index("by_user_and_enabled", ["userId", "enabled"])
+    .index("by_user_token_identifier", ["userTokenIdentifier"])
+    .index("by_user_token_identifier_and_enabled", ["userTokenIdentifier", "enabled"]),
 
   // Collect Pure spot prices and bids
   collectPurePrices: defineTable({
