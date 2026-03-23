@@ -2,14 +2,12 @@
 
 ## Now
 
-- Convex auth + query hardening → [.epics/convex-auth-query-hardening.md]
 - Reconcile docs/tooling drift → [.tasks/docs-source-of-truth.md]
 - Split `app/routes/alerts.tsx` into smaller modules → [.tasks/split-alerts-route.md]
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 
 ## Epics
 
-- **Convex Auth + Query Hardening** — [.epics/convex-auth-query-hardening.md] — In Progress
 - **Alerts & Subscriptions** — [.epics/alerts.md] — In Progress
 - **Environment Config Hardening** — [.epics/environment-config-hardening.md] — In Progress
 - **Filters & Sorting** — weight, brand, price range, "only deals" toggle — Not Started
@@ -54,4 +52,3 @@
 ## Testing
 
 - Browser coverage for route modules excluded from coverage (`dashboard`, `alerts`, `admin`, `root`)
-- Performance regression fixtures for dashboard summary/product queries and admin review query shapes
