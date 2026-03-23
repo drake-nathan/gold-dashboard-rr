@@ -2,7 +2,6 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
 
-import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CreditCard } from "@/lib/credit-cards";
+import type { CalculatorSettings } from "@/types/calculator";
 
 import { CalculatorControls } from "./calculator-controls";
 import { FilterControls } from "./filter-controls";

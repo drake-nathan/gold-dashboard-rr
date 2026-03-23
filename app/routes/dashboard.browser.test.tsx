@@ -24,7 +24,7 @@ vi.mock("usehooks-ts", () => ({
   useIsClient: () => true,
 }));
 
-vi.mock("@/hooks/use-calculator-settings", () => ({
+vi.mock("./dashboard/use-calculator-settings", () => ({
   useCalculatorSettings: () => ({
     availableCards: [],
     calculatorSettings: {
@@ -53,11 +53,11 @@ vi.mock("@/components/ui/error-boundary", () => ({
   ErrorBoundary: ({ children }: { children: ReactNode }) => children,
 }));
 
-vi.mock("@/components/dashboard/stats", () => ({
+vi.mock("./dashboard/stats", () => ({
   Stats: () => <div>Stats</div>,
 }));
 
-vi.mock("@/components/dashboard/filters", () => ({
+vi.mock("./dashboard/filters", () => ({
   Filters: ({
     metalFilter,
     setMetalFilter,
@@ -105,17 +105,17 @@ vi.mock("@/components/dashboard/filters", () => ({
   ),
 }));
 
-vi.mock("@/components/product-card", () => ({
+vi.mock("./dashboard/product-card", () => ({
   ProductCard: ({ product }: { product: { productId: string } }) => (
     <div data-testid="product-card">{product.productId}</div>
   ),
 }));
 
-vi.mock("@/components/calculator-settings-drawer", () => ({
+vi.mock("./dashboard/calculator-settings-drawer", () => ({
   CalculatorSettingsDrawer: () => null,
 }));
 
-vi.mock("@/components/card-manager-drawer", () => ({
+vi.mock("./dashboard/card-manager-drawer", () => ({
   CardManagerDrawer: () => null,
 }));
 

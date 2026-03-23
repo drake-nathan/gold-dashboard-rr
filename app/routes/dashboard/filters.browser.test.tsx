@@ -1,9 +1,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
-import type { CalculatorSettings } from "@/types/calculator";
 import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import type { CalculatorSettings } from "@/types/calculator";
 
 import { Filters } from "./filters";
 

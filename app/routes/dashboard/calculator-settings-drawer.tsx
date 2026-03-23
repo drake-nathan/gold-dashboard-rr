@@ -1,6 +1,5 @@
 import { ExternalLink, Info, Settings2 } from "lucide-react";
 
-import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,6 +19,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { calculateCashbackPercentage } from "@/lib/credit-cards";
 import { formatTierDisplay, PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import type { CalculatorSettings } from "@/types/calculator";
 
 interface CalculatorSettingsDrawerProps {
   calculatorSettings: CalculatorSettings;

@@ -30,7 +30,7 @@ vi.mock("@/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 
-vi.mock("@/components/subscription", () => ({
+vi.mock("@/components/subscription/upgrade-button", () => ({
   UpgradeButton: () => <button type="button">Upgrade to Pro</button>,
 }));
 

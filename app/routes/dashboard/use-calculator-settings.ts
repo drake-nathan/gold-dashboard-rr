@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 
-import type { CalculatorSettings } from "@/types/calculator";
 import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
-import { useQuantityStorage } from "./use-quantity-storage";
 import { useUserCreditCards } from "@/hooks/use-user-credit-cards";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import {
@@ -11,6 +9,9 @@ import {
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import type { CalculatorSettings } from "@/types/calculator";
+
+import { useQuantityStorage } from "./use-quantity-storage";
 
 export interface CalculatorSettingsState {
   availableCards: CreditCard[];

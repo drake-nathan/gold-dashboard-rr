@@ -2,7 +2,7 @@ import { Show, useClerk } from "@clerk/react-router";
 import { Bell } from "lucide-react";
 import { Link } from "react-router";
 
-import { UpgradeButton } from "@/components/subscription";
+import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
 
 export const HeaderActions = () => {

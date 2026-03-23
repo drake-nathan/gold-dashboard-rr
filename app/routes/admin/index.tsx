@@ -7,9 +7,8 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { AdminDashboard } from "./admin-dashboard";
-
 import type { Route } from "./+types/index";
+import { AdminDashboard } from "./admin-dashboard";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "Admin - Dashboard.Gold" }, { content: "noindex, nofollow", name: "robots" }];

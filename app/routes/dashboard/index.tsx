@@ -17,6 +17,7 @@ import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary
 import type { DashboardStats } from "@/types/dashboard";
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "@/utils/product-filters";
 
+import type { Route } from "./+types/index";
 import { CalculatorSettingsDrawer } from "./calculator-settings-drawer";
 import { CardManagerDrawer } from "./card-manager-drawer";
 import type { MetalFilter, SortOption } from "./filter-types";
@@ -24,8 +25,6 @@ import { Filters } from "./filters";
 import { ProductCard } from "./product-card";
 import { Stats } from "./stats";
 import { useCalculatorSettings } from "./use-calculator-settings";
-
-import type { Route } from "./+types/index";
 
 export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "@/types/dashboard";
 
@@ -297,6 +296,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   const summary = usePreloadedQuery(loaderData.preloadedSummary);
   const products = usePreloadedQuery(loaderData.preloadedProducts);
 
+  // oxlint-disable-next-line eslint/no-unnecessary-condition -- defense-in-depth: runtime data could be undefined despite type
   if (!summary || !products) {
     return (
       <div className="flex h-screen items-center justify-center">

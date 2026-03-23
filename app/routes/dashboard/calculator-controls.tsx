@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -27,13 +26,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MAX_QUANTITY } from "./use-quantity-storage";
 import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,
   calculateTotalCashbackPercentage,
   type CreditCard,
 } from "@/lib/credit-cards";
+import type { CalculatorSettings } from "@/types/calculator";
+
+import { MAX_QUANTITY } from "./use-quantity-storage";
 
 interface CalculatorControlsProps {
   availableCards: CreditCard[];

@@ -39,7 +39,8 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
    - If a `TASKS.md` item links to `.tasks/*.md`, read that brief before making changes.
    - If a `TASKS.md` item links to `.epics/*.md`, read the epic before making changes.
 6. **Blocked items**: Append `(blocked: reason)` to any item that can't progress. Don't delete — the block may clear.
-7. **No archive directories.** Git history preserves everything.
+7. **Verify the baseline continuously:** Run `bun run ci` after each completed step or patch so regressions are caught immediately and the branch stays close to green.
+8. **No archive directories.** Git history preserves everything.
 
 ## Tech Stack
 

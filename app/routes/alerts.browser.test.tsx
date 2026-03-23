@@ -91,7 +91,7 @@ vi.mock("@/components/footer", () => ({
   Footer: () => <div>Footer</div>,
 }));
 
-vi.mock("@/components/subscription", () => ({
+vi.mock("@/components/subscription/upgrade-button", () => ({
   UpgradeButton: () => <button type="button">Upgrade</button>,
 }));
 

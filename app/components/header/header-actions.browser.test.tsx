@@ -25,7 +25,7 @@ vi.mock("convex/react", () => ({
   useQuery: (...args: unknown[]) => useQueryMock(...args),
 }));
 
-vi.mock("@/components/subscription", () => ({
+vi.mock("@/components/subscription/upgrade-button", () => ({
   UpgradeButton: () => <button type="button">Upgrade to Pro</button>,
 }));
 

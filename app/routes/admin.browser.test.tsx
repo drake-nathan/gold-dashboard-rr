@@ -18,7 +18,7 @@ vi.mock("@clerk/react-router", () => ({
   useUser: () => mockUserState,
 }));
 
-vi.mock("@/components/admin/admin-dashboard", () => ({
+vi.mock("./admin/admin-dashboard", () => ({
   AdminDashboard: () => <div>Admin Dashboard</div>,
 }));
 

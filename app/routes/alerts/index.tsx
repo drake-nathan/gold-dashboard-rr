@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { UpgradeButton } from "@/components/subscription";
+import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";

@@ -5,13 +5,13 @@ import { useIsClient } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import type { CalculatorSettings } from "@/types/calculator";
+import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
 import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/format-time";
 import { calculateProductMetrics } from "@/utils/product-calculations";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
-import type { CalculatorSettings } from "@/types/calculator";
-import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
 import { PriceRow } from "./price-row";
 
 interface ProductCardProps {
