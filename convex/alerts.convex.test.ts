@@ -141,6 +141,65 @@ test("createAlert allows active subscribers", async () => {
   expect(result).toMatchObject({ success: true });
 });
 
+test("alerts CRUD lifecycle persists changes for the owning user", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    name: "CRUD User",
+    subject: "user_alert_crud",
+    tokenIdentifier: "clerk|alert-crud",
+  });
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Date.now() + 86_400_000,
+    metadata: { userId: "clerk|alert-crud" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_alert_crud",
+    stripeSubscriptionId: "sub_alert_crud",
+  });
+
+  const created = await asUser.mutation(api.alerts.createAlert, {
+    cooldownMinutes: 30,
+    enabled: true,
+    name: "Original alert",
+    productId: "sku-crud-1",
+    triggerOn: "in_stock",
+    type: "sku",
+  });
+
+  await asUser.mutation(api.alerts.updateAlert, {
+    alertId: created.alertId,
+    cooldownMinutes: 90,
+    enabled: false,
+    name: "Updated alert",
+    productId: "sku-crud-2",
+    triggerOn: "price_drop",
+    type: "sku",
+  });
+
+  const alertsAfterUpdate = await asUser.query(api.alerts.getAlerts, {});
+
+  expect(alertsAfterUpdate).toHaveLength(1);
+  expect(alertsAfterUpdate[0]).toMatchObject({
+    cooldownMinutes: 90,
+    enabled: false,
+    name: "Updated alert",
+    productId: "sku-crud-2",
+    triggerOn: "price_drop",
+    type: "sku",
+    userId: "user_alert_crud",
+    userTokenIdentifier: "clerk|alert-crud",
+  });
+
+  await asUser.mutation(api.alerts.deleteAlert, {
+    alertId: created.alertId,
+  });
+
+  await expect(asUser.query(api.alerts.getAlerts, {})).resolves.toStrictEqual([]);
+});
+
 test("updateAlert blocks re-enable when subscription becomes past_due", async () => {
   const t = withStripeComponent();
   const asUser = t.withIdentity({ name: "Pro User", subject: "user_pro_2" });

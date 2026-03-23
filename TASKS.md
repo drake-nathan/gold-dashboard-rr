@@ -15,7 +15,6 @@
 
 ## Up Next
 
-- Convex integration tests (alerts CRUD, stripe webhooks)
 - UI component tests: swipeable-card, filters, calculator-controls
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
 - Add composite indexes for alert batching/history lookup paths
