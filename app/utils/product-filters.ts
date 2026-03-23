@@ -1,10 +1,5 @@
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
-
+import type { ProductCardData } from "@/components/dashboard";
 import type { MetalFilter, SortOption } from "@/components/dashboard/filter-types";
-
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
-export type ProductCardData = GetStats["goldProducts"]["bestSpread"][number];
 
 export interface FilterOptions {
   metalFilter: MetalFilter;

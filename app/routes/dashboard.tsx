@@ -62,23 +62,32 @@ export const loader = async () => {
 
   // Use Convex's preloadQuery - this creates a payload that includes both the data
   // and the query metadata needed for client-side subscription
-  const preloadedStats = await preloadQuery(
-    api.dashboard.getStats,
-    {},
-    {
-      url: convexUrl,
-    },
-  );
+  const [preloadedSummary, preloadedProducts] = await Promise.all([
+    preloadQuery(
+      api.dashboard.getDashboardSummary,
+      {},
+      {
+        url: convexUrl,
+      },
+    ),
+    preloadQuery(
+      api.dashboard.getDashboardProducts,
+      {},
+      {
+        url: convexUrl,
+      },
+    ),
+  ]);
 
-  return { preloadedStats };
+  return { preloadedProducts, preloadedSummary };
 };
 
 const Home = ({ loaderData }: Route.ComponentProps) => {
-  const stats = usePreloadedQuery(loaderData.preloadedStats);
-  // const stats = useQuery(api.dashboard.getStats);
+  const summary = usePreloadedQuery(loaderData.preloadedSummary);
+  const products = usePreloadedQuery(loaderData.preloadedProducts);
 
   // oxlint-disable-next-line eslint/no-unnecessary-condition -- defense-in-depth: runtime data could be undefined despite type
-  if (!stats) {
+  if (!summary || !products) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -90,6 +99,18 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
       </div>
     );
   }
+
+  const stats = {
+    ...summary,
+    goldProducts: {
+      ...summary.goldProducts,
+      bestSpread: products.goldProducts,
+    },
+    silverProducts: {
+      ...summary.silverProducts,
+      bestSpread: products.silverProducts,
+    },
+  };
 
   return <Dashboard stats={stats} />;
 };

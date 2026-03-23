@@ -9,17 +9,22 @@ import { api } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./test.setup";
 
-test("dashboard.getStats returns empty data when database is empty", async () => {
+test("dashboard queries return empty data when database is empty", async () => {
   const t = convexTest(schema, modules);
 
-  const stats = await t.query(api.dashboard.getStats, {});
+  const summary = await t.query(api.dashboard.getDashboardSummary, {});
+  const products = await t.query(api.dashboard.getDashboardProducts, {});
 
-  expect(stats).toMatchObject({
-    goldProducts: { bestSpread: [], inStock: 0, total: 0 },
+  expect(summary).toMatchObject({
+    goldProducts: { inStock: 0, total: 0 },
     lastFetch: null,
     marketPrices: [],
-    silverProducts: { bestSpread: [], inStock: 0, total: 0 },
+    silverProducts: { inStock: 0, total: 0 },
     totalProducts: 0,
+  });
+  expect(products).toMatchObject({
+    goldProducts: [],
+    silverProducts: [],
   });
 });
 
@@ -56,16 +61,17 @@ test("direct DB access works for inserting and querying data", async () => {
   });
 
   // Query and verify the data
-  const stats = await t.query(api.dashboard.getStats, {});
+  const summary = await t.query(api.dashboard.getDashboardSummary, {});
+  const products = await t.query(api.dashboard.getDashboardProducts, {});
 
-  expect(stats.totalProducts).toBe(1);
-  expect(stats.goldProducts.total).toBe(1);
-  expect(stats.goldProducts.inStock).toBe(1);
-  expect(stats.goldProducts.bestSpread).toHaveLength(1);
-  expect(stats.goldProducts.bestSpread[0].name).toBe("Test Gold Bar");
+  expect(summary.totalProducts).toBe(1);
+  expect(summary.goldProducts.total).toBe(1);
+  expect(summary.goldProducts.inStock).toBe(1);
+  expect(products.goldProducts).toHaveLength(1);
+  expect(products.goldProducts[0].name).toBe("Test Gold Bar");
 });
 
-test("dashboard.getStats uses related pure products when present", async () => {
+test("dashboard products use related pure products when present", async () => {
   const t = convexTest(schema, modules);
 
   await t.run(async (ctx) => {
@@ -112,9 +118,9 @@ test("dashboard.getStats uses related pure products when present", async () => {
     });
   });
 
-  const stats = await t.query(api.dashboard.getStats, {});
+  const products = await t.query(api.dashboard.getDashboardProducts, {});
 
-  expect(stats.goldProducts.bestSpread[0]).toMatchObject({
+  expect(products.goldProducts[0]).toMatchObject({
     pureBidPrice: 2450,
     pureProductName: "1 oz Gold Bar",
     spread: 50,

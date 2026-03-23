@@ -19,12 +19,23 @@ import type { MetalFilter, SortOption } from "./filter-types";
 import { Filters } from "./filters";
 import { Stats } from "./stats";
 
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
+type DashboardSummary = FunctionReturnType<typeof api.dashboard.getDashboardSummary>;
+type DashboardProducts = FunctionReturnType<typeof api.dashboard.getDashboardProducts>;
 
-export type ProductCardData = GetStats["goldProducts"]["bestSpread"][number];
+export interface DashboardStats extends DashboardSummary {
+  goldProducts: DashboardSummary["goldProducts"] & {
+    bestSpread: DashboardProducts["goldProducts"];
+  };
+  silverProducts: DashboardSummary["silverProducts"] & {
+    bestSpread: DashboardProducts["silverProducts"];
+  };
+}
+
+export type DashboardMarketPrice = DashboardSummary["marketPrices"][number];
+export type ProductCardData = DashboardProducts["goldProducts"][number];
 
 interface DashboardProps {
-  stats: GetStats;
+  stats: DashboardStats;
 }
 
 export const Dashboard = ({ stats }: DashboardProps) => {

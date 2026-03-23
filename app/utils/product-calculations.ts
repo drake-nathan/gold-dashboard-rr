@@ -1,13 +1,7 @@
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
-
 import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { ProductCardData } from "@/components/dashboard";
+import type { DashboardMarketPrice, ProductCardData } from "@/components/dashboard";
 import { calculateCashbackPercentage, calculateSubBonusPercentage } from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
-
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
-type MarketPrices = GetStats["marketPrices"];
 
 export interface ProductCalculations {
   // Above spot calculation
@@ -63,7 +57,7 @@ const COSTCO_EXECUTIVE_PERCENTAGE = 0.02; // 2%
 
 export const calculateProductMetrics = (
   product: ProductCardData,
-  marketPrices: MarketPrices,
+  marketPrices: DashboardMarketPrice[],
   calculatorSettings: CalculatorSettings,
 ): ProductCalculations => {
   const quantity = calculatorSettings.quantity;

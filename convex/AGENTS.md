@@ -23,7 +23,7 @@ Dev and prod share the same Convex deployment. Be cautious with:
 ## Key Files
 
 - `convex/schema.ts` — Database schema (source of truth)
-- `convex/dashboard.ts` — Consolidated getStats query (all dashboard data in one query)
+- `convex/dashboard.ts` — Dashboard summary and product queries
 - `convex/costco.ts` — Costco product fetch (Search + Product APIs)
 - `convex/pure.ts` — Collect Pure API integration (bid prices, spot prices)
 - `convex/twelve.ts` — Gold API market prices (XAU, XAG, BTC)

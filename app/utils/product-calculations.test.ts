@@ -1,18 +1,13 @@
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { expect, test } from "vitest";
 
 import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { ProductCardData } from "@/components/dashboard";
+import type { DashboardMarketPrice, ProductCardData } from "@/components/dashboard";
 import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
 import { calculateProductMetrics } from "./product-calculations";
 
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
-type MarketPrices = GetStats["marketPrices"];
-
-const mockMarketPrices: MarketPrices = [
+const mockMarketPrices: DashboardMarketPrice[] = [
   {
     assetType: "gold",
     currentPrice: 2000,

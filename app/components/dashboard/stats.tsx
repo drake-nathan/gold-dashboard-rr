@@ -1,14 +1,11 @@
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { useIsClient } from "usehooks-ts";
 
+import type { DashboardMarketPrice, DashboardStats } from ".";
 import { StatCard } from "./stat-card";
 
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
-
 interface StatsProps {
-  lastFetch: GetStats["lastFetch"];
-  marketPrices: GetStats["marketPrices"];
+  lastFetch: DashboardStats["lastFetch"];
+  marketPrices: DashboardMarketPrice[];
   totalCashbackPercentage: number;
 }
 

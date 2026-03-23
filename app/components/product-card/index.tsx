@@ -1,5 +1,3 @@
-import type { api } from "convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { BellPlus, ExternalLink } from "lucide-react";
 import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
@@ -13,14 +11,12 @@ import { calculateProductMetrics } from "@/utils/product-calculations";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
 import type { CalculatorSettings } from "../calculator-settings";
-import type { ProductCardData } from "../dashboard";
+import type { DashboardMarketPrice, ProductCardData } from "../dashboard";
 import { PriceRow } from "./price-row";
-
-type GetStats = FunctionReturnType<typeof api.dashboard.getStats>;
 
 interface ProductCardProps {
   calculatorSettings: CalculatorSettings;
-  marketPrices: GetStats["marketPrices"];
+  marketPrices: DashboardMarketPrice[];
   product: ProductCardData;
 }
 
