@@ -80,6 +80,7 @@
     "convex-test": "0.0.43",
     "eslint-plugin-perfectionist": "5.7.0",
     "happy-dom": "20.8.4",
+    "listr2": "10.2.1",
     "oxfmt": "0.41.0",
     "oxlint": "1.56.0",
     "oxlint-tsgolint": "0.17.1",

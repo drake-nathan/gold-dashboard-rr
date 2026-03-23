@@ -1,61 +1,73 @@
 import { spawn } from "node:child_process";
 
-const resetColor = "\u001B[0m";
-const boldText = "\u001B[1m";
-const dimText = "\u001B[2m";
-const greenText = "\u001B[32m";
-const redText = "\u001B[31m";
+import { Listr } from "listr2";
 
 const tasks = [
-  "format",
-  "lint:fix",
-  "typecheck",
-  "typecheck:convex",
-  "test",
-  "test:convex",
-  "test:browser",
+  { script: "format", title: "Format" },
+  { script: "lint:fix", title: "Lint" },
+  { script: "typecheck", title: "Typecheck" },
+  { script: "typecheck:convex", title: "Typecheck (Convex)" },
+  { script: "test", title: "Test" },
+  { script: "test:convex", title: "Test (Convex)" },
+  { script: "test:browser", title: "Test (Browser)" },
 ];
 
-const runTask = (script: string): Promise<boolean> => {
-  return new Promise((resolve) => {
+const runScript = (script: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
     const child = spawn("bun", ["run", script], {
       shell: true,
-      stdio: "inherit",
+      stdio: ["inherit", "pipe", "pipe"],
+    });
+    child.stdout.on("data", (d: Buffer) => {
+      chunks.push(d);
+    });
+    child.stderr.on("data", (d: Buffer) => {
+      chunks.push(d);
     });
     child.on("close", (code) => {
-      resolve(code === 0);
+      const output = Buffer.concat(chunks).toString();
+      if (code === 0) resolve(output);
+      else reject(new Error(output));
     });
   });
 };
 
-const run = async () => {
-  console.log(`\n${boldText}====== CI CHECKS ======${resetColor}\n`);
-  const startTime = Date.now();
-  const failed: string[] = [];
+const runner = new Listr(
+  tasks.map(({ script, title }) => ({
+    options: { persistentOutput: true },
+    task: async (_ctx: unknown, task: { output: string }) => {
+      try {
+        await runScript(script);
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        task.output = msg;
+        throw new Error(`${title} failed`, { cause: error });
+      }
+    },
+    title: `${title}  —  bun run ${script}`,
+  })),
+  {
+    concurrent: false,
+    exitOnError: true,
+    rendererOptions: {
+      collapseErrors: false,
+      collapseSubtasks: false,
+    },
+  },
+);
 
-  for (const task of tasks) {
-    console.log(`\n${boldText}> bun run ${task}${resetColor}`);
-    const ok = await runTask(task);
-    if (!ok) {
-      failed.push(task);
-      break;
-    }
-  }
+const startTime = Date.now();
 
+try {
+  await runner.run();
+} catch {
+  // listr2 already rendered the error
+} finally {
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  console.log(`\n${dimText}Total: ${duration}s${resetColor}`);
+  console.log(`\n  Total: ${duration}s`);
+}
 
-  if (failed.length === 0) {
-    console.log(`${boldText}${greenText}All checks passed.${resetColor}`);
-  } else {
-    console.log(`${boldText}${redText}Failed: ${failed.join(", ")}${resetColor}`);
-    process.exit(1);
-  }
-};
-
-process.on("SIGINT", () => {
-  console.log(`\n${redText}Interrupted${resetColor}`);
+if (runner.errors.length > 0) {
   process.exit(1);
-});
-
-void run();
+}
