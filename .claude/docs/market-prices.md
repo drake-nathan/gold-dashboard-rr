@@ -2,7 +2,7 @@
 
 ## Gold API Integration
 
-**File**: `convex/twelve.ts` (legacy filename from Twelve Data migration)
+**File**: `convex/marketPrices.ts`
 
 ### Assets Tracked
 

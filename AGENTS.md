@@ -65,10 +65,11 @@ This project follows React's "You Might Not Need an Effect" guidelines:
 See **[docs/environment-variables.md](docs/environment-variables.md)** for the full env var reference.
 
 - **Separate dev/prod environments**: Local dev and Railway Preview use Convex Dev deployment; Railway Prod uses Convex Prod
+- Dev data is seeded from production snapshots with `bun run snapshot:sync`; production-only fetch crons stay behind `ENABLE_CRONS=true`
 - Clerk and Stripe have separate test/prod API keys
 - API keys (Unwrangle, Pure, Gold API, FMP) are shared across environments
 - Cron jobs only run in Convex prod (`ENABLE_CRONS=true`)
-- Environment variables validated with `@t3-oss/env-core`: client vars in `app/env.client.ts`, server vars in `app/env.server.ts`
+- Frontend env vars currently fail fast at module scope in `app/root.tsx` and route modules; Convex functions read `process.env` directly. The canonical shared env schema is still tracked separately in `TASKS.md`.
 
 ## Scripts
 
@@ -76,7 +77,7 @@ See **[docs/environment-variables.md](docs/environment-variables.md)** for the f
 bun install          # Install dependencies
 bun run dev          # Start dev server
 bun run build        # Production build
-bun run ci           # Run all checks (format, lint, typecheck) in parallel
+bun run ci           # Run format/lint/typecheck/tests with the CI runner
 bun run test         # Run unit tests (one-off)
 bun run test:watch   # Run tests in watch mode
 bun run test:convex  # Run Convex function tests
@@ -90,7 +91,7 @@ bun run format:check # Check formatting without fixing
 
 ### CI
 
-`bun run ci` runs all checks via Turbo for parallel execution: `format`, `lint:fix`, `typecheck`, `typecheck:convex`, `test`, `test:convex`, `test:browser`. Use before pushing to main.
+`bun run ci` runs `format`, `lint:fix`, `typecheck`, `typecheck:convex`, `test`, `test:convex`, and `test:browser` sequentially via `scripts/ci.ts` (Listr fail-fast runner). Use before pushing to main.
 
 ## Testing
 
@@ -108,7 +109,7 @@ Convex is the backend/database. See `convex/AGENTS.md` for architecture and key 
 
 **Authentication**: Clerk auth is enabled in production.
 
-**Important**: Dev and prod share the same Convex deployment — be cautious with schema changes, data mutations, and cron jobs.
+**Important**: Dev and prod use separate Convex deployments. Be cautious with schema changes, data mutations, snapshot imports, and cron configuration.
 
 Always read `convex/_generated/ai/guidelines.md` before writing Convex code — it contains rules that override training data assumptions.
 

@@ -2,7 +2,6 @@
 
 ## Now
 
-- Reconcile docs/tooling drift → [.tasks/docs-source-of-truth.md]
 - Split `app/routes/alerts.tsx` into smaller modules → [.tasks/split-alerts-route.md]
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 

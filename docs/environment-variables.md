@@ -222,13 +222,18 @@ This means VITE\_ variables must be passed:
 - As **build args** in Dockerfile (for client bundle)
 - As **runtime env vars** in Railway (for SSR)
 
-Current VITE\_ build args in Dockerfile:
+Current client/build-time args in Dockerfile:
 
 - `VITE_CONVEX_URL`
 - `VITE_CLERK_PUBLISHABLE_KEY`
 - `VITE_PUBLIC_POSTHOG_KEY`
 - `VITE_PUBLIC_POSTHOG_HOST`
 - `VITE_ADSENSE_CLIENT_ID`
+- `VITE_SENTRY_DSN`
+- `VITE_SENTRY_ENVIRONMENT`
+- `SENTRY_AUTH_TOKEN`
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
 
 ### Convex Environment Variables
 

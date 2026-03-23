@@ -39,33 +39,37 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
 
 2. **Configure environment variables**:
 
-   Copy `.env.template` to `.env.local` and fill in your values:
+   Copy `.env.template` to `.env.local` and fill in the values used by the local app process:
 
    ```bash
    cp .env.template .env.local
    ```
 
-   Required variables:
+   Required in `.env.local`:
    - `VITE_CONVEX_URL` - Your Convex deployment URL
-   - `CONVEX_DEPLOYMENT` - Your Convex deployment (e.g., `prod:your-deployment-name`)
-   - `UNWRANGLE_API_KEY` - Costco product data
-   - `PURE_API_KEY` - Collect Pure bid prices
-   - `GOLD_API_KEY` - Market prices (XAU/XAG/BTC)
-   - `FMP_API_KEY` - S&P 500 data
+   - `CONVEX_DEPLOYMENT` - Your Convex deployment (typically `dev:...` locally, `prod:...` in production)
+   - `VITE_CLERK_PUBLISHABLE_KEY` - Clerk frontend key
+   - `VITE_PUBLIC_POSTHOG_KEY` / `VITE_PUBLIC_POSTHOG_HOST` - PostHog client config
+
+   Convex-only secrets such as `UNWRANGLE_API_KEY`, `PURE_API_KEY`, `GOLD_API_KEY`, and `FMP_API_KEY`
+   are read by Convex functions from the target deployment's environment, not from `.env.local`.
 
 3. **Set up Convex**:
 
-   **Important**: This project uses a single **production-only** Convex deployment for both dev and prod. This avoids duplicating product mappings and wasting API calls on market data.
+   This project uses separate Convex deployments:
+   - Local dev and Railway Preview point at Convex dev
+   - Railway production points at Convex prod
+   - Production data can be copied into dev with `bun run snapshot:sync`
 
    ```bash
-   # Deploy schema and functions to production
-   CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex deploy
+   # Deploy schema and functions to your dev deployment first
+   CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex deploy
 
-   # Set environment variables in Convex
-   CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex env set UNWRANGLE_API_KEY "your-key"
-   CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex env set PURE_API_KEY "your-key"
-   CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex env set GOLD_API_KEY "your-key"
-   CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex env set FMP_API_KEY "your-key"
+   # Set Convex env vars on each deployment that needs them
+   CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex env set UNWRANGLE_API_KEY "your-key"
+   CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex env set PURE_API_KEY "your-key"
+   CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex env set GOLD_API_KEY "your-key"
+   CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex env set FMP_API_KEY "your-key"
    ```
 
 4. **Start development server**:
@@ -78,28 +82,31 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
 
 ### Initial Data Population
 
-Cron jobs will automatically fetch data, but you can manually trigger initial fetches:
+For local development, seed Convex dev from a production snapshot:
 
 ```bash
-# Fetch Collect Pure products and prices
-CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex run pure:fetchNewData
-
-# Fetch Costco products (will auto-match to Pure products)
-CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex run costco:fetchNewData
-
-# Fetch market prices
-CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex run twelve:fetchMarketPrices
-CONVEX_DEPLOYMENT=prod:your-deployment-name npx convex run fmp:fetchSP500
+bun run snapshot:sync
 ```
+
+Most data refreshes are driven by Convex cron jobs and internal-only functions, so they are not meant to
+be triggered directly from the CLI. For local/dev environments, use snapshots as the default bootstrap.
+
+```bash
+# Public manual refresh wrapper for Pure prices, when needed
+CONVEX_DEPLOYMENT=dev:your-dev-deployment npx convex run pure:manualFetchPrices
+```
+
+There is no public CLI wrapper today for the Costco, Gold API, or FMP refresh jobs.
 
 ## Available Scripts
 
 ```bash
 bun run dev          # Start dev server with HMR
 bun run build        # Production build
+bun run ci           # Run the full CI suite locally
 bun run typecheck    # Run TypeScript checks
-bun run lint         # Run ESLint
-bun run format       # Format with Prettier
+bun run lint         # Run OXLint
+bun run format       # Format with oxfmt
 ```
 
 ## Convex Functions
@@ -123,9 +130,11 @@ The backend uses Convex for serverless functions and real-time data:
 │   ├── dashboard.ts       # Main query for frontend
 │   ├── costco.ts          # Costco product fetching
 │   ├── pure.ts            # Collect Pure integration
-│   ├── twelve.ts          # Gold API integration (XAU/XAG/BTC)
+│   ├── marketPrices.ts    # Gold API integration (XAU/XAG/BTC)
 │   ├── fmp.ts             # FMP API integration (S&P 500)
 │   └── crons.ts           # Scheduled jobs
+├── scripts/
+│   └── snapshot.ts        # Prod-to-dev Convex snapshot sync tooling
 ├── CLAUDE.md              # Project documentation (symlinked as AGENTS.md)
 └── TASKS.md               # Task board
 ```
