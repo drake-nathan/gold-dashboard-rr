@@ -1,5 +1,9 @@
 import { query } from "./_generated/server";
 
+const maxDashboardProductsPerMetal = 1000;
+const maxDashboardMarketPrices = 10;
+const maxDashboardPureProductsPerMetal = 1000;
+
 const toDashboardMarketPrice = (price: {
   assetType: "bitcoin" | "gold" | "silver" | "sp500";
   currentPrice: number;
@@ -54,18 +58,41 @@ const toDashboardProduct = (
   url: product.url,
 });
 
+const takeBounded = async <T>(
+  load: () => Promise<T[]>,
+  limit: number,
+  label: string,
+): Promise<T[]> => {
+  const results = await load();
+  if (results.length > limit) {
+    throw new Error(`${label} exceeded safe query limit of ${limit}`);
+  }
+  return results;
+};
+
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const goldProducts = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_metal_type", (q) => q.eq("metalType", "gold"))
-      .take(1000);
-
-    const silverProducts = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_metal_type", (q) => q.eq("metalType", "silver"))
-      .take(1000);
+    const [goldProducts, silverProducts] = await Promise.all([
+      takeBounded(
+        () =>
+          ctx.db
+            .query("costcoProducts")
+            .withIndex("by_metal_type", (q) => q.eq("metalType", "gold"))
+            .take(maxDashboardProductsPerMetal + 1),
+        maxDashboardProductsPerMetal,
+        "dashboard gold products",
+      ),
+      takeBounded(
+        () =>
+          ctx.db
+            .query("costcoProducts")
+            .withIndex("by_metal_type", (q) => q.eq("metalType", "silver"))
+            .take(maxDashboardProductsPerMetal + 1),
+        maxDashboardProductsPerMetal,
+        "dashboard silver products",
+      ),
+    ]);
 
     const lastFetch = await ctx.db
       .query("fetchRuns")
@@ -86,11 +113,33 @@ export const getStats = query({
       .order("desc")
       .first();
 
-    // Get market prices from Gold API
-    const marketPrices = await ctx.db.query("marketPrices").collect();
+    const marketPrices = await takeBounded(
+      () => ctx.db.query("marketPrices").take(maxDashboardMarketPrices + 1),
+      maxDashboardMarketPrices,
+      "dashboard market prices",
+    );
 
-    // Get all Pure products for JOIN
-    const pureProducts = await ctx.db.query("pureProducts").collect();
+    const pureProductsByMetal = await Promise.all([
+      takeBounded(
+        () =>
+          ctx.db
+            .query("pureProducts")
+            .withIndex("by_metal_type", (q) => q.eq("metalType", "gold"))
+            .take(maxDashboardPureProductsPerMetal + 1),
+        maxDashboardPureProductsPerMetal,
+        "dashboard gold pure products",
+      ),
+      takeBounded(
+        () =>
+          ctx.db
+            .query("pureProducts")
+            .withIndex("by_metal_type", (q) => q.eq("metalType", "silver"))
+            .take(maxDashboardPureProductsPerMetal + 1),
+        maxDashboardPureProductsPerMetal,
+        "dashboard silver pure products",
+      ),
+    ]);
+    const pureProducts = pureProductsByMetal.flat();
     const pureProductsMap = new Map(pureProducts.map((p) => [p.pureProductId, p]));
 
     // Helper to calculate spread with fresh Pure bid prices

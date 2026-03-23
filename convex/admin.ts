@@ -27,6 +27,20 @@ const getAuthenticatedTokenIdentifier = async (ctx: QueryCtx): Promise<null | st
   return identity?.tokenIdentifier ?? null;
 };
 
+const maxAdminReviewProducts = 2000;
+
+const takeBounded = async <T>(
+  load: () => Promise<T[]>,
+  limit: number,
+  label: string,
+): Promise<T[]> => {
+  const results = await load();
+  if (results.length > limit) {
+    throw new Error(`${label} exceeded safe query limit of ${limit}`);
+  }
+  return results;
+};
+
 // Helper to require admin access
 const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
   const tokenIdentifier = await getAuthenticatedTokenIdentifier(ctx);
@@ -44,11 +58,23 @@ export const getProductsForReview = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    // Fetch all Costco products
-    const products = await ctx.db.query("costcoProducts").collect();
+    const products = await takeBounded(
+      () => ctx.db.query("costcoProducts").take(maxAdminReviewProducts + 1),
+      maxAdminReviewProducts,
+      "admin review products",
+    );
 
-    // Fetch all Pure products for joining
-    const pureProducts = await ctx.db.query("pureProducts").collect();
+    const pureProductIds = [...new Set(products.flatMap((product) => product.pureProductId ?? []))];
+    const pureProducts = (
+      await Promise.all(
+        pureProductIds.map((pureProductId) =>
+          ctx.db
+            .query("pureProducts")
+            .withIndex("by_pure_id", (q) => q.eq("pureProductId", pureProductId))
+            .unique(),
+        ),
+      )
+    ).filter((product) => product !== null);
     const pureProductsMap = new Map(pureProducts.map((p) => [p.pureProductId, p]));
 
     // Group by match status

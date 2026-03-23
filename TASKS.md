@@ -18,7 +18,6 @@
 - Convex integration tests (alerts CRUD, stripe webhooks)
 - Performance guardrails for `dashboard.getStats` and admin queries → [.tasks/query-performance-guardrails.md]
 - UI component tests: swipeable-card, filters, calculator-controls
-- Guard unbounded `.collect()` in `dashboard.getStats` and `admin.getProductsForReview`
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
 - Add composite indexes for alert batching/history lookup paths
 - Add route tests for dashboard filters, alerts flows, and admin access → [.tasks/route-test-coverage.md]
