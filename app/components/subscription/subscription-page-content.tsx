@@ -44,7 +44,9 @@ export const SubscriptionPageContent = () => {
         <Button
           className="w-full"
           disabled={isActionLoading}
-          onClick={() => void handleManagePortal()}
+          onClick={() => {
+            void handleManagePortal();
+          }}
           variant="outline"
         >
           {isActionLoading ? (
