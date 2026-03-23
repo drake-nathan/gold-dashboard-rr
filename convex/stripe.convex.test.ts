@@ -1,3 +1,4 @@
+import { StripeSubscriptions } from "@convex-dev/stripe";
 import { convexTest } from "convex-test";
 import StripeSdk from "stripe";
 import { afterEach, expect, test, vi } from "vitest";
@@ -40,7 +41,202 @@ const sendStripeWebhook = async (
 };
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
+});
+
+test("createCheckoutSession uses the configured price ID and existing token customer", async () => {
+  vi.stubEnv("SITE_URL", "https://dashboard.gold");
+  vi.stubEnv("STRIPE_PRICE_ID", "price_configured");
+
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    email: "checkout@example.com",
+    name: "Checkout User",
+    subject: "user_checkout_subject",
+    tokenIdentifier: "clerk|checkout-user",
+  });
+
+  await t.mutation(components.stripe.public.createOrUpdateCustomer, {
+    email: "checkout@example.com",
+    metadata: { userId: "clerk|checkout-user" },
+    name: "Checkout User",
+    stripeCustomerId: "cus_existing_token",
+  });
+
+  const getOrCreateCustomerSpy = vi.spyOn(StripeSubscriptions.prototype, "getOrCreateCustomer");
+  const createCheckoutSessionSpy = vi
+    .spyOn(StripeSubscriptions.prototype, "createCheckoutSession")
+    .mockResolvedValue({
+      sessionId: "cs_test_1",
+      url: "https://checkout.stripe.com/pay/cs_test_1",
+    });
+
+  const result = await asUser.action(api.stripe.createCheckoutSession, {
+    priceId: "price_tampered",
+  });
+
+  expect(result).toStrictEqual({
+    url: "https://checkout.stripe.com/pay/cs_test_1",
+  });
+  expect(getOrCreateCustomerSpy).not.toHaveBeenCalled();
+  expect(createCheckoutSessionSpy).toHaveBeenCalledWith(expect.anything(), {
+    cancelUrl: "https://dashboard.gold?checkout=canceled",
+    customerId: "cus_existing_token",
+    mode: "subscription",
+    priceId: "price_configured",
+    subscriptionMetadata: { userId: "clerk|checkout-user" },
+    successUrl: "https://dashboard.gold?checkout=success",
+  });
+});
+
+test("createCheckoutSession falls back to a subject-linked customer before creating a new one", async () => {
+  vi.stubEnv("SITE_URL", "https://dashboard.gold");
+  vi.stubEnv("STRIPE_PRICE_ID", "price_configured");
+
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    email: "legacy@example.com",
+    name: "Legacy User",
+    subject: "user_legacy_subject",
+    tokenIdentifier: "clerk|legacy-user",
+  });
+
+  await t.mutation(components.stripe.public.createOrUpdateCustomer, {
+    email: "legacy@example.com",
+    metadata: { userId: "user_legacy_subject" },
+    name: "Legacy User",
+    stripeCustomerId: "cus_subject_only",
+  });
+
+  const getOrCreateCustomerSpy = vi.spyOn(StripeSubscriptions.prototype, "getOrCreateCustomer");
+  const createCheckoutSessionSpy = vi
+    .spyOn(StripeSubscriptions.prototype, "createCheckoutSession")
+    .mockResolvedValue({
+      sessionId: "cs_test_legacy",
+      url: "https://checkout.stripe.com/pay/cs_test_legacy",
+    });
+
+  const result = await asUser.action(api.stripe.createCheckoutSession, {
+    priceId: "price_configured",
+  });
+
+  expect(result).toStrictEqual({
+    url: "https://checkout.stripe.com/pay/cs_test_legacy",
+  });
+  expect(getOrCreateCustomerSpy).not.toHaveBeenCalled();
+  expect(createCheckoutSessionSpy).toHaveBeenCalledWith(expect.anything(), {
+    cancelUrl: "https://dashboard.gold?checkout=canceled",
+    customerId: "cus_subject_only",
+    mode: "subscription",
+    priceId: "price_configured",
+    subscriptionMetadata: { userId: "clerk|legacy-user" },
+    successUrl: "https://dashboard.gold?checkout=success",
+  });
+});
+
+test("createPortalSession creates a customer when needed and returns the portal URL", async () => {
+  vi.stubEnv("SITE_URL", "https://dashboard.gold");
+
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    email: "portal@example.com",
+    name: "Portal User",
+    subject: "user_portal_subject",
+    tokenIdentifier: "clerk|portal-user",
+  });
+
+  const getOrCreateCustomerSpy = vi
+    .spyOn(StripeSubscriptions.prototype, "getOrCreateCustomer")
+    .mockResolvedValue({
+      customerId: "cus_created_for_portal",
+      isNew: true,
+    });
+  const createCustomerPortalSessionSpy = vi
+    .spyOn(StripeSubscriptions.prototype, "createCustomerPortalSession")
+    .mockResolvedValue({
+      url: "https://billing.stripe.com/p/session_123",
+    });
+
+  const result = await asUser.action(api.stripe.createPortalSession, {});
+
+  expect(result).toStrictEqual({
+    url: "https://billing.stripe.com/p/session_123",
+  });
+  expect(getOrCreateCustomerSpy).toHaveBeenCalledWith(expect.anything(), {
+    email: "portal@example.com",
+    name: "Portal User",
+    userId: "clerk|portal-user",
+  });
+  expect(createCustomerPortalSessionSpy).toHaveBeenCalledWith(expect.anything(), {
+    customerId: "cus_created_for_portal",
+    returnUrl: "https://dashboard.gold",
+  });
+});
+
+test("getSubscriptionStatus returns anonymous defaults when no identity is present", async () => {
+  const t = withStripeComponent();
+
+  const result = await t.query(api.stripe.getSubscriptionStatus, {});
+
+  expect(result).toStrictEqual({
+    alertEntitlements: {
+      canCreateAlerts: false,
+      canEnableAlerts: false,
+      canManageAlerts: false,
+      canSendAlerts: false,
+      shouldPauseEnabledAlerts: false,
+    },
+    isPro: false,
+    status: "anonymous",
+  });
+});
+
+test("getSubscriptionStatus merges token and legacy subscriptions and prefers the active one", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    name: "Merged User",
+    subject: "user_status_subject",
+    tokenIdentifier: "clerk|status-user",
+  });
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: true,
+    currentPeriodEnd: Date.now() + 3_600_000,
+    metadata: { userId: "clerk|status-user" },
+    priceId: "price_old",
+    quantity: 1,
+    status: "canceled",
+    stripeCustomerId: "cus_status_1",
+    stripeSubscriptionId: "sub_status_1",
+  });
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Date.now() + 86_400_000,
+    metadata: { userId: "user_status_subject" },
+    priceId: "price_active",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_status_2",
+    stripeSubscriptionId: "sub_status_2",
+  });
+
+  const result = await asUser.query(api.stripe.getSubscriptionStatus, {});
+
+  expect(result).toMatchObject({
+    alertEntitlements: {
+      canCreateAlerts: true,
+      canEnableAlerts: true,
+      canManageAlerts: true,
+      canSendAlerts: true,
+      shouldPauseEnabledAlerts: false,
+    },
+    currentPeriodEnd: expect.any(Number),
+    isPro: true,
+    status: "active",
+    userId: "clerk|status-user",
+  });
 });
 
 test("customer.subscription.updated webhook pauses enabled alerts and updates subscription status", async () => {

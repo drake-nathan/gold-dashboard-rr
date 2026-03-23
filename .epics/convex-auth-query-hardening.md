@@ -20,11 +20,10 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 - Alerts now read from a minimal `alertProductOptions` query surface instead of overfetching product data.
 - Alert batching/history lookups now use composite indexes for pending batch and unsent history window queries instead of user-wide scans.
 - Dashboard filters, alerts route flows, and admin access states now have focused browser route coverage.
+- Stripe checkout, portal, and subscription status flows now have direct Convex test coverage beyond webhook-only coverage.
 
 ## Remaining
 
-- Add Convex tests for Stripe checkout, portal, and subscription status flows.
-  Source of truth: `TASKS.md` Up Next
 - Audit unconditional `checkIsAdmin` queries in shared header/mobile navigation.
   Source of truth: `TASKS.md` Up Next and `.tasks/admin-check-callsite-audit.md`
 - Add performance regression fixtures for dashboard and admin review query shapes.
