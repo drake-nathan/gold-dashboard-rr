@@ -2,12 +2,6 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
-  alertProductOptions: defineTable({
-    metalType: v.union(v.literal("gold"), v.literal("silver")),
-    name: v.string(),
-    productId: v.string(),
-  }).index("by_product_id", ["productId"]),
-
   alertBatches: defineTable({
     alerts: v.array(
       v.object({
@@ -55,6 +49,12 @@ export default defineSchema({
     .index("by_alert", ["alertId"])
     .index("by_user", ["userId"])
     .index("by_user_token_identifier", ["userTokenIdentifier"]),
+
+  alertProductOptions: defineTable({
+    metalType: v.union(v.literal("gold"), v.literal("silver")),
+    name: v.string(),
+    productId: v.string(),
+  }).index("by_product_id", ["productId"]),
 
   alerts: defineTable({
     // Threshold alert config

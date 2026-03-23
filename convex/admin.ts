@@ -3,13 +3,13 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { type QueryCtx, action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
-import { takeWithLimit } from "./lib/queries";
 import {
   extractProductType,
   getHighestOfferPrice,
   hasMorePages,
   parseWeightToOz,
 } from "./lib/pureApiParsing";
+import { takeWithLimit } from "./lib/queries";
 
 // Helper to check if a user is an admin
 const isAdmin = (tokenIdentifier: null | string): boolean => {

@@ -254,7 +254,7 @@ test("upsertProduct recreates a missing alert product option for an existing pro
       price: 2050,
       productId: "existing-gold-1",
     }),
-    timestamp: now + 1_000,
+    timestamp: now + 1000,
   });
 
   const options = await t.query(api.alerts.getProductOptions, {});
