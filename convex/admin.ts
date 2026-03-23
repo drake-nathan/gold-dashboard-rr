@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { type QueryCtx, action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
+import { takeWithLimit } from "./lib/queries";
 import {
   extractProductType,
   getHighestOfferPrice,
@@ -29,18 +30,6 @@ const getAuthenticatedTokenIdentifier = async (ctx: QueryCtx): Promise<null | st
 
 const maxAdminReviewProducts = 2000;
 
-const takeBounded = async <T>(
-  load: () => Promise<T[]>,
-  limit: number,
-  label: string,
-): Promise<T[]> => {
-  const results = await load();
-  if (results.length > limit) {
-    throw new Error(`${label} exceeded safe query limit of ${limit}`);
-  }
-  return results;
-};
-
 // Helper to require admin access
 const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
   const tokenIdentifier = await getAuthenticatedTokenIdentifier(ctx);
@@ -58,7 +47,7 @@ export const getProductsForReview = query({
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const products = await takeBounded(
+    const products = await takeWithLimit(
       () => ctx.db.query("costcoProducts").take(maxAdminReviewProducts + 1),
       maxAdminReviewProducts,
       "admin review products",

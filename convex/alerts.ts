@@ -15,6 +15,7 @@ import {
 import { type AuthUserIdentity, requireAuthIdentity } from "./lib/authIdentity";
 import { type AlertPauseReason, getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements, listSubscriptionsForIdentity } from "./subscriptionEntitlements";
+import { takeWithLimit } from "./lib/queries";
 
 const alertTypeValidator = v.union(v.literal("sku"), v.literal("category"), v.literal("threshold"));
 
@@ -34,6 +35,7 @@ const categoryWeightToleranceOz = 0.05;
 const defaultPendingBatchProcessLimit = 25;
 const UNSUBSCRIBE_TOKEN_SEPARATOR = ".";
 const defaultReplyToEmail = "support@dashboard.gold";
+const maxAlertProductOptions = 2000;
 const recentPriceDropWindowMs = 30 * 60 * 1000;
 const resendSendEmailUrl = "https://api.resend.com/emails";
 
@@ -678,29 +680,19 @@ export const getAlerts = query({
 export const getProductOptions = query({
   args: {},
   handler: async (ctx) => {
-    const [goldProducts, silverProducts] = await Promise.all([
-      ctx.db
-        .query("costcoProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", "gold"))
-        .take(1000),
-      ctx.db
-        .query("costcoProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", "silver"))
-        .take(1000),
-    ]);
-
-    const productOptions = new Map(
-      [...goldProducts, ...silverProducts].map((product) => [
-        product.productId,
-        {
-          metalType: product.metalType,
-          name: product.name,
-          productId: product.productId,
-        },
-      ]),
+    const productOptions = await takeWithLimit(
+      () => ctx.db.query("alertProductOptions").take(maxAlertProductOptions + 1),
+      maxAlertProductOptions,
+      "alert product options",
     );
 
-    return [...productOptions.values()].toSorted((a, b) => a.name.localeCompare(b.name));
+    return productOptions
+      .map((product) => ({
+        metalType: product.metalType,
+        name: product.name,
+        productId: product.productId,
+      }))
+      .toSorted((a, b) => a.name.localeCompare(b.name));
   },
 });
 

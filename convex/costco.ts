@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import { internalAction, internalMutation, query } from "./_generated/server";
+import { type MutationCtx, internalAction, internalMutation, query } from "./_generated/server";
 import {
   extractMetalAttributes,
   extractWeightInOz,
@@ -230,6 +230,31 @@ export const fetchNewData = internalAction({
 // How long Product API verification takes precedence over Search API (90 minutes)
 const VERIFICATION_WINDOW_MS = 90 * 60 * 1000;
 
+const upsertAlertProductOption = async (
+  ctx: MutationCtx,
+  product: {
+    metalType: "gold" | "silver";
+    name: string;
+    productId: string;
+  },
+): Promise<void> => {
+  const existing = await ctx.db
+    .query("alertProductOptions")
+    .withIndex("by_product_id", (q) => q.eq("productId", product.productId))
+    .unique();
+
+  if (!existing) {
+    await ctx.db.insert("alertProductOptions", product);
+    return;
+  }
+
+  if (existing.metalType === product.metalType && existing.name === product.name) {
+    return;
+  }
+
+  await ctx.db.patch(existing._id, product);
+};
+
 // Upsert product with history tracking
 export const upsertProduct = internalMutation({
   args: {
@@ -303,14 +328,16 @@ export const upsertProduct = internalMutation({
 
       // Check if metalWeight changed (e.g., count multiplier fix)
       const weightChanged = existing.metalWeight !== (product.metalWeight ?? null);
+      const nameChanged = existing.name !== product.name;
 
       // Update product if anything changed
-      if (priceChanged || stockChanged || weightChanged) {
+      if (priceChanged || stockChanged || weightChanged || nameChanged) {
         await ctx.db.patch(existing._id, {
           currentInStock: effectiveInStock,
           currentPrice: product.price,
           currentPricePerOunce: product.pricePerOunce ?? null,
           lastUpdated: args.timestamp,
+          ...(nameChanged && { name: product.name }),
           // Update metalWeight if it changed
           ...(weightChanged && { metalWeight: product.metalWeight ?? null }),
           ...(priceChanged && { lastPriceChange: args.timestamp }),
@@ -320,6 +347,12 @@ export const upsertProduct = internalMutation({
         });
         updated = true;
       }
+
+      await upsertAlertProductOption(ctx, {
+        metalType: product.metalType,
+        name: product.name,
+        productId: product.id,
+      });
     } else {
       // New product - insert it with Pure matching fields
       await ctx.db.insert("costcoProducts", {
@@ -348,6 +381,12 @@ export const upsertProduct = internalMutation({
         thumbnail: product.thumbnail ?? null,
         upc: product.upc ?? null,
         url: product.url,
+      });
+
+      await upsertAlertProductOption(ctx, {
+        metalType: product.metalType,
+        name: product.name,
+        productId: product.id,
       });
 
       // Record initial price and stock

@@ -1,8 +1,9 @@
 import { SignIn, useUser } from "@clerk/react-router";
 import { getAuth } from "@clerk/react-router/server";
 import { api } from "convex/_generated/api";
+// React Router uses the same server-side Convex helper exposed from convex/nextjs.
 import { fetchQuery } from "convex/nextjs";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { Button } from "@/components/ui/button";
@@ -86,17 +87,6 @@ const AdminPage = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  if (!loaderData.productsData && isUserLoaded && loaderData.adminCheck.isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Verifying access...</span>
-        </div>
-      </div>
-    );
-  }
-
   // Not an admin - show unauthorized
   if (!loaderData.adminCheck.isAdmin) {
     return (
@@ -131,19 +121,7 @@ const AdminPage = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  // Admin access granted - show admin dashboard
-  if (!loaderData.productsData) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading products...</span>
-        </div>
-      </div>
-    );
-  }
-
-  return <AdminDashboard productsData={loaderData.productsData} />;
+  return <AdminDashboard productsData={loaderData.productsData!} />;
 };
 
 export default AdminPage;

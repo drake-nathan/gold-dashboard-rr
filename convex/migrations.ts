@@ -82,6 +82,33 @@ export const backfillUserSettingsUserTokenIdentifier = migrations.define({
   table: "userSettings",
 });
 
+export const backfillAlertProductOptions = migrations.define({
+  migrateOne: async (ctx, doc) => {
+    const existing = await ctx.db
+      .query("alertProductOptions")
+      .withIndex("by_product_id", (q) => q.eq("productId", doc.productId))
+      .unique();
+
+    const nextOption = {
+      metalType: doc.metalType,
+      name: doc.name,
+      productId: doc.productId,
+    };
+
+    if (!existing) {
+      await ctx.db.insert("alertProductOptions", nextOption);
+      return;
+    }
+
+    if (existing.metalType === nextOption.metalType && existing.name === nextOption.name) {
+      return;
+    }
+
+    await ctx.db.patch(existing._id, nextOption);
+  },
+  table: "costcoProducts",
+});
+
 export const runUserTokenIdentifierBackfill = migrations.runner([
   internal.migrations.backfillUserCreditCardsUserTokenIdentifier,
   internal.migrations.backfillUserSettingsUserTokenIdentifier,
@@ -89,5 +116,9 @@ export const runUserTokenIdentifierBackfill = migrations.runner([
   internal.migrations.backfillAlertHistoryUserTokenIdentifier,
   internal.migrations.backfillAlertBatchesUserTokenIdentifier,
 ]);
+
+export const runAlertProductOptionsBackfill = migrations.runner(
+  internal.migrations.backfillAlertProductOptions,
+);
 
 export const run = migrations.runner();

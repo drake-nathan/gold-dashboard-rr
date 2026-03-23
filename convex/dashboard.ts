@@ -1,4 +1,5 @@
 import { query } from "./_generated/server";
+import { takeWithLimit } from "./lib/queries";
 
 const maxDashboardProductsPerMetal = 1000;
 const maxDashboardMarketPrices = 10;
@@ -58,23 +59,11 @@ const toDashboardProduct = (
   url: product.url,
 });
 
-const takeBounded = async <T>(
-  load: () => Promise<T[]>,
-  limit: number,
-  label: string,
-): Promise<T[]> => {
-  const results = await load();
-  if (results.length > limit) {
-    throw new Error(`${label} exceeded safe query limit of ${limit}`);
-  }
-  return results;
-};
-
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
     const [goldProducts, silverProducts] = await Promise.all([
-      takeBounded(
+      takeWithLimit(
         () =>
           ctx.db
             .query("costcoProducts")
@@ -83,7 +72,7 @@ export const getStats = query({
         maxDashboardProductsPerMetal,
         "dashboard gold products",
       ),
-      takeBounded(
+      takeWithLimit(
         () =>
           ctx.db
             .query("costcoProducts")
@@ -113,14 +102,14 @@ export const getStats = query({
       .order("desc")
       .first();
 
-    const marketPrices = await takeBounded(
+    const marketPrices = await takeWithLimit(
       () => ctx.db.query("marketPrices").take(maxDashboardMarketPrices + 1),
       maxDashboardMarketPrices,
       "dashboard market prices",
     );
 
     const pureProductsByMetal = await Promise.all([
-      takeBounded(
+      takeWithLimit(
         () =>
           ctx.db
             .query("pureProducts")
@@ -129,7 +118,7 @@ export const getStats = query({
         maxDashboardPureProductsPerMetal,
         "dashboard gold pure products",
       ),
-      takeBounded(
+      takeWithLimit(
         () =>
           ctx.db
             .query("pureProducts")

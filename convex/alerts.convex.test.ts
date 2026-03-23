@@ -1,11 +1,15 @@
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 
+import migrationsComponentSchema from "../node_modules/@convex-dev/migrations/dist/component/schema.js";
 import stripeComponentSchema from "../node_modules/@convex-dev/stripe/dist/component/schema.js";
 import { api, components, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./test.setup";
 
+const migrationsComponentModules = import.meta.glob(
+  "../node_modules/@convex-dev/migrations/dist/component/**/*.js",
+);
 const stripeComponentModules = import.meta.glob(
   "../node_modules/@convex-dev/stripe/dist/component/**/*.js",
 );
@@ -13,6 +17,12 @@ const stripeComponentModules = import.meta.glob(
 const withStripeComponent = () => {
   const t = convexTest(schema, modules);
   t.registerComponent("stripe", stripeComponentSchema, stripeComponentModules);
+  return t;
+};
+
+const withMigrationsComponent = () => {
+  const t = convexTest(schema, modules);
+  t.registerComponent("migrations", migrationsComponentSchema, migrationsComponentModules);
   return t;
 };
 
@@ -66,6 +76,35 @@ const insertCostcoProduct = async (
   });
 };
 
+const createProcessedProduct = ({
+  metalType = "gold" as const,
+  name = "Test Product",
+  price = 1000,
+  productId,
+}: {
+  metalType?: "gold" | "silver";
+  name?: string;
+  price?: number;
+  productId: string;
+}) => ({
+  attributes: [{ key: "Metal Weight", value: "1 oz" }],
+  brand: "Test Brand",
+  categories: ["precious-metals"],
+  id: productId,
+  in_stock: true,
+  is_member_only: false,
+  is_warehouse_only: false,
+  marketing_features: [],
+  max_quantity: 5,
+  metalType,
+  metalWeight: "1 oz",
+  name,
+  price,
+  pricePerOunce: price,
+  retailer_id: "costco",
+  url: `https://www.costco.com/${productId}.html`,
+});
+
 test("getAlerts requires authentication", async () => {
   const t = convexTest(schema, modules);
 
@@ -100,6 +139,131 @@ test("getAlerts reads token-identifier keyed alerts after subject changes", asyn
 
   expect(alerts).toHaveLength(1);
   expect(alerts[0].name).toBe("Token-owned alert");
+});
+
+test("getProductOptions reads the alert product option summary table", async () => {
+  const t = convexTest(schema, modules);
+  const now = Date.now();
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: createProcessedProduct({
+      metalType: "silver",
+      name: "B Silver Coin",
+      productId: "sku-b",
+    }),
+    timestamp: now,
+  });
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: createProcessedProduct({
+      metalType: "gold",
+      name: "A Gold Bar",
+      productId: "sku-a",
+    }),
+    timestamp: now,
+  });
+
+  const options = await t.query(api.alerts.getProductOptions, {});
+
+  expect(options).toStrictEqual([
+    { metalType: "gold", name: "A Gold Bar", productId: "sku-a" },
+    { metalType: "silver", name: "B Silver Coin", productId: "sku-b" },
+  ]);
+});
+
+test("backfillAlertProductOptions populates summary rows for existing Costco products", async () => {
+  const t = withMigrationsComponent();
+  const now = Date.now();
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("costcoProducts", {
+      brand: "Legacy Brand",
+      categories: ["precious-metals"],
+      currentInStock: true,
+      currentPrice: 2050,
+      currentPricePerOunce: 2050,
+      firstSeen: now,
+      isMemberOnly: false,
+      isOnlineOnly: true,
+      lastPriceChange: now,
+      lastStockChange: now,
+      lastUpdated: now,
+      marketingFeatures: null,
+      maxQuantity: null,
+      metalType: "gold",
+      metalWeight: "1 oz",
+      name: "Legacy Gold Bar",
+      productId: "legacy-gold-1",
+      pureProductId: null,
+      retailerId: "costco",
+      shortDescription: null,
+      thumbnail: null,
+      upc: null,
+      url: "https://www.costco.com/legacy-gold-1.html",
+    });
+  });
+
+  await t.mutation(internal.migrations.run, {
+    dryRun: false,
+    fn: "migrations:backfillAlertProductOptions",
+  });
+
+  const options = await t.query(api.alerts.getProductOptions, {});
+
+  expect(options).toStrictEqual([
+    { metalType: "gold", name: "Legacy Gold Bar", productId: "legacy-gold-1" },
+  ]);
+});
+
+test("upsertProduct recreates a missing alert product option for an existing product", async () => {
+  const t = convexTest(schema, modules);
+  const now = Date.now();
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("costcoProducts", {
+      brand: "Legacy Brand",
+      categories: ["precious-metals"],
+      currentInStock: true,
+      currentPrice: 2050,
+      currentPricePerOunce: 2050,
+      firstSeen: now,
+      isMemberOnly: false,
+      isOnlineOnly: true,
+      lastPriceChange: now,
+      lastStockChange: now,
+      lastUpdated: now,
+      marketingFeatures: null,
+      maxQuantity: null,
+      metalType: "gold",
+      metalWeight: "1 oz",
+      name: "Existing Gold Bar",
+      productId: "existing-gold-1",
+      pureProductId: null,
+      retailerId: "costco",
+      shortDescription: null,
+      thumbnail: null,
+      upc: null,
+      url: "https://www.costco.com/existing-gold-1.html",
+    });
+  });
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: createProcessedProduct({
+      metalType: "gold",
+      name: "Existing Gold Bar",
+      price: 2050,
+      productId: "existing-gold-1",
+    }),
+    timestamp: now + 1_000,
+  });
+
+  const options = await t.query(api.alerts.getProductOptions, {});
+
+  expect(options).toContainEqual({
+    metalType: "gold",
+    name: "Existing Gold Bar",
+    productId: "existing-gold-1",
+  });
 });
 
 test("createAlert blocks free users without active subscription", async () => {
