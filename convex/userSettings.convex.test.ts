@@ -254,35 +254,3 @@ test("markMigrationComplete updates existing settings", async () => {
     localStorageMigrated: true,
   });
 });
-
-test("markMigrationComplete backfills token identifier on legacy settings", async () => {
-  const t = convexTest(schema, modules);
-
-  await t.run(async (ctx) => {
-    await ctx.db.insert("userSettings", {
-      costcoMembershipEnabled: false,
-      createdAt: Date.now(),
-      localStorageMigrated: false,
-      updatedAt: Date.now(),
-      userId: "user_123",
-    });
-  });
-
-  const asUser = t.withIdentity({
-    name: "Test User",
-    subject: "user_123",
-    tokenIdentifier: "clerk|stable-user",
-  });
-
-  await asUser.mutation(api.userSettings.markMigrationComplete, {});
-
-  await t.run(async (ctx) => {
-    const stored = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", "user_123"))
-      .unique();
-
-    expect(stored?.localStorageMigrated).toBeTruthy();
-    expect(stored?.userTokenIdentifier).toBe("clerk|stable-user");
-  });
-});

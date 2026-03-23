@@ -25,7 +25,7 @@ export default defineSchema({
     sentAt: v.optional(v.number()),
     terminalFailureAt: v.optional(v.number()),
     userId: v.string(),
-    userTokenIdentifier: v.optional(v.string()),
+    userTokenIdentifier: v.string(),
   })
     .index("by_pending", ["sent", "scheduledFor"])
     .index("by_user", ["userId"])
@@ -44,7 +44,7 @@ export default defineSchema({
     ),
     triggeredAt: v.number(),
     userId: v.string(),
-    userTokenIdentifier: v.optional(v.string()),
+    userTokenIdentifier: v.string(),
   })
     .index("by_alert", ["alertId"])
     .index("by_user", ["userId"])
@@ -76,8 +76,8 @@ export default defineSchema({
 
     type: v.union(v.literal("sku"), v.literal("category"), v.literal("threshold")),
     updatedAt: v.number(),
-    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
-    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
+    userId: v.string(), // Clerk subject retained for reference and external joins
+    userTokenIdentifier: v.string(), // Canonical Convex auth identity key
     weight: v.optional(v.number()), // Troy ounces
   })
     .index("by_enabled", ["enabled"])
@@ -276,12 +276,10 @@ export default defineSchema({
       }),
     ),
     updatedAt: v.number(),
-    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
-    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
+    userId: v.string(), // Clerk subject retained for reference
+    userTokenIdentifier: v.string(), // Canonical Convex auth identity key
     valuePerPoint: v.number(),
   })
-    .index("by_user", ["userId"])
-    .index("by_user_and_card", ["userId", "cardId"])
     .index("by_user_token_identifier", ["userTokenIdentifier"])
     .index("by_user_token_identifier_and_card", ["userTokenIdentifier", "cardId"]),
 
@@ -292,9 +290,7 @@ export default defineSchema({
     lastSelectedCardId: v.optional(v.string()), // Last selected credit card
     localStorageMigrated: v.boolean(), // Track if migration from localStorage is complete
     updatedAt: v.number(),
-    userId: v.string(), // Deprecated legacy auth key keyed by Clerk subject
-    userTokenIdentifier: v.optional(v.string()), // Canonical Convex auth identity key
-  })
-    .index("by_user", ["userId"])
-    .index("by_user_token_identifier", ["userTokenIdentifier"]),
+    userId: v.string(), // Clerk subject retained for reference
+    userTokenIdentifier: v.string(), // Canonical Convex auth identity key
+  }).index("by_user_token_identifier", ["userTokenIdentifier"]),
 });

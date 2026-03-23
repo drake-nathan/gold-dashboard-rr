@@ -11,24 +11,11 @@ import { type MutationCtx, type QueryCtx, mutation, query } from "./_generated/s
 import { type AuthUserIdentity, requireAuthIdentity } from "./lib/authIdentity";
 
 const getSettingsByIdentity = async (ctx: MutationCtx | QueryCtx, identity: AuthUserIdentity) => {
-  const settingsByToken = await ctx.db
+  return ctx.db
     .query("userSettings")
     .withIndex("by_user_token_identifier", (q) =>
       q.eq("userTokenIdentifier", identity.tokenIdentifier),
     )
-    .unique();
-
-  if (settingsByToken) {
-    return settingsByToken;
-  }
-
-  if (identity.subject === identity.tokenIdentifier) {
-    return null;
-  }
-
-  return ctx.db
-    .query("userSettings")
-    .withIndex("by_user", (q) => q.eq("userId", identity.subject))
     .unique();
 };
 

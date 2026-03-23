@@ -12,11 +12,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import {
-  type AuthUserIdentity,
-  getIdentityLookupKeys,
-  requireAuthIdentity,
-} from "./lib/authIdentity";
+import { type AuthUserIdentity, requireAuthIdentity } from "./lib/authIdentity";
 import { type AlertPauseReason, getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements, listSubscriptionsForIdentity } from "./subscriptionEntitlements";
 
@@ -100,63 +96,31 @@ type SendAlertEmailResult = SendAlertEmailFailure | SendAlertEmailSuccess;
 
 interface UserOwnedRecord {
   userId: string;
-  userTokenIdentifier?: string;
+  userTokenIdentifier: string;
 }
 
 const listAlertsForIdentity = async (
   ctx: MutationCtx | QueryCtx,
   identity: AuthUserIdentity,
 ): Promise<AlertDoc[]> => {
-  const alertsByToken = await ctx.db
+  return ctx.db
     .query("alerts")
     .withIndex("by_user_token_identifier", (q) =>
       q.eq("userTokenIdentifier", identity.tokenIdentifier),
     )
     .collect();
-
-  const alertsBySubject =
-    identity.subject === identity.tokenIdentifier
-      ? []
-      : await ctx.db
-          .query("alerts")
-          .withIndex("by_user", (q) => q.eq("userId", identity.subject))
-          .collect();
-
-  const alerts = new Map(alertsBySubject.map((alert) => [alert._id, alert]));
-  for (const alert of alertsByToken) {
-    alerts.set(alert._id, alert);
-  }
-
-  return [...alerts.values()];
 };
 
 const getEnabledAlertsForIdentity = async (
   ctx: MutationCtx,
   identity: AuthUserIdentity,
 ): Promise<AlertDoc[]> => {
-  const alertsByToken = await ctx.db
+  return ctx.db
     .query("alerts")
     .withIndex("by_user_token_identifier_and_enabled", (q) =>
       q.eq("userTokenIdentifier", identity.tokenIdentifier).eq("enabled", true),
     )
     .collect();
-
-  const alertsBySubject =
-    identity.subject === identity.tokenIdentifier
-      ? []
-      : await ctx.db
-          .query("alerts")
-          .withIndex("by_user_and_enabled", (q) =>
-            q.eq("userId", identity.subject).eq("enabled", true),
-          )
-          .collect();
-
-  const alerts = new Map(alertsBySubject.map((alert) => [alert._id, alert]));
-  for (const alert of alertsByToken) {
-    alerts.set(alert._id, alert);
-  }
-
-  return [...alerts.values()];
 };
 
 const getEnabledAlertsForUserKey = async (
@@ -184,14 +148,13 @@ const getEnabledAlertsForUserKey = async (
 };
 
 const isAlertOwnedByIdentity = (alert: AlertDoc, identity: AuthUserIdentity): boolean =>
-  getIdentityLookupKeys(identity).includes(alert.userTokenIdentifier ?? alert.userId);
+  alert.userTokenIdentifier === identity.tokenIdentifier;
 
-const getStoredUserKey = (record: UserOwnedRecord): string =>
-  record.userTokenIdentifier ?? record.userId;
+const getStoredUserKey = (record: UserOwnedRecord): string => record.userTokenIdentifier;
 
 const getStoredIdentity = (record: UserOwnedRecord): AuthUserIdentity => ({
   subject: record.userId,
-  tokenIdentifier: record.userTokenIdentifier ?? record.userId,
+  tokenIdentifier: record.userTokenIdentifier,
 });
 
 const listAlertHistoryForUserKey = async (

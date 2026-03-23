@@ -22,11 +22,3 @@ export const requireAuthIdentity = async (ctx: AuthContext): Promise<AuthUserIde
     tokenIdentifier: identity.tokenIdentifier,
   };
 };
-
-export const getIdentityLookupKeys = (identity: AuthUserIdentity): string[] => {
-  if (identity.subject === identity.tokenIdentifier) {
-    return [identity.tokenIdentifier];
-  }
-
-  return [identity.tokenIdentifier, identity.subject];
-};

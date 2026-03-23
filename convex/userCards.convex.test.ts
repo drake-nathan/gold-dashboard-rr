@@ -264,42 +264,6 @@ test("updateCard can update signupBonus", async () => {
   });
 });
 
-test("updateCard backfills token identifier on legacy cards", async () => {
-  const t = convexTest(schema, modules);
-
-  await t.run(async (ctx) => {
-    await ctx.db.insert("userCreditCards", {
-      ...testCard,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      userId: "user_123",
-    });
-  });
-
-  const asUser = t.withIdentity({
-    name: "Test User",
-    subject: "user_123",
-    tokenIdentifier: "clerk|stable-user",
-  });
-
-  await asUser.mutation(api.userCards.updateCard, {
-    cardId: testCard.cardId,
-    name: "Updated Legacy Card",
-  });
-
-  await t.run(async (ctx) => {
-    const stored = await ctx.db
-      .query("userCreditCards")
-      .withIndex("by_user_and_card", (q) =>
-        q.eq("userId", "user_123").eq("cardId", testCard.cardId),
-      )
-      .unique();
-
-    expect(stored?.name).toBe("Updated Legacy Card");
-    expect(stored?.userTokenIdentifier).toBe("clerk|stable-user");
-  });
-});
-
 test("updateCard upserts when preset card not yet in Convex", async () => {
   const t = convexTest(schema, modules);
   const asUser = t.withIdentity({ name: "Test User", subject: "user_123" });

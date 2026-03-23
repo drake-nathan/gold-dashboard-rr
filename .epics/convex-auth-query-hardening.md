@@ -8,7 +8,6 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 
 ## Plan
 
-- Run the shipped `userTokenIdentifier` backfill on Convex prod, then remove legacy `subject` fallback reads across `alerts`, `userCards`, and `userSettings`.
 - Split `dashboard.getStats` and the admin review path into smaller query surfaces, including a minimal product-options query for alerts.
 - Add missing indexes and tests for alert batching, Stripe flows, and route-level behaviors tied to these changes.
 
@@ -23,5 +22,6 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 ## Notes
 
 - Audit evidence spans `convex/_generated/ai/guidelines.md`, `convex/dashboard.ts`, `convex/admin.ts`, `convex/alerts.ts`, `convex/userCards.ts`, `convex/userSettings.ts`, and `convex/stripe.ts`.
-- The repo now includes `convex/migrations.ts` plus the `@convex-dev/migrations` component; dev backfill ran successfully on March 22, 2026 against the configured dev deployment.
+- The repo now includes `convex/migrations.ts` plus the `@convex-dev/migrations` component; dev and prod `userTokenIdentifier` backfills completed successfully on March 22, 2026.
+- Migration-era `subject` fallback reads have been removed from the auth-facing `userCards`, `userSettings`, and `alerts` paths; alert internals still dual-read raw stored keys where Stripe compatibility requires it.
 - Related follow-up work is tracked in `TASKS.md` under Up Next and Testing so the epic can stay focused on current and next actions.

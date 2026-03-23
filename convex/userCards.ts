@@ -23,27 +23,12 @@ const presetCardsById = new Map<string, (typeof CREDIT_CARD_PRESETS)[number]>(
 );
 
 const getCardsByIdentity = async (ctx: MutationCtx | QueryCtx, identity: AuthUserIdentity) => {
-  const cardsByToken = await ctx.db
+  return ctx.db
     .query("userCreditCards")
     .withIndex("by_user_token_identifier", (q) =>
       q.eq("userTokenIdentifier", identity.tokenIdentifier),
     )
     .collect();
-
-  const cardsBySubject =
-    identity.subject === identity.tokenIdentifier
-      ? []
-      : await ctx.db
-          .query("userCreditCards")
-          .withIndex("by_user", (q) => q.eq("userId", identity.subject))
-          .collect();
-
-  const cards = new Map(cardsBySubject.map((card) => [card._id, card]));
-  for (const card of cardsByToken) {
-    cards.set(card._id, card);
-  }
-
-  return [...cards.values()];
 };
 
 const getCardByIdentityAndCardId = async (
@@ -51,24 +36,11 @@ const getCardByIdentityAndCardId = async (
   identity: AuthUserIdentity,
   cardId: string,
 ) => {
-  const cardByToken = await ctx.db
+  return ctx.db
     .query("userCreditCards")
     .withIndex("by_user_token_identifier_and_card", (q) =>
       q.eq("userTokenIdentifier", identity.tokenIdentifier).eq("cardId", cardId),
     )
-    .unique();
-
-  if (cardByToken) {
-    return cardByToken;
-  }
-
-  if (identity.subject === identity.tokenIdentifier) {
-    return null;
-  }
-
-  return ctx.db
-    .query("userCreditCards")
-    .withIndex("by_user_and_card", (q) => q.eq("userId", identity.subject).eq("cardId", cardId))
     .unique();
 };
 
