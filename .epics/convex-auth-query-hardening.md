@@ -18,11 +18,10 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 - Dashboard query work was decomposed into narrower helper/query surfaces instead of one broad hot path.
 - Admin review work was split into smaller status/count query surfaces.
 - Alerts now read from a minimal `alertProductOptions` query surface instead of overfetching product data.
+- Alert batching/history lookups now use composite indexes for pending batch and unsent history window queries instead of user-wide scans.
 
 ## Remaining
 
-- Add composite indexes for alert batching/history lookup paths.
-  Source of truth: `TASKS.md` Up Next
 - Add route tests for dashboard filters, alerts flows, and admin access.
   Source of truth: `TASKS.md` Up Next and `.tasks/route-test-coverage.md`
 - Add Convex tests for Stripe checkout, portal, and subscription status flows.

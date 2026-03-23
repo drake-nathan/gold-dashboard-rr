@@ -18,7 +18,6 @@
 
 - Define a canonical env schema and replace ad hoc env validation/access across app, Convex, Docker, and hosted config → [.epics/environment-config-hardening.md]
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
-- Add composite indexes for alert batching/history lookup paths
 - Add route tests for dashboard filters, alerts flows, and admin access → [.tasks/route-test-coverage.md]
 - Add Convex tests for Stripe checkout, portal, and subscription status flows
 - Replace hardcoded dashboard OG/site URL with the canonical site URL source

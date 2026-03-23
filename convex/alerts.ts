@@ -159,18 +159,32 @@ const getStoredIdentity = (record: UserOwnedRecord): AuthUserIdentity => ({
   tokenIdentifier: record.userTokenIdentifier,
 });
 
-const listAlertHistoryForUserKey = async (
+const listPendingAlertHistoryForUserKey = async (
   ctx: MutationCtx,
   userKey: string,
+  windowStart: number,
+  windowEnd: number,
 ): Promise<AlertHistoryDoc[]> => {
   const historyByLegacyKey = await ctx.db
     .query("alertHistory")
-    .withIndex("by_user", (q) => q.eq("userId", userKey))
+    .withIndex("by_user_notification_sent_and_triggered", (q) =>
+      q
+        .eq("userId", userKey)
+        .eq("notificationSent", false)
+        .gte("triggeredAt", windowStart)
+        .lte("triggeredAt", windowEnd),
+    )
     .collect();
 
   const historyByTokenKey = await ctx.db
     .query("alertHistory")
-    .withIndex("by_user_token_identifier", (q) => q.eq("userTokenIdentifier", userKey))
+    .withIndex("by_user_token_identifier_notification_sent_and_triggered", (q) =>
+      q
+        .eq("userTokenIdentifier", userKey)
+        .eq("notificationSent", false)
+        .gte("triggeredAt", windowStart)
+        .lte("triggeredAt", windowEnd),
+    )
     .collect();
 
   const history = new Map(historyByLegacyKey.map((entry) => [entry._id, entry]));
@@ -188,12 +202,16 @@ const findPendingBatchForUserKey = async (
 ): Promise<AlertBatchDoc | null> => {
   const batchesByLegacyKey = await ctx.db
     .query("alertBatches")
-    .withIndex("by_user", (q) => q.eq("userId", userKey))
+    .withIndex("by_user_pending_schedule", (q) =>
+      q.eq("userId", userKey).eq("sent", false).eq("scheduledFor", scheduleTime),
+    )
     .collect();
 
   const batchesByTokenKey = await ctx.db
     .query("alertBatches")
-    .withIndex("by_user_token_identifier", (q) => q.eq("userTokenIdentifier", userKey))
+    .withIndex("by_user_token_identifier_pending_schedule", (q) =>
+      q.eq("userTokenIdentifier", userKey).eq("sent", false).eq("scheduledFor", scheduleTime),
+    )
     .collect();
 
   const batches = new Map(batchesByLegacyKey.map((batch) => [batch._id, batch]));
@@ -201,10 +219,7 @@ const findPendingBatchForUserKey = async (
     batches.set(batch._id, batch);
   }
 
-  return (
-    [...batches.values()].find((batch) => batch.scheduledFor === scheduleTime && !batch.sent) ??
-    null
-  );
+  return [...batches.values()][0] ?? null;
 };
 
 const assertValidAlertConfiguration = (config: AlertConfiguration): void => {
@@ -319,15 +334,14 @@ const getPendingAlertHistoryForBatch = async (
   const windowStart = batch.createdAt - windowMs;
   const windowEnd = batch.createdAt + windowMs;
   const alertIds = new Set(batch.alerts.map((entry) => entry.alertId));
-  const pendingHistory = await listAlertHistoryForUserKey(ctx, getStoredUserKey(batch));
-
-  return pendingHistory.filter(
-    (history) =>
-      !history.notificationSent &&
-      history.triggeredAt >= windowStart &&
-      history.triggeredAt <= windowEnd &&
-      alertIds.has(history.alertId),
+  const pendingHistory = await listPendingAlertHistoryForUserKey(
+    ctx,
+    getStoredUserKey(batch),
+    windowStart,
+    windowEnd,
   );
+
+  return pendingHistory.filter((history) => alertIds.has(history.alertId));
 };
 
 const isAlertInCooldown = (

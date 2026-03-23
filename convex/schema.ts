@@ -29,7 +29,13 @@ export default defineSchema({
   })
     .index("by_pending", ["sent", "scheduledFor"])
     .index("by_user", ["userId"])
-    .index("by_user_token_identifier", ["userTokenIdentifier"]),
+    .index("by_user_token_identifier", ["userTokenIdentifier"])
+    .index("by_user_pending_schedule", ["userId", "sent", "scheduledFor"])
+    .index("by_user_token_identifier_pending_schedule", [
+      "userTokenIdentifier",
+      "sent",
+      "scheduledFor",
+    ]),
 
   alertHistory: defineTable({
     alertId: v.id("alerts"),
@@ -48,7 +54,13 @@ export default defineSchema({
   })
     .index("by_alert", ["alertId"])
     .index("by_user", ["userId"])
-    .index("by_user_token_identifier", ["userTokenIdentifier"]),
+    .index("by_user_token_identifier", ["userTokenIdentifier"])
+    .index("by_user_notification_sent_and_triggered", ["userId", "notificationSent", "triggeredAt"])
+    .index("by_user_token_identifier_notification_sent_and_triggered", [
+      "userTokenIdentifier",
+      "notificationSent",
+      "triggeredAt",
+    ]),
 
   alertProductOptions: defineTable({
     metalType: v.union(v.literal("gold"), v.literal("silver")),

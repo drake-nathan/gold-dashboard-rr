@@ -44,12 +44,12 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 
 ## Decisions
 
-| Decision              | Choice                                      | Rationale                                                                 |
-| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------- |
-| **Notifications**     | Email only (via Resend)                     | SMS still adds operational and compliance overhead; defer it.             |
-| **Alert Timing**      | Batched digests                             | Reduces spam and keeps stock/price triggers readable.                     |
-| **Payments**          | Stripe Checkout + Webhooks + Customer Portal| Existing implementation path is already in place and matches the product. |
-| **Current Epic Scope**| Polish, structure, and confidence           | Core behavior exists; the gap is maintainability and user-facing finish.  |
+| Decision               | Choice                                       | Rationale                                                                 |
+| ---------------------- | -------------------------------------------- | ------------------------------------------------------------------------- |
+| **Notifications**      | Email only (via Resend)                      | SMS still adds operational and compliance overhead; defer it.             |
+| **Alert Timing**       | Batched digests                              | Reduces spam and keeps stock/price triggers readable.                     |
+| **Payments**           | Stripe Checkout + Webhooks + Customer Portal | Existing implementation path is already in place and matches the product. |
+| **Current Epic Scope** | Polish, structure, and confidence            | Core behavior exists; the gap is maintainability and user-facing finish.  |
 
 ## Notes
 
