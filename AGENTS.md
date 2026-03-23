@@ -61,6 +61,14 @@ This project follows React's "You Might Not Need an Effect" guidelines:
 - **localStorage writes**: Always in event handlers, never in Effects
 - **SSR data loading**: Routes use `preloadQuery` (server) + `usePreloadedQuery` (client) from Convex
 
+## File Organization
+
+- **No barrel files**: Avoid `index.ts` re-export files entirely.
+- **`index.tsx` is a real entrypoint**: Use it when a folder represents a route or a component module and `index.tsx` contains the actual implementation, not a pass-through export.
+- **Co-locate by feature**: Keep route-specific components, hooks, and tests inside that route's folder.
+- **Avoid file dumps**: When a route folder starts accumulating many siblings, split into focused subfolders like `filters/`, `calculator/`, `products/`, or `hooks/`.
+- **Import rules**: Use relative imports within a feature folder; use `@/` imports only for shared cross-feature modules.
+
 ## Environment Setup
 
 See **[docs/environment-variables.md](docs/environment-variables.md)** for the full env var reference.

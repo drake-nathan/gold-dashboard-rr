@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 
-import { ALERT_TYPE_LABELS, TRIGGER_LABELS } from "./types";
+import { ALERT_TYPE_LABELS, TRIGGER_LABELS } from "../form/types";
 
 export const AlertCard = ({
   alert,

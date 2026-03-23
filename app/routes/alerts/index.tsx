@@ -16,16 +16,16 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { useSubscription } from "@/hooks/use-subscription";
 
-import { AlertCard } from "./alert-card";
-import { AlertFormFields } from "./alert-form-fields";
-import { EditAlertDialog } from "./edit-alert-dialog";
+import { EditAlertDialog } from "./dialogs/edit-alert-dialog";
+import { AlertFormFields } from "./form/alert-form-fields";
 import {
   buildAlertPayload,
   defaultFormValues,
   type AlertFormType,
   type AlertFormValues,
   getFormValidationError,
-} from "./types";
+} from "./form/types";
+import { AlertCard } from "./list/alert-card";
 
 export const meta = () => [
   { title: "Alerts - Dashboard.Gold" },

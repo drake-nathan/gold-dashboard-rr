@@ -18,13 +18,13 @@ import type { DashboardStats } from "@/types/dashboard";
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "@/utils/product-filters";
 
 import type { Route } from "./+types/index";
-import { CalculatorSettingsDrawer } from "./calculator-settings-drawer";
-import { CardManagerDrawer } from "./card-manager-drawer";
-import type { MetalFilter, SortOption } from "./filter-types";
-import { Filters } from "./filters";
-import { ProductCard } from "./product-card";
-import { Stats } from "./stats";
-import { useCalculatorSettings } from "./use-calculator-settings";
+import { CalculatorSettingsDrawer } from "./calculator/calculator-settings-drawer";
+import { CardManagerDrawer } from "./cards/card-manager-drawer";
+import type { MetalFilter, SortOption } from "./filters/filter-types";
+import { Filters } from "./filters/filters";
+import { useCalculatorSettings } from "./hooks/use-calculator-settings";
+import { ProductCard } from "./products/product-card";
+import { Stats } from "./stats/stats";
 
 export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "@/types/dashboard";
 

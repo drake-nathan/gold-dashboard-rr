@@ -34,7 +34,7 @@ import {
 } from "@/lib/credit-cards";
 import type { CalculatorSettings } from "@/types/calculator";
 
-import { MAX_QUANTITY } from "./use-quantity-storage";
+import { MAX_QUANTITY } from "../hooks/use-quantity-storage";
 
 interface CalculatorControlsProps {
   availableCards: CreditCard[];

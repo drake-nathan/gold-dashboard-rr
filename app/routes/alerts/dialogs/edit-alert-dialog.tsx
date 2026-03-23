@@ -14,13 +14,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
-import { AlertFormFields } from "./alert-form-fields";
+import { AlertFormFields } from "../form/alert-form-fields";
 import {
   alertFormValuesFromDoc,
   buildAlertPayload,
   getFormValidationError,
   type ProductOption,
-} from "./types";
+} from "../form/types";
 
 export const EditAlertDialog = ({
   alert,

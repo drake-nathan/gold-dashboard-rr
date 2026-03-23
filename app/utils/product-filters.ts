@@ -1,4 +1,4 @@
-import type { MetalFilter, SortOption } from "@/routes/dashboard/filter-types";
+import type { MetalFilter, SortOption } from "@/routes/dashboard/filters/filter-types";
 import type { ProductCardData } from "@/types/dashboard";
 
 export interface FilterOptions {

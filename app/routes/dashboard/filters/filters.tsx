@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { CreditCard } from "@/lib/credit-cards";
 import type { CalculatorSettings } from "@/types/calculator";
 
-import { CalculatorControls } from "./calculator-controls";
+import { CalculatorControls } from "../calculator/calculator-controls";
 import { FilterControls } from "./filter-controls";
 import type { MetalFilter, SortOption } from "./filter-types";
 
