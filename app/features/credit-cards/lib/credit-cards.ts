@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CREDIT_CARD_PRESETS } from "../../lib/credit-card-presets";
+import { CREDIT_CARD_PRESETS } from "../../../../lib/credit-card-presets";
 
 // Zod schema for signup bonus
 export const signupBonusSchema = z.object({

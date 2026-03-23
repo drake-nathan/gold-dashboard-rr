@@ -11,6 +11,8 @@ Tighten the app and Convex file structure so feature boundaries stay obvious, sh
 
 - Keep dashboard-owned types and pure logic inside `app/routes/dashboard/*` so feature ownership matches import boundaries.
 - Keep feature-owned hooks out of `app/hooks`, using feature-shared homes for reusable domains and route-local folders for dashboard-only state.
+- Keep `app/lib` limited to truly shared UI or app-wide infrastructure; move domain modules to their owning features.
+- Keep route entrypoints thin by extracting page body orchestration and route-local state into nearby modules.
 - Continue splitting oversized route and Convex modules along feature responsibilities instead of growing top-level catch-all buckets.
 - Decide whether a small set of repo-specific lint rules is still warranted after the first cleanup pass settles.
 
@@ -32,9 +34,13 @@ Tighten the app and Convex file structure so feature boundaries stay obvious, sh
   - Moved subscription hooks into `app/features/subscription/hooks/*`.
   - Moved credit-card hooks into `app/features/credit-cards/hooks/*`.
   - Moved dashboard-only settings/storage hooks into `app/routes/dashboard/calculator/hooks/*`.
+  - Moved credit-card domain helpers/tests into `app/features/credit-cards/lib/*`.
+  - Moved dashboard calculator fee-tier helpers/tests into `app/routes/dashboard/calculator/lib/*`.
+  - Reduced `app/lib` to shared infrastructure (`cn`, Sentry filters) instead of feature/domain code.
+  - Slimmed `app/routes/dashboard/index.tsx` by extracting `dashboard-content.tsx`, `use-dashboard-filters.ts`, and `use-migration-toast.ts`.
+  - Slimmed `app/routes/alerts/index.tsx` by extracting `alerts-page.tsx` and `hooks/use-alerts-page.ts`.
 - Current structural smells to address:
-  - Top-level shared bucket `app/lib` still contains some feature-specific code that may want feature-shared homes instead.
-  - Oversized orchestrator files in `app/routes/dashboard/index.tsx`, `app/routes/alerts/index.tsx`, `convex/alerts.ts`, `convex/admin.ts`, and `convex/costco.ts`.
+  - Oversized Convex modules in `convex/alerts.ts`, `convex/admin.ts`, and `convex/costco.ts`.
   - Inconsistent test placement in Convex (`convex/__tests__` versus colocated tests elsewhere).
 - Likely rule candidates only if notes are not enough:
   - Disallow imports from `app/routes/**` inside shared buckets such as `app/lib/**`, `app/utils/**`, and `app/hooks/**`.

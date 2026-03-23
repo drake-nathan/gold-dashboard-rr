@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { CreditCard } from "@/lib/credit-cards";
+import type { CreditCard } from "@/features/credit-cards/lib/credit-cards";
 
 import { CalculatorControls } from "../calculator/calculator-controls";
 import type { CalculatorSettings } from "../calculator/types";

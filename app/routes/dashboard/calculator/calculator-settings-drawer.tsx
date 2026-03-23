@@ -17,9 +17,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import { calculateCashbackPercentage } from "@/lib/credit-cards";
-import { formatTierDisplay, PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import { calculateCashbackPercentage } from "@/features/credit-cards/lib/credit-cards";
 
+import { formatTierDisplay, PURE_FEE_TIERS } from "./lib/pure-fee-tiers";
 import type { CalculatorSettings } from "./types";
 
 interface CalculatorSettingsDrawerProps {

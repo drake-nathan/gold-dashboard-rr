@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 
-import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
-import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import { DEFAULT_PRESET_CARDS } from "@/features/credit-cards/lib/credit-cards";
 
 import type { DashboardMarketPrice, ProductCardData } from "../types";
+import { PURE_FEE_TIERS } from "./lib/pure-fee-tiers";
 import { calculateProductMetrics } from "./product-calculations";
 import type { CalculatorSettings } from "./types";
 

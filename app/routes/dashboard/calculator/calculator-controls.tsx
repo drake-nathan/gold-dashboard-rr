@@ -26,12 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,
   calculateTotalCashbackPercentage,
   type CreditCard,
-} from "@/lib/credit-cards";
+} from "@/features/credit-cards/lib/credit-cards";
+import { cn } from "@/lib/cn";
 
 import { MAX_QUANTITY } from "../hooks/use-quantity-storage";
 import type { CalculatorSettings } from "./types";

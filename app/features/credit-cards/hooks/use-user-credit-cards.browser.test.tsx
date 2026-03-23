@@ -13,8 +13,7 @@ import {
   CREDIT_CARDS_STORAGE_KEY,
   type CreditCard,
   DEFAULT_PRESET_CARDS,
-} from "@/lib/credit-cards";
-
+} from "../lib/credit-cards";
 // Import after mocks are set up
 import { useUserCreditCards } from "./use-user-credit-cards";
 

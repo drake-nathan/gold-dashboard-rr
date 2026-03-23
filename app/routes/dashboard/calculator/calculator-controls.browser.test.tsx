@@ -1,10 +1,10 @@
 import { expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
-import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
-import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+import { DEFAULT_PRESET_CARDS } from "@/features/credit-cards/lib/credit-cards";
 
 import { CalculatorControls } from "./calculator-controls";
+import { PURE_FEE_TIERS } from "./lib/pure-fee-tiers";
 import type { CalculatorSettings } from "./types";
 
 const availableCards = DEFAULT_PRESET_CARDS.slice(0, 2);

@@ -4,7 +4,7 @@ import {
   PURE_FEE_TIERS,
   type PureFeeTierStorage,
   pureFeeTierStorageSchema,
-} from "@/lib/pure-fee-tiers";
+} from "../lib/pure-fee-tiers";
 
 const STORAGE_KEY = "dashboard-gold-pure-fee-tier";
 

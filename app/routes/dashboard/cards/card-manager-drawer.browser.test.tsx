@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
-import { type CreditCard, DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
+import { type CreditCard, DEFAULT_PRESET_CARDS } from "@/features/credit-cards/lib/credit-cards";
 
 import { CardManagerDrawer } from "./card-manager-drawer";
 

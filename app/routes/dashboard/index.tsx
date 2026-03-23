@@ -3,30 +3,15 @@ import { api } from "convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
 import { usePreloadedQuery } from "convex/react";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { isRouteErrorResponse, Link, useRouteError, useSearchParams } from "react-router";
-import { toast } from "sonner";
-import { useDebounceCallback, useIsClient } from "usehooks-ts";
+import { isRouteErrorResponse, Link, useRouteError } from "react-router";
 
-import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary";
 
 import type { Route } from "./+types/index";
-import { CalculatorSettingsDrawer } from "./calculator/calculator-settings-drawer";
-import { CardManagerDrawer } from "./cards/card-manager-drawer";
-import type { MetalFilter, SortOption } from "./filters/filter-types";
-import { Filters } from "./filters/filters";
-import {
-  filterProducts,
-  shouldAutoFlipToOutOfStock,
-  sortProducts,
-} from "./filters/product-filters";
-import { useCalculatorSettings } from "./hooks/use-calculator-settings";
-import { ProductCard } from "./products/product-card";
-import { Stats } from "./stats/stats";
-import { type DashboardStats, type DashboardMarketPrice, type ProductCardData } from "./types";
+import { DashboardContent } from "./dashboard-content";
+import { type DashboardMarketPrice, type DashboardStats, type ProductCardData } from "./types";
+
 export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "./types";
 
 export const meta = () => {
@@ -91,204 +76,6 @@ export const loader = async () => {
   return { preloadedProducts, preloadedSummary };
 };
 
-interface DashboardProps {
-  stats: DashboardStats;
-}
-
-const Dashboard = ({ stats }: DashboardProps) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [_, startTransition] = useTransition();
-  const hasAutoFlipped = useRef(false);
-  const isClient = useIsClient();
-
-  const {
-    availableCards,
-    calculatorSettings,
-    handleCardsChange,
-    handleResetAll,
-    isMigrating,
-    totalCashbackPercentage,
-    updateCalculatorSettings,
-  } = useCalculatorSettings();
-
-  const [cardManagerOpen, setCardManagerOpen] = useState(false);
-  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
-
-  const migrationToastId = useRef<number | string | undefined>(undefined);
-  useEffect(() => {
-    if (isMigrating && !migrationToastId.current) {
-      migrationToastId.current = toast.loading("Syncing your card settings...");
-    } else if (!isMigrating && migrationToastId.current) {
-      toast.success("Settings synced!", { id: migrationToastId.current });
-      migrationToastId.current = undefined;
-    }
-  }, [isMigrating]);
-
-  const metalFilter = (searchParams.get("metal") as MetalFilter | null) ?? "all";
-  const sortOption = (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
-  const urlShowOutOfStock = searchParams.get("showOOS") === "true";
-  const [showOutOfStock, setShowOutOfStockLocal] = useState(urlShowOutOfStock);
-
-  useEffect(() => {
-    setShowOutOfStockLocal(urlShowOutOfStock);
-  }, [urlShowOutOfStock]);
-
-  useEffect(() => {
-    if (hasAutoFlipped.current) return;
-
-    const hasFilterParams =
-      searchParams.has("metal") || searchParams.has("sort") || searchParams.has("showOOS");
-
-    if (hasFilterParams) {
-      hasAutoFlipped.current = true;
-      return;
-    }
-
-    const shouldAutoFlip = shouldAutoFlipToOutOfStock(
-      stats.goldProducts.inStock,
-      stats.silverProducts.inStock,
-    );
-
-    if (shouldAutoFlip) {
-      startTransition(() => {
-        const params = new URLSearchParams();
-        params.set("showOOS", "true");
-        params.set("sort", "last-in-stock");
-        setSearchParams(params, { replace: true });
-      });
-    }
-
-    hasAutoFlipped.current = true;
-  }, [searchParams, setSearchParams, stats.goldProducts.inStock, stats.silverProducts.inStock]);
-
-  const setMetalFilter = useDebounceCallback((value: MetalFilter) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams);
-      if (value !== "all") {
-        params.set("metal", value);
-      } else {
-        params.delete("metal");
-      }
-      setSearchParams(params, { replace: true });
-    });
-  }, 150);
-
-  const setSortOption = useDebounceCallback((value: SortOption) => {
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams);
-      if (value !== "profit-desc") {
-        params.set("sort", value);
-      } else {
-        params.delete("sort");
-      }
-      setSearchParams(params, { replace: true });
-    });
-  }, 150);
-
-  const setShowOutOfStock = (value: boolean) => {
-    setShowOutOfStockLocal(value);
-
-    const params = new URLSearchParams(searchParams);
-    if (value) {
-      params.set("showOOS", "true");
-    } else {
-      params.delete("showOOS");
-    }
-    setSearchParams(params, { replace: true });
-  };
-
-  const filteredProducts = filterProducts(
-    stats.goldProducts.bestSpread,
-    stats.silverProducts.bestSpread,
-    { metalFilter, showOutOfStock },
-  );
-
-  const sortedProducts = sortProducts(filteredProducts, sortOption);
-
-  return (
-    <>
-      <main className="container mx-auto flex-1 px-4 py-6">
-        <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
-          <Stats
-            lastFetch={stats.lastFetch}
-            marketPrices={stats.marketPrices}
-            totalCashbackPercentage={totalCashbackPercentage}
-          />
-        </UIErrorBoundary>
-
-        <Filters
-          availableCards={availableCards}
-          calculatorSettings={calculatorSettings}
-          isClientReady={isClient}
-          metalFilter={metalFilter}
-          onOpenCardManager={() => {
-            setCardManagerOpen(true);
-          }}
-          onOpenSettings={() => {
-            setSettingsDrawerOpen(true);
-          }}
-          setCalculatorSettings={(settings) => {
-            void updateCalculatorSettings(settings);
-          }}
-          setMetalFilter={setMetalFilter}
-          setShowOutOfStock={setShowOutOfStock}
-          setSortOption={setSortOption}
-          showOutOfStock={showOutOfStock}
-          sortOption={sortOption}
-        />
-
-        <CardManagerDrawer
-          cards={availableCards}
-          onCardsChange={(cards, selectCardId) => {
-            void handleCardsChange(cards, selectCardId);
-          }}
-          onClose={() => {
-            setCardManagerOpen(false);
-          }}
-          onResetAll={handleResetAll}
-          open={cardManagerOpen}
-        />
-
-        <CalculatorSettingsDrawer
-          calculatorSettings={calculatorSettings}
-          onOpenCardManager={() => {
-            setCardManagerOpen(true);
-          }}
-          onOpenChange={setSettingsDrawerOpen}
-          open={settingsDrawerOpen}
-          setCalculatorSettings={(settings) => {
-            void updateCalculatorSettings(settings);
-          }}
-        />
-
-        {sortedProducts.length === 0 ? (
-          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-            <div className="text-center">
-              <p className="text-lg font-medium text-muted-foreground">No products found</p>
-              <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
-            </div>
-          </div>
-        ) : (
-          <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
-              {sortedProducts.map((product) => (
-                <ProductCard
-                  calculatorSettings={calculatorSettings}
-                  key={product.productId}
-                  marketPrices={stats.marketPrices}
-                  product={product}
-                />
-              ))}
-            </div>
-          </UIErrorBoundary>
-        )}
-      </main>
-
-      <FeatureAnnouncementModal />
-    </>
-  );
-};
-
 const Home = ({ loaderData }: Route.ComponentProps) => {
   const summary = usePreloadedQuery(loaderData.preloadedSummary);
   const products = usePreloadedQuery(loaderData.preloadedProducts);
@@ -307,7 +94,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  const stats = {
+  const stats: DashboardStats = {
     ...summary,
     goldProducts: {
       ...summary.goldProducts,
@@ -319,7 +106,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
     },
   };
 
-  return <Dashboard stats={stats} />;
+  return <DashboardContent stats={stats} />;
 };
 
 export default Home;

@@ -1,5 +1,9 @@
-import { type CreditCard, calculateCashbackPercentage } from "@/lib/credit-cards";
-import type { PureFeeTier } from "@/lib/pure-fee-tiers";
+import {
+  type CreditCard,
+  calculateCashbackPercentage,
+} from "@/features/credit-cards/lib/credit-cards";
+
+import type { PureFeeTier } from "./lib/pure-fee-tiers";
 
 // Legacy type for backward compatibility
 export interface LegacyCreditCard {

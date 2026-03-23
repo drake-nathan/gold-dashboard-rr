@@ -5,11 +5,11 @@ import {
   calculateCashbackPercentage,
   type CreditCard,
   DEFAULT_PRESET_CARDS,
-} from "@/lib/credit-cards";
-import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
+} from "@/features/credit-cards/lib/credit-cards";
 
 import { usePureFeeTierStorage } from "../calculator/hooks/use-pure-fee-tier-storage";
 import { useUserSettings } from "../calculator/hooks/use-user-settings";
+import { PURE_FEE_TIERS } from "../calculator/lib/pure-fee-tiers";
 import type { CalculatorSettings } from "../calculator/types";
 import { useQuantityStorage } from "./use-quantity-storage";
 

@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CREDIT_CARDS_STORAGE_KEY } from "@/lib/credit-cards";
+import { CREDIT_CARDS_STORAGE_KEY } from "@/features/credit-cards/lib/credit-cards";
 
 // localStorage key for tracking dismissal
 const DISMISSED_KEY = "feature-announcement-dismissed";

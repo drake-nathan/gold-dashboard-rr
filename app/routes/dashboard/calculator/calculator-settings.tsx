@@ -18,7 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { type CreditCard, calculateCashbackPercentage } from "@/lib/credit-cards";
+import {
+  type CreditCard,
+  calculateCashbackPercentage,
+} from "@/features/credit-cards/lib/credit-cards";
 
 import type { CalculatorSettings } from "./types";
 

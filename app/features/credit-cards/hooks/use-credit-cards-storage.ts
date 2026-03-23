@@ -5,7 +5,7 @@ import {
   type CreditCardsStorage,
   creditCardsStorageSchema,
   DEFAULT_PRESET_CARDS,
-} from "@/lib/credit-cards";
+} from "../lib/credit-cards";
 
 export const defaultCreditCardsStorage: CreditCardsStorage = {
   cards: DEFAULT_PRESET_CARDS,
