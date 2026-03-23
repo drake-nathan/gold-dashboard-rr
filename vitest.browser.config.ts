@@ -3,6 +3,15 @@ import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  optimizeDeps: {
+    include: [
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-popover",
+      "@radix-ui/react-select",
+      "@radix-ui/react-switch",
+      "cmdk",
+    ],
+  },
   plugins: [react()],
   resolve: {
     tsconfigPaths: true,

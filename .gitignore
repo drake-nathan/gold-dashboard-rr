@@ -15,6 +15,7 @@
 /coverage/
 coverage-final.json
 __screenshots__
+.vitest-attachments/
 
 # Convex data snapshots (prod data, don't commit)
 /convex/seed/

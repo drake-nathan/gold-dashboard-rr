@@ -15,7 +15,6 @@
 
 ## Up Next
 
-- UI component tests: swipeable-card, filters, calculator-controls
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
 - Add composite indexes for alert batching/history lookup paths
 - Add route tests for dashboard filters, alerts flows, and admin access → [.tasks/route-test-coverage.md]
