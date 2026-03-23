@@ -1,6 +1,7 @@
 import { UserButton } from "@clerk/react-router";
 import { api } from "convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import {
   AlertCircle,
   CheckCircle2,
@@ -19,21 +20,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ProductMatchCard } from "./product-match-card";
 
-export const AdminDashboard = () => {
+type AdminProductsForReview = FunctionReturnType<typeof api.admin.getProductsForReview>;
+
+export const AdminDashboard = ({ productsData }: { productsData: AdminProductsForReview }) => {
   const [activeTab, setActiveTab] = useState("needs_review");
-
-  const productsData = useQuery(api.admin.getProductsForReview);
-
-  if (!productsData) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading products...</span>
-        </div>
-      </div>
-    );
-  }
 
   const { counts } = productsData;
 

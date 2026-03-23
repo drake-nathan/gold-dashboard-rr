@@ -1,6 +1,7 @@
 import { SignIn, useUser } from "@clerk/react-router";
+import { getAuth } from "@clerk/react-router/server";
 import { api } from "convex/_generated/api";
-import { useQuery } from "convex/react";
+import { fetchQuery } from "convex/nextjs";
 import { Loader2, ShieldAlert } from "lucide-react";
 
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
@@ -13,26 +14,65 @@ export const meta: Route.MetaFunction = () => {
   return [{ title: "Admin - Dashboard.Gold" }, { content: "noindex, nofollow", name: "robots" }];
 };
 
-const AdminPage = () => {
-  const { isLoaded: isUserLoaded, isSignedIn, user } = useUser();
+export const loader = async (args: Route.LoaderArgs) => {
+  const convexUrl = process.env.VITE_CONVEX_URL;
 
-  // Check if user is admin (only query when signed in)
-  const adminCheck = useQuery(api.admin.checkIsAdmin, isSignedIn ? {} : "skip");
-
-  // Loading state while Clerk initializes
-  if (!isUserLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
+  if (!convexUrl) {
+    throw new Error("VITE_CONVEX_URL is not set");
   }
 
+  const auth = await getAuth(args);
+  const token = await auth.getToken({ template: "convex" });
+
+  if (!token) {
+    return {
+      adminCheck: {
+        isAdmin: false,
+        userTokenIdentifier: null,
+      },
+      isAuthenticated: false,
+      productsData: null,
+    };
+  }
+
+  const adminCheck = await fetchQuery(
+    api.admin.checkIsAdmin,
+    {},
+    {
+      token,
+      url: convexUrl,
+    },
+  );
+
+  if (!adminCheck.isAdmin) {
+    return {
+      adminCheck,
+      isAuthenticated: true,
+      productsData: null,
+    };
+  }
+
+  const productsData = await fetchQuery(
+    api.admin.getProductsForReview,
+    {},
+    {
+      token,
+      url: convexUrl,
+    },
+  );
+
+  return {
+    adminCheck,
+    isAuthenticated: true,
+    productsData,
+  };
+};
+
+const AdminPage = ({ loaderData }: Route.ComponentProps) => {
+  const { isLoaded: isUserLoaded, user } = useUser();
+
   // Not signed in - show sign in
-  if (!isSignedIn) {
+  if (!loaderData.isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="flex flex-col items-center">
@@ -46,8 +86,7 @@ const AdminPage = () => {
     );
   }
 
-  // Loading admin check
-  if (adminCheck === undefined) {
+  if (!loaderData.productsData && isUserLoaded && loaderData.adminCheck.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -59,7 +98,7 @@ const AdminPage = () => {
   }
 
   // Not an admin - show unauthorized
-  if (!adminCheck.isAdmin) {
+  if (!loaderData.adminCheck.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="w-full max-w-md border-destructive/50">
@@ -74,11 +113,13 @@ const AdminPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-md bg-muted p-4">
-              <p className="text-sm text-muted-foreground">
-                Signed in as: {user.primaryEmailAddress?.emailAddress}
-              </p>
+              {isUserLoaded ? (
+                <p className="text-sm text-muted-foreground">
+                  Signed in as: {user?.primaryEmailAddress?.emailAddress}
+                </p>
+              ) : null}
               <p className="mt-1 font-mono text-xs text-muted-foreground">
-                Token ID: {adminCheck.userTokenIdentifier}
+                Token ID: {loaderData.adminCheck.userTokenIdentifier}
               </p>
             </div>
             <Button asChild variant="outline">
@@ -91,7 +132,18 @@ const AdminPage = () => {
   }
 
   // Admin access granted - show admin dashboard
-  return <AdminDashboard />;
+  if (!loaderData.productsData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading products...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <AdminDashboard productsData={loaderData.productsData} />;
 };
 
 export default AdminPage;
