@@ -9,8 +9,8 @@ import {
   DEFAULT_PRESET_CARDS,
 } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
-import type { CalculatorSettings } from "@/types/calculator";
 
+import type { CalculatorSettings } from "../calculator/types";
 import { useQuantityStorage } from "./use-quantity-storage";
 
 export interface CalculatorSettingsState {

@@ -12,19 +12,22 @@ import { FeatureAnnouncementModal } from "@/components/feature-announcement-moda
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary";
-import type { DashboardStats } from "@/types/dashboard";
-import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "@/utils/product-filters";
 
 import type { Route } from "./+types/index";
 import { CalculatorSettingsDrawer } from "./calculator/calculator-settings-drawer";
 import { CardManagerDrawer } from "./cards/card-manager-drawer";
 import type { MetalFilter, SortOption } from "./filters/filter-types";
 import { Filters } from "./filters/filters";
+import {
+  filterProducts,
+  shouldAutoFlipToOutOfStock,
+  sortProducts,
+} from "./filters/product-filters";
 import { useCalculatorSettings } from "./hooks/use-calculator-settings";
 import { ProductCard } from "./products/product-card";
 import { Stats } from "./stats/stats";
-
-export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "@/types/dashboard";
+import { type DashboardStats, type DashboardMarketPrice, type ProductCardData } from "./types";
+export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "./types";
 
 export const meta = () => {
   const title = "Dashboard.Gold - Precious Metals Price Comparison";

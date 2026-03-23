@@ -3,9 +3,9 @@ import { render } from "vitest-browser-react";
 
 import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
-import type { CalculatorSettings } from "@/types/calculator";
 
 import { CalculatorControls } from "./calculator-controls";
+import type { CalculatorSettings } from "./types";
 
 const availableCards = DEFAULT_PRESET_CARDS.slice(0, 2);
 

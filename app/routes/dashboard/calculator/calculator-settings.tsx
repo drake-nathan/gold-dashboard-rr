@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { type CreditCard, calculateCashbackPercentage } from "@/lib/credit-cards";
-import type { CalculatorSettings } from "@/types/calculator";
 
-export type { CalculatorSettings, CreditCard };
+import type { CalculatorSettings } from "./types";
+
+export type { CalculatorSettings, CreditCard } from "./types";
 
 interface CalculatorSettingsDialogProps {
   availableCards: CreditCard[];

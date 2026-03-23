@@ -1,7 +1,8 @@
 import { calculateCashbackPercentage, calculateSubBonusPercentage } from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
-import type { CalculatorSettings } from "@/types/calculator";
-import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
+
+import type { DashboardMarketPrice, ProductCardData } from "../types";
+import type { CalculatorSettings } from "./types";
 
 export interface ProductCalculations {
   // Above spot calculation

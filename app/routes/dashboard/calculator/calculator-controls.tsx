@@ -32,9 +32,9 @@ import {
   calculateTotalCashbackPercentage,
   type CreditCard,
 } from "@/lib/credit-cards";
-import type { CalculatorSettings } from "@/types/calculator";
 
 import { MAX_QUANTITY } from "../hooks/use-quantity-storage";
+import type { CalculatorSettings } from "./types";
 
 interface CalculatorControlsProps {
   availableCards: CreditCard[];

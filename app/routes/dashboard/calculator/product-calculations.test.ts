@@ -2,10 +2,10 @@ import { expect, test } from "vitest";
 
 import { DEFAULT_PRESET_CARDS } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
-import type { CalculatorSettings } from "@/types/calculator";
-import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
 
+import type { DashboardMarketPrice, ProductCardData } from "../types";
 import { calculateProductMetrics } from "./product-calculations";
+import type { CalculatorSettings } from "./types";
 
 const mockMarketPrices: DashboardMarketPrice[] = [
   {

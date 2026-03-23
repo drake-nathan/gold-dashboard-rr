@@ -1,7 +1,6 @@
 import { test } from "vitest";
 
-import type { ProductCardData } from "@/types/dashboard";
-
+import type { ProductCardData } from "../types";
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
 
 // Mock product data helpers

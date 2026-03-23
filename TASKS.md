@@ -2,11 +2,13 @@
 
 ## Now
 
+- File organization guardrails + feature boundary cleanup → [.epics/file-organization.md]
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 - Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
 
 ## Epics
 
+- **File Organization Guardrails** — [.epics/file-organization.md] — In Progress
 - **Alerts & Subscriptions** — [.epics/alerts.md] — In Progress
 - **Environment Config Hardening** — [.epics/environment-config-hardening.md] — In Progress
 - **Filters & Sorting** — weight, brand, price range, "only deals" toggle — Not Started
