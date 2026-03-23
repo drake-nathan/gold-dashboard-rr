@@ -21,11 +21,10 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 - Alert batching/history lookups now use composite indexes for pending batch and unsent history window queries instead of user-wide scans.
 - Dashboard filters, alerts route flows, and admin access states now have focused browser route coverage.
 - Stripe checkout, portal, and subscription status flows now have direct Convex test coverage beyond webhook-only coverage.
+- Shared header/mobile navigation no longer issue speculative `checkIsAdmin` queries; admin access is enforced at the `/admin` route instead.
 
 ## Remaining
 
-- Audit unconditional `checkIsAdmin` queries in shared header/mobile navigation.
-  Source of truth: `TASKS.md` Up Next and `.tasks/admin-check-callsite-audit.md`
 - Add performance regression fixtures for dashboard and admin review query shapes.
   Source of truth: `TASKS.md` Testing
 
@@ -44,6 +43,7 @@ Align Convex auth identity usage and remove the highest-risk hot-path query patt
 | Treat auth identity consistency as a correctness issue, not cleanup | Accepted | Current code uses `identity.subject` despite Convex guidance favoring `tokenIdentifier` |
 | Keep this as a dedicated high-priority epic                         | Accepted | Work crosses schema assumptions, query design, Stripe linkage, and tests                |
 | Prefer targeted hardening over broad rewrites                       | Accepted | Scope is auth keys, hot queries, indexes, and coverage for affected flows               |
+| Avoid global admin status polling in shared chrome                  | Accepted | `/admin` remains the authorization boundary; shared nav no longer pays that query cost  |
 
 ## Notes
 

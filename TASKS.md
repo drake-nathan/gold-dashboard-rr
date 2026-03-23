@@ -20,7 +20,6 @@
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
 - Replace hardcoded dashboard OG/site URL with the canonical site URL source
 - Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
-- Audit unconditional `checkIsAdmin` queries in header/mobile navigation → [.tasks/admin-check-callsite-audit.md]
 - Split `app/components/admin/*` oversized files → [.tasks/split-admin-components.md]
 - Split `app/hooks/use-user-credit-cards.ts` → [.tasks/split-user-credit-cards-hook.md]
 - Loading skeletons instead of empty states

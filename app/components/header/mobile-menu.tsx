@@ -1,7 +1,5 @@
 import { Show, useClerk } from "@clerk/react-router";
-import { api } from "convex/_generated/api";
-import { useQuery } from "convex/react";
-import { Bell, LogIn, Menu, Settings, UserPlus } from "lucide-react";
+import { Bell, LogIn, Menu, UserPlus } from "lucide-react";
 import { Link } from "react-router";
 
 import { UpgradeButton } from "@/components/subscription";
@@ -23,10 +21,6 @@ export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
   const { isPro } = useSubscription();
 
-  // Check if current user is admin
-  const adminCheck = useQuery(api.admin.checkIsAdmin);
-  const isAdmin = adminCheck?.isAdmin ?? false;
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -40,19 +34,6 @@ export const MobileMenu = () => {
           Theme
         </DropdownMenuLabel>
         <ThemeMenuItems />
-
-        {/* Admin Link */}
-        {isAdmin ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/admin">
-                <Settings className="mr-2 h-4 w-4" />
-                Admin
-              </Link>
-            </DropdownMenuItem>
-          </>
-        ) : null}
 
         {/* Auth Section */}
         <DropdownMenuSeparator />
