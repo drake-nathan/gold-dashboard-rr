@@ -37,22 +37,15 @@ test("requests the Convex Clerk token template for protected admin queries", asy
       userTokenIdentifier: "clerk|admin-user",
     })
     .mockResolvedValueOnce({
-      auto_matched: [],
-      counts: {
-        auto_matched: 0,
-        fallback: 0,
-        manual_matched: 0,
-        needs_review: 0,
-        pending_approval: 0,
-        total: 0,
-        unmatched: 0,
-      },
-      fallback: [],
-      manual_matched: [],
-      needs_review: [],
-      pending_approval: [],
-      unmatched: [],
-    });
+      auto_matched: 0,
+      fallback: 0,
+      manual_matched: 0,
+      needs_review: 0,
+      pending_approval: 0,
+      total: 0,
+      unmatched: 0,
+    })
+    .mockResolvedValueOnce([]);
 
   const { loader } = await import("./admin");
 
@@ -77,11 +70,21 @@ test("requests the Convex Clerk token template for protected admin queries", asy
       url: "https://example.convex.cloud",
     },
   );
+  expect(fetchQueryMock).toHaveBeenNthCalledWith(
+    3,
+    expect.anything(),
+    { status: "action_needed" },
+    {
+      token: "convex-jwt",
+      url: "https://example.convex.cloud",
+    },
+  );
   expect(result).toMatchObject({
     adminCheck: {
       isAdmin: true,
       userTokenIdentifier: "clerk|admin-user",
     },
+    initialProducts: [],
     isAuthenticated: true,
   });
 });
@@ -104,6 +107,7 @@ test("returns signed-out loader data when no Convex token is available", async (
       isAdmin: false,
       userTokenIdentifier: null,
     },
+    initialProducts: null,
     isAuthenticated: false,
     productsData: null,
   });

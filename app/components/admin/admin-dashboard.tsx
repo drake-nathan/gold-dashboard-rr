@@ -20,12 +20,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ProductMatchCard } from "./product-match-card";
 
-type AdminProductsForReview = FunctionReturnType<typeof api.admin.getProductsForReview>;
+type AdminProductReviewCounts = FunctionReturnType<typeof api.admin.getProductsForReviewCounts>;
+type AdminProductsForReviewStatus = FunctionReturnType<typeof api.admin.getProductsForReviewStatus>;
+type ReviewTab = "action_needed" | "auto_matched" | "fallback" | "manual_matched" | "unmatched";
 
-export const AdminDashboard = ({ productsData }: { productsData: AdminProductsForReview }) => {
-  const [activeTab, setActiveTab] = useState("needs_review");
+export const AdminDashboard = ({
+  initialProducts,
+  productsData,
+}: {
+  initialProducts: AdminProductsForReviewStatus;
+  productsData: AdminProductReviewCounts;
+}) => {
+  const [activeTab, setActiveTab] = useState<ReviewTab>("action_needed");
+  const activeProductsQuery = useQuery(api.admin.getProductsForReviewStatus, {
+    status: activeTab,
+  });
 
-  const { counts } = productsData;
+  const counts = productsData;
+  const activeProducts =
+    activeProductsQuery ?? (activeTab === "action_needed" ? initialProducts : undefined);
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,11 +94,17 @@ export const AdminDashboard = ({ productsData }: { productsData: AdminProductsFo
         <UrlParserCard />
 
         {/* Product Tabs */}
-        <Tabs className="mt-8" onValueChange={setActiveTab} value={activeTab}>
+        <Tabs
+          className="mt-8"
+          onValueChange={(value) => {
+            setActiveTab(value as ReviewTab);
+          }}
+          value={activeTab}
+        >
           <TabsList className="inline-flex h-auto w-full flex-wrap justify-start gap-1 bg-transparent p-0">
             <TabsTrigger
               className="gap-1.5 rounded-full border bg-background px-3 py-1.5 data-[state=active]:border-yellow-500 data-[state=active]:bg-yellow-500/10"
-              value="needs_review"
+              value="action_needed"
             >
               <AlertCircle className="h-3.5 w-3.5" />
               <span>Action</span>
@@ -135,60 +154,46 @@ export const AdminDashboard = ({ productsData }: { productsData: AdminProductsFo
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent className="mt-6 space-y-4" value="needs_review">
-            {productsData.needs_review.length === 0 &&
-            productsData.pending_approval.length === 0 ? (
-              <EmptyState message="No products need action" />
-            ) : (
-              [...productsData.pending_approval, ...productsData.needs_review].map((product) => (
-                <ProductMatchCard key={product.productId} product={product} />
-              ))
-            )}
+          <TabsContent className="mt-6 space-y-4" value="action_needed">
+            <ProductList products={activeTab === "action_needed" ? activeProducts : undefined} />
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="auto_matched">
-            {productsData.auto_matched.length === 0 ? (
-              <EmptyState message="No auto-matched products" />
-            ) : (
-              productsData.auto_matched.map((product) => (
-                <ProductMatchCard key={product.productId} product={product} />
-              ))
-            )}
+            <ProductList products={activeTab === "auto_matched" ? activeProducts : undefined} />
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="fallback">
-            {productsData.fallback.length === 0 ? (
-              <EmptyState message="No products using fallback" />
-            ) : (
-              productsData.fallback.map((product) => (
-                <ProductMatchCard key={product.productId} product={product} />
-              ))
-            )}
+            <ProductList products={activeTab === "fallback" ? activeProducts : undefined} />
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="manual_matched">
-            {productsData.manual_matched.length === 0 ? (
-              <EmptyState message="No approved products" />
-            ) : (
-              productsData.manual_matched.map((product) => (
-                <ProductMatchCard key={product.productId} product={product} />
-              ))
-            )}
+            <ProductList products={activeTab === "manual_matched" ? activeProducts : undefined} />
           </TabsContent>
 
           <TabsContent className="mt-6 space-y-4" value="unmatched">
-            {productsData.unmatched.length === 0 ? (
-              <EmptyState message="No unmatched products" />
-            ) : (
-              productsData.unmatched.map((product) => (
-                <ProductMatchCard key={product.productId} product={product} />
-              ))
-            )}
+            <ProductList products={activeTab === "unmatched" ? activeProducts : undefined} />
           </TabsContent>
         </Tabs>
       </main>
     </div>
   );
+};
+
+const ProductList = ({ products }: { products: AdminProductsForReviewStatus | undefined }) => {
+  if (!products) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Loading products...
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return <EmptyState message="No products in this tab" />;
+  }
+
+  return products.map((product) => <ProductMatchCard key={product.productId} product={product} />);
 };
 
 const StatsCard = ({

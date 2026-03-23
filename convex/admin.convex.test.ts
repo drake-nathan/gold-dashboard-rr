@@ -45,7 +45,7 @@ test("checkIsAdmin does not grant access for matching subject alone", async () =
   });
 });
 
-test("getProductsForReview joins only matched pure products", async () => {
+test("getProductsForReviewStatus joins only matched pure products", async () => {
   vi.stubEnv("ADMIN_USER_IDS", "clerk|admin-user");
 
   const t = convexTest(schema, modules);
@@ -144,13 +144,101 @@ test("getProductsForReview joins only matched pure products", async () => {
     tokenIdentifier: "clerk|admin-user",
   });
 
-  const products = await asAdmin.query(api.admin.getProductsForReview, {});
+  const counts = await asAdmin.query(api.admin.getProductsForReviewCounts, {});
+  const manualMatched = await asAdmin.query(api.admin.getProductsForReviewStatus, {
+    status: "manual_matched",
+  });
+  const unmatched = await asAdmin.query(api.admin.getProductsForReviewStatus, {
+    status: "unmatched",
+  });
 
-  expect(products.counts.manual_matched).toBe(1);
-  expect(products.counts.unmatched).toBe(1);
-  expect(products.manual_matched[0]?.pureProduct).toMatchObject({
+  expect(counts.manual_matched).toBe(1);
+  expect(counts.unmatched).toBe(1);
+  expect(manualMatched[0]?.pureProduct).toMatchObject({
     productName: "1 oz Gold Bar",
     pureProductId: "pure-gold-1",
   });
-  expect(products.unmatched[0]?.pureProduct).toBeNull();
+  expect(unmatched[0]?.pureProduct).toBeNull();
+});
+
+test("getProductsForReviewStatus combines pending approval and needs review for action_needed", async () => {
+  vi.stubEnv("ADMIN_USER_IDS", "clerk|admin-user");
+
+  const t = convexTest(schema, modules);
+
+  await t.run(async (ctx) => {
+    const now = Date.now();
+
+    await ctx.db.insert("costcoProducts", {
+      brand: "Brand A",
+      categories: [],
+      currentInStock: true,
+      currentPrice: 2499,
+      currentPricePerOunce: 2499,
+      firstSeen: now,
+      isMemberOnly: null,
+      isOnlineOnly: null,
+      lastPriceChange: null,
+      lastStockChange: null,
+      lastUpdated: now,
+      marketingFeatures: null,
+      matchApprovedAt: null,
+      matchApprovedBy: null,
+      matchStatus: "needs_review",
+      maxQuantity: null,
+      metalType: "gold",
+      metalWeight: "1 oz",
+      name: "Needs Review Product",
+      productId: "review-1",
+      retailerId: "costco",
+      shortDescription: null,
+      thumbnail: null,
+      upc: null,
+      url: "https://example.com/review-1",
+      verifiedInStock: null,
+    });
+
+    await ctx.db.insert("costcoProducts", {
+      brand: "Brand B",
+      categories: [],
+      currentInStock: true,
+      currentPrice: 2599,
+      currentPricePerOunce: 2599,
+      firstSeen: now,
+      isMemberOnly: null,
+      isOnlineOnly: null,
+      lastPriceChange: null,
+      lastStockChange: null,
+      lastUpdated: now,
+      marketingFeatures: null,
+      matchApprovedAt: null,
+      matchApprovedBy: null,
+      matchStatus: "pending_approval",
+      maxQuantity: null,
+      metalType: "gold",
+      metalWeight: "1 oz",
+      name: "Pending Product",
+      productId: "pending-1",
+      retailerId: "costco",
+      shortDescription: null,
+      thumbnail: null,
+      upc: null,
+      url: "https://example.com/pending-1",
+      verifiedInStock: null,
+    });
+  });
+
+  const asAdmin = t.withIdentity({
+    subject: "user_admin_subject",
+    tokenIdentifier: "clerk|admin-user",
+  });
+
+  const counts = await asAdmin.query(api.admin.getProductsForReviewCounts, {});
+  const actionNeeded = await asAdmin.query(api.admin.getProductsForReviewStatus, {
+    status: "action_needed",
+  });
+
+  expect(counts.needs_review).toBe(1);
+  expect(counts.pending_approval).toBe(1);
+  expect(actionNeeded.map((product) => product.productId)).toStrictEqual(["pending-1", "review-1"]);
 });

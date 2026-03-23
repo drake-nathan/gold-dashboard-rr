@@ -31,6 +31,7 @@ export const loader = async (args: Route.LoaderArgs) => {
         isAdmin: false,
         userTokenIdentifier: null,
       },
+      initialProducts: null,
       isAuthenticated: false,
       productsData: null,
     };
@@ -48,22 +49,36 @@ export const loader = async (args: Route.LoaderArgs) => {
   if (!adminCheck.isAdmin) {
     return {
       adminCheck,
+      initialProducts: null,
       isAuthenticated: true,
       productsData: null,
     };
   }
 
-  const productsData = await fetchQuery(
-    api.admin.getProductsForReview,
-    {},
-    {
-      token,
-      url: convexUrl,
-    },
-  );
+  const [productsData, initialProducts] = await Promise.all([
+    fetchQuery(
+      api.admin.getProductsForReviewCounts,
+      {},
+      {
+        token,
+        url: convexUrl,
+      },
+    ),
+    fetchQuery(
+      api.admin.getProductsForReviewStatus,
+      {
+        status: "action_needed",
+      },
+      {
+        token,
+        url: convexUrl,
+      },
+    ),
+  ]);
 
   return {
     adminCheck,
+    initialProducts,
     isAuthenticated: true,
     productsData,
   };
@@ -121,7 +136,12 @@ const AdminPage = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  return <AdminDashboard productsData={loaderData.productsData!} />;
+  return (
+    <AdminDashboard
+      initialProducts={loaderData.initialProducts!}
+      productsData={loaderData.productsData!}
+    />
+  );
 };
 
 export default AdminPage;

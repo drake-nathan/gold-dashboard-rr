@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import { type QueryCtx, action, internalMutation, mutation, query } from "./_generated/server";
 import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
 import {
@@ -29,6 +30,15 @@ const getAuthenticatedTokenIdentifier = async (ctx: QueryCtx): Promise<null | st
 };
 
 const maxAdminReviewProducts = 2000;
+const reviewStatusValidator = v.union(
+  v.literal("action_needed"),
+  v.literal("auto_matched"),
+  v.literal("fallback"),
+  v.literal("manual_matched"),
+  v.literal("unmatched"),
+);
+
+type ReviewStatus = "action_needed" | "auto_matched" | "fallback" | "manual_matched" | "unmatched";
 
 // Helper to require admin access
 const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
@@ -39,110 +49,197 @@ const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
   return tokenIdentifier ?? "";
 };
 
+const assertAdminReviewLimit = <T>(products: T[], label: string): T[] => {
+  if (products.length > maxAdminReviewProducts) {
+    throw new Error(`${label} exceeded safe query limit of ${maxAdminReviewProducts}`);
+  }
+  return products;
+};
+
+const listLegacyUndefinedMatchStatusProducts = async (
+  ctx: QueryCtx,
+): Promise<Doc<"costcoProducts">[]> => {
+  const products = await takeWithLimit(
+    () => ctx.db.query("costcoProducts").take(maxAdminReviewProducts + 1),
+    maxAdminReviewProducts,
+    "admin legacy unmatched products",
+  );
+
+  return products.filter((product) => product.matchStatus === undefined);
+};
+
+const getPureProductsMap = async (
+  ctx: QueryCtx,
+  products: Doc<"costcoProducts">[],
+): Promise<Map<string, Doc<"pureProducts">>> => {
+  const pureProductIds = [...new Set(products.flatMap((product) => product.pureProductId ?? []))];
+  const pureProducts = (
+    await Promise.all(
+      pureProductIds.map((pureProductId) =>
+        ctx.db
+          .query("pureProducts")
+          .withIndex("by_pure_id", (q) => q.eq("pureProductId", pureProductId))
+          .unique(),
+      ),
+    )
+  ).filter((product) => product !== null);
+
+  return new Map(pureProducts.map((product) => [product.pureProductId, product]));
+};
+
+const enrichReviewProducts = async (ctx: QueryCtx, products: Doc<"costcoProducts">[]) => {
+  const pureProductsMap = await getPureProductsMap(ctx, products);
+
+  return products.map((product) => {
+    const pureProduct = product.pureProductId ? pureProductsMap.get(product.pureProductId) : null;
+
+    return {
+      _id: product._id,
+      currentInStock: product.currentInStock,
+      currentPrice: product.currentPrice,
+      firstSeen: product.firstSeen,
+      matchApprovedAt: product.matchApprovedAt,
+      matchApprovedBy: product.matchApprovedBy,
+      matchStatus: product.matchStatus,
+      metalType: product.metalType,
+      metalWeight: product.metalWeight,
+      name: product.name,
+      productId: product.productId,
+      pureProduct: pureProduct
+        ? {
+            currentBidPrice: pureProduct.currentBidPrice,
+            isGenericFallback: pureProduct.isGenericFallback,
+            manufacturer: pureProduct.manufacturer,
+            productName: pureProduct.productName,
+            pureProductId: pureProduct.pureProductId,
+            sku: pureProduct.sku,
+            weight: pureProduct.weight,
+          }
+        : null,
+      pureProductId: product.pureProductId,
+      thumbnail: product.thumbnail,
+      url: product.url,
+    };
+  });
+};
+
+const listProductsForReviewStatus = async (
+  ctx: QueryCtx,
+  status: ReviewStatus,
+): Promise<Doc<"costcoProducts">[]> => {
+  if (status === "action_needed") {
+    const [needsReview, pendingApproval] = await Promise.all([
+      takeWithLimit(
+        () =>
+          ctx.db
+            .query("costcoProducts")
+            .withIndex("by_match_status", (q) => q.eq("matchStatus", "needs_review"))
+            .take(maxAdminReviewProducts + 1),
+        maxAdminReviewProducts,
+        "admin needs review products",
+      ),
+      takeWithLimit(
+        () =>
+          ctx.db
+            .query("costcoProducts")
+            .withIndex("by_match_status", (q) => q.eq("matchStatus", "pending_approval"))
+            .take(maxAdminReviewProducts + 1),
+        maxAdminReviewProducts,
+        "admin pending approval products",
+      ),
+    ]);
+
+    return assertAdminReviewLimit(
+      [...pendingApproval, ...needsReview],
+      "admin action needed products",
+    );
+  }
+
+  if (status === "unmatched") {
+    const [nullStatusProducts, legacyUndefinedProducts] = await Promise.all([
+      takeWithLimit(
+        () =>
+          ctx.db
+            .query("costcoProducts")
+            .withIndex("by_match_status", (q) => q.eq("matchStatus", null))
+            .take(maxAdminReviewProducts + 1),
+        maxAdminReviewProducts,
+        "admin unmatched products",
+      ),
+      listLegacyUndefinedMatchStatusProducts(ctx),
+    ]);
+
+    return assertAdminReviewLimit(
+      [...nullStatusProducts, ...legacyUndefinedProducts],
+      "admin unmatched products",
+    );
+  }
+
+  return takeWithLimit(
+    () =>
+      ctx.db
+        .query("costcoProducts")
+        .withIndex("by_match_status", (q) => q.eq("matchStatus", status))
+        .take(maxAdminReviewProducts + 1),
+    maxAdminReviewProducts,
+    `admin ${status} products`,
+  );
+};
+
+const getProductReviewCounts = async (ctx: QueryCtx) => {
+  const [actionNeeded, autoMatched, fallback, manualMatched, unmatched] = await Promise.all([
+    listProductsForReviewStatus(ctx, "action_needed"),
+    listProductsForReviewStatus(ctx, "auto_matched"),
+    listProductsForReviewStatus(ctx, "fallback"),
+    listProductsForReviewStatus(ctx, "manual_matched"),
+    listProductsForReviewStatus(ctx, "unmatched"),
+  ]);
+
+  const pendingApproval = actionNeeded.filter(
+    (product) => product.matchStatus === "pending_approval",
+  );
+  const needsReview = actionNeeded.filter((product) => product.matchStatus === "needs_review");
+
+  return {
+    auto_matched: autoMatched.length,
+    fallback: fallback.length,
+    manual_matched: manualMatched.length,
+    needs_review: needsReview.length,
+    pending_approval: pendingApproval.length,
+    total:
+      actionNeeded.length +
+      autoMatched.length +
+      fallback.length +
+      manualMatched.length +
+      unmatched.length,
+    unmatched: unmatched.length,
+  };
+};
+
 /**
- * Get all products for admin review, grouped by match status
+ * Get product counts for admin review tabs
  */
-export const getProductsForReview = query({
+export const getProductsForReviewCounts = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
 
-    const products = await takeWithLimit(
-      () => ctx.db.query("costcoProducts").take(maxAdminReviewProducts + 1),
-      maxAdminReviewProducts,
-      "admin review products",
-    );
+    return getProductReviewCounts(ctx);
+  },
+});
 
-    const pureProductIds = [...new Set(products.flatMap((product) => product.pureProductId ?? []))];
-    const pureProducts = (
-      await Promise.all(
-        pureProductIds.map((pureProductId) =>
-          ctx.db
-            .query("pureProducts")
-            .withIndex("by_pure_id", (q) => q.eq("pureProductId", pureProductId))
-            .unique(),
-        ),
-      )
-    ).filter((product) => product !== null);
-    const pureProductsMap = new Map(pureProducts.map((p) => [p.pureProductId, p]));
+/**
+ * Get products for a single admin review tab
+ */
+export const getProductsForReviewStatus = query({
+  args: {
+    status: reviewStatusValidator,
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
 
-    // Group by match status
-    const grouped = {
-      auto_matched: [] as typeof products,
-      fallback: [] as typeof products,
-      manual_matched: [] as typeof products,
-      needs_review: [] as typeof products,
-      pending_approval: [] as typeof products,
-      unmatched: [] as typeof products,
-    };
-
-    for (const product of products) {
-      const status = product.matchStatus;
-      if (status === "needs_review") {
-        grouped.needs_review.push(product);
-      } else if (status === "auto_matched") {
-        grouped.auto_matched.push(product);
-      } else if (status === "fallback") {
-        grouped.fallback.push(product);
-      } else if (status === "manual_matched") {
-        grouped.manual_matched.push(product);
-      } else if (status === "pending_approval") {
-        grouped.pending_approval.push(product);
-      } else {
-        grouped.unmatched.push(product);
-      }
-    }
-
-    // Enrich with Pure product info
-    const enrichProduct = (product: (typeof products)[0]) => {
-      const pureProduct = product.pureProductId ? pureProductsMap.get(product.pureProductId) : null;
-
-      return {
-        _id: product._id,
-        currentInStock: product.currentInStock,
-        currentPrice: product.currentPrice,
-        firstSeen: product.firstSeen,
-        matchApprovedAt: product.matchApprovedAt,
-        matchApprovedBy: product.matchApprovedBy,
-        matchStatus: product.matchStatus,
-        metalType: product.metalType,
-        metalWeight: product.metalWeight,
-        name: product.name,
-        productId: product.productId,
-        pureProduct: pureProduct
-          ? {
-              currentBidPrice: pureProduct.currentBidPrice,
-              isGenericFallback: pureProduct.isGenericFallback,
-              manufacturer: pureProduct.manufacturer,
-              productName: pureProduct.productName,
-              pureProductId: pureProduct.pureProductId,
-              sku: pureProduct.sku,
-              weight: pureProduct.weight,
-            }
-          : null,
-        pureProductId: product.pureProductId,
-        thumbnail: product.thumbnail,
-        url: product.url,
-      };
-    };
-
-    return {
-      auto_matched: grouped.auto_matched.map(enrichProduct),
-      counts: {
-        auto_matched: grouped.auto_matched.length,
-        fallback: grouped.fallback.length,
-        manual_matched: grouped.manual_matched.length,
-        needs_review: grouped.needs_review.length,
-        pending_approval: grouped.pending_approval.length,
-        total: products.length,
-        unmatched: grouped.unmatched.length,
-      },
-      fallback: grouped.fallback.map(enrichProduct),
-      manual_matched: grouped.manual_matched.map(enrichProduct),
-      needs_review: grouped.needs_review.map(enrichProduct),
-      pending_approval: grouped.pending_approval.map(enrichProduct),
-      unmatched: grouped.unmatched.map(enrichProduct),
-    };
+    const products = await listProductsForReviewStatus(ctx, args.status);
+    return enrichReviewProducts(ctx, products);
   },
 });
 
