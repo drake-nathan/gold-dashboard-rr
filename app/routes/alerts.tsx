@@ -14,7 +14,7 @@ import {
   TriangleAlert,
   Zap,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
@@ -613,7 +613,7 @@ const AlertsPage = () => {
   const { alertEntitlements, isLoading: isSubscriptionLoading } = useSubscription();
 
   const alerts = useQuery(api.alerts.getAlerts, isSignedIn ? {} : "skip");
-  const stats = useQuery(api.dashboard.getStats, isSignedIn ? {} : "skip");
+  const productOptions = useQuery(api.alerts.getProductOptions, isSignedIn ? {} : "skip") ?? [];
 
   const createAlert = useMutation(api.alerts.createAlert);
   const updateAlert = useMutation(api.alerts.updateAlert);
@@ -635,27 +635,6 @@ const AlertsPage = () => {
         ? ("price_drop" as const)
         : ("in_stock" as const),
   }));
-
-  const productOptions = useMemo(() => {
-    if (!stats) {
-      return [];
-    }
-
-    const allProducts = [...stats.goldProducts.bestSpread, ...stats.silverProducts.bestSpread];
-
-    const unique = new Map(
-      allProducts.map((product) => [
-        product.productId,
-        {
-          metalType: product.metalType,
-          name: product.name,
-          productId: product.productId,
-        },
-      ]),
-    );
-
-    return [...unique.values()].toSorted((a, b) => a.name.localeCompare(b.name));
-  }, [stats]);
 
   const hasValidationError = getFormValidationError(formValues);
 

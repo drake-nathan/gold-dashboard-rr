@@ -675,6 +675,35 @@ export const getAlerts = query({
   },
 });
 
+export const getProductOptions = query({
+  args: {},
+  handler: async (ctx) => {
+    const [goldProducts, silverProducts] = await Promise.all([
+      ctx.db
+        .query("costcoProducts")
+        .withIndex("by_metal_type", (q) => q.eq("metalType", "gold"))
+        .take(1000),
+      ctx.db
+        .query("costcoProducts")
+        .withIndex("by_metal_type", (q) => q.eq("metalType", "silver"))
+        .take(1000),
+    ]);
+
+    const productOptions = new Map(
+      [...goldProducts, ...silverProducts].map((product) => [
+        product.productId,
+        {
+          metalType: product.metalType,
+          name: product.name,
+          productId: product.productId,
+        },
+      ]),
+    );
+
+    return [...productOptions.values()].toSorted((a, b) => a.name.localeCompare(b.name));
+  },
+});
+
 export const createAlert = mutation({
   args: {
     aboveSpotThreshold: v.optional(v.number()),
