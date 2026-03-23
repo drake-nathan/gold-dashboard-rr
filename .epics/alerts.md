@@ -9,7 +9,6 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 
 ## Plan
 
-- Finish the active `alerts` route cleanup so the route module becomes an orchestrator instead of the main implementation surface.
 - Close the highest-signal UI polish and coverage gaps around `/alerts`, subscription gating, and shared public chrome.
 
 ## Completed
@@ -18,11 +17,10 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 - Phase 4 core shipped: alert CRUD, evaluation engine, batched email digests, and the main `/alerts` route/UI.
 - Convex-side coverage is already substantial for alerts evaluation, batching, unsubscribe behavior, and subscription-state interactions.
 - Hook/component coverage exists for subscription state, upgrade flow, and portal flow, so the main confidence gap is route-level behavior rather than basic primitives.
+- `app/routes/alerts.tsx` is now reduced to a route export surface, with page orchestration, form state, dialog UI, and card rendering split into smaller modules under `app/routes/alerts/*`.
 
 ## Remaining
 
-- Split `app/routes/alerts.tsx` into smaller modules with stable seams.
-  Source of truth: `TASKS.md` Now and `.tasks/split-alerts-route.md`
 - Add focused route/browser tests for dashboard filters, alerts flows, and admin access, with alerts called out explicitly.
   Source of truth: `TASKS.md` Up Next and `.tasks/route-test-coverage.md`
 - Polish the `/alerts` experience around empty/loading/error states and responsive behavior.
@@ -36,7 +34,6 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 
 ## Exit Criteria
 
-- `app/routes/alerts.tsx` is reduced to a route container with form/list/auth concerns split into smaller modules.
 - `/alerts` has focused browser coverage for signed-out gating and at least one signed-in happy path.
 - The alerts/subscription UI handles loading, empty, and error states intentionally on desktop and mobile.
 - Shared chrome decisions for dashboard/alerts are settled enough that alerts UI ownership is clear.
