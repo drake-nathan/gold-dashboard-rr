@@ -39,8 +39,10 @@ Tighten the app and Convex file structure so feature boundaries stay obvious, sh
   - Reduced `app/lib` to shared infrastructure (`cn`, Sentry filters) instead of feature/domain code.
   - Slimmed `app/routes/dashboard/index.tsx` by extracting `dashboard-content.tsx`, `use-dashboard-filters.ts`, and `use-migration-toast.ts`.
   - Slimmed `app/routes/alerts/index.tsx` by extracting `alerts-page.tsx` and `hooks/use-alerts-page.ts`.
+  - Extracted the large helper prelude from `convex/alerts.ts` into `convex/alerts/helpers.ts` while keeping the registered Convex function surface stable in `convex/alerts.ts`.
 - Current structural smells to address:
-  - Oversized Convex modules in `convex/alerts.ts`, `convex/admin.ts`, and `convex/costco.ts`.
+  - Oversized Convex modules in `convex/admin.ts` and `convex/costco.ts`.
+  - `convex/alerts.ts` still has a large registration surface and could be split further by CRUD/evaluation/batch processing concerns if needed.
   - Inconsistent test placement in Convex (`convex/__tests__` versus colocated tests elsewhere).
 - Likely rule candidates only if notes are not enough:
   - Disallow imports from `app/routes/**` inside shared buckets such as `app/lib/**`, `app/utils/**`, and `app/hooks/**`.
