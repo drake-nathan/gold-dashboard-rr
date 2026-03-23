@@ -1,7 +1,7 @@
 import { Loader2, Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useManagePortal } from "@/hooks/use-manage-portal";
+import { useManagePortal } from "@/features/subscription/hooks/use-manage-portal";
 
 interface ManageSubscriptionButtonProps {
   className?: string;

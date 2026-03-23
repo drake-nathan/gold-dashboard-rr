@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 
-import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
-import { useUserCreditCards } from "@/hooks/use-user-credit-cards";
-import { useUserSettings } from "@/hooks/use-user-settings";
+import { useUserCreditCards } from "@/features/credit-cards/hooks/use-user-credit-cards";
 import {
   calculateCashbackPercentage,
   type CreditCard,
@@ -10,6 +8,8 @@ import {
 } from "@/lib/credit-cards";
 import { PURE_FEE_TIERS } from "@/lib/pure-fee-tiers";
 
+import { usePureFeeTierStorage } from "../calculator/hooks/use-pure-fee-tier-storage";
+import { useUserSettings } from "../calculator/hooks/use-user-settings";
 import type { CalculatorSettings } from "../calculator/types";
 import { useQuantityStorage } from "./use-quantity-storage";
 

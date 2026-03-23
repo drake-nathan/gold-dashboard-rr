@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useSubscription } from "@/features/subscription/hooks/use-subscription";
 
 import { EditAlertDialog } from "./dialogs/edit-alert-dialog";
 import { AlertFormFields } from "./form/alert-form-fields";

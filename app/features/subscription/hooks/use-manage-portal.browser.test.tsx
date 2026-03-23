@@ -23,7 +23,7 @@ let mockSubscription = {
 };
 
 // Mock useSubscription
-vi.mock("@/hooks/use-subscription", () => ({
+vi.mock("./use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 

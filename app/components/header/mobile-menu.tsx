@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useSubscription } from "@/features/subscription/hooks/use-subscription";
 
 import { ThemeMenuItems } from "./theme-toggle";
 import { UserButtonWithPro } from "./user-button-with-pro";

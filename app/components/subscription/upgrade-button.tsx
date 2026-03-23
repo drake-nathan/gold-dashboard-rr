@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useSubscription } from "@/features/subscription/hooks/use-subscription";
 
 interface UpgradeButtonProps {
   className?: string;

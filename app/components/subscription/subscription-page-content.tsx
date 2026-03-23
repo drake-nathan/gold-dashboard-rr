@@ -1,8 +1,8 @@
 import { Crown, ExternalLink, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useManagePortal } from "@/hooks/use-manage-portal";
-import { useSubscription } from "@/hooks/use-subscription";
+import { useManagePortal } from "@/features/subscription/hooks/use-manage-portal";
+import { useSubscription } from "@/features/subscription/hooks/use-subscription";
 
 /**
  * Content for the Subscription page in Clerk's UserProfile modal.

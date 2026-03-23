@@ -26,7 +26,7 @@ vi.mock("convex/react", () => ({
   useQuery: (...args: unknown[]) => useQueryMock(...args),
 }));
 
-vi.mock("@/hooks/use-subscription", () => ({
+vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 

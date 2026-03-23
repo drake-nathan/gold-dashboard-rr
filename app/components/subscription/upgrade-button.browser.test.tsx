@@ -23,7 +23,7 @@ vi.mock("@clerk/react-router", () => ({
 }));
 
 // Mock useSubscription hook
-vi.mock("@/hooks/use-subscription", () => ({
+vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 

@@ -8,7 +8,7 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 
-import { useSubscription } from "@/hooks/use-subscription";
+import { useSubscription } from "./use-subscription";
 
 interface UseManagePortalReturn {
   /**

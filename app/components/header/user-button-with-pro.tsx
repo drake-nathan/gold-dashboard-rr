@@ -3,7 +3,7 @@ import { CreditCard, Crown } from "lucide-react";
 
 import { SubscriptionPageContent } from "@/components/subscription/subscription-page-content";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useManagePortal } from "@/hooks/use-manage-portal";
+import { useManagePortal } from "@/features/subscription/hooks/use-manage-portal";
 import { cn } from "@/lib/cn";
 
 /** Skeleton sizes account for the avatar + 2px border on each side (p-[2px] wrapper) */
