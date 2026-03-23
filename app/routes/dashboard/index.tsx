@@ -9,8 +9,6 @@ import { toast } from "sonner";
 import { useDebounceCallback, useIsClient } from "usehooks-ts";
 
 import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary";
@@ -205,9 +203,7 @@ const Dashboard = ({ stats }: DashboardProps) => {
   const sortedProducts = sortProducts(filteredProducts, sortOption);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-
+    <>
       <main className="container mx-auto flex-1 px-4 py-6">
         <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
           <Stats
@@ -285,10 +281,8 @@ const Dashboard = ({ stats }: DashboardProps) => {
         )}
       </main>
 
-      <Footer />
-
       <FeatureAnnouncementModal />
-    </div>
+    </>
   );
 };
 
@@ -299,14 +293,14 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   // oxlint-disable-next-line eslint/no-unnecessary-condition -- defense-in-depth: runtime data could be undefined despite type
   if (!summary || !products) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="text-center">
           <div className="text-lg font-medium">Error</div>
           <div className="text-sm text-muted-foreground">
             We&apos;re having an issue connecting to our database, please try again later.
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -332,7 +326,7 @@ export const ErrorBoundary = () => {
 
   if (isRouteErrorResponse(error)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <main className="container mx-auto flex flex-1 items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md border-destructive/50 bg-destructive/10">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -373,7 +367,7 @@ export const ErrorBoundary = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     );
   }
 
@@ -385,7 +379,7 @@ export const ErrorBoundary = () => {
   const errorStack = isError ? error.stack : undefined;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <main className="container mx-auto flex flex-1 items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md border-destructive/50 bg-destructive/10">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -432,6 +426,6 @@ export const ErrorBoundary = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };

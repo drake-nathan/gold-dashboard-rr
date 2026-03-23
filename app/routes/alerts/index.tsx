@@ -7,8 +7,6 @@ import { useState } from "react";
 import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
 import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -137,18 +135,18 @@ const AlertsPage = () => {
 
   if (!isAuthLoaded) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading alerts...</span>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (!isSignedIn) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="flex flex-col items-center">
           <div className="mb-6 text-center">
             <h1 className="text-2xl font-bold">Alerts</h1>
@@ -156,7 +154,7 @@ const AlertsPage = () => {
           </div>
           <SignIn fallbackRedirectUrl="/alerts" forceRedirectUrl="/alerts" routing="hash" />
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -165,8 +163,7 @@ const AlertsPage = () => {
   const totalCount = alerts?.length ?? 0;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
+    <>
       <main className="container mx-auto flex-1 px-4 py-8">
         <div className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -306,8 +303,6 @@ const AlertsPage = () => {
         </div>
       </main>
 
-      <Footer />
-
       {editingAlert ? (
         <EditAlertDialog
           alert={editingAlert}
@@ -318,7 +313,7 @@ const AlertsPage = () => {
           productOptions={productOptions}
         />
       ) : null}
-    </div>
+    </>
   );
 };
 
