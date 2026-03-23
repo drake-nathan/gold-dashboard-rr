@@ -1,6 +1,6 @@
 import { test } from "vitest";
 
-import type { ProductCardData } from "@/components/dashboard";
+import type { ProductCardData } from "@/types/dashboard";
 
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
 

@@ -1,15 +1,15 @@
 import { SignIn, useUser } from "@clerk/react-router";
 import { getAuth } from "@clerk/react-router/server";
 import { api } from "convex/_generated/api";
-// React Router uses the same server-side Convex helper exposed from convex/nextjs.
 import { fetchQuery } from "convex/nextjs";
 import { ShieldAlert } from "lucide-react";
 
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import type { Route } from "./+types/admin";
+import { AdminDashboard } from "./admin-dashboard";
+
+import type { Route } from "./+types/index";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "Admin - Dashboard.Gold" }, { content: "noindex, nofollow", name: "robots" }];
@@ -87,7 +87,6 @@ export const loader = async (args: Route.LoaderArgs) => {
 const AdminPage = ({ loaderData }: Route.ComponentProps) => {
   const { isLoaded: isUserLoaded, user } = useUser();
 
-  // Not signed in - show sign in
   if (!loaderData.isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -102,7 +101,6 @@ const AdminPage = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
-  // Not an admin - show unauthorized
   if (!loaderData.adminCheck.isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">

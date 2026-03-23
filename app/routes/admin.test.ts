@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 
-import type { Route } from "./+types/admin";
+import type { Route } from "./admin/+types/index";
 
 const getAuthMock = vi.fn();
 const fetchQueryMock = vi.fn();

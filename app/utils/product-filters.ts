@@ -1,5 +1,5 @@
-import type { ProductCardData } from "@/components/dashboard";
-import type { MetalFilter, SortOption } from "@/components/dashboard/filter-types";
+import type { ProductCardData } from "@/types/dashboard";
+import type { MetalFilter, SortOption } from "@/routes/dashboard/filter-types";
 
 export interface FilterOptions {
   metalFilter: MetalFilter;

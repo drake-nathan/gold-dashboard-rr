@@ -1,6 +1,6 @@
 import { useIsClient } from "usehooks-ts";
 
-import type { DashboardMarketPrice, DashboardStats } from ".";
+import type { DashboardMarketPrice, DashboardStats } from "@/types/dashboard";
 import { StatCard } from "./stat-card";
 
 interface StatsProps {

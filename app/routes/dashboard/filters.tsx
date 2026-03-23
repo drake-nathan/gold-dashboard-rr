@@ -2,7 +2,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useIsClient, useMediaQuery } from "usehooks-ts";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
+import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,

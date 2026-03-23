@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
+import type { CalculatorSettings } from "@/types/calculator";
 import { usePureFeeTierStorage } from "@/hooks/use-pure-fee-tier-storage";
-import { useQuantityStorage } from "@/hooks/use-quantity-storage";
+import { useQuantityStorage } from "./use-quantity-storage";
 import { useUserCreditCards } from "@/hooks/use-user-credit-cards";
 import { useUserSettings } from "@/hooks/use-user-settings";
 import {

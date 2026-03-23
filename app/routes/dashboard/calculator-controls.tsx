@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
+import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MAX_QUANTITY } from "@/hooks/use-quantity-storage";
+import { MAX_QUANTITY } from "./use-quantity-storage";
 import { cn } from "@/lib/cn";
 import {
   calculateCashbackPercentage,

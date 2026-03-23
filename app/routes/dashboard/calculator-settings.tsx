@@ -19,35 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { type CreditCard, calculateCashbackPercentage } from "@/lib/credit-cards";
-import type { PureFeeTier } from "@/lib/pure-fee-tiers";
+import type { CalculatorSettings } from "@/types/calculator";
 
-// Legacy type for backward compatibility
-export interface LegacyCreditCard {
-  cashbackPercentage: number;
-  earnRate: number;
-  id: string;
-  name: string;
-  pointValue: number;
-}
-
-// oxlint-disable-next-line react/only-export-components -- legacy compatibility helper co-located with legacy types
-export const toLegacyCard = (card: CreditCard): LegacyCreditCard => ({
-  cashbackPercentage: calculateCashbackPercentage(card),
-  earnRate: card.pointsPerDollar,
-  id: card.id,
-  name: card.name,
-  pointValue: card.valuePerPoint,
-});
-
-// Export the new type as well
-export type { CreditCard };
-
-export interface CalculatorSettings {
-  costcoMembershipEnabled: boolean;
-  creditCard: CreditCard;
-  pureFeeTier: PureFeeTier;
-  quantity: number;
-}
+export type { CalculatorSettings, CreditCard };
 
 interface CalculatorSettingsDialogProps {
   availableCards: CreditCard[];

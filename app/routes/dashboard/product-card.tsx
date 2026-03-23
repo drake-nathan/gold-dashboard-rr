@@ -10,8 +10,8 @@ import { formatRelativeTime } from "@/utils/format-time";
 import { calculateProductMetrics } from "@/utils/product-calculations";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
-import type { CalculatorSettings } from "../calculator-settings";
-import type { DashboardMarketPrice, ProductCardData } from "../dashboard";
+import type { CalculatorSettings } from "@/types/calculator";
+import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
 import { PriceRow } from "./price-row";
 
 interface ProductCardProps {

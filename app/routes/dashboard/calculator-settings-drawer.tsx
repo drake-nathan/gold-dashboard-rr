@@ -1,6 +1,6 @@
 import { ExternalLink, Info, Settings2 } from "lucide-react";
 
-import type { CalculatorSettings } from "@/components/calculator-settings";
+import type { CalculatorSettings } from "@/types/calculator";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {

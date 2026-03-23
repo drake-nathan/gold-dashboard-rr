@@ -114,7 +114,7 @@ test("keeps real stackful server errors", () => {
       values: [
         {
           stacktrace: {
-            frames: [{ filename: "/app/routes/dashboard.tsx", function: "loader" }],
+            frames: [{ filename: "/app/routes/dashboard/index.tsx", function: "loader" }],
           },
           type: "Error",
           value: "Unexpected Server Error",

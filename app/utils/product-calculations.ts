@@ -1,5 +1,5 @@
-import type { CalculatorSettings } from "@/components/calculator-settings";
-import type { DashboardMarketPrice, ProductCardData } from "@/components/dashboard";
+import type { CalculatorSettings } from "@/types/calculator";
+import type { DashboardMarketPrice, ProductCardData } from "@/types/dashboard";
 import { calculateCashbackPercentage, calculateSubBonusPercentage } from "@/lib/credit-cards";
 import { getFeeRateForMetal } from "@/lib/pure-fee-tiers";
 
