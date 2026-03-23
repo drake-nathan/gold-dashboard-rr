@@ -24,6 +24,7 @@ export default defineConfig({
         "jest/require-hook": "off",
         "jsdoc/check-tag-names": "off",
         "typescript/consistent-return": "off",
+        "typescript/no-unsafe-return": "off",
         "typescript/strict-void-return": "off",
         "typescript/unbound-method": "off",
         "unicorn/consistent-function-scoping": "off",
