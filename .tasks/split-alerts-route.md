@@ -1,4 +1,4 @@
-> **Status:** Ready
+> **Status:** In Progress
 
 # Split Alerts Route
 
@@ -34,3 +34,4 @@ Reduce `app/routes/alerts.tsx` to a route container with clearer ownership bound
 ## Notes
 
 - This is structural work. Keep product-option-query changes separate unless they are required to complete the split cleanly.
+- Favor stable ownership boundaries over file-count reduction; the route should end up easier to read, test, and change.

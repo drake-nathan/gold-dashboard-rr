@@ -18,6 +18,8 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
    - Delete items when done. No checkboxes, no ✅ — git history is the archive.
    - Add discovered work to "Up Next" — inform the user when you do.
    - Promote items to "Now" only with user approval.
+   - When a `TASKS.md` item with a linked `.tasks/*.md` brief moves into "Now", update that brief's status to `In Progress` in the same change.
+   - When a linked task is no longer active, keep the brief status in sync (`Ready`, `In Progress`, or `Blocked`) with the task's actual state.
    - Keep under 80 lines. If a topic grows past 3-4 items, it's an epic.
 3. **Epic files** (`.epics/<name>.md`):
    - Create for multi-session work (3+ sessions expected).
@@ -29,6 +31,7 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 4. **Task brief files** (`.tasks/<name>.md`):
    - Create for medium-complexity work when a one-line task would be too ambiguous for a cold-start agent.
    - Always start with: `> **Status:** Ready | In Progress | Blocked`
+   - Status should reflect tracker reality: `Ready` for queued work, `In Progress` for items in "Now", `Blocked` when the linked task is blocked.
    - Include: Goal, Scope, Non-goals, Acceptance Criteria, Key Files, Notes.
    - Link from `TASKS.md` using `→ [.tasks/<name>.md]`.
    - Delete the file when the task ships or is absorbed into an epic.

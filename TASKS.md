@@ -56,4 +56,4 @@
 ## Testing
 
 - Browser coverage for route modules excluded from coverage (`dashboard`, `alerts`, `admin`, `root`)
-- Performance regression fixtures for `dashboard.getStats` and admin review query shapes
+- Performance regression fixtures for dashboard summary/product queries and admin review query shapes

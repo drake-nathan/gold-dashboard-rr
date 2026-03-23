@@ -1,4 +1,4 @@
-> **Status:** Ready
+> **Status:** In Progress
 
 # Docs Source Of Truth
 
@@ -36,3 +36,4 @@ Make the repo instructions internally consistent so a cold-start contributor or 
 ## Notes
 
 - Current contradictions include dev/prod Convex deployment strategy, `twelve.ts` references, ESLint/Prettier mentions, and “parallel/Turbo” CI claims.
+- This is a documentation-alignment task. Prefer correcting the docs to match the current codebase unless the code is clearly wrong and the user asks for behavioral changes.
