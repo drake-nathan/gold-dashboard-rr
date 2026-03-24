@@ -2,13 +2,11 @@
 
 ## Now
 
-- File organization guardrails + feature boundary cleanup → [.epics/file-organization.md]
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
 - Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
 
 ## Epics
 
-- **File Organization Guardrails** — [.epics/file-organization.md] — In Progress
 - **Alerts & Subscriptions** — [.epics/alerts.md] — In Progress
 - **Environment Config Hardening** — [.epics/environment-config-hardening.md] — In Progress
 - **Filters & Sorting** — weight, brand, price range, "only deals" toggle — Not Started
@@ -33,8 +31,6 @@
 
 ## Later
 
-- Split `convex/alerts.ts` by public API, batching, and email delivery concerns
-- Split `convex/admin.ts` by review queries, matching workflows, and Pure ingestion
 - Split `app/components/card-manager-drawer.tsx` and `app/components/admin/product-match-card.tsx`
 - Price history charts for individual products
 - Stock availability notifications (extend alerts system)

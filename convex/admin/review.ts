@@ -1,7 +1,7 @@
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import { normalizeProductName, scorePureProductCandidate } from "../lib/productMatching";
 import { extractWeightInOz, getFallbackPureId } from "../lib/metalParsing";
+import { normalizeProductName, scorePureProductCandidate } from "../lib/productMatching";
 import { takeWithLimit } from "../lib/queries";
 import type { ReviewStatus } from "./access";
 
@@ -200,9 +200,7 @@ export const getTopMatchesForProduct = async (
   }
 
   const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-  const fallbackPureId = weightInOz
-    ? getFallbackPureId(costcoProduct.metalType, weightInOz)
-    : null;
+  const fallbackPureId = weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
 
   const fallbackPureProduct = fallbackPureId
     ? await ctx.db

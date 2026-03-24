@@ -1,3 +1,4 @@
+import type { MutationCtx } from "../_generated/server";
 import {
   extractProductType,
   getHighestOfferPrice,
@@ -113,4 +114,45 @@ export const toPureProductInsertData = (product: PureApiProduct) => {
     weight: weightOz,
     weightGrams: product.weightGrams || null,
   };
+};
+
+export const insertPureProductHelper = async (
+  ctx: MutationCtx,
+  args: {
+    currentBidPrice: null | number;
+    currentBidPricePerOz: null | number;
+    isGenericFallback: boolean;
+    lastUpdated: number;
+    manufacturer: null | string;
+    metalType: "gold" | "silver";
+    productName: string;
+    productType: null | string;
+    pureProductId: string;
+    sku: null | string;
+    weight: number;
+    weightGrams: null | number;
+  },
+) => {
+  const existing = await ctx.db
+    .query("pureProducts")
+    .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
+    .first();
+
+  if (existing) {
+    await ctx.db.patch(existing._id, {
+      currentBidPrice: args.currentBidPrice,
+      currentBidPricePerOz: args.currentBidPricePerOz,
+      lastUpdated: args.lastUpdated,
+      manufacturer: args.manufacturer,
+      productName: args.productName,
+      productType: args.productType,
+      sku: args.sku,
+      weight: args.weight,
+      weightGrams: args.weightGrams,
+    });
+    return { inserted: false, updated: true };
+  }
+
+  await ctx.db.insert("pureProducts", args);
+  return { inserted: true, updated: false };
 };

@@ -108,9 +108,7 @@ export const applyFallbackHelper = async (
 ) => {
   const costcoProduct = await getCostcoProduct(ctx, args.costcoProductId);
   const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-  const fallbackPureId = weightInOz
-    ? getFallbackPureId(costcoProduct.metalType, weightInOz)
-    : null;
+  const fallbackPureId = weightInOz ? getFallbackPureId(costcoProduct.metalType, weightInOz) : null;
 
   await ctx.db.patch(costcoProduct._id, {
     matchApprovedAt: Date.now(),

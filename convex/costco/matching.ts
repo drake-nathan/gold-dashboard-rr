@@ -1,7 +1,7 @@
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import { normalizeProductName, scorePureProductCandidate } from "../lib/productMatching";
 import { extractWeightInOz, getFallbackPureId } from "../lib/metalParsing";
+import { normalizeProductName, scorePureProductCandidate } from "../lib/productMatching";
 
 interface ScoredMatch {
   details: string;

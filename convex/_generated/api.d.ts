@@ -9,8 +9,18 @@
  */
 
 import type * as admin from "../admin.js";
+import type * as admin_access from "../admin/access.js";
+import type * as admin_catalog from "../admin/catalog.js";
+import type * as admin_mutations from "../admin/mutations.js";
+import type * as admin_pure from "../admin/pure.js";
+import type * as admin_review from "../admin/review.js";
 import type * as alerts from "../alerts.js";
+import type * as alerts_batches from "../alerts/batches.js";
+import type * as alerts_evaluation from "../alerts/evaluation.js";
 import type * as costco from "../costco.js";
+import type * as costco_api from "../costco/api.js";
+import type * as costco_matching from "../costco/matching.js";
+import type * as costco_productState from "../costco/productState.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
 import type * as fmp from "../fmp.js";
@@ -18,6 +28,7 @@ import type * as http from "../http.js";
 import type * as lib_alerts from "../lib/alerts.js";
 import type * as lib_authIdentity from "../lib/authIdentity.js";
 import type * as lib_metalParsing from "../lib/metalParsing.js";
+import type * as lib_productMatching from "../lib/productMatching.js";
 import type * as lib_pureApiParsing from "../lib/pureApiParsing.js";
 import type * as lib_queries from "../lib/queries.js";
 import type * as marketPrices from "../marketPrices.js";
@@ -38,8 +49,18 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
+  "admin/access": typeof admin_access;
+  "admin/catalog": typeof admin_catalog;
+  "admin/mutations": typeof admin_mutations;
+  "admin/pure": typeof admin_pure;
+  "admin/review": typeof admin_review;
   alerts: typeof alerts;
+  "alerts/batches": typeof alerts_batches;
+  "alerts/evaluation": typeof alerts_evaluation;
   costco: typeof costco;
+  "costco/api": typeof costco_api;
+  "costco/matching": typeof costco_matching;
+  "costco/productState": typeof costco_productState;
   crons: typeof crons;
   dashboard: typeof dashboard;
   fmp: typeof fmp;
@@ -47,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "lib/alerts": typeof lib_alerts;
   "lib/authIdentity": typeof lib_authIdentity;
   "lib/metalParsing": typeof lib_metalParsing;
+  "lib/productMatching": typeof lib_productMatching;
   "lib/pureApiParsing": typeof lib_pureApiParsing;
   "lib/queries": typeof lib_queries;
   marketPrices: typeof marketPrices;

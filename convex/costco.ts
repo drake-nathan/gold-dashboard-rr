@@ -13,7 +13,7 @@ import {
   markUnseenProductsOutOfStockHelper,
   updateProductFromVerificationHelper,
   upsertProcessedProduct,
-} from "./costco/product-state";
+} from "./costco/productState";
 
 export const fetchNewData = internalAction({
   args: {},

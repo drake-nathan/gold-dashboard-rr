@@ -31,9 +31,7 @@ export const isAdmin = (tokenIdentifier: null | string): boolean => {
   return adminIds.includes(tokenIdentifier);
 };
 
-export const getAuthenticatedTokenIdentifier = async (
-  ctx: AuthCtx,
-): Promise<null | string> => {
+export const getAuthenticatedTokenIdentifier = async (ctx: AuthCtx): Promise<null | string> => {
   const identity = await ctx.auth.getUserIdentity();
   return identity?.tokenIdentifier ?? null;
 };

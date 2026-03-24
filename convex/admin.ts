@@ -2,7 +2,13 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
-import { isAdmin, requireAdmin, reviewStatusValidator } from "./admin/access";
+import { requireAdmin, reviewStatusValidator } from "./admin/access";
+import {
+  getAdminStatusHelper,
+  getAllPureProductsHelper,
+  getPureProductBySkuHelper,
+  searchPureProductsHelper,
+} from "./admin/catalog";
 import {
   applyFallbackHelper,
   approveMatchHelper,
@@ -11,12 +17,16 @@ import {
   selectMatchHelper,
 } from "./admin/mutations";
 import {
+  fetchPureProductBySku,
+  insertPureProductHelper,
+  toPureProductInsertData,
+} from "./admin/pure";
+import {
   enrichReviewProducts,
   getProductReviewCounts,
   getTopMatchesForProduct,
   listProductsForReviewStatus,
 } from "./admin/review";
-import { fetchPureProductBySku, toPureProductInsertData } from "./admin/pure";
 
 /**
  * Get product counts for admin review tabs
@@ -73,28 +83,7 @@ export const getPureProductBySku = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-
-    const pureProduct = await ctx.db
-      .query("pureProducts")
-      .withIndex("by_sku", (q) => q.eq("sku", args.sku))
-      .first();
-
-    if (!pureProduct) {
-      return null;
-    }
-
-    return {
-      currentBidPrice: pureProduct.currentBidPrice,
-      currentBidPricePerOz: pureProduct.currentBidPricePerOz,
-      isGenericFallback: pureProduct.isGenericFallback,
-      manufacturer: pureProduct.manufacturer,
-      metalType: pureProduct.metalType,
-      productName: pureProduct.productName,
-      productType: pureProduct.productType,
-      pureProductId: pureProduct.pureProductId,
-      sku: pureProduct.sku,
-      weight: pureProduct.weight,
-    };
+    return getPureProductBySkuHelper(ctx, args.sku);
   },
 });
 
@@ -109,44 +98,7 @@ export const searchPureProducts = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-
-    const limit = args.limit ?? 10;
-    const searchQuery = args.query.toLowerCase();
-
-    let pureProducts;
-    if (args.metalType) {
-      pureProducts = await ctx.db
-        .query("pureProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType ?? "gold"))
-        .collect();
-    } else {
-      pureProducts = await ctx.db.query("pureProducts").collect();
-    }
-
-    // Filter by search query
-    const filtered = pureProducts.filter((p) => {
-      const name = p.productName.toLowerCase();
-      const sku = p.sku?.toLowerCase() ?? "";
-      const manufacturer = p.manufacturer?.toLowerCase() ?? "";
-
-      return (
-        name.includes(searchQuery) ||
-        sku.includes(searchQuery) ||
-        manufacturer.includes(searchQuery)
-      );
-    });
-
-    // Return top results
-    return filtered.slice(0, limit).map((p) => ({
-      currentBidPrice: p.currentBidPrice,
-      isGenericFallback: p.isGenericFallback,
-      manufacturer: p.manufacturer,
-      metalType: p.metalType,
-      productName: p.productName,
-      pureProductId: p.pureProductId,
-      sku: p.sku,
-      weight: p.weight,
-    }));
+    return searchPureProductsHelper(ctx, args);
   },
 });
 
@@ -278,27 +230,7 @@ export const getAllPureProducts = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-
-    let pureProducts;
-    if (args.metalType) {
-      pureProducts = await ctx.db
-        .query("pureProducts")
-        .withIndex("by_metal_type", (q) => q.eq("metalType", args.metalType ?? "gold"))
-        .collect();
-    } else {
-      pureProducts = await ctx.db.query("pureProducts").collect();
-    }
-
-    return pureProducts.map((p) => ({
-      currentBidPrice: p.currentBidPrice,
-      isGenericFallback: p.isGenericFallback,
-      manufacturer: p.manufacturer,
-      metalType: p.metalType,
-      productName: p.productName,
-      pureProductId: p.pureProductId,
-      sku: p.sku,
-      weight: p.weight,
-    }));
+    return getAllPureProductsHelper(ctx, args);
   },
 });
 
@@ -307,14 +239,7 @@ export const getAllPureProducts = query({
  */
 export const checkIsAdmin = query({
   args: {},
-  handler: async (ctx) => {
-    const tokenIdentifier = (await ctx.auth.getUserIdentity())?.tokenIdentifier ?? null;
-
-    return {
-      isAdmin: isAdmin(tokenIdentifier),
-      userTokenIdentifier: tokenIdentifier,
-    };
-  },
+  handler: (ctx) => getAdminStatusHelper(ctx),
 });
 
 /**
@@ -394,30 +319,6 @@ export const insertPureProduct = internalMutation({
     weightGrams: v.union(v.number(), v.null()),
   },
   handler: async (ctx, args) => {
-    // Check if product already exists
-    const existing = await ctx.db
-      .query("pureProducts")
-      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
-      .first();
-
-    if (existing) {
-      // Update existing product
-      await ctx.db.patch(existing._id, {
-        currentBidPrice: args.currentBidPrice,
-        currentBidPricePerOz: args.currentBidPricePerOz,
-        lastUpdated: args.lastUpdated,
-        manufacturer: args.manufacturer,
-        productName: args.productName,
-        productType: args.productType,
-        sku: args.sku,
-        weight: args.weight,
-        weightGrams: args.weightGrams,
-      });
-      return { inserted: false, updated: true };
-    }
-
-    // Insert new product
-    await ctx.db.insert("pureProducts", args);
-    return { inserted: true, updated: false };
+    return insertPureProductHelper(ctx, args);
   },
 });
