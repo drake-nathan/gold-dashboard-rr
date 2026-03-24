@@ -1,220 +1,22 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
-import { type QueryCtx, action, internalMutation, mutation, query } from "./_generated/server";
-import { extractWeightInOz, getFallbackPureId } from "./lib/metalParsing";
+import { action, internalMutation, mutation, query } from "./_generated/server";
+import { isAdmin, requireAdmin, reviewStatusValidator } from "./admin/access";
 import {
-  extractProductType,
-  getHighestOfferPrice,
-  hasMorePages,
-  parseWeightToOz,
-} from "./lib/pureApiParsing";
-import { takeWithLimit } from "./lib/queries";
-
-// Helper to check if a user is an admin
-const isAdmin = (tokenIdentifier: null | string): boolean => {
-  if (!tokenIdentifier) return false;
-
-  const adminUserIds = process.env.ADMIN_USER_IDS;
-  if (!adminUserIds) return false;
-
-  const adminIds = adminUserIds.split(",").map((id) => id.trim());
-  return adminIds.includes(tokenIdentifier);
-};
-
-// Helper to get authenticated user token identifier from context
-const getAuthenticatedTokenIdentifier = async (ctx: QueryCtx): Promise<null | string> => {
-  const identity = await ctx.auth.getUserIdentity();
-  return identity?.tokenIdentifier ?? null;
-};
-
-const maxAdminReviewProducts = 2000;
-const reviewStatusValidator = v.union(
-  v.literal("action_needed"),
-  v.literal("auto_matched"),
-  v.literal("fallback"),
-  v.literal("manual_matched"),
-  v.literal("unmatched"),
-);
-
-type ReviewStatus = "action_needed" | "auto_matched" | "fallback" | "manual_matched" | "unmatched";
-
-// Helper to require admin access
-const requireAdmin = async (ctx: QueryCtx): Promise<string> => {
-  const tokenIdentifier = await getAuthenticatedTokenIdentifier(ctx);
-  if (!isAdmin(tokenIdentifier)) {
-    throw new Error("Unauthorized: Admin access required");
-  }
-  return tokenIdentifier ?? "";
-};
-
-const assertAdminReviewLimit = <T>(products: T[], label: string): T[] => {
-  if (products.length > maxAdminReviewProducts) {
-    throw new Error(`${label} exceeded safe query limit of ${maxAdminReviewProducts}`);
-  }
-  return products;
-};
-
-const listLegacyUndefinedMatchStatusProducts = async (
-  ctx: QueryCtx,
-): Promise<Doc<"costcoProducts">[]> => {
-  const products = await takeWithLimit(
-    () => ctx.db.query("costcoProducts").take(maxAdminReviewProducts + 1),
-    maxAdminReviewProducts,
-    "admin legacy unmatched products",
-  );
-
-  return products.filter((product) => product.matchStatus === undefined);
-};
-
-const getPureProductsMap = async (
-  ctx: QueryCtx,
-  products: Doc<"costcoProducts">[],
-): Promise<Map<string, Doc<"pureProducts">>> => {
-  const pureProductIds = [...new Set(products.flatMap((product) => product.pureProductId ?? []))];
-  const pureProducts = (
-    await Promise.all(
-      pureProductIds.map((pureProductId) =>
-        ctx.db
-          .query("pureProducts")
-          .withIndex("by_pure_id", (q) => q.eq("pureProductId", pureProductId))
-          .unique(),
-      ),
-    )
-  ).filter((product) => product !== null);
-
-  return new Map(pureProducts.map((product) => [product.pureProductId, product]));
-};
-
-const enrichReviewProducts = async (ctx: QueryCtx, products: Doc<"costcoProducts">[]) => {
-  const pureProductsMap = await getPureProductsMap(ctx, products);
-
-  return products.map((product) => {
-    const pureProduct = product.pureProductId ? pureProductsMap.get(product.pureProductId) : null;
-
-    return {
-      _id: product._id,
-      currentInStock: product.currentInStock,
-      currentPrice: product.currentPrice,
-      firstSeen: product.firstSeen,
-      matchApprovedAt: product.matchApprovedAt,
-      matchApprovedBy: product.matchApprovedBy,
-      matchStatus: product.matchStatus,
-      metalType: product.metalType,
-      metalWeight: product.metalWeight,
-      name: product.name,
-      productId: product.productId,
-      pureProduct: pureProduct
-        ? {
-            currentBidPrice: pureProduct.currentBidPrice,
-            isGenericFallback: pureProduct.isGenericFallback,
-            manufacturer: pureProduct.manufacturer,
-            productName: pureProduct.productName,
-            pureProductId: pureProduct.pureProductId,
-            sku: pureProduct.sku,
-            weight: pureProduct.weight,
-          }
-        : null,
-      pureProductId: product.pureProductId,
-      thumbnail: product.thumbnail,
-      url: product.url,
-    };
-  });
-};
-
-const listProductsForReviewStatus = async (
-  ctx: QueryCtx,
-  status: ReviewStatus,
-): Promise<Doc<"costcoProducts">[]> => {
-  if (status === "action_needed") {
-    const [needsReview, pendingApproval] = await Promise.all([
-      takeWithLimit(
-        () =>
-          ctx.db
-            .query("costcoProducts")
-            .withIndex("by_match_status", (q) => q.eq("matchStatus", "needs_review"))
-            .take(maxAdminReviewProducts + 1),
-        maxAdminReviewProducts,
-        "admin needs review products",
-      ),
-      takeWithLimit(
-        () =>
-          ctx.db
-            .query("costcoProducts")
-            .withIndex("by_match_status", (q) => q.eq("matchStatus", "pending_approval"))
-            .take(maxAdminReviewProducts + 1),
-        maxAdminReviewProducts,
-        "admin pending approval products",
-      ),
-    ]);
-
-    return assertAdminReviewLimit(
-      [...pendingApproval, ...needsReview],
-      "admin action needed products",
-    );
-  }
-
-  if (status === "unmatched") {
-    const [nullStatusProducts, legacyUndefinedProducts] = await Promise.all([
-      takeWithLimit(
-        () =>
-          ctx.db
-            .query("costcoProducts")
-            .withIndex("by_match_status", (q) => q.eq("matchStatus", null))
-            .take(maxAdminReviewProducts + 1),
-        maxAdminReviewProducts,
-        "admin unmatched products",
-      ),
-      listLegacyUndefinedMatchStatusProducts(ctx),
-    ]);
-
-    return assertAdminReviewLimit(
-      [...nullStatusProducts, ...legacyUndefinedProducts],
-      "admin unmatched products",
-    );
-  }
-
-  return takeWithLimit(
-    () =>
-      ctx.db
-        .query("costcoProducts")
-        .withIndex("by_match_status", (q) => q.eq("matchStatus", status))
-        .take(maxAdminReviewProducts + 1),
-    maxAdminReviewProducts,
-    `admin ${status} products`,
-  );
-};
-
-const getProductReviewCounts = async (ctx: QueryCtx) => {
-  const [actionNeeded, autoMatched, fallback, manualMatched, unmatched] = await Promise.all([
-    listProductsForReviewStatus(ctx, "action_needed"),
-    listProductsForReviewStatus(ctx, "auto_matched"),
-    listProductsForReviewStatus(ctx, "fallback"),
-    listProductsForReviewStatus(ctx, "manual_matched"),
-    listProductsForReviewStatus(ctx, "unmatched"),
-  ]);
-
-  const pendingApproval = actionNeeded.filter(
-    (product) => product.matchStatus === "pending_approval",
-  );
-  const needsReview = actionNeeded.filter((product) => product.matchStatus === "needs_review");
-
-  return {
-    auto_matched: autoMatched.length,
-    fallback: fallback.length,
-    manual_matched: manualMatched.length,
-    needs_review: needsReview.length,
-    pending_approval: pendingApproval.length,
-    total:
-      actionNeeded.length +
-      autoMatched.length +
-      fallback.length +
-      manualMatched.length +
-      unmatched.length,
-    unmatched: unmatched.length,
-  };
-};
+  applyFallbackHelper,
+  approveMatchHelper,
+  clearManualMatchHelper,
+  confirmMatchHelper,
+  selectMatchHelper,
+} from "./admin/mutations";
+import {
+  enrichReviewProducts,
+  getProductReviewCounts,
+  getTopMatchesForProduct,
+  listProductsForReviewStatus,
+} from "./admin/review";
+import { fetchPureProductBySku, toPureProductInsertData } from "./admin/pure";
 
 /**
  * Get product counts for admin review tabs
@@ -254,206 +56,10 @@ export const getTopMatches = query({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-
-    const limit = args.limit ?? 5;
-
-    // Get the Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-
-    // Get fallback Pure product info
-    const fallbackPureId = weightInOz
-      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
-      : null;
-
-    let fallbackPureProduct = null;
-    if (fallbackPureId) {
-      fallbackPureProduct = await ctx.db
-        .query("pureProducts")
-        .withIndex("by_pure_id", (q) => q.eq("pureProductId", fallbackPureId))
-        .first();
-    }
-
-    // Get all Pure products for this metal type
-    const pureProducts = await ctx.db
-      .query("pureProducts")
-      .withIndex("by_metal_type", (q) => q.eq("metalType", costcoProduct.metalType))
-      .collect();
-
-    if (pureProducts.length === 0) {
-      return {
-        costcoProduct: {
-          metalType: costcoProduct.metalType,
-          metalWeight: costcoProduct.metalWeight,
-          name: costcoProduct.name,
-          productId: costcoProduct.productId,
-          weightInOz,
-        },
-        fallback: fallbackPureProduct
-          ? {
-              currentBidPrice: fallbackPureProduct.currentBidPrice,
-              isGenericFallback: fallbackPureProduct.isGenericFallback,
-              manufacturer: fallbackPureProduct.manufacturer,
-              productName: fallbackPureProduct.productName,
-              pureProductId: fallbackPureProduct.pureProductId,
-              sku: fallbackPureProduct.sku,
-              weight: fallbackPureProduct.weight,
-            }
-          : null,
-        matches: [],
-      };
-    }
-
-    // Score each Pure product (same logic as auto-matching)
-    interface ScoredMatch {
-      details: string[];
-      product: (typeof pureProducts)[0];
-      score: number;
-      weightMatch: boolean;
-    }
-
-    const matches: ScoredMatch[] = [];
-
-    const costcoNameLower = costcoProduct.name
-      .toLowerCase()
-      .replaceAll(/[^\s\w]/g, " ")
-      .replaceAll(/\s+/g, " ")
-      .trim();
-
-    for (const pureProduct of pureProducts) {
-      const pureNameLower = pureProduct.productName
-        .toLowerCase()
-        .replaceAll(/[^\s\w]/g, " ")
-        .replaceAll(/\s+/g, " ")
-        .trim();
-
-      let score = 0;
-      const matchDetails: string[] = [];
-      let weightMatch = false;
-
-      // 1. WEIGHT MATCH
-      if (weightInOz) {
-        const weightDiff = Math.abs(pureProduct.weight - weightInOz);
-        if (weightDiff <= 0.05) {
-          score += 100;
-          matchDetails.push("weight");
-          weightMatch = true;
-        }
-      }
-
-      // 2. MANUFACTURER MATCH
-      if (pureProduct.manufacturer) {
-        const manufacturer = pureProduct.manufacturer.toLowerCase();
-        const manufacturerVariants = [manufacturer, manufacturer.replaceAll(/\s+/g, "")];
-
-        const hasManufacturer = manufacturerVariants.some((variant) =>
-          costcoNameLower.includes(variant),
-        );
-
-        if (hasManufacturer) {
-          score += 100;
-          matchDetails.push(`brand:${manufacturer}`);
-        } else if (manufacturer.length > 3) {
-          score -= 50;
-        }
-      }
-
-      // 3. PRODUCT TYPE MATCH
-      if (pureProduct.productType) {
-        const productType = pureProduct.productType.toLowerCase();
-        if (costcoNameLower.includes(productType)) {
-          score += 50;
-          matchDetails.push(`type:${productType}`);
-        }
-      }
-
-      // 4. PHRASE MATCHING
-      const pureWords = pureNameLower.split(/\s+/);
-      const genericPhrases = new Set([
-        "fine gold",
-        "fine silver",
-        "gold bar",
-        "gold coin",
-        "in assay",
-        "new in",
-        "silver bar",
-        "silver coin",
-        "troy ounce",
-      ]);
-
-      for (let i = 0; i < pureWords.length - 1; i++) {
-        const twoWord = `${pureWords[i]} ${pureWords[i + 1]}`;
-        const threeWord =
-          i < pureWords.length - 2
-            ? `${pureWords[i]} ${pureWords[i + 1]} ${pureWords[i + 2]}`
-            : null;
-
-        if (threeWord && !genericPhrases.has(threeWord) && costcoNameLower.includes(threeWord)) {
-          score += 75;
-          matchDetails.push(`phrase:"${threeWord}"`);
-        } else if (!genericPhrases.has(twoWord) && costcoNameLower.includes(twoWord)) {
-          score += 40;
-          matchDetails.push(`phrase:"${twoWord}"`);
-        }
-      }
-
-      // Include all matches with positive score, or weight match
-      if (score > 0 || weightMatch) {
-        matches.push({
-          details: matchDetails,
-          product: pureProduct,
-          score,
-          weightMatch,
-        });
-      }
-    }
-
-    // Sort by score descending
-    matches.sort((a, b) => b.score - a.score);
-
-    // Return top N matches
-    const topMatches = matches.slice(0, limit).map((m) => ({
-      currentBidPrice: m.product.currentBidPrice,
-      details: m.details,
-      isGenericFallback: m.product.isGenericFallback,
-      manufacturer: m.product.manufacturer,
-      productName: m.product.productName,
-      pureProductId: m.product.pureProductId,
-      score: m.score,
-      sku: m.product.sku,
-      weight: m.product.weight,
-      weightMatch: m.weightMatch,
-    }));
-
-    return {
-      costcoProduct: {
-        metalType: costcoProduct.metalType,
-        metalWeight: costcoProduct.metalWeight,
-        name: costcoProduct.name,
-        productId: costcoProduct.productId,
-        weightInOz,
-      },
-      fallback: fallbackPureProduct
-        ? {
-            currentBidPrice: fallbackPureProduct.currentBidPrice,
-            isGenericFallback: fallbackPureProduct.isGenericFallback,
-            manufacturer: fallbackPureProduct.manufacturer,
-            productName: fallbackPureProduct.productName,
-            pureProductId: fallbackPureProduct.pureProductId,
-            sku: fallbackPureProduct.sku,
-            weight: fallbackPureProduct.weight,
-          }
-        : null,
-      matches: topMatches,
-    };
+    return getTopMatchesForProduct(ctx, {
+      costcoProductId: args.costcoProductId,
+      limit: args.limit ?? 5,
+    });
   },
 });
 
@@ -555,38 +161,7 @@ export const selectMatch = mutation({
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-
-    // Get the Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    // Get the Pure product to verify it exists
-    const pureProduct = await ctx.db
-      .query("pureProducts")
-      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
-      .first();
-
-    if (!pureProduct) {
-      throw new Error(`Pure product ${args.pureProductId} not found`);
-    }
-
-    // Set pending match (not yet approved)
-    await ctx.db.patch(costcoProduct._id, {
-      matchStatus: "pending_approval",
-      pureProductId: args.pureProductId,
-    });
-
-    return {
-      costcoProduct: costcoProduct.name,
-      pureProduct: pureProduct.productName,
-      success: true,
-    };
+    return selectMatchHelper(ctx, args);
   },
 });
 
@@ -599,32 +174,7 @@ export const confirmMatch = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
-
-    // Get the Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    if (!costcoProduct.pureProductId) {
-      throw new Error("No match selected to confirm");
-    }
-
-    // Confirm the match with approval metadata
-    await ctx.db.patch(costcoProduct._id, {
-      matchApprovedAt: Date.now(),
-      matchApprovedBy: userId,
-      matchStatus: "manual_matched",
-    });
-
-    return {
-      costcoProduct: costcoProduct.name,
-      success: true,
-    };
+    return confirmMatchHelper(ctx, { costcoProductId: args.costcoProductId, userId });
   },
 });
 
@@ -641,40 +191,7 @@ export const approveMatch = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
-
-    // Get the Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    // Get the Pure product to verify it exists
-    const pureProduct = await ctx.db
-      .query("pureProducts")
-      .withIndex("by_pure_id", (q) => q.eq("pureProductId", args.pureProductId))
-      .first();
-
-    if (!pureProduct) {
-      throw new Error(`Pure product ${args.pureProductId} not found`);
-    }
-
-    // Update the match with approval metadata
-    await ctx.db.patch(costcoProduct._id, {
-      matchApprovedAt: Date.now(),
-      matchApprovedBy: userId,
-      matchStatus: "manual_matched",
-      pureProductId: args.pureProductId,
-    });
-
-    return {
-      costcoProduct: costcoProduct.name,
-      pureProduct: pureProduct.productName,
-      success: true,
-    };
+    return approveMatchHelper(ctx, { ...args, userId });
   },
 });
 
@@ -687,36 +204,7 @@ export const useFallback = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAdmin(ctx);
-
-    // Get the Costco product
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    // Get weight-specific fallback if available
-    const weightInOz = extractWeightInOz(costcoProduct.metalWeight);
-    const fallbackPureId = weightInOz
-      ? getFallbackPureId(costcoProduct.metalType, weightInOz)
-      : null;
-
-    // Update to use fallback
-    await ctx.db.patch(costcoProduct._id, {
-      matchApprovedAt: Date.now(),
-      matchApprovedBy: userId,
-      matchStatus: "manual_matched", // Manual decision to use fallback
-      pureProductId: fallbackPureId,
-    });
-
-    return {
-      costcoProduct: costcoProduct.name,
-      fallbackPureId,
-      success: true,
-    };
+    return applyFallbackHelper(ctx, { costcoProductId: args.costcoProductId, userId });
   },
 });
 
@@ -778,26 +266,7 @@ export const clearManualMatch = internalMutation({
   args: {
     costcoProductId: v.string(),
   },
-  handler: async (ctx, args) => {
-    const costcoProduct = await ctx.db
-      .query("costcoProducts")
-      .withIndex("by_product_id", (q) => q.eq("productId", args.costcoProductId))
-      .first();
-
-    if (!costcoProduct) {
-      throw new Error(`Costco product ${args.costcoProductId} not found`);
-    }
-
-    // Clear the match to allow re-matching
-    await ctx.db.patch(costcoProduct._id, {
-      matchApprovedAt: null,
-      matchApprovedBy: null,
-      matchStatus: null,
-      pureProductId: null,
-    });
-
-    return { success: true };
-  },
+  handler: (ctx, args) => clearManualMatchHelper(ctx, args),
 });
 
 /**
@@ -839,39 +308,14 @@ export const getAllPureProducts = query({
 export const checkIsAdmin = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    const tokenIdentifier = identity?.tokenIdentifier ?? null;
+    const tokenIdentifier = (await ctx.auth.getUserIdentity())?.tokenIdentifier ?? null;
+
     return {
       isAdmin: isAdmin(tokenIdentifier),
       userTokenIdentifier: tokenIdentifier,
     };
   },
 });
-
-// Pure API v2 configuration
-const PURE_API_BASE_URL = "https://api.collectpure.com";
-
-// Type for Pure API product response
-interface PureApiProduct {
-  attributes: string[];
-  id: string;
-  manufacturer?: {
-    title: string;
-  };
-  material: string;
-  sku: string;
-  subCategory?: {
-    title: string;
-  };
-  title: string;
-  variants: {
-    highestOffer?: null | {
-      price: number;
-    };
-  }[];
-  weight: string;
-  weightGrams: number;
-}
 
 /**
  * Fetch a Pure product by SKU from the API and add it to the database
@@ -899,94 +343,14 @@ export const fetchAndAddPureProduct = action({
     // Check admin access
     await ctx.runMutation(internal.admin.checkAdminAccess, {});
 
-    const apiKey = process.env.PURE_API_KEY;
-    if (!apiKey) {
-      return { error: "PURE_API_KEY not configured", success: false };
-    }
-
     try {
-      // Try to fetch the product by SKU
-      // The Pure API uses SKU as a query parameter
-      const searchParams = new URLSearchParams({
-        limit: "100",
-        offset: "0",
-      });
-
-      // Search through gold and silver products to find the SKU
-      const metals = ["Gold", "Silver"];
-      let foundProduct: null | PureApiProduct = null;
-
-      for (const material of metals) {
-        if (foundProduct) break;
-
-        let offset = 0;
-        let hasMore = true;
-
-        while (hasMore && !foundProduct) {
-          searchParams.set("material", material);
-          searchParams.set("offset", offset.toString());
-
-          const response = await fetch(
-            `${PURE_API_BASE_URL}/products/get-products/v2?${searchParams.toString()}`,
-            {
-              headers: {
-                Accept: "application/json",
-                "x-api-key": apiKey,
-              },
-            },
-          );
-
-          if (!response.ok) {
-            console.warn(`Failed to fetch ${material} products: ${response.status}`);
-            break;
-          }
-
-          const responseBody = (await response.json()) as {
-            data: PureApiProduct[];
-            total: number;
-          };
-          const products = responseBody.data;
-
-          // Look for the matching SKU
-          foundProduct = products.find((p) => p.sku === args.sku) ?? null;
-
-          // Advance by actual page size returned (server may cap below requested limit)
-          const pageSize = products.length;
-          if (pageSize > 0 && hasMorePages(offset, pageSize, responseBody.total)) {
-            offset += pageSize;
-          } else {
-            hasMore = false;
-          }
-        }
+      const result = await fetchPureProductBySku(args.sku);
+      if (!result.success || !result.product) {
+        return { error: result.error ?? "Product not found in Pure API", success: false };
       }
 
-      if (!foundProduct) {
-        return { error: "Product not found in Pure API", success: false };
-      }
+      const productData = toPureProductInsertData(result.product);
 
-      // Transform the product data
-      const metalType = foundProduct.material.toLowerCase() as "gold" | "silver";
-      const weightOz = parseWeightToOz(foundProduct.weight, foundProduct.weightGrams);
-      const productType = extractProductType(foundProduct);
-      const bidPrice = getHighestOfferPrice(foundProduct.variants);
-      const bidPricePerOz = bidPrice ? bidPrice / weightOz : null;
-
-      const productData = {
-        currentBidPrice: bidPrice,
-        currentBidPricePerOz: bidPricePerOz,
-        isGenericFallback: false,
-        lastUpdated: Date.now(),
-        manufacturer: foundProduct.manufacturer?.title ?? null,
-        metalType,
-        productName: foundProduct.title,
-        productType,
-        pureProductId: foundProduct.id,
-        sku: foundProduct.sku,
-        weight: weightOz,
-        weightGrams: foundProduct.weightGrams || null,
-      };
-
-      // Add to database
       await ctx.runMutation(internal.admin.insertPureProduct, productData);
 
       return {
