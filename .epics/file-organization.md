@@ -40,8 +40,9 @@ Tighten the app and Convex file structure so feature boundaries stay obvious, sh
   - Slimmed `app/routes/dashboard/index.tsx` by extracting `dashboard-content.tsx`, `use-dashboard-filters.ts`, and `use-migration-toast.ts`.
   - Slimmed `app/routes/alerts/index.tsx` by extracting `alerts-page.tsx` and `hooks/use-alerts-page.ts`.
   - Extracted the large helper prelude from `convex/alerts.ts` into `convex/alerts/helpers.ts` while keeping the registered Convex function surface stable in `convex/alerts.ts`.
+  - Extracted Costco search API, matching, and product state helpers into `convex/costco/*` while keeping the registered Convex function surface stable in `convex/costco.ts`.
 - Current structural smells to address:
-  - Oversized Convex modules in `convex/admin.ts` and `convex/costco.ts`.
+  - Oversized Convex modules in `convex/admin.ts`; `convex/costco.ts` is thinner now but may still warrant another pass if more responsibilities accrete.
   - `convex/alerts.ts` still has a large registration surface and could be split further by CRUD/evaluation/batch processing concerns if needed.
   - Inconsistent test placement in Convex (`convex/__tests__` versus colocated tests elsewhere).
 - Likely rule candidates only if notes are not enough:
