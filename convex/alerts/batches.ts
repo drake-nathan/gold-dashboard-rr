@@ -1,6 +1,7 @@
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
+import { getUserAlertEntitlements } from "../subscriptionEntitlements";
 import {
   type AlertHistoryDoc,
   alertBatchMaxSendAttempts,
@@ -15,8 +16,7 @@ import {
   resolveAlertRecipientEmail,
   sendAlertEmail,
   buildUnsubscribeUrl,
-} from "../lib/alerts";
-import { getUserAlertEntitlements } from "../subscriptionEntitlements";
+} from "./core";
 
 export const listPendingAlertBatchesHelper = async (
   ctx: QueryCtx,

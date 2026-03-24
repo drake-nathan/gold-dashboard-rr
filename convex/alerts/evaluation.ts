@@ -1,5 +1,6 @@
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { getUserAlertEntitlements } from "../subscriptionEntitlements";
 import {
   type AlertBatchDoc,
   type TriggeredAlertProduct,
@@ -13,8 +14,7 @@ import {
   matchesCategoryFilters,
   mergeAlertProducts,
   recentPriceDropWindowMs,
-} from "../lib/alerts";
-import { getUserAlertEntitlements } from "../subscriptionEntitlements";
+} from "./core";
 
 const getProductsByIds = async (ctx: MutationCtx, productIds: string[]) => {
   return (

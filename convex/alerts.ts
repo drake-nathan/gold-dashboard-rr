@@ -14,7 +14,6 @@ import {
   processPendingAlertBatchesHelper,
   recordAlertBatchSendFailureHelper,
 } from "./alerts/batches";
-import { evaluateAlertsForProductsHelper } from "./alerts/evaluation";
 import {
   type AlertConfiguration,
   alertTypeValidator,
@@ -27,7 +26,8 @@ import {
   pauseEnabledAlertsForUser,
   takeAlertProductOptions,
   triggerOnValidator,
-} from "./lib/alerts";
+} from "./alerts/core";
+import { evaluateAlertsForProductsHelper } from "./alerts/evaluation";
 import { requireAuthIdentity } from "./lib/authIdentity";
 import { getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements } from "./subscriptionEntitlements";

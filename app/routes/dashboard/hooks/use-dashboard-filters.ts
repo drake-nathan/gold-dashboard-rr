@@ -25,10 +25,13 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
   const urlShowOutOfStock = searchParams.get("showOOS") === "true";
   const [showOutOfStock, setShowOutOfStockLocal] = useState(urlShowOutOfStock);
 
+  // External system sync: keep local state in sync with browser URL (for back/forward nav).
   useEffect(() => {
     setShowOutOfStockLocal(urlShowOutOfStock);
   }, [urlShowOutOfStock]);
 
+  // External system sync: on first load with no filter params, auto-flip to OOS view
+  // when all products are out of stock. Writes to browser URL/history. Runs once via ref guard.
   useEffect(() => {
     if (hasAutoFlipped.current) return;
 

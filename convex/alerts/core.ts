@@ -34,6 +34,7 @@ export const maxAlertProductOptions = 2000;
 export const recentPriceDropWindowMs = 30 * 60 * 1000;
 export const resendSendEmailUrl = "https://api.resend.com/emails";
 
+// Canonical source. Duplicated in app/routes/alerts/form/types.ts — keep in sync.
 export type AlertType = "category" | "sku" | "threshold";
 export type TriggerOn = "in_stock" | "price_drop" | "threshold_met";
 

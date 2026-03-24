@@ -1,5 +1,6 @@
 import type { Doc } from "convex/_generated/dataModel";
 
+// Mirrors convex/alerts/core.ts (AlertType, TriggerOn) — keep in sync.
 export type AlertFormType = "category" | "sku" | "threshold";
 export type TriggerOn = "in_stock" | "price_drop" | "threshold_met";
 

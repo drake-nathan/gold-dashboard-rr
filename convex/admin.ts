@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
-import { internal } from "./_generated/api";
 import { action, internalMutation, mutation, query } from "./_generated/server";
 import { requireAdmin, reviewStatusValidator } from "./admin/access";
+import { fetchAndAddPureProductHelper, rematchProductHelper } from "./admin/actions";
 import {
   getAdminStatusHelper,
   getAllPureProductsHelper,
@@ -16,11 +16,7 @@ import {
   confirmMatchHelper,
   selectMatchHelper,
 } from "./admin/mutations";
-import {
-  fetchPureProductBySku,
-  insertPureProductHelper,
-  toPureProductInsertData,
-} from "./admin/pure";
+import { insertPureProductHelper } from "./admin/pure";
 import {
   enrichReviewProducts,
   getProductReviewCounts,
@@ -169,39 +165,7 @@ export const rematchProduct = action({
     costcoProductId: v.string(),
     force: v.optional(v.boolean()), // If true, override even manual matches
   },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{
-    candidates?: {
-      details: string;
-      productName: string;
-      pureProductId: string;
-      score: number;
-    }[];
-    matched: boolean;
-    pureProductId?: string;
-    score?: number;
-    skipped?: boolean;
-    status?: string;
-  }> => {
-    // Check admin access via internal mutation
-    await ctx.runMutation(internal.admin.checkAdminAccess, {});
-
-    // If forcing, clear the manual match status first
-    if (args.force) {
-      await ctx.runMutation(internal.admin.clearManualMatch, {
-        costcoProductId: args.costcoProductId,
-      });
-    }
-
-    // Run the matching algorithm
-    const result = await ctx.runMutation(internal.costco.matchCostcoProductToPure, {
-      costcoProductId: args.costcoProductId,
-    });
-
-    return result;
-  },
+  handler: (ctx, args) => rematchProductHelper(ctx, args),
 });
 
 // Internal mutation to check admin access (used by actions)
@@ -249,55 +213,7 @@ export const fetchAndAddPureProduct = action({
   args: {
     sku: v.string(),
   },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{
-    error?: string;
-    product?: {
-      currentBidPrice: null | number;
-      manufacturer: null | string;
-      metalType: "gold" | "silver";
-      productName: string;
-      pureProductId: string;
-      sku: string;
-      weight: number;
-    };
-    success: boolean;
-  }> => {
-    // Check admin access
-    await ctx.runMutation(internal.admin.checkAdminAccess, {});
-
-    try {
-      const result = await fetchPureProductBySku(args.sku);
-      if (!result.success || !result.product) {
-        return { error: result.error ?? "Product not found in Pure API", success: false };
-      }
-
-      const productData = toPureProductInsertData(result.product);
-
-      await ctx.runMutation(internal.admin.insertPureProduct, productData);
-
-      return {
-        product: {
-          currentBidPrice: productData.currentBidPrice,
-          manufacturer: productData.manufacturer,
-          metalType: productData.metalType,
-          productName: productData.productName,
-          pureProductId: productData.pureProductId,
-          sku: productData.sku,
-          weight: productData.weight,
-        },
-        success: true,
-      };
-    } catch (error) {
-      console.error("Error fetching Pure product:", error);
-      return {
-        error: error instanceof Error ? error.message : "Unknown error",
-        success: false,
-      };
-    }
-  },
+  handler: (ctx, args) => fetchAndAddPureProductHelper(ctx, args),
 });
 
 /**

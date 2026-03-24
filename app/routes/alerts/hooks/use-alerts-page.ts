@@ -1,49 +1,25 @@
 import { api } from "convex/_generated/api";
 import type { Doc, Id } from "convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { useState } from "react";
-import { useSearchParams } from "react-router";
 import { toast } from "sonner";
 
-import { useSubscription } from "@/features/subscription/hooks/use-subscription";
-
-import {
-  buildAlertPayload,
-  defaultFormValues,
-  type AlertFormType,
-  type AlertFormValues,
-  getFormValidationError,
-} from "../form/types";
+import { buildAlertPayload, defaultFormValues } from "../form/types";
+import { useAlertForm } from "./use-alert-form";
+import { useAlertQueries } from "./use-alert-queries";
 
 export const useAlertsPage = (isSignedIn: boolean) => {
-  const [searchParams] = useSearchParams();
-  const { alertEntitlements, isLoading: isSubscriptionLoading } = useSubscription();
-
-  const alerts = useQuery(api.alerts.getAlerts, isSignedIn ? {} : "skip");
-  const productOptions = useQuery(api.alerts.getProductOptions, isSignedIn ? {} : "skip") ?? [];
+  const { alertEntitlements, alerts, isSubscriptionLoading, productOptions } =
+    useAlertQueries(isSignedIn);
+  const { formValues, hasValidationError, setFormValues } = useAlertForm();
 
   const createAlert = useMutation(api.alerts.createAlert);
   const updateAlert = useMutation(api.alerts.updateAlert);
   const deleteAlert = useMutation(api.alerts.deleteAlert);
 
-  const initialType = searchParams.get("type");
-  const initialFormType: AlertFormType =
-    initialType === "sku" || initialType === "category" ? initialType : "threshold";
-
   const [isSaving, setIsSaving] = useState(false);
   const [editingAlert, setEditingAlert] = useState<Doc<"alerts"> | null>(null);
-  const [formValues, setFormValues] = useState<AlertFormValues>(() => ({
-    ...defaultFormValues,
-    formType: initialFormType,
-    name: searchParams.get("name") ?? "",
-    skuProductId: searchParams.get("productId") ?? "",
-    skuTriggerOn:
-      searchParams.get("triggerOn") === "price_drop"
-        ? ("price_drop" as const)
-        : ("in_stock" as const),
-  }));
 
-  const hasValidationError = getFormValidationError(formValues);
   const createDisabled =
     isSaving ||
     isSubscriptionLoading ||
