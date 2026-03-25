@@ -3,7 +3,6 @@
 ## Now
 
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
-- Convert public page chrome into a shared layout route for dashboard and alerts → [.tasks/public-layout-route.md]
 
 ## Epics
 
@@ -16,8 +15,7 @@
 - Define a canonical env schema and replace ad hoc env validation/access across app, Convex, Docker, and hosted config → [.epics/environment-config-hardening.md]
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
 - Replace hardcoded dashboard OG/site URL with the canonical site URL source
-- Split `app/components/admin/*` oversized files → [.tasks/split-admin-components.md]
-- Split `app/hooks/use-user-credit-cards.ts` → [.tasks/split-user-credit-cards-hook.md]
+- Split `app/features/credit-cards/hooks/use-user-credit-cards.ts` → [.tasks/split-user-credit-cards-hook.md]
 - Loading skeletons instead of empty states
 - Error boundaries around product grid
 - Placeholder images for missing product thumbnails
@@ -31,7 +29,7 @@
 
 ## Later
 
-- Split `app/components/card-manager-drawer.tsx` and `app/components/admin/product-match-card.tsx`
+- Split `app/routes/dashboard/cards/card-manager-drawer.tsx`
 - Price history charts for individual products
 - Stock availability notifications (extend alerts system)
 - Trending products (best spreads over time)

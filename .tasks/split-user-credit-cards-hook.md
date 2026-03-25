@@ -25,10 +25,10 @@ Separate migration, storage-source selection, and card CRUD orchestration so the
 
 ## Key Files
 
-- `app/hooks/use-user-credit-cards.ts`
-- `app/hooks/use-credit-cards-storage.ts`
-- `app/hooks/use-user-credit-cards.browser.test.tsx`
-- `app/hooks/use-user-credit-cards-migration.browser.test.tsx`
+- `app/features/credit-cards/hooks/use-user-credit-cards.ts`
+- `app/features/credit-cards/hooks/use-credit-cards-storage.ts`
+- `app/features/credit-cards/hooks/use-user-credit-cards.browser.test.tsx`
+- `app/features/credit-cards/hooks/use-user-credit-cards-migration.browser.test.tsx`
 
 ## Notes
 
