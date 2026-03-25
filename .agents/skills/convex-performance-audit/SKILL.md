@@ -1,6 +1,6 @@
 ---
 name: convex-performance-audit
-description: Audit and optimize Convex application performance, covering hot path reads, write contention, subscription cost, and function limits. Use when a Convex feature is slow, reads too much data, writes too often, has OCC conflicts, or needs performance investigation.
+description: Audits and optimizes Convex application performance across hot-path reads, write contention, subscription cost, and function limits. Use this skill when a Convex feature is slow or expensive, npx convex insights shows high bytes or documents read, OCC conflict errors or mutation retries appear, subscriptions or UI updates are costly, functions hit execution or transaction limits, or the user mentions performance, latency, read amplification, or invalidation problems in a Convex app.
 ---
 
 # Convex Performance Audit
@@ -43,13 +43,13 @@ Start with the strongest signal available:
 
 After gathering signals, identify the problem class and read the matching reference file.
 
-| Signal                                                         | Reference                                 |
-| -------------------------------------------------------------- | ----------------------------------------- |
-| High bytes or documents read, JS filtering, unnecessary joins  | `references/hot-path-rules.md`            |
-| OCC conflict errors, write contention, mutation retries        | `references/occ-conflicts.md`             |
-| High subscription count, slow UI updates, excessive re-renders | `references/subscription-cost.md`         |
-| Function timeouts, transaction size errors, large payloads     | `references/function-budget.md`           |
-| General "it's slow" with no specific signal                    | Start with `references/hot-path-rules.md` |
+| Signal | Reference |
+|---|---|
+| High bytes or documents read, JS filtering, unnecessary joins | `references/hot-path-rules.md` |
+| OCC conflict errors, write contention, mutation retries | `references/occ-conflicts.md` |
+| High subscription count, slow UI updates, excessive re-renders | `references/subscription-cost.md` |
+| Function timeouts, transaction size errors, large payloads | `references/function-budget.md` |
+| General "it's slow" with no specific signal | Start with `references/hot-path-rules.md` |
 
 Multiple problem classes can overlap. Read the most relevant reference first, then check the others if symptoms remain.
 
