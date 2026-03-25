@@ -18,6 +18,7 @@ const createLoaderArgs = (): Route.LoaderArgs => ({
   params: {},
   request: new Request("http://localhost/admin"),
   unstable_pattern: "/admin",
+  unstable_url: new URL("http://localhost/admin"),
 });
 
 const resetAdminRouteMocks = () => {

@@ -13,7 +13,10 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 
 ### Rules for Agents
 
-1. **Read `TASKS.md` first** at the start of any task-oriented session. Start with the "Now" section.
+1. **Read `TASKS.md` on demand, not by default.**
+   - Read it when the user asks what to work on next, asks for priorities/status, or explicitly references the task tracker.
+   - Read it before starting work that is clearly coming from a tracked item.
+   - Start with the "Now" section, then "Epics", then "Up Next".
 2. **Update `TASKS.md` as you work:**
    - Delete items when done. No checkboxes, no ✅ — git history is the archive.
    - Add discovered work to "Up Next" — inform the user when you do.
@@ -35,7 +38,7 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
    - Include: Goal, Scope, Non-goals, Acceptance Criteria, Key Files, Notes.
    - Link from `TASKS.md` using `→ [.tasks/<name>.md]`.
    - Delete the file when the task ships or is absorbed into an epic.
-5. **Read linked context before starting:**
+5. **Read linked context before starting tracked work:**
    - If a `TASKS.md` item links to `.tasks/*.md`, read that brief before making changes.
    - If a `TASKS.md` item links to `.epics/*.md`, read the epic before making changes.
 6. **Blocked items**: Append `(blocked: reason)` to any item that can't progress. Don't delete — the block may clear.
@@ -48,7 +51,7 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 - **Runtime**: Bun
 - **Backend/Database**: Convex
 - **Styling**: Tailwind CSS v4
-- **Language**: TypeScript
+- **Language**: TypeScript 6 + tsgo (native Go compiler, `@typescript/native-preview`)
 - **Linting**: OXLint (type-aware) + oxfmt formatter
 - **Features**: Server-Side Rendering (SSR), React Compiler (babel-plugin-react-compiler)
 
@@ -91,7 +94,8 @@ bun run test         # Run unit tests (one-off)
 bun run test:watch   # Run tests in watch mode
 bun run test:convex  # Run Convex function tests
 bun run test:browser # Run browser-mode tests
-bun run typecheck    # Run TypeScript checks
+bun run ts           # Typecheck with tsgo (native Go compiler)
+bun run ts:convex    # Typecheck Convex functions with tsgo
 bun run lint         # Run OXLint (type-aware)
 bun run lint:fix     # Run OXLint with auto-fix
 bun run format       # Format with oxfmt
@@ -100,7 +104,7 @@ bun run format:check # Check formatting without fixing
 
 ### CI
 
-`bun run ci` runs `format`, `lint:fix`, `typecheck`, `typecheck:convex`, `test`, `test:convex`, and `test:browser` sequentially via `scripts/ci.ts` (Listr fail-fast runner). Use before pushing to main.
+`bun run ci` runs `format`, `lint:fix`, `ts`, `ts:convex`, `test`, `test:convex`, and `test:browser` sequentially via `scripts/ci.ts` (Listr fail-fast runner). Use before pushing to main.
 
 ## Testing
 

@@ -12,7 +12,7 @@ A real-time precious metals price tracking dashboard that monitors Costco gold/s
 
 ## Tech Stack
 
-- **Frontend**: React Router 7, TypeScript, Tailwind CSS v4
+- **Frontend**: React Router 7, TypeScript 6 + tsgo, Tailwind CSS v4
 - **Runtime**: Bun
 - **Backend/Database**: Convex (serverless backend with real-time sync)
 - **APIs**:
@@ -104,7 +104,7 @@ There is no public CLI wrapper today for the Costco, Gold API, or FMP refresh jo
 bun run dev          # Start dev server with HMR
 bun run build        # Production build
 bun run ci           # Run the full CI suite locally
-bun run typecheck    # Run TypeScript checks
+bun run ts           # Typecheck with tsgo (native Go compiler)
 bun run lint         # Run OXLint
 bun run format       # Format with oxfmt
 ```

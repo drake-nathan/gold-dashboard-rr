@@ -5,8 +5,8 @@ import { Listr } from "listr2";
 const tasks = [
   { script: "format", title: "Format" },
   { script: "lint:fix", title: "Lint" },
-  { script: "typecheck", title: "Typecheck" },
-  { script: "typecheck:convex", title: "Typecheck (Convex)" },
+  { script: "ts", title: "Typecheck" },
+  { script: "ts:convex", title: "Typecheck (Convex)" },
   { script: "test", title: "Test" },
   { script: "test:convex", title: "Test (Convex)" },
   { script: "test:browser", title: "Test (Browser)" },
@@ -28,7 +28,7 @@ const runScript = (script: string): Promise<string> => {
     child.on("close", (code) => {
       const output = Buffer.concat(chunks).toString();
       if (code === 0) resolve(output);
-      else reject(new Error(output));
+      else reject(new Error(output || `bun run ${script} exited with code ${code ?? "unknown"}`));
     });
   });
 };
@@ -40,8 +40,9 @@ const runner = new Listr(
       try {
         await runScript(script);
       } catch (error: unknown) {
-        const msg = error instanceof Error ? error.message : String(error);
+        const msg = (error instanceof Error ? error.message : String(error)).trim();
         task.output = msg;
+        process.stderr.write(`\n[${title}] bun run ${script} failed\n${msg}\n`);
         throw new Error(`${title} failed`, { cause: error });
       }
     },

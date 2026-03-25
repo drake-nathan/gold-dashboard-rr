@@ -155,6 +155,7 @@ export default defineConfig({
     "vitest/prefer-called-once": "off",
     "vitest/prefer-called-times": "off",
     "vitest/prefer-import-in-mock": "off",
+    "vitest/prefer-strict-boolean-matchers": "off",
   },
   settings: {
     react: {
