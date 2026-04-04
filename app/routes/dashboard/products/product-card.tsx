@@ -89,7 +89,7 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
 
         {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
           <div className="mt-3">
-            <Button asChild className="w-full" size="sm" variant="secondary">
+            <Button asChild className="w-full" size="sm" variant="outline">
               <Link
                 onClick={() => {
                   posthog.capture("alert_cta_clicked", baseProductProperties);

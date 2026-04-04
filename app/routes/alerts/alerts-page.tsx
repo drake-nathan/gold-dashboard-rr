@@ -12,8 +12,7 @@ import { AlertFormFields } from "./form/alert-form-fields";
 import { useAlertsPage } from "./hooks/use-alerts-page";
 import { AlertCard } from "./list/alert-card";
 
-export const AlertsPage = () => {
-  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+const SignedInAlertsPage = () => {
   const {
     alertEntitlements,
     alerts,
@@ -28,32 +27,7 @@ export const AlertsPage = () => {
     productOptions,
     setEditingAlert,
     setFormValues,
-  } = useAlertsPage(isSignedIn === true);
-
-  if (!isAuthLoaded) {
-    return (
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading alerts...</span>
-        </div>
-      </main>
-    );
-  }
-
-  if (!isSignedIn) {
-    return (
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="flex flex-col items-center">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">Alerts</h1>
-            <p className="text-sm text-muted-foreground">Sign in to manage your alerts</p>
-          </div>
-          <SignIn fallbackRedirectUrl="/alerts" forceRedirectUrl="/alerts" routing="hash" />
-        </div>
-      </main>
-    );
-  }
+  } = useAlertsPage(true);
 
   const canCreate = alertEntitlements.canCreateAlerts;
   const enabledCount = alerts?.filter((alert) => alert.enabled).length ?? 0;
@@ -212,4 +186,35 @@ export const AlertsPage = () => {
       ) : null}
     </>
   );
+};
+
+export const AlertsPage = () => {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+
+  if (!isAuthLoaded) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-4 py-8">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading alerts...</span>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-4 py-8">
+        <div className="flex flex-col items-center">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-bold">Alerts</h1>
+            <p className="text-sm text-muted-foreground">Sign in to manage your alerts</p>
+          </div>
+          <SignIn fallbackRedirectUrl="/alerts" forceRedirectUrl="/alerts" routing="hash" />
+        </div>
+      </main>
+    );
+  }
+
+  return <SignedInAlertsPage />;
 };

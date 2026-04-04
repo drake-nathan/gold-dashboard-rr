@@ -30,6 +30,7 @@ const updateAlertMock = vi.fn();
 const deleteAlertMock = vi.fn();
 const toastSuccessMock = vi.fn();
 const toastErrorMock = vi.fn();
+const useQueryMock = vi.fn();
 
 vi.mock("convex/_generated/api", () => ({
   api: {
@@ -56,6 +57,8 @@ vi.mock("convex/react", () => ({
     return vi.fn();
   },
   useQuery: (ref: string, args: unknown) => {
+    useQueryMock(ref, args);
+
     if (args === "skip") {
       return undefined;
     }
@@ -128,6 +131,8 @@ test("shows sign-in gating when the alerts route is opened signed out", async ()
   await expect.element(screen.getByRole("heading", { name: "Alerts" })).toBeInTheDocument();
   await expect.element(screen.getByText("Sign in to manage your alerts")).toBeInTheDocument();
   await expect.element(screen.getByText("Mock Sign In")).toBeInTheDocument();
+  expect(useQueryMock).not.toHaveBeenCalledWith("getAlerts", expect.anything());
+  expect(useQueryMock).not.toHaveBeenCalledWith("getProductOptions", expect.anything());
 });
 
 test("prefills the form from search params and creates a threshold alert when signed in", async () => {

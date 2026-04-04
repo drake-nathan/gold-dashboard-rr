@@ -22,3 +22,5 @@ __screenshots__
 
 # Turbo
 .turbo
+
+.playwright-mcp/
