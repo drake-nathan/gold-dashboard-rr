@@ -54,6 +54,9 @@ jobs:
       - name: Convex tests
         run: bun run test:convex
 
+      - name: Verify runtime
+        run: bun run verify:runtime
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(bunx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
