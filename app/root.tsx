@@ -22,6 +22,8 @@ import type { Route } from "./+types/root";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Toaster } from "./components/ui/sonner";
+import { ObservabilitySync } from "./features/observability/observability-sync";
+import { resolveAppRelease, resolveObservabilityEnvironment } from "./lib/observability-config";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
@@ -94,6 +96,11 @@ const convexUrl = import.meta.env.VITE_CONVEX_URL;
 const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
 const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
+const appEnvironment = resolveObservabilityEnvironment(
+  import.meta.env.VITE_SENTRY_ENVIRONMENT,
+  import.meta.env.MODE,
+);
+const appRelease = resolveAppRelease(import.meta.env.VITE_APP_RELEASE);
 
 if (!convexUrl) {
   throw new Error("VITE_CONVEX_URL environment variable is not set");
@@ -119,6 +126,12 @@ const App = ({ loaderData }: Route.ComponentProps) => {
         capture_exceptions: false, // Sentry handles error tracking
         debug: false,
         defaults: "2025-05-24",
+        loaded: (client) => {
+          client.register({
+            environment: appEnvironment,
+            ...(appRelease ? { release: appRelease } : {}),
+          });
+        },
       }}
     >
       <ClerkProvider
@@ -127,6 +140,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
         publishableKey={clerkApiKey}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <ObservabilitySync />
           <Outlet />
         </ConvexProviderWithClerk>
       </ClerkProvider>

@@ -1,4 +1,5 @@
 import { ExternalLink, Info, Settings2 } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -37,9 +38,30 @@ export const CalculatorSettingsDrawer = ({
   open,
   setCalculatorSettings,
 }: CalculatorSettingsDrawerProps) => {
+  const posthog = usePostHog();
   const totalCashbackPercentage =
     (calculatorSettings.costcoMembershipEnabled ? 2 : 0) +
     calculateCashbackPercentage(calculatorSettings.creditCard);
+
+  const capturePremiumCalculated = (
+    trigger: "costco_membership" | "pure_fee_tier",
+    overrides: Partial<CalculatorSettings> = {},
+  ) => {
+    const creditCard = overrides.creditCard ?? calculatorSettings.creditCard;
+
+    posthog.capture("premium_calculated", {
+      card_type: creditCard.cardType,
+      costco_membership_enabled:
+        overrides.costcoMembershipEnabled ?? calculatorSettings.costcoMembershipEnabled,
+      credit_card_id: creditCard.id,
+      credit_card_name: creditCard.name,
+      has_signup_bonus: creditCard.signupBonus?.enabled ?? false,
+      pure_fee_tier_id: (overrides.pureFeeTier ?? calculatorSettings.pureFeeTier).id,
+      quantity: overrides.quantity ?? calculatorSettings.quantity,
+      surface: "settings_drawer",
+      trigger,
+    });
+  };
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
@@ -69,6 +91,9 @@ export const CalculatorSettingsDrawer = ({
                     onCheckedChange={(checked) => {
                       setCalculatorSettings({
                         ...calculatorSettings,
+                        costcoMembershipEnabled: checked,
+                      });
+                      capturePremiumCalculated("costco_membership", {
                         costcoMembershipEnabled: checked,
                       });
                     }}
@@ -101,6 +126,9 @@ export const CalculatorSettingsDrawer = ({
                     if (tier) {
                       setCalculatorSettings({
                         ...calculatorSettings,
+                        pureFeeTier: tier,
+                      });
+                      capturePremiumCalculated("pure_fee_tier", {
                         pureFeeTier: tier,
                       });
                     }

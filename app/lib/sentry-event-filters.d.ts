@@ -18,6 +18,11 @@ interface SentryEventLike {
   extra?: {
     __serialized?: unknown;
   };
+  request?: {
+    headers?: Record<string, string | string[] | undefined>;
+    method?: string;
+    url?: string;
+  };
   tags?: Record<string, unknown>;
   transaction?: string;
 }

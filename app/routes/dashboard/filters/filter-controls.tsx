@@ -1,3 +1,5 @@
+import { usePostHog } from "posthog-js/react";
+
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,7 +31,9 @@ export const FilterControls = ({
   showOutOfStock,
   sortOption,
 }: FilterControlsProps) => {
+  const posthog = usePostHog();
   const containerClass = isMobile ? "flex flex-col gap-3" : "contents";
+  const surface = isMobile ? "mobile" : "desktop";
 
   return (
     <div className={containerClass}>
@@ -37,7 +41,19 @@ export const FilterControls = ({
         <Label className={isMobile ? "text-sm" : ""} htmlFor="show-oos">
           Show Out of Stock
         </Label>
-        <Switch checked={showOutOfStock} id="show-oos" onCheckedChange={setShowOutOfStock} />
+        <Switch
+          checked={showOutOfStock}
+          id="show-oos"
+          onCheckedChange={(checked) => {
+            setShowOutOfStock(checked);
+            posthog.capture("filter_changed", {
+              filter_name: "show_out_of_stock",
+              next_value: checked,
+              previous_value: showOutOfStock,
+              surface,
+            });
+          }}
+        />
       </div>
 
       <div className={isMobile ? "space-y-2" : "flex items-center gap-2"}>
@@ -47,6 +63,12 @@ export const FilterControls = ({
         <Select
           onValueChange={(value) => {
             setMetalFilter(value as MetalFilter);
+            posthog.capture("filter_changed", {
+              filter_name: "metal",
+              next_value: value,
+              previous_value: metalFilter,
+              surface,
+            });
           }}
           value={metalFilter}
         >
@@ -68,6 +90,12 @@ export const FilterControls = ({
         <Select
           onValueChange={(value) => {
             setSortOption(value as SortOption);
+            posthog.capture("filter_changed", {
+              filter_name: "sort",
+              next_value: value,
+              previous_value: sortOption,
+              surface,
+            });
           }}
           value={sortOption}
         >

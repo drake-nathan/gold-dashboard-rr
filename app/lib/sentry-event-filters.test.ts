@@ -108,6 +108,30 @@ test("drops stackless generic root failures from scanners and uptime checks", ()
   expect(shouldDropServerEvent(uptimeEvent)).toBeTruthy();
 });
 
+test("drops stackless uptime failures when only the request user agent is available", () => {
+  const event = {
+    exception: {
+      values: [
+        {
+          mechanism: { type: "generic" },
+          type: "Error",
+          value: "Unexpected Server Error",
+        },
+      ],
+    },
+    request: {
+      headers: {
+        "user-agent": "SentryUptimeBot/1.0",
+      },
+      method: "GET",
+      url: "https://dashboard.gold/",
+    },
+    transaction: "GET /",
+  };
+
+  expect(shouldDropServerEvent(event)).toBeTruthy();
+});
+
 test("keeps real stackful server errors", () => {
   const event = {
     exception: {

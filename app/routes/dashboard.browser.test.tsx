@@ -7,6 +7,7 @@ import DashboardRoute from "./dashboard";
 
 const mockToastLoading = vi.fn();
 const mockToastSuccess = vi.fn();
+const mockPostHogCapture = vi.fn();
 
 vi.mock("convex/react", () => ({
   usePreloadedQuery: (value: unknown) => value,
@@ -22,6 +23,12 @@ vi.mock("sonner", () => ({
 vi.mock("usehooks-ts", () => ({
   useDebounceCallback: <T extends (...args: never[]) => unknown>(fn: T) => fn,
   useIsClient: () => true,
+}));
+
+vi.mock("posthog-js/react", () => ({
+  usePostHog: () => ({
+    capture: (...args: unknown[]) => mockPostHogCapture(...args),
+  }),
 }));
 
 vi.mock("./dashboard/hooks/use-calculator-settings", () => ({
@@ -217,6 +224,36 @@ test("auto-flips to out-of-stock params when no products are in stock", async ()
     .toHaveTextContent("?showOOS=true&sort=last-in-stock");
   await expect.element(screen.getByTestId("show-oos")).toHaveTextContent("true");
   await expect.element(screen.getByTestId("sort-option")).toHaveTextContent("last-in-stock");
+});
+
+test("captures dashboard_viewed after the auto-flip settles", async () => {
+  const screen = await renderDashboardRoute("/dashboard", {
+    ...baseLoaderData,
+    preloadedSummary: {
+      ...baseLoaderData.preloadedSummary,
+      goldProducts: { inStock: 0 },
+      silverProducts: { inStock: 0 },
+    },
+  });
+
+  await expect
+    .element(screen.getByTestId("location-search"))
+    .toHaveTextContent("?showOOS=true&sort=last-in-stock");
+
+  await vi.waitFor(() => {
+    const dashboardViewedCalls = mockPostHogCapture.mock.calls.filter(
+      ([eventName]) => eventName === "dashboard_viewed",
+    );
+
+    expect(dashboardViewedCalls).toHaveLength(1);
+    expect(dashboardViewedCalls[0]?.[1]).toEqual(
+      expect.objectContaining({
+        show_out_of_stock: true,
+        sort_option: "last-in-stock",
+        visible_products: 3,
+      }),
+    );
+  });
 });
 
 test("updates filter params without dropping unrelated search params", async () => {

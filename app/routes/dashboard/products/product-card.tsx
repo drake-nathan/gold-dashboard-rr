@@ -1,4 +1,5 @@
 import { BellPlus, ExternalLink } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
 
@@ -22,6 +23,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ calculatorSettings, marketPrices, product }: ProductCardProps) => {
   const isClient = useIsClient();
+  const posthog = usePostHog();
 
   // Calculate all metrics using utility function
   const calc = calculateProductMetrics(product, marketPrices, calculatorSettings);
@@ -37,6 +39,17 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
     triggerOn: "in_stock",
     type: "sku",
   }).toString()}`;
+
+  const baseProductProperties = {
+    current_in_stock: product.currentInStock,
+    current_price: product.currentPrice,
+    metal_type: product.metalType,
+    product_id: product.productId,
+    product_name: product.name,
+    pure_product_sku: product.pureProductSku ?? null,
+    source: "dashboard_product_card",
+    spread_percentage: product.spreadPercentage ?? null,
+  };
 
   return (
     <Card className="flex h-full flex-col gap-3">
@@ -77,7 +90,12 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
         {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
           <div className="mt-3">
             <Button asChild className="w-full" size="sm" variant="secondary">
-              <Link to={alertLink}>
+              <Link
+                onClick={() => {
+                  posthog.capture("alert_cta_clicked", baseProductProperties);
+                }}
+                to={alertLink}
+              >
                 <BellPlus className="size-4" />
                 Create In-Stock Alert
               </Link>
@@ -333,6 +351,12 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
           <a
             aria-label={`View ${product.name} on Costco`}
             href={product.url}
+            onClick={() => {
+              posthog.capture("outbound_costco_click", {
+                ...baseProductProperties,
+                destination_url: product.url,
+              });
+            }}
             rel="noopener noreferrer"
             target="_blank"
           >
@@ -348,6 +372,13 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
                 : `Search for ${product.name} on Collect Pure`
             }
             href={collectPureUrl}
+            onClick={() => {
+              posthog.capture("outbound_pure_click", {
+                ...baseProductProperties,
+                destination_url: collectPureUrl,
+                has_exact_pure_match: Boolean(product.pureProductSku),
+              });
+            }}
             rel="noopener noreferrer"
             target="_blank"
           >

@@ -19,6 +19,11 @@
  *   extra?: {
  *     __serialized?: unknown;
  *   };
+ *   request?: {
+ *     headers?: Record<string, string | string[] | undefined>;
+ *     method?: string;
+ *     url?: string;
+ *   };
  *   tags?: Record<string, unknown>;
  *   transaction?: string;
  * }} SentryEventLike
@@ -77,6 +82,32 @@ const isBrowserName = (event, browserName) => event.tags?.["browser.name"] === b
  * @returns {boolean} True when the transaction name matches.
  */
 const isTransaction = (event, transaction) => event.transaction === transaction;
+
+/**
+ * Read a request header value from the event when available.
+ *
+ * @param {SentryEventLike} event - Event payload from Sentry.
+ * @param {string} headerName - Header name to read.
+ * @returns {string} Header value or an empty string.
+ */
+const getRequestHeader = (event, headerName) => {
+  const headers = event.request?.headers;
+  if (!headers || typeof headers !== "object") {
+    return "";
+  }
+
+  const headerValue = headers[headerName] ?? headers[headerName.toLowerCase()];
+
+  if (typeof headerValue === "string") {
+    return headerValue;
+  }
+
+  if (Array.isArray(headerValue)) {
+    return headerValue.find((value) => typeof value === "string") ?? "";
+  }
+
+  return "";
+};
 
 /**
  * Extract the serialized framework message safely when present.
@@ -166,7 +197,9 @@ export const shouldDropServerEvent = (event) => {
     error?.type === "Error" &&
     errorMessage === "Unexpected Server Error" &&
     !getError(event)?.stacktrace &&
-    (isTransaction(event, "POST /") || isBrowserName(event, "SentryUptimeBot"));
+    (isTransaction(event, "POST /") ||
+      isBrowserName(event, "SentryUptimeBot") ||
+      getRequestHeader(event, "user-agent").includes("SentryUptimeBot"));
 
   if (isStacklessGenericRootFailure) {
     return true;

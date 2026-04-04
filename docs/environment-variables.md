@@ -12,37 +12,38 @@ Comprehensive reference for managing environment variables across all environmen
 
 ## Quick Reference
 
-| Variable                     | Type   | Required  | Env-Specific | Description                                                     |
-| ---------------------------- | ------ | --------- | ------------ | --------------------------------------------------------------- |
+| Variable                     | Type   | Required  | Env-Specific | Description                                                      |
+| ---------------------------- | ------ | --------- | ------------ | ---------------------------------------------------------------- |
 | **Convex**                   |
-| `CONVEX_DEPLOYMENT`          | Server | Yes       | Yes          | Convex deployment identifier (`prod:xxx` or `dev:xxx`)          |
-| `VITE_CONVEX_URL`            | Client | Yes       | Yes          | Convex deployment URL                                           |
-| `ENABLE_CRONS`               | Convex | No        | Yes          | Enable cron jobs (prod only)                                    |
+| `CONVEX_DEPLOYMENT`          | Server | Yes       | Yes          | Convex deployment identifier (`prod:xxx` or `dev:xxx`)           |
+| `VITE_CONVEX_URL`            | Client | Yes       | Yes          | Convex deployment URL                                            |
+| `ENABLE_CRONS`               | Convex | No        | Yes          | Enable cron jobs (prod only)                                     |
 | **API Keys**                 |
-| `UNWRANGLE_API_KEY`          | Convex | Yes       | No           | Costco product data API                                         |
-| `PURE_API_KEY`               | Convex | Yes       | No           | Collect Pure spot/bid prices                                    |
-| `GOLD_API_KEY`               | Convex | No        | No           | Gold API (not actively used)                                    |
-| `FMP_API_KEY`                | Convex | Yes       | No           | Financial Modeling Prep (S&P 500)                               |
+| `UNWRANGLE_API_KEY`          | Convex | Yes       | No           | Costco product data API                                          |
+| `PURE_API_KEY`               | Convex | Yes       | No           | Collect Pure spot/bid prices                                     |
+| `GOLD_API_KEY`               | Convex | No        | No           | Gold API (not actively used)                                     |
+| `FMP_API_KEY`                | Convex | Yes       | No           | Financial Modeling Prep (S&P 500)                                |
 | **Clerk Auth**               |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Client | Yes       | Yes          | Clerk frontend key (pk_test/pk_live)                            |
-| `CLERK_SECRET_KEY`           | Convex | Yes       | Yes          | Clerk backend key (sk_test/sk_live)                             |
-| `CLERK_JWT_ISSUER_DOMAIN`    | Convex | Yes       | Yes          | Clerk JWT issuer domain                                         |
-| `ADMIN_USER_IDS`             | Convex | No        | Yes          | Comma-separated admin Clerk user IDs                            |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Client | Yes       | Yes          | Clerk frontend key (pk_test/pk_live)                             |
+| `CLERK_SECRET_KEY`           | Convex | Yes       | Yes          | Clerk backend key (sk_test/sk_live)                              |
+| `CLERK_JWT_ISSUER_DOMAIN`    | Convex | Yes       | Yes          | Clerk JWT issuer domain                                          |
+| `ADMIN_USER_IDS`             | Convex | No        | Yes          | Comma-separated admin Clerk user IDs                             |
 | **Stripe**                   |
-| `VITE_STRIPE_ENABLED`        | Client | No        | Yes          | Feature flag for Stripe UI                                      |
-| `STRIPE_SECRET_KEY`          | Convex | If Stripe | Yes          | Stripe backend key (sk_test/sk_live)                            |
-| `STRIPE_WEBHOOK_SECRET`      | Convex | If Stripe | Yes          | Stripe webhook signing secret                                   |
-| `STRIPE_PRICE_ID`            | Convex | If Stripe | Yes          | Pro subscription price ID                                       |
-| `VITE_STRIPE_PRICE_ID`       | Client | If Stripe | Yes          | Same price ID (client-side)                                     |
-| `SITE_URL`                   | Convex | If Stripe | Yes          | Site URL for Stripe redirects and alert email links             |
+| `VITE_STRIPE_ENABLED`        | Client | No        | Yes          | Feature flag for Stripe UI                                       |
+| `STRIPE_SECRET_KEY`          | Convex | If Stripe | Yes          | Stripe backend key (sk_test/sk_live)                             |
+| `STRIPE_WEBHOOK_SECRET`      | Convex | If Stripe | Yes          | Stripe webhook signing secret                                    |
+| `STRIPE_PRICE_ID`            | Convex | If Stripe | Yes          | Pro subscription price ID                                        |
+| `VITE_STRIPE_PRICE_ID`       | Client | If Stripe | Yes          | Same price ID (client-side)                                      |
+| `SITE_URL`                   | Convex | If Stripe | Yes          | Site URL for Stripe redirects and alert email links              |
 | **Resend (Alerts)**          |
-| `RESEND_API_KEY`             | Convex | If Alerts | Yes          | Resend API key for sending alert digests                        |
-| `RESEND_FROM_EMAIL`          | Convex | If Alerts | Yes          | Sender address (e.g. `alerts@dashboard.gold`)                   |
-| `RESEND_REPLY_TO_EMAIL`      | Convex | No        | Yes          | Optional reply-to for alerts (default `support@dashboard.gold`) |
-| `UNSUBSCRIBE_SECRET`         | Convex | If Alerts | No           | HMAC secret for signing one-click unsubscribe tokens            |
+| `RESEND_API_KEY`             | Convex | If Alerts | Yes          | Resend API key for sending alert digests                         |
+| `RESEND_FROM_EMAIL`          | Convex | If Alerts | Yes          | Sender address (e.g. `alerts@dashboard.gold`)                    |
+| `RESEND_REPLY_TO_EMAIL`      | Convex | No        | Yes          | Optional reply-to for alerts (default `support@dashboard.gold`)  |
+| `UNSUBSCRIBE_SECRET`         | Convex | If Alerts | No           | HMAC secret for signing one-click unsubscribe tokens             |
 | **Analytics**                |
-| `VITE_PUBLIC_POSTHOG_KEY`    | Client | Yes       | Yes          | PostHog API key                                                 |
-| `VITE_PUBLIC_POSTHOG_HOST`   | Client | Yes       | No           | PostHog host URL                                                |
+| `VITE_PUBLIC_POSTHOG_KEY`    | Client | Yes       | Yes          | PostHog API key                                                  |
+| `VITE_PUBLIC_POSTHOG_HOST`   | Client | Yes       | No           | PostHog host URL                                                 |
+| `VITE_APP_RELEASE`           | Client | No        | Yes          | Shared app release identifier (use the git SHA in hosted builds) |
 
 **Type Legend:**
 
@@ -79,6 +80,7 @@ Where each variable is configured:
 | `UNSUBSCRIBE_SECRET`         |       -        |      -       |        -        |    same    |    same     |
 | `VITE_PUBLIC_POSTHOG_KEY`    |      key       |     key      |       key       |     -      |      -      |
 | `VITE_PUBLIC_POSTHOG_HOST`   |      host      |     host     |      host       |     -      |      -      |
+| `VITE_APP_RELEASE`           |  optional SHA  |   git SHA    |     git SHA     |     -      |      -      |
 
 **Notes:**
 
@@ -105,12 +107,16 @@ Where each variable is configured:
    VITE_PUBLIC_POSTHOG_KEY=phc_xxx
    VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
    ```
-5. Optional - Stripe test mode:
+5. Optional - shared release ID for observability:
+   ```bash
+   VITE_APP_RELEASE=$(git rev-parse HEAD)
+   ```
+6. Optional - Stripe test mode:
    ```bash
    VITE_STRIPE_ENABLED=true
    VITE_STRIPE_PRICE_ID=price_test_xxx
    ```
-6. Run `bun run dev`
+7. Run `bun run dev`
 
 ### Railway Preview Deployment
 
@@ -124,6 +130,8 @@ Railway preview deployments should use the **dev** Convex deployment and **test*
    VITE_STRIPE_ENABLED=false  # or use test keys
    VITE_PUBLIC_POSTHOG_KEY=phc_xxx
    VITE_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+   VITE_SENTRY_ENVIRONMENT=develop
+   VITE_APP_RELEASE=$RAILWAY_GIT_COMMIT_SHA
    ```
 
 2. Ensure Convex **dev** deployment has:
@@ -205,8 +213,9 @@ All API keys are **shared** across environments (no test/prod split):
 | -------------------------- | ------------------------------------------------------------------ |
 | `VITE_PUBLIC_POSTHOG_KEY`  | `phc_xxx` - Same key for all environments                          |
 | `VITE_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com` (US) or `https://eu.i.posthog.com` (EU) |
+| `VITE_APP_RELEASE`         | Git SHA for the current build (shared with Sentry release tagging) |
 
-PostHog uses the same project for all environments. Use PostHog's environment property to filter dev vs prod events.
+PostHog uses the same project for all environments. Register `environment` as `develop` or `production`, and set `VITE_APP_RELEASE` to the current git SHA so PostHog events line up with Sentry releases.
 
 ## Architecture Notes
 
@@ -228,6 +237,7 @@ Current client/build-time args in Dockerfile:
 - `VITE_CLERK_PUBLISHABLE_KEY`
 - `VITE_PUBLIC_POSTHOG_KEY`
 - `VITE_PUBLIC_POSTHOG_HOST`
+- `VITE_APP_RELEASE`
 - `VITE_ADSENSE_CLIENT_ID`
 - `VITE_SENTRY_DSN`
 - `VITE_SENTRY_ENVIRONMENT`

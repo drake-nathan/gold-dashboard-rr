@@ -6,6 +6,7 @@ import {
   Plus,
   Settings,
 } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -54,8 +55,31 @@ export const CalculatorControls = ({
   setCalculatorSettings,
 }: CalculatorControlsProps) => {
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const posthog = usePostHog();
 
   const hasSignupBonus = calculatorSettings.creditCard.signupBonus?.enabled ?? false;
+  const surface = isMobile ? "mobile" : "desktop";
+
+  const capturePremiumCalculated = (
+    trigger: "costco_membership" | "credit_card" | "pure_fee_tier" | "quantity",
+    overrides: Partial<CalculatorSettings> = {},
+  ) => {
+    const creditCard = overrides.creditCard ?? calculatorSettings.creditCard;
+    const quantity = overrides.quantity ?? calculatorSettings.quantity;
+
+    posthog.capture("premium_calculated", {
+      card_type: creditCard.cardType,
+      costco_membership_enabled:
+        overrides.costcoMembershipEnabled ?? calculatorSettings.costcoMembershipEnabled,
+      credit_card_id: creditCard.id,
+      credit_card_name: creditCard.name,
+      has_signup_bonus: creditCard.signupBonus?.enabled ?? false,
+      pure_fee_tier_id: (overrides.pureFeeTier ?? calculatorSettings.pureFeeTier).id,
+      quantity,
+      surface,
+      trigger,
+    });
+  };
 
   return (
     <>
@@ -70,10 +94,12 @@ export const CalculatorControls = ({
             disabled={calculatorSettings.quantity <= 1}
             onClick={() => {
               if (calculatorSettings.quantity > 1) {
+                const nextQuantity = calculatorSettings.quantity - 1;
                 setCalculatorSettings({
                   ...calculatorSettings,
-                  quantity: calculatorSettings.quantity - 1,
+                  quantity: nextQuantity,
                 });
+                capturePremiumCalculated("quantity", { quantity: nextQuantity });
               }
             }}
             size="icon"
@@ -89,10 +115,12 @@ export const CalculatorControls = ({
             disabled={calculatorSettings.quantity >= MAX_QUANTITY}
             onClick={() => {
               if (calculatorSettings.quantity < MAX_QUANTITY) {
+                const nextQuantity = calculatorSettings.quantity + 1;
                 setCalculatorSettings({
                   ...calculatorSettings,
-                  quantity: calculatorSettings.quantity + 1,
+                  quantity: nextQuantity,
                 });
+                capturePremiumCalculated("quantity", { quantity: nextQuantity });
               }
             }}
             size="icon"
@@ -129,6 +157,7 @@ export const CalculatorControls = ({
                     ...calculatorSettings,
                     creditCard: card,
                   });
+                  capturePremiumCalculated("credit_card", { creditCard: card });
                 }
               }}
               value={calculatorSettings.creditCard.id}
@@ -209,6 +238,7 @@ export const CalculatorControls = ({
                               creditCard: card,
                             });
                             setComboboxOpen(false);
+                            capturePremiumCalculated("credit_card", { creditCard: card });
                           }}
                           value={`${card.name} ${card.issuer ?? ""}`}
                         >

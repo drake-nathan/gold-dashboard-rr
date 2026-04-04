@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { usePostHog } from "posthog-js/react";
+import { useEffect, useRef, useState } from "react";
 import { useIsClient } from "usehooks-ts";
 
 import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
@@ -21,6 +22,8 @@ interface DashboardContentProps {
 
 export const DashboardContent = ({ stats }: DashboardContentProps) => {
   const isClient = useIsClient();
+  const posthog = usePostHog();
+  const hasTrackedInitialView = useRef(false);
   const {
     availableCards,
     calculatorSettings,
@@ -31,6 +34,7 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
     updateCalculatorSettings,
   } = useCalculatorSettings();
   const {
+    isInitialized,
     metalFilter,
     setMetalFilter,
     setShowOutOfStock,
@@ -50,6 +54,53 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
     { metalFilter, showOutOfStock },
   );
   const sortedProducts = sortProducts(filteredProducts, sortOption);
+
+  useEffect(() => {
+    if (hasTrackedInitialView.current || !isInitialized) {
+      return;
+    }
+
+    hasTrackedInitialView.current = true;
+
+    posthog.capture("dashboard_viewed", {
+      gold_products_in_stock: stats.goldProducts.inStock,
+      gold_products_total: stats.goldProducts.total,
+      last_fetch_timestamp: stats.lastFetch?.timestamp ?? null,
+      market_price_count: stats.marketPrices.length,
+      metal_filter: metalFilter,
+      show_out_of_stock: showOutOfStock,
+      silver_products_in_stock: stats.silverProducts.inStock,
+      silver_products_total: stats.silverProducts.total,
+      sort_option: sortOption,
+      total_products: stats.totalProducts,
+      visible_products: sortedProducts.length,
+    });
+
+    posthog.capture("spot_price_viewed", {
+      bitcoin_spot_price:
+        stats.marketPrices.find((price) => price.assetType === "bitcoin")?.currentPrice ?? null,
+      gold_spot_price:
+        stats.marketPrices.find((price) => price.assetType === "gold")?.currentPrice ?? null,
+      silver_spot_price:
+        stats.marketPrices.find((price) => price.assetType === "silver")?.currentPrice ?? null,
+      sp500_price:
+        stats.marketPrices.find((price) => price.assetType === "sp500")?.currentPrice ?? null,
+    });
+  }, [
+    isInitialized,
+    metalFilter,
+    posthog,
+    showOutOfStock,
+    sortOption,
+    sortedProducts.length,
+    stats.goldProducts.inStock,
+    stats.goldProducts.total,
+    stats.lastFetch?.timestamp,
+    stats.marketPrices,
+    stats.silverProducts.inStock,
+    stats.silverProducts.total,
+    stats.totalProducts,
+  ]);
 
   return (
     <>

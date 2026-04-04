@@ -264,3 +264,25 @@ export const getDashboardProducts = query({
   args: {},
   handler: async (ctx) => buildDashboardProductsResponse(ctx),
 });
+
+export const getStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const [summary, products] = await Promise.all([
+      buildDashboardSummaryResponse(ctx),
+      buildDashboardProductsResponse(ctx),
+    ]);
+
+    return {
+      ...summary,
+      goldProducts: {
+        ...summary.goldProducts,
+        bestSpread: products.goldProducts,
+      },
+      silverProducts: {
+        ...summary.silverProducts,
+        bestSpread: products.silverProducts,
+      },
+    };
+  },
+});

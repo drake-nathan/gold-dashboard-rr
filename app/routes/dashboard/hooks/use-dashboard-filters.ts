@@ -7,6 +7,7 @@ import { shouldAutoFlipToOutOfStock } from "../filters/product-filters";
 import type { DashboardStats } from "../types";
 
 interface UseDashboardFiltersResult {
+  isInitialized: boolean;
   metalFilter: MetalFilter;
   setMetalFilter: (value: MetalFilter) => void;
   setShowOutOfStock: (value: boolean) => void;
@@ -19,6 +20,7 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
   const [searchParams, setSearchParams] = useSearchParams();
   const [_, startTransition] = useTransition();
   const hasAutoFlipped = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const metalFilter = (searchParams.get("metal") as MetalFilter | null) ?? "all";
   const sortOption = (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
@@ -40,6 +42,7 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
 
     if (hasFilterParams) {
       hasAutoFlipped.current = true;
+      setIsInitialized(true);
       return;
     }
 
@@ -55,9 +58,12 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
         params.set("sort", "last-in-stock");
         setSearchParams(params, { replace: true });
       });
+      hasAutoFlipped.current = true;
+      return;
     }
 
     hasAutoFlipped.current = true;
+    setIsInitialized(true);
   }, [
     searchParams,
     setSearchParams,
@@ -65,6 +71,23 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
     stats.goldProducts.inStock,
     stats.silverProducts.inStock,
   ]);
+
+  useEffect(() => {
+    if (isInitialized || !hasAutoFlipped.current) {
+      return;
+    }
+
+    const hasFilterParams =
+      searchParams.has("metal") || searchParams.has("sort") || searchParams.has("showOOS");
+    const shouldAutoFlip = shouldAutoFlipToOutOfStock(
+      stats.goldProducts.inStock,
+      stats.silverProducts.inStock,
+    );
+
+    if (hasFilterParams || !shouldAutoFlip) {
+      setIsInitialized(true);
+    }
+  }, [isInitialized, searchParams, stats.goldProducts.inStock, stats.silverProducts.inStock]);
 
   const setMetalFilter = useDebounceCallback((value: MetalFilter) => {
     startTransition(() => {
@@ -103,6 +126,7 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
   };
 
   return {
+    isInitialized,
     metalFilter,
     setMetalFilter,
     setShowOutOfStock,
