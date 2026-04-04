@@ -80,7 +80,7 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
   const summary = usePreloadedQuery(loaderData.preloadedSummary);
   const products = usePreloadedQuery(loaderData.preloadedProducts);
 
-  // oxlint-disable-next-line eslint/no-unnecessary-condition -- defense-in-depth: runtime data could be undefined despite type
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- defense-in-depth: keep a user-facing fallback if preloaded route data is unexpectedly missing at runtime
   if (!summary || !products) {
     return (
       <main className="flex flex-1 items-center justify-center px-4 py-8">

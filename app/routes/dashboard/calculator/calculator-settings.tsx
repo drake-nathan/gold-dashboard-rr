@@ -40,7 +40,7 @@ export const CalculatorSettingsDialog = ({
   onSettingsChange,
   settings,
 }: CalculatorSettingsDialogProps) => {
-  const [localSettings, setLocalSettings] = useState<CalculatorSettings>(settings);
+  const [localSettings, setLocalSettings] = useState(settings);
 
   const handleCardChange = (cardId: string) => {
     const card = availableCards.find((c) => c.id === cardId);

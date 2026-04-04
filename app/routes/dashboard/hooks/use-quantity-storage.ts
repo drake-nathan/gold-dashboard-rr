@@ -51,7 +51,7 @@ const serializer = (value: QuantityStorage): string => {
  * - Validates quantity is between 1 and MAX_QUANTITY
  */
 export const useQuantityStorage = () => {
-  const [storage, setStorage] = useLocalStorage<QuantityStorage>(STORAGE_KEY, defaultValue, {
+  const [storage, setStorage] = useLocalStorage(STORAGE_KEY, defaultValue, {
     deserializer,
     // Match SSR output on the first client render, then hydrate from localStorage.
     initializeWithValue: false,

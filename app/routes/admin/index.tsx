@@ -14,6 +14,16 @@ export const meta: Route.MetaFunction = () => {
   return [{ title: "Admin - Dashboard.Gold" }, { content: "noindex, nofollow", name: "robots" }];
 };
 
+const assertPresent: <T>(value: T, message: string) => asserts value is NonNullable<T> = (
+  value,
+  message,
+) => {
+  // oxlint-disable-next-line typescript/no-unnecessary-condition -- generic assertion helper must handle both null and undefined across call sites
+  if (value === null || value === undefined) {
+    throw new Error(message);
+  }
+};
+
 export const loader = async (args: Route.LoaderArgs) => {
   const convexUrl = process.env.VITE_CONVEX_URL;
 
@@ -133,10 +143,13 @@ const AdminPage = ({ loaderData }: Route.ComponentProps) => {
     );
   }
 
+  assertPresent(loaderData.initialProducts, "Admin products were not loaded");
+  assertPresent(loaderData.productsData, "Admin review counts were not loaded");
+
   return (
     <AdminDashboard
-      initialProducts={loaderData.initialProducts!}
-      productsData={loaderData.productsData!}
+      initialProducts={loaderData.initialProducts}
+      productsData={loaderData.productsData}
     />
   );
 };

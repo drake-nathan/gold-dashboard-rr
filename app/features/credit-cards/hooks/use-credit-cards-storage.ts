@@ -75,7 +75,7 @@ const serializer = (value: CreditCardsStorage): string => {
  * - Preset card merging (ensures presets are always available)
  */
 export const useCreditCardsStorage = () => {
-  const [storage, setStorage] = useLocalStorage<CreditCardsStorage>(
+  const [storage, setStorage] = useLocalStorage(
     CREDIT_CARDS_STORAGE_KEY,
     defaultCreditCardsStorage,
     {

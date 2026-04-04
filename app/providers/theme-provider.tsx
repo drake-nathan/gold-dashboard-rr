@@ -26,7 +26,7 @@ const initialState: ThemeProviderState = {
   theme: "system",
 };
 
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
+const ThemeProviderContext = createContext(initialState);
 
 export const ThemeProvider = ({
   children,

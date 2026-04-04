@@ -55,7 +55,7 @@ const serializer = (value: PureFeeTierStorage): string => {
  * - Validation that selected tier exists in PURE_FEE_TIERS
  */
 export const usePureFeeTierStorage = () => {
-  const [storage, setStorage] = useLocalStorage<PureFeeTierStorage>(STORAGE_KEY, defaultValue, {
+  const [storage, setStorage] = useLocalStorage(STORAGE_KEY, defaultValue, {
     deserializer,
     // Match SSR output on the first client render, then hydrate from localStorage.
     initializeWithValue: false,
