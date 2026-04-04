@@ -57,6 +57,26 @@ const resolveAppRelease = (...values) => {
 };
 
 /**
+ * @param {{
+ *   dsn?: null | string;
+ *   isLocalDevRuntime?: boolean;
+ *   localOverride?: null | string;
+ * }} options - Runtime flags and env values.
+ * @returns {boolean} True when Sentry should initialize.
+ */
+const shouldEnableSentry = ({ dsn, isLocalDevRuntime = false, localOverride } = {}) => {
+  if (typeof dsn !== "string" || dsn.trim().length === 0) {
+    return false;
+  }
+
+  if (!isLocalDevRuntime) {
+    return true;
+  }
+
+  return typeof localOverride === "string" && localOverride.trim().toLowerCase() === "true";
+};
+
+/**
  * @typedef {{
  *   mechanism?: { type?: string };
  *   stacktrace?: {
@@ -201,30 +221,38 @@ const shouldDropServerEvent = (event) => {
   return false;
 };
 
-const consoleLogging = Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] });
-
-Sentry.init({
-  beforeSend: (event) => {
-    if (shouldDropServerEvent(event)) {
-      return null;
-    }
-
-    return event;
-  },
-
+const sentryEnabled = shouldEnableSentry({
   dsn: process.env.VITE_SENTRY_DSN,
-  enableLogs: true,
-  environment: resolveObservabilityEnvironment(
-    process.env.VITE_SENTRY_ENVIRONMENT,
-    process.env.NODE_ENV,
-  ),
-
-  integrations: [nodeProfilingIntegration(), consoleLogging],
-  profileLifecycle: "trace",
-  profileSessionSampleRate: 0.5,
-  release: resolveAppRelease(process.env.VITE_APP_RELEASE, process.env.RAILWAY_GIT_COMMIT_SHA),
-  // Adds request headers and IP for users, for more info visit:
-  // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
-  tracesSampleRate: 1,
+  isLocalDevRuntime: process.env.NODE_ENV !== "production",
+  localOverride: process.env.VITE_SENTRY_LOCAL_ENABLED,
 });
+
+if (sentryEnabled) {
+  const consoleLogging = Sentry.consoleLoggingIntegration({ levels: ["warn", "error"] });
+
+  Sentry.init({
+    beforeSend: (event) => {
+      if (shouldDropServerEvent(event)) {
+        return null;
+      }
+
+      return event;
+    },
+
+    dsn: process.env.VITE_SENTRY_DSN,
+    enableLogs: true,
+    environment: resolveObservabilityEnvironment(
+      process.env.VITE_SENTRY_ENVIRONMENT,
+      process.env.NODE_ENV,
+    ),
+
+    integrations: [nodeProfilingIntegration(), consoleLogging],
+    profileLifecycle: "trace",
+    profileSessionSampleRate: 0.5,
+    release: resolveAppRelease(process.env.VITE_APP_RELEASE, process.env.RAILWAY_GIT_COMMIT_SHA),
+    // Adds request headers and IP for users, for more info visit:
+    // https://docs.sentry.io/platforms/javascript/guides/react-router/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+    tracesSampleRate: 1,
+  });
+}

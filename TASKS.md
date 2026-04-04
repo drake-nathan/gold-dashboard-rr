@@ -14,6 +14,7 @@
 
 ## Up Next
 
+- Refactor alerts from standalone page to dashboard drawer → [.epics/alerts.md]
 - Define a canonical env schema and replace ad hoc env validation/access across app, Convex, Docker, and hosted config → [.epics/environment-config-hardening.md]
 - Remove temporary Convex `dashboard:getStats` compatibility query after stale cached clients age out
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]

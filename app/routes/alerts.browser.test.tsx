@@ -138,18 +138,18 @@ test("shows sign-in gating when the alerts route is opened signed out", async ()
 test("prefills the form from search params and creates a threshold alert when signed in", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: true };
 
-  const screen = await renderAlertsRoute("/alerts?name=Deal%20Watcher");
+  const screen = await renderAlertsRoute("/alerts?name=Deal%20Watcher&type=threshold");
 
   await expect.element(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Deal Watcher");
 
-  await screen.getByRole("spinbutton", { name: "Profit Threshold (USD)" }).fill("25");
+  await screen.getByRole("spinbutton", { name: "Max Markup (%)" }).fill("3");
   await screen.getByRole("button", { name: "Create Alert" }).click();
 
   expect(createAlertMock).toHaveBeenCalledWith({
+    aboveSpotThreshold: 3,
     cooldownMinutes: 60,
     enabled: true,
     name: "Deal Watcher",
-    profitThreshold: 25,
     triggerOn: "threshold_met",
     type: "threshold",
   });

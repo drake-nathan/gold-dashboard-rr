@@ -47,6 +47,7 @@ Comprehensive reference for managing environment variables across all environmen
 | **Observability**            |
 | `VITE_SENTRY_DSN`            | Client | No        | Yes          | Sentry DSN for client/server SDK initialization                  |
 | `VITE_SENTRY_ENVIRONMENT`    | Client | No        | Yes          | Canonical observability environment name                         |
+| `VITE_SENTRY_LOCAL_ENABLED`  | Client | No        | Yes          | Re-enable Sentry during local dev when set to `true`             |
 | `SENTRY_AUTH_TOKEN`          | Client | No        | Yes          | Sentry auth token for source map uploads during builds           |
 | `SENTRY_ORG`                 | Client | No        | Yes          | Sentry org slug for source map upload configuration              |
 | `SENTRY_PROJECT`             | Client | No        | Yes          | Sentry project slug for source map upload configuration          |
@@ -89,6 +90,7 @@ Where each variable is configured:
 | `VITE_APP_RELEASE`           |  optional SHA  |   git SHA    |     git SHA     |     -      |      -      |
 | `VITE_SENTRY_DSN`            |    optional    | recommended  |   recommended   |     -      |      -      |
 | `VITE_SENTRY_ENVIRONMENT`    |    optional    |  production  |     develop     |     -      |      -      |
+| `VITE_SENTRY_LOCAL_ENABLED`  |    `false`     |      -       |        -        |     -      |      -      |
 | `SENTRY_AUTH_TOKEN`          |       -        |   optional   |    optional     |     -      |      -      |
 | `SENTRY_ORG`                 |       -        |   optional   |    optional     |     -      |      -      |
 | `SENTRY_PROJECT`             |       -        |   optional   |    optional     |     -      |      -      |
@@ -122,12 +124,16 @@ Where each variable is configured:
    ```bash
    VITE_APP_RELEASE=$(git rev-parse HEAD)
    ```
-6. Optional - Stripe test mode:
+6. Optional - keep Sentry disabled in local dev (default). Set this only when you need to debug Sentry locally:
+   ```bash
+   VITE_SENTRY_LOCAL_ENABLED=true
+   ```
+7. Optional - Stripe test mode:
    ```bash
    VITE_STRIPE_ENABLED=true
    VITE_STRIPE_PRICE_ID=price_test_xxx
    ```
-7. Run `bun run dev`
+8. Run `bun run dev`
 
 ### Railway Preview Deployment
 
@@ -230,16 +236,17 @@ PostHog uses the same project for all environments. Register `environment` as `d
 
 ### Sentry
 
-| Variable                  | Value                                                        |
-| ------------------------- | ------------------------------------------------------------ |
-| `VITE_SENTRY_DSN`         | Public DSN for the app's Sentry project                      |
-| `VITE_SENTRY_ENVIRONMENT` | Canonical environment name such as `develop` or `production` |
-| `VITE_APP_RELEASE`        | Git SHA or other release identifier shared with PostHog      |
-| `SENTRY_AUTH_TOKEN`       | Build-time auth token for source map uploads                 |
-| `SENTRY_ORG`              | Sentry org slug                                              |
-| `SENTRY_PROJECT`          | Sentry project slug                                          |
+| Variable                    | Value                                                        |
+| --------------------------- | ------------------------------------------------------------ |
+| `VITE_SENTRY_DSN`           | Public DSN for the app's Sentry project                      |
+| `VITE_SENTRY_ENVIRONMENT`   | Canonical environment name such as `develop` or `production` |
+| `VITE_SENTRY_LOCAL_ENABLED` | Set to `true` to re-enable Sentry during `bun run dev`       |
+| `VITE_APP_RELEASE`          | Git SHA or other release identifier shared with PostHog      |
+| `SENTRY_AUTH_TOKEN`         | Build-time auth token for source map uploads                 |
+| `SENTRY_ORG`                | Sentry org slug                                              |
+| `SENTRY_PROJECT`            | Sentry project slug                                          |
 
-Prefer `develop` and `production` as the canonical environment vocabulary so Sentry and PostHog stay aligned. For observability architecture, event ownership, and runbook guidance, see `docs/observability.md`.
+Prefer `develop` and `production` as the canonical environment vocabulary so Sentry and PostHog stay aligned. Local development defaults to Sentry disabled even if `VITE_SENTRY_DSN` is present; set `VITE_SENTRY_LOCAL_ENABLED=true` when you intentionally want local error reporting. For observability architecture, event ownership, and runbook guidance, see `docs/observability.md`.
 
 ## Architecture Notes
 

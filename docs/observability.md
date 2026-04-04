@@ -144,6 +144,8 @@ Observability data should always be segmentable by environment and, when possibl
 
 - `VITE_SENTRY_ENVIRONMENT` is the canonical explicit env override
 - `VITE_APP_RELEASE` is the preferred shared release identifier
+- Local `bun run dev` sessions default to Sentry disabled, even when `VITE_SENTRY_DSN` is present
+- `VITE_SENTRY_LOCAL_ENABLED=true` is the explicit opt-in for local Sentry debugging
 - Hosted builds should set `VITE_APP_RELEASE` to the git SHA
 - Local development may omit `VITE_APP_RELEASE`
 

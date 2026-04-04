@@ -115,7 +115,7 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
               <>
                 {calc.aboveSpotPercentage !== null && (
                   <span className="mr-1.5 text-xs font-light text-muted-foreground">
-                    {formatPercentage(calc.aboveSpotPercentage)} above spot
+                    {formatPercentage(calc.aboveSpotPercentage)} markup
                   </span>
                 )}
                 -{formatCurrency(calc.unitCostcoPrice)}

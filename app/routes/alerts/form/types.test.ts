@@ -14,13 +14,12 @@ const withDefaults = (overrides: Partial<AlertFormValues>): AlertFormValues => (
 
 // --- getFormValidationError ---
 
-test("threshold form requires at least one threshold value", () => {
-  expect(getFormValidationError(withDefaults({ formType: "threshold" }))).toBeTruthy();
+test("threshold form requires above spot threshold", () => {
+  expect(
+    getFormValidationError(withDefaults({ aboveSpotThreshold: "", formType: "threshold" })),
+  ).toBeTruthy();
   expect(
     getFormValidationError(withDefaults({ aboveSpotThreshold: "5", formType: "threshold" })),
-  ).toBeFalsy();
-  expect(
-    getFormValidationError(withDefaults({ formType: "threshold", profitThreshold: "10" })),
   ).toBeFalsy();
 });
 
@@ -44,20 +43,18 @@ test("category form requires at least one filter", () => {
 
 // --- buildAlertPayload ---
 
-test("threshold payload includes parsed numeric thresholds", () => {
+test("threshold payload includes parsed above spot threshold", () => {
   const payload = buildAlertPayload(
     withDefaults({
       aboveSpotThreshold: "5.5",
       formType: "threshold",
       name: " Deal Watcher ",
-      profitThreshold: "25",
     }),
   );
 
   expect(payload).toMatchObject({
     aboveSpotThreshold: 5.5,
     name: "Deal Watcher",
-    profitThreshold: 25,
     triggerOn: "threshold_met",
     type: "threshold",
   });
@@ -121,10 +118,8 @@ test("threshold payload ignores non-numeric strings", () => {
       aboveSpotThreshold: "abc",
       formType: "threshold",
       name: "Test",
-      profitThreshold: "",
     }),
   );
 
   expect(payload.aboveSpotThreshold).toBeUndefined();
-  expect(payload.profitThreshold).toBeUndefined();
 });

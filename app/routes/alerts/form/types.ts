@@ -20,13 +20,12 @@ export interface AlertFormValues {
   enabled: boolean;
   formType: AlertFormType;
   name: string;
-  profitThreshold: string;
   skuProductId: string;
   skuTriggerOn: "in_stock" | "price_drop";
 }
 
 export const defaultFormValues: AlertFormValues = {
-  aboveSpotThreshold: "",
+  aboveSpotThreshold: "3",
   brand: "",
   categoryMetal: "",
   categoryTriggerOn: "in_stock",
@@ -35,7 +34,6 @@ export const defaultFormValues: AlertFormValues = {
   enabled: true,
   formType: "threshold",
   name: "",
-  profitThreshold: "",
   skuProductId: "",
   skuTriggerOn: "in_stock",
 };
@@ -51,7 +49,6 @@ export const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues =>
   enabled: alert.enabled,
   formType: alert.type,
   name: alert.name,
-  profitThreshold: alert.profitThreshold !== undefined ? String(alert.profitThreshold) : "",
   skuProductId: alert.productId ?? "",
   skuTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
 });
@@ -59,18 +56,32 @@ export const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues =>
 export const getFormValidationError = (values: AlertFormValues): boolean => {
   const categoryHasFilter =
     values.categoryMetal.length > 0 || values.categoryWeight.trim() || values.brand.trim();
-  const thresholdHasFilter =
-    values.aboveSpotThreshold.trim().length > 0 || values.profitThreshold.trim().length > 0;
 
   return (
     (values.formType === "category" && !categoryHasFilter) ||
     (values.formType === "sku" && !values.skuProductId) ||
-    (values.formType === "threshold" && !thresholdHasFilter)
+    (values.formType === "threshold" && !values.aboveSpotThreshold.trim())
   );
 };
 
-export const buildAlertPayload = (values: AlertFormValues) => {
+export const getValidationErrorMessage = (values: AlertFormValues): null | string => {
+  if (values.formType === "threshold" && !values.aboveSpotThreshold.trim()) {
+    return "Enter a max markup percentage";
+  }
+  if (values.formType === "sku" && !values.skuProductId) {
+    return "Please select a product";
+  }
+  if (values.formType === "category") {
+    const hasFilter =
+      values.categoryMetal.length > 0 || values.categoryWeight.trim() || values.brand.trim();
+    if (!hasFilter) return "Select at least one category filter (metal, weight, or brand)";
+  }
+  return null;
+};
+
+export const buildAlertPayload = (values: AlertFormValues, productOptions?: ProductOption[]) => {
   let triggerOn: TriggerOn = "threshold_met";
+  const name = values.name.trim() || generateAlertName(values, productOptions);
   const payload: {
     aboveSpotThreshold?: number;
     brand?: string;
@@ -79,14 +90,13 @@ export const buildAlertPayload = (values: AlertFormValues) => {
     metalType?: "gold" | "silver";
     name: string;
     productId?: string;
-    profitThreshold?: number;
     triggerOn: TriggerOn;
     type: AlertFormType;
     weight?: number;
   } = {
     cooldownMinutes: values.cooldownMinutes,
     enabled: values.enabled,
-    name: values.name.trim(),
+    name,
     triggerOn,
     type: values.formType,
   };
@@ -118,18 +128,40 @@ export const buildAlertPayload = (values: AlertFormValues) => {
 
   if (values.formType === "threshold") {
     const parsedAboveSpot = Number.parseFloat(values.aboveSpotThreshold);
-    const parsedProfit = Number.parseFloat(values.profitThreshold);
 
     if (values.aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot)) {
       payload.aboveSpotThreshold = parsedAboveSpot;
     }
-
-    if (values.profitThreshold.trim() && Number.isFinite(parsedProfit)) {
-      payload.profitThreshold = parsedProfit;
-    }
   }
 
   return payload;
+};
+
+export const generateAlertName = (
+  values: AlertFormValues,
+  productOptions?: ProductOption[],
+): string => {
+  if (values.formType === "threshold") {
+    const pct = values.aboveSpotThreshold.trim();
+    return pct ? `Markup \u2264 ${pct}%` : "Markup alert";
+  }
+
+  if (values.formType === "sku") {
+    const product = productOptions?.find((p) => p.productId === values.skuProductId);
+    const label = product?.name ?? "Product";
+    const trigger = values.skuTriggerOn === "in_stock" ? "restock" : "price drop";
+    return `${label} ${trigger}`;
+  }
+
+  // category
+  const parts: string[] = [];
+  if (values.categoryMetal) {
+    parts.push(values.categoryMetal.charAt(0).toUpperCase() + values.categoryMetal.slice(1));
+  }
+  if (values.brand.trim()) parts.push(values.brand.trim());
+  if (values.categoryWeight.trim()) parts.push(`${values.categoryWeight.trim()}oz`);
+  const trigger = values.categoryTriggerOn === "in_stock" ? "restock" : "price drop";
+  return parts.length > 0 ? `${parts.join(" ")} ${trigger}` : `Category ${trigger}`;
 };
 
 export const ALERT_TYPE_LABELS: Record<string, string> = {

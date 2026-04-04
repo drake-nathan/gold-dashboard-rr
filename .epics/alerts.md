@@ -25,6 +25,8 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
   Source of truth: `TASKS.md` Up Next and `.tasks/route-test-coverage.md`
 - Polish the `/alerts` experience around empty/loading/error states and responsive behavior.
   Source of truth: this epic and `TASKS.md` Now
+- Refactor alerts from a standalone page to a drawer on the dashboard (list + create/edit dialogs stay as-is, nav opens drawer instead of navigating).
+  Source of truth: `TASKS.md` Up Next
 - Decide whether shared public chrome should move into a layout route for dashboard and alerts.
   Source of truth: `TASKS.md` Up Next and `.tasks/public-layout-route.md`
 - Test alerts and subscription flows on real mobile devices.

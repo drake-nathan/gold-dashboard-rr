@@ -5,38 +5,25 @@ import { usePostHog } from "posthog-js/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { buildAlertPayload, defaultFormValues } from "../form/types";
-import { useAlertForm } from "./use-alert-form";
+import type { buildAlertPayload } from "../form/types";
 import { useAlertQueries } from "./use-alert-queries";
 
 export const useAlertsPage = (isSignedIn: boolean) => {
   const posthog = usePostHog();
-  const { alertEntitlements, alerts, isSubscriptionLoading, productOptions } =
-    useAlertQueries(isSignedIn);
-  const { formValues, hasValidationError, setFormValues } = useAlertForm();
+  const { alertEntitlements, alerts, productOptions } = useAlertQueries(isSignedIn);
 
   const createAlert = useMutation(api.alerts.createAlert);
   const updateAlert = useMutation(api.alerts.updateAlert);
   const deleteAlert = useMutation(api.alerts.deleteAlert);
 
-  const [isSaving, setIsSaving] = useState(false);
   const [editingAlert, setEditingAlert] = useState<Doc<"alerts"> | null>(null);
 
-  const createDisabled =
-    isSaving ||
-    isSubscriptionLoading ||
-    !alertEntitlements.canCreateAlerts ||
-    hasValidationError ||
-    !formValues.name.trim();
-
-  const onCreateAlert = async () => {
-    if (createDisabled) {
-      return;
+  const onCreateAlert = async (payload: ReturnType<typeof buildAlertPayload>) => {
+    if (!alertEntitlements.canCreateAlerts) {
+      toast.error("Creating alerts requires a Pro subscription");
+      throw new Error("Subscription required");
     }
 
-    const payload = buildAlertPayload(formValues);
-
-    setIsSaving(true);
     try {
       await createAlert(payload);
       posthog.capture("alert_created", {
@@ -46,21 +33,16 @@ export const useAlertsPage = (isSignedIn: boolean) => {
         enabled_on_create: payload.enabled,
         has_above_spot_threshold: payload.aboveSpotThreshold !== undefined,
         has_product_id: payload.productId !== undefined,
-        has_profit_threshold: payload.profitThreshold !== undefined,
+
         metal_type: payload.metalType ?? null,
         product_id: payload.productId ?? null,
         trigger_on: payload.triggerOn,
         weight: payload.weight ?? null,
       });
       toast.success("Alert created");
-      setFormValues({
-        ...defaultFormValues,
-        formType: formValues.formType,
-      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create alert");
-    } finally {
-      setIsSaving(false);
+      throw error;
     }
   };
 
@@ -113,16 +95,12 @@ export const useAlertsPage = (isSignedIn: boolean) => {
   return {
     alertEntitlements,
     alerts,
-    createDisabled,
     editingAlert,
-    formValues,
-    isSaving,
     onCreateAlert,
     onDeleteAlert,
     onEditAlert,
     onToggleAlert,
     productOptions,
     setEditingAlert,
-    setFormValues,
   };
 };
