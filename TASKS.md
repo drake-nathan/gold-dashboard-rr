@@ -3,11 +3,13 @@
 ## Now
 
 - Alerts: UI polish + test coverage → [.epics/alerts.md]
+- Observability strategy docs + rollout plan → [.epics/observability-overhaul.md]
 
 ## Epics
 
 - **Alerts & Subscriptions** — [.epics/alerts.md] — In Progress
 - **Environment Config Hardening** — [.epics/environment-config-hardening.md] — In Progress
+- **Observability Overhaul** — [.epics/observability-overhaul.md] — In Progress
 - **Filters & Sorting** — weight, brand, price range, "only deals" toggle — Not Started
 
 ## Up Next

@@ -44,6 +44,12 @@ Comprehensive reference for managing environment variables across all environmen
 | `VITE_PUBLIC_POSTHOG_KEY`    | Client | Yes       | Yes          | PostHog API key                                                  |
 | `VITE_PUBLIC_POSTHOG_HOST`   | Client | Yes       | No           | PostHog host URL                                                 |
 | `VITE_APP_RELEASE`           | Client | No        | Yes          | Shared app release identifier (use the git SHA in hosted builds) |
+| **Observability**            |
+| `VITE_SENTRY_DSN`            | Client | No        | Yes          | Sentry DSN for client/server SDK initialization                  |
+| `VITE_SENTRY_ENVIRONMENT`    | Client | No        | Yes          | Canonical observability environment name                         |
+| `SENTRY_AUTH_TOKEN`          | Client | No        | Yes          | Sentry auth token for source map uploads during builds           |
+| `SENTRY_ORG`                 | Client | No        | Yes          | Sentry org slug for source map upload configuration              |
+| `SENTRY_PROJECT`             | Client | No        | Yes          | Sentry project slug for source map upload configuration          |
 
 **Type Legend:**
 
@@ -81,6 +87,11 @@ Where each variable is configured:
 | `VITE_PUBLIC_POSTHOG_KEY`    |      key       |     key      |       key       |     -      |      -      |
 | `VITE_PUBLIC_POSTHOG_HOST`   |      host      |     host     |      host       |     -      |      -      |
 | `VITE_APP_RELEASE`           |  optional SHA  |   git SHA    |     git SHA     |     -      |      -      |
+| `VITE_SENTRY_DSN`            |    optional    | recommended  |   recommended   |     -      |      -      |
+| `VITE_SENTRY_ENVIRONMENT`    |    optional    |  production  |     develop     |     -      |      -      |
+| `SENTRY_AUTH_TOKEN`          |       -        |   optional   |    optional     |     -      |      -      |
+| `SENTRY_ORG`                 |       -        |   optional   |    optional     |     -      |      -      |
+| `SENTRY_PROJECT`             |       -        |   optional   |    optional     |     -      |      -      |
 
 **Notes:**
 
@@ -216,6 +227,19 @@ All API keys are **shared** across environments (no test/prod split):
 | `VITE_APP_RELEASE`         | Git SHA for the current build (shared with Sentry release tagging) |
 
 PostHog uses the same project for all environments. Register `environment` as `develop` or `production`, and set `VITE_APP_RELEASE` to the current git SHA so PostHog events line up with Sentry releases.
+
+### Sentry
+
+| Variable                  | Value                                                        |
+| ------------------------- | ------------------------------------------------------------ |
+| `VITE_SENTRY_DSN`         | Public DSN for the app's Sentry project                      |
+| `VITE_SENTRY_ENVIRONMENT` | Canonical environment name such as `develop` or `production` |
+| `VITE_APP_RELEASE`        | Git SHA or other release identifier shared with PostHog      |
+| `SENTRY_AUTH_TOKEN`       | Build-time auth token for source map uploads                 |
+| `SENTRY_ORG`              | Sentry org slug                                              |
+| `SENTRY_PROJECT`          | Sentry project slug                                          |
+
+Prefer `develop` and `production` as the canonical environment vocabulary so Sentry and PostHog stay aligned. For observability architecture, event ownership, and runbook guidance, see `docs/observability.md`.
 
 ## Architecture Notes
 
