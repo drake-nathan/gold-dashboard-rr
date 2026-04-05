@@ -31,24 +31,26 @@ export const ConfirmationDialog = ({
   variant = "default",
 }: ConfirmationDialogProps) => (
   <AlertDialog open={open}>
-    <AlertDialogContent>
-      <AlertDialogHeader>
-        <AlertDialogTitle>{title}</AlertDialogTitle>
-        <AlertDialogDescription>{description}</AlertDialogDescription>
-      </AlertDialogHeader>
-      <AlertDialogFooter>
-        <AlertDialogCancel onClick={onCancel}>{cancelText}</AlertDialogCancel>
-        <AlertDialogAction
-          className={
-            variant === "danger"
-              ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              : undefined
-          }
-          onClick={onConfirm}
-        >
-          {confirmText}
-        </AlertDialogAction>
-      </AlertDialogFooter>
-    </AlertDialogContent>
+    {open ? (
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction
+            className={
+              variant === "danger"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined
+            }
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    ) : null}
   </AlertDialog>
 );

@@ -57,13 +57,13 @@ const SignedInAlertsPage = () => {
               <div
                 className={`inline-flex h-9 items-center gap-2 rounded-full border px-3 text-xs font-medium${
                   alertEntitlements.canSendAlerts
-                    ? " border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    ? " border-teal-500/30 bg-teal-500/10 text-teal-600 dark:text-teal-400"
                     : " border-yellow-500/30 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
                 }`}
               >
                 <span
                   className={`inline-block size-1.5 rounded-full${
-                    alertEntitlements.canSendAlerts ? " bg-emerald-500" : " bg-yellow-500"
+                    alertEntitlements.canSendAlerts ? " bg-teal-500" : " bg-yellow-500"
                   }`}
                 />
                 {alertEntitlements.canSendAlerts ? "Sending active" : "Sending paused"}

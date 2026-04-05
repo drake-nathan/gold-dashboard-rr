@@ -50,7 +50,9 @@ test("renders inline desktop filters when the desktop media query matches", asyn
   const screen = await renderFilters();
 
   await expect.element(screen.getByText("Quantity:")).toBeInTheDocument();
-  await expect.element(screen.getByLabelText("Show Out of Stock")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("switch", { name: "Show Out of Stock" }))
+    .toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
 });
 

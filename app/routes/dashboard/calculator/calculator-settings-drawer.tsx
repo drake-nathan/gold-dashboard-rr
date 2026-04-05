@@ -121,7 +121,10 @@ export const CalculatorSettingsDrawer = ({
                   </p>
                 </div>
                 <Select
+                  modal={false}
                   onValueChange={(tierId) => {
+                    if (!tierId) return;
+
                     const tier = PURE_FEE_TIERS.find((t) => t.id === tierId);
                     if (tier) {
                       setCalculatorSettings({
@@ -138,7 +141,7 @@ export const CalculatorSettingsDrawer = ({
                   <SelectTrigger id="pure-fee-tier-drawer">
                     <SelectValue>{formatTierDisplay(calculatorSettings.pureFeeTier)}</SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent portal={false}>
                     {PURE_FEE_TIERS.map((tier) => (
                       <SelectItem key={tier.id} value={tier.id}>
                         <div className="flex flex-col gap-0.5">

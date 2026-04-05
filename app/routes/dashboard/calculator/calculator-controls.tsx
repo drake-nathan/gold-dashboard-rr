@@ -151,6 +151,8 @@ export const CalculatorControls = ({
           <div className="space-y-2">
             <Select
               onValueChange={(cardId) => {
+                if (!cardId) return;
+
                 const card = availableCards.find((c) => c.id === cardId);
                 if (card) {
                   setCalculatorSettings({

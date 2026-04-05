@@ -8,9 +8,12 @@
     "utils": "@/lib/cn"
   },
   "iconLibrary": "lucide",
+  "menuAccent": "subtle",
+  "menuColor": "default",
   "registries": {},
   "rsc": true,
-  "style": "new-york",
+  "rtl": false,
+  "style": "base-nova",
   "tailwind": {
     "baseColor": "gray",
     "config": "",

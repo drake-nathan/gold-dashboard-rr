@@ -42,7 +42,9 @@ export const CalculatorSettingsDialog = ({
 }: CalculatorSettingsDialogProps) => {
   const [localSettings, setLocalSettings] = useState(settings);
 
-  const handleCardChange = (cardId: string) => {
+  const handleCardChange = (cardId: null | string) => {
+    if (!cardId) return;
+
     const card = availableCards.find((c) => c.id === cardId);
     if (!card) return;
 
@@ -92,11 +94,17 @@ export const CalculatorSettingsDialog = ({
                 </Button>
               ) : null}
             </div>
-            <Select onValueChange={handleCardChange} value={localSettings.creditCard.id}>
+            <Select
+              modal={false}
+              onValueChange={handleCardChange}
+              value={localSettings.creditCard.id}
+            >
               <SelectTrigger id="credit-card">
-                <SelectValue placeholder="Select a credit card" />
+                <SelectValue placeholder="Select a credit card">
+                  {localSettings.creditCard.name} ({cashbackPercentage.toFixed(2)}%)
+                </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent portal={false}>
                 {availableCards.map((card) => {
                   const cardCashback = calculateCashbackPercentage(card);
                   return (

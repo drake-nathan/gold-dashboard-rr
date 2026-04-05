@@ -1,17 +1,19 @@
-import { Label as LabelPrimitive } from "radix-ui";
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "@/lib/cn";
 
-const Label = ({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) => (
-  <LabelPrimitive.Root
-    className={cn(
-      "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
-      className,
-    )}
-    data-slot="label"
-    {...props}
-  />
-);
+const Label = ({ className, ...props }: React.ComponentProps<"label">) => {
+  return (
+    // oxlint-disable-next-line jsx-a11y/label-has-associated-control
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className,
+      )}
+      data-slot="label"
+      {...props}
+    />
+  );
+};
 
 export { Label };

@@ -139,11 +139,23 @@ test("prefills the form from search params and creates a threshold alert when si
   mockAuthState = { isLoaded: true, isSignedIn: true };
 
   const screen = await renderAlertsRoute("/alerts?name=Deal%20Watcher&type=threshold");
+  const dialog = document.querySelector('[role="dialog"]');
 
   await expect.element(screen.getByRole("textbox", { name: "Name" })).toHaveValue("Deal Watcher");
 
   await screen.getByRole("spinbutton", { name: "Max Markup (%)" }).fill("3");
-  await screen.getByRole("button", { name: "Create Alert" }).click();
+
+  const createAlertButton = dialog
+    ? [...dialog.querySelectorAll("button")].find((button) =>
+        button.textContent.includes("Create Alert"),
+      )
+    : null;
+
+  if (!createAlertButton) {
+    throw new Error("Create Alert button not found");
+  }
+
+  createAlertButton.click();
 
   expect(createAlertMock).toHaveBeenCalledWith({
     aboveSpotThreshold: 3,
@@ -153,5 +165,27 @@ test("prefills the form from search params and creates a threshold alert when si
     triggerOn: "threshold_met",
     type: "threshold",
   });
-  expect(toastSuccessMock).toHaveBeenCalledWith("Alert created");
+  await expect.poll(() => toastSuccessMock.mock.calls[0]?.[0]).toBe("Alert created");
+});
+
+test("filters product options in the create alert combobox", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockProductOptions = [
+    { metalType: "gold", name: "American Buffalo", productId: "buffalo" },
+    { metalType: "silver", name: "Canadian Maple Leaf", productId: "maple" },
+    { metalType: "gold", name: "South African Krugerrand", productId: "krugerrand" },
+  ];
+
+  const screen = await renderAlertsRoute("/alerts?type=sku");
+  const productInput = screen.getByRole("combobox", { name: "Product" });
+
+  await productInput.fill("buffalo");
+
+  await expect
+    .poll(() =>
+      [...document.querySelectorAll('[data-slot="combobox-item"]:not([hidden])')].map((item) =>
+        item.textContent.trim(),
+      ),
+    )
+    .toEqual(["American Buffalo (gold)"]);
 });

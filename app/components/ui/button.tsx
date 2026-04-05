@@ -1,7 +1,7 @@
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Slot as SlotPrimitive } from "radix-ui";
-import * as React from "react";
 
+import { Slot } from "@/components/ui/render-helpers";
 import { cn } from "@/lib/cn";
 
 const buttonVariants = cva(
@@ -35,22 +35,29 @@ const buttonVariants = cva(
 
 const Button = ({
   asChild = false,
+  children,
   className,
   size,
   variant,
   ...props
-}: React.ComponentProps<"button"> &
+}: ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) => {
-  const Comp = asChild ? SlotPrimitive.Slot : "button";
+  const buttonClassName = cn(buttonVariants({ size, variant }), className);
+
+  if (asChild) {
+    return (
+      <Slot className={buttonClassName} data-slot="button" {...props}>
+        {children}
+      </Slot>
+    );
+  }
 
   return (
-    <Comp
-      className={cn(buttonVariants({ className, size, variant }))}
-      data-slot="button"
-      {...props}
-    />
+    <ButtonPrimitive className={buttonClassName} data-slot="button" {...props}>
+      {children}
+    </ButtonPrimitive>
   );
 };
 

@@ -51,6 +51,7 @@ A gold/silver price tracking dashboard that monitors Costco precious metals prod
 - **Runtime**: Bun
 - **Backend/Database**: Convex
 - **Styling**: Tailwind CSS v4
+- **UI primitives**: shadcn/ui wrappers on Base UI primitives (`components.json` uses `"base": "base"`)
 - **Language**: TypeScript 6 + tsgo (native Go compiler, `@typescript/native-preview`)
 - **Linting**: OXLint (type-aware) + oxfmt formatter
 - **Features**: Server-Side Rendering (SSR), React Compiler (babel-plugin-react-compiler)
@@ -63,6 +64,13 @@ This project follows React's "You Might Not Need an Effect" guidelines:
 - **Derived state**: Store minimal IDs, derive full objects with `useMemo`
 - **localStorage writes**: Always in event handlers, never in Effects
 - **SSR data loading**: Routes use `preloadQuery` (server) + `usePreloadedQuery` (client) from Convex
+
+## UI Component Guidance
+
+- **Base UI over Radix**: The local shadcn wrappers in `app/components/ui` target Base UI, not the older Radix primitives.
+- **Prefer `render` for new primitive-level composition**: Base UI replaces Radix `asChild` with `render` and optional `nativeButton={false}` when rendering non-button elements from button-like primitives.
+- **`asChild` is compatibility-only in local wrappers**: Existing wrappers may still expose `asChild` for app ergonomics, but new wrapper work should prefer Base UI's `render` API directly.
+- **Browser tests should prefer semantic roles**: Base UI components like `Switch` and `Checkbox` render hidden form inputs; use role-based queries for the interactive control instead of relying on `getByLabelText` when both nodes may match.
 
 ## File Organization
 

@@ -1,12 +1,14 @@
 import { Show, useClerk } from "@clerk/react-router";
-import { Bell } from "lucide-react";
-import { Link } from "react-router";
+import { Bell, LayoutDashboard } from "lucide-react";
+import { Link, useLocation } from "react-router";
 
 import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
 
 export const HeaderActions = () => {
   const { openSignIn, openSignUp } = useClerk();
+  const location = useLocation();
+  const isAlertsPage = location.pathname === "/alerts";
 
   return (
     <>
@@ -33,9 +35,18 @@ export const HeaderActions = () => {
       <Show when="signed-in">
         {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
           <Button asChild size="sm" variant="outline">
-            <Link to="/alerts">
-              <Bell className="h-4 w-4" />
-              <span className="ml-1.5">Alerts</span>
+            <Link to={isAlertsPage ? "/" : "/alerts"}>
+              {isAlertsPage ? (
+                <>
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="ml-1.5">Dashboard</span>
+                </>
+              ) : (
+                <>
+                  <Bell className="h-4 w-4" />
+                  <span className="ml-1.5">Alerts</span>
+                </>
+              )}
             </Link>
           </Button>
         ) : null}

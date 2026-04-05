@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { AlertFormType, AlertFormValues, ProductOption } from "./types";
 
+const getProductLabel = (product: ProductOption) => `${product.name} (${product.metalType})`;
+
 export const AlertFormFields = ({
   onChange,
   productOptions,
@@ -33,11 +35,14 @@ export const AlertFormFields = ({
     sku: "Track a specific Costco product for restocks or price drops.",
     threshold: "Alert when a product's markup over spot drops to your target.",
   };
+  const selectedProduct =
+    productOptions.find((product) => product.productId === values.skuProductId) ?? null;
 
   return (
     <>
       <Tabs
         onValueChange={(value) => {
+          if (!value) return;
           onChange({ formType: value as AlertFormType });
         }}
         value={values.formType}
@@ -78,16 +83,17 @@ export const AlertFormFields = ({
           <div className="space-y-1.5">
             <Label htmlFor="alert-product">Product</Label>
             <Combobox
-              filter={(itemValue, query) => {
-                const product = productOptions.find((p) => p.productId === itemValue);
-                if (!product) return false;
+              filter={(product: ProductOption, query) => {
                 const label = `${product.name} ${product.metalType}`.toLowerCase();
                 return label.includes(query.toLowerCase());
               }}
-              onValueChange={(value) => {
-                onChange({ skuProductId: value ?? "" });
+              items={productOptions}
+              itemToStringLabel={getProductLabel}
+              itemToStringValue={(product: ProductOption) => product.productId}
+              onValueChange={(product: null | ProductOption) => {
+                onChange({ skuProductId: product?.productId ?? "" });
               }}
-              value={values.skuProductId || null}
+              value={selectedProduct}
             >
               <ComboboxInput
                 className="w-full"
@@ -96,13 +102,13 @@ export const AlertFormFields = ({
                 showClear={Boolean(values.skuProductId)}
               />
               <ComboboxContent>
+                <ComboboxEmpty>No products found.</ComboboxEmpty>
                 <ComboboxList>
-                  <ComboboxEmpty>No products found.</ComboboxEmpty>
-                  {productOptions.map((product) => (
-                    <ComboboxItem key={product.productId} value={product.productId}>
-                      {product.name} ({product.metalType})
+                  {(product: ProductOption) => (
+                    <ComboboxItem key={product.productId} value={product}>
+                      {getProductLabel(product)}
                     </ComboboxItem>
-                  ))}
+                  )}
                 </ComboboxList>
               </ComboboxContent>
             </Combobox>
@@ -111,9 +117,12 @@ export const AlertFormFields = ({
           <div className="space-y-1.5">
             <Label htmlFor="alert-sku-trigger">Trigger On</Label>
             <Select
+              items={{ in_stock: "Back in stock", price_drop: "Price drop" }}
+              modal={false}
               onValueChange={(value) => {
+                if (!value) return;
                 onChange({
-                  skuTriggerOn: value as "in_stock" | "price_drop",
+                  skuTriggerOn: value,
                 });
               }}
               value={values.skuTriggerOn}
@@ -121,7 +130,7 @@ export const AlertFormFields = ({
               <SelectTrigger className="w-full" id="alert-sku-trigger">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent portal={false}>
                 <SelectItem value="in_stock">Back in stock</SelectItem>
                 <SelectItem value="price_drop">Price drop</SelectItem>
               </SelectContent>
@@ -133,9 +142,12 @@ export const AlertFormFields = ({
           <div className="space-y-1.5">
             <Label htmlFor="alert-category-trigger">Trigger On</Label>
             <Select
+              items={{ in_stock: "Back in stock", price_drop: "Price drop" }}
+              modal={false}
               onValueChange={(value) => {
+                if (!value) return;
                 onChange({
-                  categoryTriggerOn: value as "in_stock" | "price_drop",
+                  categoryTriggerOn: value,
                 });
               }}
               value={values.categoryTriggerOn}
@@ -143,7 +155,7 @@ export const AlertFormFields = ({
               <SelectTrigger id="alert-category-trigger">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent portal={false}>
                 <SelectItem value="in_stock">Back in stock</SelectItem>
                 <SelectItem value="price_drop">Price drop</SelectItem>
               </SelectContent>
@@ -153,7 +165,10 @@ export const AlertFormFields = ({
           <div className="space-y-1.5">
             <Label htmlFor="alert-metal">Metal</Label>
             <Select
+              items={{ any: "Any metal", gold: "Gold", silver: "Silver" }}
+              modal={false}
               onValueChange={(value) => {
+                if (!value) return;
                 onChange({
                   categoryMetal: value === "any" ? "" : (value as "gold" | "silver"),
                 });
@@ -163,7 +178,7 @@ export const AlertFormFields = ({
               <SelectTrigger id="alert-metal">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent portal={false}>
                 <SelectItem value="any">Any metal</SelectItem>
                 <SelectItem value="gold">Gold</SelectItem>
                 <SelectItem value="silver">Silver</SelectItem>
@@ -201,7 +216,17 @@ export const AlertFormFields = ({
       <div className="space-y-1.5">
         <Label htmlFor="alert-cooldown">Don&apos;t re-alert for</Label>
         <Select
+          items={{
+            "15": "15 minutes",
+            "30": "30 minutes",
+            "60": "1 hour",
+            "240": "4 hours",
+            "720": "12 hours",
+            "1440": "1 day",
+          }}
+          modal={false}
           onValueChange={(value) => {
+            if (!value) return;
             onChange({ cooldownMinutes: Number.parseInt(value, 10) });
           }}
           value={String(values.cooldownMinutes)}
@@ -209,7 +234,7 @@ export const AlertFormFields = ({
           <SelectTrigger className="w-full" id="alert-cooldown">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent portal={false}>
             <SelectItem value="15">15 minutes</SelectItem>
             <SelectItem value="30">30 minutes</SelectItem>
             <SelectItem value="60">1 hour</SelectItem>

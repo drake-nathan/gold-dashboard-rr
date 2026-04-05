@@ -354,13 +354,24 @@ export const CardManagerDrawer = ({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Reward Type</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select
+                          items={{
+                            cashback: "Cashback (flat percentage back)",
+                            travel: "Travel Points (earn points for travel)",
+                          }}
+                          modal={false}
+                          onValueChange={(value) => {
+                            if (!value) return;
+                            field.onChange(value);
+                          }}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select reward type" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent portal={false}>
                             <SelectItem value="cashback">
                               Cashback (flat percentage back)
                             </SelectItem>

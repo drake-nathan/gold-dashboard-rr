@@ -207,6 +207,12 @@ export default mergeConfig(
 - ✅ Theme switching and CSS class changes
 - ✅ Integration of multiple components
 
+### Querying Base UI Components
+
+- Prefer semantic role queries for interactive controls, especially `switch`, `checkbox`, `button`, `dialog`, and `menuitem`.
+- Base UI `Switch` and `Checkbox` render a hidden native input alongside the visible control. `getByLabelText(...)` can match both, so prefer `getByRole("switch", { name: ... })` or `getByRole("checkbox", { name: ... })` when you mean the interactive element.
+- For portaled popups and dialogs, assert against visible roles and headings instead of implementation details like portal container attributes.
+
 ### Use Unit Tests For:
 
 - ✅ Pure functions and utilities

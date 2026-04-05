@@ -8,12 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/cn";
 
-const handleAddonKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-  if (e.key === "Enter" || e.key === " ") {
-    e.currentTarget.parentElement?.querySelector("input")?.focus();
-  }
-};
-
 const InputGroup = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
@@ -71,15 +65,14 @@ const InputGroupAddon = ({
       className={cn(inputGroupAddonVariants({ align }), className)}
       data-align={align}
       data-slot="input-group-addon"
-      onClick={(e) => {
+      onMouseDown={(e) => {
         if ((e.target as HTMLElement).closest("button")) {
           return;
         }
+        e.preventDefault();
         e.currentTarget.parentElement?.querySelector("input")?.focus();
       }}
-      onKeyDown={handleAddonKeyDown}
       role="group"
-      tabIndex={0}
       {...props}
     />
   );

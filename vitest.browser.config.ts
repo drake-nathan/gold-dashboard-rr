@@ -5,10 +5,17 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   optimizeDeps: {
     include: [
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-popover",
-      "@radix-ui/react-select",
-      "@radix-ui/react-switch",
+      "@base-ui/react/alert-dialog",
+      "@base-ui/react/button",
+      "@base-ui/react/checkbox",
+      "@base-ui/react/dialog",
+      "@base-ui/react/menu",
+      "@base-ui/react/popover",
+      "@base-ui/react/select",
+      "@base-ui/react/separator",
+      "@base-ui/react/switch",
+      "@base-ui/react/tabs",
+      "@base-ui/react/tooltip",
       "@clerk/react-router/server",
       "cmdk",
       "convex/nextjs",

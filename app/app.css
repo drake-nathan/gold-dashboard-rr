@@ -181,10 +181,19 @@
     letter-spacing: var(--tracking-normal);
   }
 
-  /* Block hover/focus bleed-through when a dialog overlay is active.
-     Radix portal siblings (the original page content) should not respond
+  /* Block hover/focus bleed-through when a portaled overlay is active.
+     Base UI portal siblings (the original page content) should not respond
      to pointer events while the overlay is visible. */
-  body:has([data-slot="dialog-overlay"]) > *:not([data-radix-portal]) {
+  body:has([data-slot="dialog-overlay"][data-open]:not([hidden])),
+  body:has([data-slot="sheet-overlay"][data-open]:not([hidden])),
+  body:has([data-slot="alert-dialog-overlay"][data-open]:not([hidden])) {
+    overflow: hidden;
+  }
+
+  body:has([data-slot="dialog-overlay"][data-open]:not([hidden])) > *:not([data-slot$="-portal"]),
+  body:has([data-slot="sheet-overlay"][data-open]:not([hidden])) > *:not([data-slot$="-portal"]),
+  body:has([data-slot="alert-dialog-overlay"][data-open]:not([hidden]))
+    > *:not([data-slot$="-portal"]) {
     pointer-events: none;
   }
 

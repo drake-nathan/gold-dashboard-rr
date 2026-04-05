@@ -31,7 +31,8 @@ const CommandDialog = ({
   showCloseButton = true,
   title = "Command Palette",
   ...props
-}: React.ComponentProps<typeof Dialog> & {
+}: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
+  children?: React.ReactNode;
   className?: string;
   description?: string;
   showCloseButton?: boolean;

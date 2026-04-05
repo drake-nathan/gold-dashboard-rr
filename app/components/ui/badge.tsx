@@ -1,7 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Slot as SlotPrimitive } from "radix-ui";
-import * as React from "react";
+import type * as React from "react";
 
+import { Slot } from "@/components/ui/render-helpers";
 import { cn } from "@/lib/cn";
 
 const badgeVariants = cva(
@@ -28,15 +28,26 @@ const badgeVariants = cva(
 
 const Badge = ({
   asChild = false,
+  children,
   className,
   variant,
   ...props
-}: React.ComponentProps<"span"> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) => {
-  const Comp = asChild ? SlotPrimitive.Slot : "span";
+}: React.ComponentProps<"span"> &
+  VariantProps<typeof badgeVariants> & {
+    asChild?: boolean;
+  }) => {
+  const sharedProps = {
+    ...props,
+    className: cn(badgeVariants({ variant }), className),
+    "data-slot": "badge",
+    "data-variant": variant,
+  };
 
-  return (
-    <Comp className={cn(badgeVariants({ variant }), className)} data-slot="badge" {...props} />
-  );
+  if (asChild) {
+    return <Slot {...sharedProps}>{children}</Slot>;
+  }
+
+  return <span {...sharedProps}>{children}</span>;
 };
 
 export { Badge, badgeVariants };

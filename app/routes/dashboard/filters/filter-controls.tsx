@@ -61,7 +61,10 @@ export const FilterControls = ({
           Metal Type:
         </Label>
         <Select
+          items={{ all: "All", gold: "Gold", silver: "Silver" }}
           onValueChange={(value) => {
+            if (!value) return;
+
             setMetalFilter(value as MetalFilter);
             posthog.capture("filter_changed", {
               filter_name: "metal",
@@ -88,7 +91,16 @@ export const FilterControls = ({
           Sort By:
         </Label>
         <Select
+          items={{
+            "last-in-stock": "Last Out of Stock",
+            "price-asc": "Price (Low to High)",
+            "price-desc": "Price (High to Low)",
+            "profit-asc": "Profit (Low to High)",
+            "profit-desc": "Profit (High to Low)",
+          }}
           onValueChange={(value) => {
+            if (!value) return;
+
             setSortOption(value as SortOption);
             posthog.capture("filter_changed", {
               filter_name: "sort",
