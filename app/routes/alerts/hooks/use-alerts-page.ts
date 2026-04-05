@@ -8,9 +8,11 @@ import { toast } from "sonner";
 import type { buildAlertPayload } from "../form/types";
 import { useAlertQueries } from "./use-alert-queries";
 
+const enableAlertsErrorMessage = "An active subscription is required to enable alerts.";
+
 export const useAlertsPage = (isSignedIn: boolean) => {
   const posthog = usePostHog();
-  const { alertEntitlements, alerts, productOptions } = useAlertQueries(isSignedIn);
+  const { alertEntitlements, alerts, brandOptions, productOptions } = useAlertQueries(isSignedIn);
 
   const createAlert = useMutation(api.alerts.createAlert);
   const updateAlert = useMutation(api.alerts.updateAlert);
@@ -37,7 +39,7 @@ export const useAlertsPage = (isSignedIn: boolean) => {
         metal_type: payload.metalType ?? null,
         product_id: payload.productId ?? null,
         trigger_on: payload.triggerOn,
-        weight: payload.weight ?? null,
+        weight_group: payload.weightGroup ?? null,
       });
       toast.success("Alert created");
     } catch (error) {
@@ -50,6 +52,11 @@ export const useAlertsPage = (isSignedIn: boolean) => {
     alertId: Id<"alerts">,
     payload: ReturnType<typeof buildAlertPayload>,
   ) => {
+    if (payload.enabled && !alertEntitlements.canEnableAlerts) {
+      toast.error(enableAlertsErrorMessage);
+      throw new Error(enableAlertsErrorMessage);
+    }
+
     try {
       await updateAlert({
         alertId,
@@ -63,6 +70,11 @@ export const useAlertsPage = (isSignedIn: boolean) => {
   };
 
   const onToggleAlert = async (alertId: Id<"alerts">, nextEnabled: boolean) => {
+    if (nextEnabled && !alertEntitlements.canEnableAlerts) {
+      toast.error(enableAlertsErrorMessage);
+      return;
+    }
+
     try {
       await updateAlert({
         alertId,
@@ -95,6 +107,7 @@ export const useAlertsPage = (isSignedIn: boolean) => {
   return {
     alertEntitlements,
     alerts,
+    brandOptions,
     editingAlert,
     onCreateAlert,
     onDeleteAlert,

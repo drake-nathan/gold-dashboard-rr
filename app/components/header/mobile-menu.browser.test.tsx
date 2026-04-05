@@ -30,10 +30,6 @@ vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 
-vi.mock("@/components/subscription/upgrade-button", () => ({
-  UpgradeButton: () => <button type="button">Upgrade to Pro</button>,
-}));
-
 vi.mock("./user-button-with-pro", () => ({
   UserButtonWithPro: () => <div>Account Avatar</div>,
 }));
@@ -84,7 +80,6 @@ test("shows signed-in alerts and account actions without admin chrome", async ()
   await screen.getByRole("button", { name: "Open menu" }).click();
 
   await expect.element(screen.getByText("Alerts")).toBeInTheDocument();
-  await expect.element(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
   await expect.element(screen.getByText("Account Avatar")).toBeInTheDocument();
   await expect.element(screen.getByText(/^Pro$/)).toBeInTheDocument();
   expect(document.body.textContent).not.toContain("Admin");

@@ -1,5 +1,7 @@
 import { Show } from "@clerk/react-router";
 
+import { UpgradeButton } from "@/components/subscription/upgrade-button";
+
 import { HeaderActions } from "./header-actions";
 import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
@@ -21,8 +23,11 @@ export const Header = () => {
           </Show>
         </div>
 
-        {/* Mobile: Hamburger menu */}
-        <div className="sm:hidden">
+        {/* Mobile: Upgrade button + Hamburger menu */}
+        <div className="flex items-center gap-2 sm:hidden">
+          <Show when="signed-in">
+            <UpgradeButton size="sm" />
+          </Show>
           <MobileMenu />
         </div>
       </div>

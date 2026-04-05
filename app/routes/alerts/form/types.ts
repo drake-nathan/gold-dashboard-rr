@@ -1,5 +1,12 @@
 import type { Doc } from "convex/_generated/dataModel";
 
+import {
+  type CategoryWeightGroup,
+  formatStoredCategoryWeightGroup,
+  inferCategoryWeightGroup,
+  type StoredCategoryWeightGroup,
+} from "../weight-groups";
+
 // Mirrors convex/alerts/core.ts (AlertType, TriggerOn) — keep in sync.
 export type AlertFormType = "category" | "sku" | "threshold";
 export type TriggerOn = "in_stock" | "price_drop" | "threshold_met";
@@ -14,22 +21,20 @@ export interface AlertFormValues {
   aboveSpotThreshold: string;
   brand: string;
   categoryMetal: "" | "gold" | "silver";
-  categoryTriggerOn: "in_stock" | "price_drop";
-  categoryWeight: string;
+  categoryWeightGroup: CategoryWeightGroup;
   cooldownMinutes: number;
   enabled: boolean;
   formType: AlertFormType;
   name: string;
   skuProductId: string;
-  skuTriggerOn: "in_stock" | "price_drop";
+  skuTriggerOn: "in_stock";
 }
 
 export const defaultFormValues: AlertFormValues = {
   aboveSpotThreshold: "3",
   brand: "",
-  categoryMetal: "",
-  categoryTriggerOn: "in_stock",
-  categoryWeight: "",
+  categoryMetal: "gold",
+  categoryWeightGroup: "any",
   cooldownMinutes: 60,
   enabled: true,
   formType: "threshold",
@@ -43,22 +48,20 @@ export const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues =>
     alert.aboveSpotThreshold !== undefined ? String(alert.aboveSpotThreshold) : "",
   brand: alert.brand ?? "",
   categoryMetal: alert.metalType ?? "",
-  categoryTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
-  categoryWeight: alert.weight !== undefined ? String(alert.weight) : "",
+  categoryWeightGroup: inferCategoryWeightGroup({
+    weight: alert.weight,
+    weightGroup: alert.weightGroup,
+  }),
   cooldownMinutes: alert.cooldownMinutes,
   enabled: alert.enabled,
   formType: alert.type,
   name: alert.name,
   skuProductId: alert.productId ?? "",
-  skuTriggerOn: alert.triggerOn === "price_drop" ? "price_drop" : "in_stock",
+  skuTriggerOn: "in_stock",
 });
 
 export const getFormValidationError = (values: AlertFormValues): boolean => {
-  const categoryHasFilter =
-    values.categoryMetal.length > 0 || values.categoryWeight.trim() || values.brand.trim();
-
   return (
-    (values.formType === "category" && !categoryHasFilter) ||
     (values.formType === "sku" && !values.skuProductId) ||
     (values.formType === "threshold" && !values.aboveSpotThreshold.trim())
   );
@@ -70,11 +73,6 @@ export const getValidationErrorMessage = (values: AlertFormValues): null | strin
   }
   if (values.formType === "sku" && !values.skuProductId) {
     return "Please select a product";
-  }
-  if (values.formType === "category") {
-    const hasFilter =
-      values.categoryMetal.length > 0 || values.categoryWeight.trim() || values.brand.trim();
-    if (!hasFilter) return "Select at least one category filter (metal, weight, or brand)";
   }
   return null;
 };
@@ -92,7 +90,7 @@ export const buildAlertPayload = (values: AlertFormValues, productOptions?: Prod
     productId?: string;
     triggerOn: TriggerOn;
     type: AlertFormType;
-    weight?: number;
+    weightGroup?: StoredCategoryWeightGroup;
   } = {
     cooldownMinutes: values.cooldownMinutes,
     enabled: values.enabled,
@@ -102,22 +100,21 @@ export const buildAlertPayload = (values: AlertFormValues, productOptions?: Prod
   };
 
   if (values.formType === "sku") {
-    triggerOn = values.skuTriggerOn;
+    triggerOn = "in_stock";
     payload.productId = values.skuProductId;
     payload.triggerOn = triggerOn;
   }
 
   if (values.formType === "category") {
-    triggerOn = values.categoryTriggerOn;
+    triggerOn = "in_stock";
     payload.triggerOn = triggerOn;
 
     if (values.categoryMetal) {
       payload.metalType = values.categoryMetal;
     }
 
-    const parsedWeight = Number.parseFloat(values.categoryWeight);
-    if (values.categoryWeight.trim() && Number.isFinite(parsedWeight)) {
-      payload.weight = parsedWeight;
+    if (values.categoryWeightGroup !== "any") {
+      payload.weightGroup = values.categoryWeightGroup;
     }
 
     const trimmedBrand = values.brand.trim();
@@ -149,8 +146,7 @@ export const generateAlertName = (
   if (values.formType === "sku") {
     const product = productOptions?.find((p) => p.productId === values.skuProductId);
     const label = product?.name ?? "Product";
-    const trigger = values.skuTriggerOn === "in_stock" ? "restock" : "price drop";
-    return `${label} ${trigger}`;
+    return `${label} restock`;
   }
 
   // category
@@ -159,9 +155,10 @@ export const generateAlertName = (
     parts.push(values.categoryMetal.charAt(0).toUpperCase() + values.categoryMetal.slice(1));
   }
   if (values.brand.trim()) parts.push(values.brand.trim());
-  if (values.categoryWeight.trim()) parts.push(`${values.categoryWeight.trim()}oz`);
-  const trigger = values.categoryTriggerOn === "in_stock" ? "restock" : "price drop";
-  return parts.length > 0 ? `${parts.join(" ")} ${trigger}` : `Category ${trigger}`;
+  if (values.categoryWeightGroup !== "any") {
+    parts.push(formatStoredCategoryWeightGroup(values.categoryWeightGroup));
+  }
+  return parts.length > 0 ? `${parts.join(" ")} restock` : "Category restock";
 };
 
 export const ALERT_TYPE_LABELS: Record<string, string> = {

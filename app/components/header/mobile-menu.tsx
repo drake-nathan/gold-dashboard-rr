@@ -2,7 +2,6 @@ import { Show, useClerk } from "@clerk/react-router";
 import { Bell, LogIn, Menu, UserPlus } from "lucide-react";
 import { Link } from "react-router";
 
-import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -64,9 +63,6 @@ export const MobileMenu = () => {
               </Link>
             </DropdownMenuItem>
           ) : null}
-          <div className="px-2 py-1.5">
-            <UpgradeButton className="w-full justify-start" size="sm" />
-          </div>
           <div className="flex items-center gap-2 px-2 py-1.5">
             <UserButtonWithPro avatarSize="size-[28px]" />
             <span className="text-sm">

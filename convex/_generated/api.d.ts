@@ -19,6 +19,7 @@ import type * as alerts from "../alerts.js";
 import type * as alerts_batches from "../alerts/batches.js";
 import type * as alerts_core from "../alerts/core.js";
 import type * as alerts_evaluation from "../alerts/evaluation.js";
+import type * as alerts_weightGroups from "../alerts/weightGroups.js";
 import type * as costco from "../costco.js";
 import type * as costco_api from "../costco/api.js";
 import type * as costco_matching from "../costco/matching.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   "alerts/batches": typeof alerts_batches;
   "alerts/core": typeof alerts_core;
   "alerts/evaluation": typeof alerts_evaluation;
+  "alerts/weightGroups": typeof alerts_weightGroups;
   costco: typeof costco;
   "costco/api": typeof costco_api;
   "costco/matching": typeof costco_matching;

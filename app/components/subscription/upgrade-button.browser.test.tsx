@@ -22,6 +22,14 @@ vi.mock("@clerk/react-router", () => ({
   useAuth: () => mockAuthState,
 }));
 
+vi.mock("react-router", () => ({
+  useLocation: () => ({
+    hash: "",
+    pathname: "/alerts",
+    search: "?type=sku",
+  }),
+}));
+
 // Mock useSubscription hook
 vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
@@ -97,7 +105,22 @@ test("calls createCheckout when clicked", async () => {
   const button = screen.getByRole("button", { name: /upgrade to pro/i });
   await button.click();
 
-  expect(mockSubscription.createCheckout).toHaveBeenCalled();
+  await expect
+    .element(screen.getByRole("heading", { name: /alerts require a pro subscription/i }))
+    .toBeInTheDocument();
+  expect(mockSubscription.createCheckout).not.toHaveBeenCalled();
+
+  const continueButton = [...document.querySelectorAll("button")].find((candidate) =>
+    candidate.textContent.includes("Continue to Stripe"),
+  );
+
+  if (!continueButton) {
+    throw new Error("Continue to Stripe button not found");
+  }
+
+  continueButton.click();
+
+  expect(mockSubscription.createCheckout).toHaveBeenCalledWith("/alerts?type=sku");
 });
 
 test("renders custom text when provided", async () => {

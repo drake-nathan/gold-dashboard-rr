@@ -26,6 +26,32 @@ const getSiteUrl = (): string => {
   return siteUrl;
 };
 
+const getCheckoutReturnUrl = (
+  siteUrl: string,
+  returnPath: string | undefined,
+  checkoutState: "canceled" | "success",
+): string => {
+  const fallbackOrigin = new URL(siteUrl);
+  const fallbackUrl = `${siteUrl}${siteUrl.includes("?") ? "&" : "?"}checkout=${checkoutState}`;
+
+  if (!returnPath) {
+    return fallbackUrl;
+  }
+
+  try {
+    const returnUrl = new URL(returnPath, siteUrl);
+
+    if (returnUrl.origin !== fallbackOrigin.origin) {
+      return fallbackUrl;
+    }
+
+    returnUrl.searchParams.set("checkout", checkoutState);
+    return returnUrl.toString();
+  } catch {
+    return fallbackUrl;
+  }
+};
+
 const getStripeCustomerForIdentity = async (
   ctx: ActionCtx,
   identity: Awaited<ReturnType<typeof requireAuthIdentity>>,
@@ -61,6 +87,7 @@ export const createCheckoutSession = action({
   args: {
     // Kept for client compatibility; server enforces STRIPE_PRICE_ID.
     priceId: v.string(),
+    returnPath: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ error?: string; url?: string }> => {
     try {
@@ -83,12 +110,12 @@ export const createCheckoutSession = action({
       // Create the checkout session
       const siteUrl = getSiteUrl();
       const session = await stripeClient.createCheckoutSession(ctx, {
-        cancelUrl: `${siteUrl}?checkout=canceled`,
+        cancelUrl: getCheckoutReturnUrl(siteUrl, args.returnPath, "canceled"),
         customerId,
         mode: "subscription",
         priceId: configuredPriceId,
         subscriptionMetadata: { userId: identity.tokenIdentifier },
-        successUrl: `${siteUrl}?checkout=success`,
+        successUrl: getCheckoutReturnUrl(siteUrl, args.returnPath, "success"),
       });
 
       return { url: session.url ?? undefined };

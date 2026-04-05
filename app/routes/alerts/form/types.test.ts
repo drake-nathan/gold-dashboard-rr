@@ -31,12 +31,12 @@ test("sku form requires a product ID", () => {
 });
 
 test("category form requires at least one filter", () => {
-  expect(getFormValidationError(withDefaults({ formType: "category" }))).toBeTruthy();
+  expect(getFormValidationError(withDefaults({ formType: "category" }))).toBeFalsy();
   expect(
     getFormValidationError(withDefaults({ categoryMetal: "gold", formType: "category" })),
   ).toBeFalsy();
   expect(
-    getFormValidationError(withDefaults({ categoryWeight: "1.0", formType: "category" })),
+    getFormValidationError(withDefaults({ categoryWeightGroup: "1oz", formType: "category" })),
   ).toBeFalsy();
   expect(getFormValidationError(withDefaults({ brand: "PAMP", formType: "category" }))).toBeFalsy();
 });
@@ -60,30 +60,28 @@ test("threshold payload includes parsed above spot threshold", () => {
   });
 });
 
-test("sku payload includes product ID and trigger", () => {
+test("sku payload always creates an in-stock alert", () => {
   const payload = buildAlertPayload(
     withDefaults({
       formType: "sku",
       name: "Gold Bar Alert",
       skuProductId: "prod-123",
-      skuTriggerOn: "price_drop",
     }),
   );
 
   expect(payload).toMatchObject({
     productId: "prod-123",
-    triggerOn: "price_drop",
+    triggerOn: "in_stock",
     type: "sku",
   });
 });
 
-test("category payload includes metal, weight, and brand when set", () => {
+test("category payload includes metal, grouped weight, and brand when set", () => {
   const payload = buildAlertPayload(
     withDefaults({
       brand: " PAMP ",
       categoryMetal: "gold",
-      categoryTriggerOn: "in_stock",
-      categoryWeight: "1.0",
+      categoryWeightGroup: "1oz",
       formType: "category",
       name: "Gold Restock",
     }),
@@ -94,7 +92,7 @@ test("category payload includes metal, weight, and brand when set", () => {
     metalType: "gold",
     triggerOn: "in_stock",
     type: "category",
-    weight: 1,
+    weightGroup: "1oz",
   });
 });
 
@@ -108,7 +106,7 @@ test("category payload omits empty optional fields", () => {
   );
 
   expect(payload.metalType).toBe("silver");
-  expect(payload.weight).toBeUndefined();
+  expect(payload.weightGroup).toBeUndefined();
   expect(payload.brand).toBeUndefined();
 });
 

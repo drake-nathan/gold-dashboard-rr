@@ -19,27 +19,30 @@ import {
   alertFormValuesFromDoc,
   buildAlertPayload,
   generateAlertName,
-  getFormValidationError,
+  getValidationErrorMessage,
   type AlertFormValues,
   type ProductOption,
 } from "../form/types";
 
 export const EditAlertDialog = ({
   alert,
+  brandOptions,
   onClose,
   onSave,
   productOptions,
 }: {
   alert: Doc<"alerts">;
+  brandOptions: string[];
   onClose: () => void;
   onSave: (alertId: Id<"alerts">, payload: ReturnType<typeof buildAlertPayload>) => Promise<void>;
   productOptions: ProductOption[];
 }) => {
   const [values, setValues] = useState(() => alertFormValuesFromDoc(alert));
   const [isSaving, setIsSaving] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const hasValidationError = getFormValidationError(values);
-  const saveDisabled = isSaving || hasValidationError;
+  const validationErrorMessage = getValidationErrorMessage(values);
+  const showValidationErrors = submitAttempted && validationErrorMessage !== null;
 
   const handleFieldChange = (update: Partial<AlertFormValues>) => {
     setValues((prev) => {
@@ -61,7 +64,9 @@ export const EditAlertDialog = ({
   };
 
   const handleSave = async () => {
-    if (saveDisabled) return;
+    if (isSaving) return;
+    setSubmitAttempted(true);
+    if (validationErrorMessage) return;
 
     const payload = buildAlertPayload(values, productOptions);
     setIsSaving(true);
@@ -91,10 +96,18 @@ export const EditAlertDialog = ({
         <div className="-mx-6 flex-1 overflow-y-auto px-6">
           <div className="space-y-4 pb-2">
             <AlertFormFields
+              brandOptions={brandOptions}
               onChange={handleFieldChange}
               productOptions={productOptions}
+              showValidationErrors={showValidationErrors}
               values={values}
             />
+
+            {showValidationErrors ? (
+              <p className="text-sm text-destructive" role="alert">
+                {validationErrorMessage}
+              </p>
+            ) : null}
 
             <Separator />
 
@@ -118,7 +131,7 @@ export const EditAlertDialog = ({
             Cancel
           </Button>
           <Button
-            disabled={saveDisabled}
+            disabled={isSaving}
             onClick={() => {
               void handleSave();
             }}

@@ -12,6 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 
+import {
+  formatLegacyWeightOz,
+  formatStoredCategoryWeightGroup,
+  isStoredCategoryWeightGroup,
+} from "../weight-groups";
+
 const formatCooldown = (minutes: number): string => {
   if (minutes >= 1440) return `${Math.round(minutes / 1440)} day`;
   if (minutes >= 60) return `${Math.round(minutes / 60)} hour`;
@@ -25,7 +31,11 @@ const buildDescription = (alert: Doc<"alerts">): string => {
     if (alert.metalType)
       parts.push(alert.metalType.charAt(0).toUpperCase() + alert.metalType.slice(1));
     if (alert.brand) parts.push(alert.brand);
-    if (alert.weight) parts.push(`${alert.weight}oz`);
+    if (isStoredCategoryWeightGroup(alert.weightGroup)) {
+      parts.push(formatStoredCategoryWeightGroup(alert.weightGroup));
+    } else if (alert.weight) {
+      parts.push(formatLegacyWeightOz(alert.weight));
+    }
   }
 
   if (alert.type !== "threshold") {

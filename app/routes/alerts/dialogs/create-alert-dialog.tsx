@@ -1,7 +1,6 @@
 import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +26,12 @@ import {
 } from "../form/types";
 
 export const CreateAlertDialog = ({
+  brandOptions,
   onClose,
   onSave,
   productOptions,
 }: {
+  brandOptions: string[];
   onClose: () => void;
   onSave: (payload: ReturnType<typeof buildAlertPayload>) => Promise<void>;
   productOptions: ProductOption[];
@@ -40,17 +41,16 @@ export const CreateAlertDialog = ({
   const [values, setValues] = useState<AlertFormValues>(() => {
     const initialType = searchParams.get("type");
     const formType: AlertFormType =
-      initialType === "sku" || initialType === "category" ? initialType : "threshold";
+      initialType === "threshold" || initialType === "sku" || initialType === "category"
+        ? initialType
+        : "category";
 
     const initial: AlertFormValues = {
       ...defaultFormValues,
       formType,
       name: searchParams.get("name") ?? "",
       skuProductId: searchParams.get("productId") ?? "",
-      skuTriggerOn:
-        searchParams.get("triggerOn") === "price_drop"
-          ? ("price_drop" as const)
-          : ("in_stock" as const),
+      skuTriggerOn: "in_stock",
     };
 
     if (!initial.name) {
@@ -60,6 +60,9 @@ export const CreateAlertDialog = ({
     return initial;
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const validationErrorMessage = getValidationErrorMessage(values);
+  const showValidationErrors = submitAttempted && validationErrorMessage !== null;
 
   const handleFieldChange = (update: Partial<AlertFormValues>) => {
     setValues((prev) => {
@@ -84,12 +87,8 @@ export const CreateAlertDialog = ({
 
   const handleCreate = async () => {
     if (isSaving) return;
-
-    const error = getValidationErrorMessage(values);
-    if (error) {
-      toast.error(error);
-      return;
-    }
+    setSubmitAttempted(true);
+    if (validationErrorMessage) return;
 
     const payload = buildAlertPayload(values, productOptions);
     setIsSaving(true);
@@ -121,10 +120,18 @@ export const CreateAlertDialog = ({
         <div className="-mx-6 flex-1 overflow-y-auto px-6">
           <div className="space-y-4 pb-2">
             <AlertFormFields
+              brandOptions={brandOptions}
               onChange={handleFieldChange}
               productOptions={productOptions}
+              showValidationErrors={showValidationErrors}
               values={values}
             />
+
+            {showValidationErrors ? (
+              <p className="text-sm text-destructive" role="alert">
+                {validationErrorMessage}
+              </p>
+            ) : null}
 
             <Separator />
 
@@ -148,6 +155,7 @@ export const CreateAlertDialog = ({
             Cancel
           </Button>
           <Button
+            disabled={isSaving}
             onClick={() => {
               void handleCreate();
             }}

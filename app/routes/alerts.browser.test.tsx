@@ -10,9 +10,11 @@ let mockAlerts: {
   cooldownMinutes: number;
   enabled: boolean;
   name: string;
+  pauseReason?: "billing_hold" | "inactive_subscription";
   triggerOn: "in_stock" | "price_drop" | "threshold_met";
   type: "category" | "sku" | "threshold";
 }[] = [];
+let mockBrandOptions: string[] = [];
 let mockProductOptions: { metalType: string; name: string; productId: string }[] = [];
 let mockSubscription = {
   alertEntitlements: {
@@ -38,6 +40,7 @@ vi.mock("convex/_generated/api", () => ({
       createAlert: "createAlert",
       deleteAlert: "deleteAlert",
       getAlerts: "getAlerts",
+      getBrandOptions: "getBrandOptions",
       getProductOptions: "getProductOptions",
       updateAlert: "updateAlert",
     },
@@ -65,6 +68,10 @@ vi.mock("convex/react", () => ({
 
     if (ref === "getAlerts") {
       return mockAlerts;
+    }
+
+    if (ref === "getBrandOptions") {
+      return mockBrandOptions;
     }
 
     if (ref === "getProductOptions") {
@@ -109,6 +116,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockAuthState = { isLoaded: true, isSignedIn: false };
   mockAlerts = [];
+  mockBrandOptions = [];
   mockProductOptions = [];
   mockSubscription = {
     alertEntitlements: {
@@ -188,4 +196,112 @@ test("filters product options in the create alert combobox", async () => {
       ),
     )
     .toEqual(["American Buffalo (gold)"]);
+});
+
+test("category dialog starts with gold selected and treats any brand as a real value", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+
+  const screen = await renderAlertsRoute("/alerts?type=category");
+
+  const goldButton = document.querySelector('[data-slot="toggle-group-item"][aria-label="Gold"]');
+
+  if (!(goldButton instanceof HTMLButtonElement)) {
+    throw new Error("Gold toggle button not found");
+  }
+
+  await expect.element(goldButton).toHaveAttribute("data-pressed");
+  await expect
+    .element(screen.getByRole("combobox", { name: "Brand" }))
+    .toHaveTextContent("Any brand");
+  await expect.element(screen.getByRole("button", { name: "Create Alert" })).not.toBeDisabled();
+});
+
+test("creates a category restock alert with segmented metal controls", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockBrandOptions = ["Argor-Heraeus", "PAMP", "Valcambi"];
+
+  const screen = await renderAlertsRoute("/alerts?type=category");
+  const dialog = document.querySelector('[role="dialog"]');
+
+  const goldButton = document.querySelector('[data-slot="toggle-group-item"][aria-label="Gold"]');
+
+  if (!(goldButton instanceof HTMLButtonElement)) {
+    throw new Error("Category metal toggle button not found");
+  }
+
+  goldButton.click();
+  const weightButton = document.querySelector('[data-slot="toggle-group-item"][aria-label="1 oz"]');
+
+  if (!(weightButton instanceof HTMLButtonElement)) {
+    throw new Error("Category weight toggle button not found");
+  }
+
+  weightButton.click();
+  await expect
+    .element(screen.getByRole("textbox", { name: "Name" }))
+    .toHaveValue("Gold 1 oz restock");
+
+  const createAlertButton = dialog
+    ? [...dialog.querySelectorAll("button")].find((button) =>
+        button.textContent.includes("Create Alert"),
+      )
+    : null;
+
+  if (!createAlertButton) {
+    throw new Error("Create Alert button not found");
+  }
+
+  createAlertButton.click();
+
+  await expect
+    .poll(() => createAlertMock.mock.calls[0]?.[0])
+    .toMatchObject({
+      cooldownMinutes: 60,
+      enabled: true,
+      metalType: "gold",
+      name: "Gold 1 oz restock",
+      triggerOn: "in_stock",
+      type: "category",
+      weightGroup: "1oz",
+    });
+});
+
+test("prevents enabling an alert when the subscription cannot enable alerts", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockSubscription = {
+    alertEntitlements: {
+      canCreateAlerts: false,
+      canEnableAlerts: false,
+      canManageAlerts: true,
+      canSendAlerts: false,
+      shouldPauseEnabledAlerts: true,
+    },
+    isLoading: false,
+  };
+  mockAlerts = [
+    {
+      _id: "alert-1",
+      cooldownMinutes: 60,
+      enabled: false,
+      name: "Paused alert",
+      pauseReason: "inactive_subscription",
+      triggerOn: "in_stock",
+      type: "sku",
+    },
+  ];
+
+  await renderAlertsRoute("/alerts");
+
+  const alertSwitch = document.querySelector('[data-slot="switch"]');
+
+  if (!(alertSwitch instanceof HTMLElement)) {
+    throw new Error("Alert switch not found");
+  }
+
+  alertSwitch.click();
+
+  expect(updateAlertMock).not.toHaveBeenCalled();
+  await expect
+    .poll(() => toastErrorMock.mock.calls[0]?.[0])
+    .toBe("An active subscription is required to enable alerts.");
 });

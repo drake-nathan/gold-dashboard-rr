@@ -135,6 +135,50 @@ test("createCheckoutSession falls back to a subject-linked customer before creat
   });
 });
 
+test("createCheckoutSession returns the user to the requested in-app route", async () => {
+  vi.stubEnv("SITE_URL", "https://dashboard.gold");
+  vi.stubEnv("STRIPE_PRICE_ID", "price_configured");
+
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    email: "alerts@example.com",
+    name: "Alerts User",
+    subject: "user_alerts_subject",
+    tokenIdentifier: "clerk|alerts-user",
+  });
+
+  await t.mutation(components.stripe.public.createOrUpdateCustomer, {
+    email: "alerts@example.com",
+    metadata: { userId: "clerk|alerts-user" },
+    name: "Alerts User",
+    stripeCustomerId: "cus_alerts_token",
+  });
+
+  const createCheckoutSessionSpy = vi
+    .spyOn(StripeSubscriptions.prototype, "createCheckoutSession")
+    .mockResolvedValue({
+      sessionId: "cs_test_alerts",
+      url: "https://checkout.stripe.com/pay/cs_test_alerts",
+    });
+
+  const result = await asUser.action(api.stripe.createCheckoutSession, {
+    priceId: "price_configured",
+    returnPath: "/alerts?type=sku",
+  });
+
+  expect(result).toStrictEqual({
+    url: "https://checkout.stripe.com/pay/cs_test_alerts",
+  });
+  expect(createCheckoutSessionSpy).toHaveBeenCalledWith(expect.anything(), {
+    cancelUrl: "https://dashboard.gold/alerts?type=sku&checkout=canceled",
+    customerId: "cus_alerts_token",
+    mode: "subscription",
+    priceId: "price_configured",
+    subscriptionMetadata: { userId: "clerk|alerts-user" },
+    successUrl: "https://dashboard.gold/alerts?type=sku&checkout=success",
+  });
+});
+
 test("createPortalSession creates a customer when needed and returns the portal URL", async () => {
   vi.stubEnv("SITE_URL", "https://dashboard.gold");
 

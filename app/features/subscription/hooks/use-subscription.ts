@@ -38,7 +38,7 @@ interface UseSubscriptionReturn {
    * Create a checkout session and return the URL
    * User should be redirected to this URL
    */
-  createCheckout: () => Promise<{ error?: string; url?: string }>;
+  createCheckout: (returnPath?: string) => Promise<{ error?: string; url?: string }>;
 
   /**
    * Whether an action is in progress (checkout or portal creation)
@@ -122,28 +122,31 @@ export const useSubscription = (): UseSubscriptionReturn => {
   const createCheckoutSession = useAction(api.stripe.createCheckoutSession);
   const createPortalSession = useAction(api.stripe.createPortalSession);
 
-  const createCheckout = useCallback(async () => {
-    if (!isStripeEnabled) {
-      return { error: "Stripe is not enabled" };
-    }
-    if (!isSignedIn) {
-      return { error: "You must be logged in to subscribe" };
-    }
+  const createCheckout = useCallback(
+    async (returnPath?: string) => {
+      if (!isStripeEnabled) {
+        return { error: "Stripe is not enabled" };
+      }
+      if (!isSignedIn) {
+        return { error: "You must be logged in to subscribe" };
+      }
 
-    // Get price ID from environment - check BEFORE setting loading state
-    const priceId = import.meta.env.VITE_STRIPE_PRICE_ID;
-    if (!priceId) {
-      return { error: "Stripe not configured" };
-    }
+      // Get price ID from environment - check BEFORE setting loading state
+      const priceId = import.meta.env.VITE_STRIPE_PRICE_ID;
+      if (!priceId) {
+        return { error: "Stripe not configured" };
+      }
 
-    setIsActionLoading(true);
-    try {
-      const result = await createCheckoutSession({ priceId });
-      return result;
-    } finally {
-      setIsActionLoading(false);
-    }
-  }, [isStripeEnabled, isSignedIn, createCheckoutSession]);
+      setIsActionLoading(true);
+      try {
+        return await createCheckoutSession({ priceId, returnPath });
+      } catch (error) {
+        setIsActionLoading(false);
+        throw error;
+      }
+    },
+    [isStripeEnabled, isSignedIn, createCheckoutSession],
+  );
 
   const openPortal = useCallback(async () => {
     if (!isStripeEnabled) {

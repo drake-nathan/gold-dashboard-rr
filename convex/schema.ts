@@ -1,6 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+import { categoryWeightGroupValidator } from "./alerts/weightGroups";
+
 export default defineSchema({
   alertBatches: defineTable({
     alerts: v.array(
@@ -97,6 +99,7 @@ export default defineSchema({
     userId: v.string(), // Clerk subject retained for reference and external joins
     userTokenIdentifier: v.string(), // Canonical Convex auth identity key
     weight: v.optional(v.number()), // Troy ounces
+    weightGroup: v.optional(categoryWeightGroupValidator),
   })
     .index("by_enabled", ["enabled"])
     .index("by_user", ["userId"])

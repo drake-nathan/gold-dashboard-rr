@@ -19,6 +19,7 @@ const SignedInAlertsPage = () => {
   const {
     alertEntitlements,
     alerts,
+    brandOptions,
     editingAlert,
     onCreateAlert,
     onDeleteAlert,
@@ -144,6 +145,7 @@ const SignedInAlertsPage = () => {
 
       {showCreateDialog ? (
         <CreateAlertDialog
+          brandOptions={brandOptions}
           onClose={() => {
             setShowCreateDialog(false);
           }}
@@ -155,6 +157,7 @@ const SignedInAlertsPage = () => {
       {editingAlert ? (
         <EditAlertDialog
           alert={editingAlert}
+          brandOptions={brandOptions}
           onClose={() => {
             setEditingAlert(null);
           }}

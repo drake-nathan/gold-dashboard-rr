@@ -7,6 +7,11 @@ import { type AuthUserIdentity } from "../lib/authIdentity";
 import { takeWithLimit } from "../lib/queries";
 import { type AlertPauseReason } from "../stripeUtils";
 import { listSubscriptionsForIdentity } from "../subscriptionEntitlements";
+import {
+  type AlertCategoryWeightGroup,
+  categoryWeightToleranceOz,
+  matchesCategoryWeightGroup,
+} from "./weightGroups";
 
 export const alertTypeValidator = v.union(
   v.literal("sku"),
@@ -26,7 +31,6 @@ export const alertBatchMissingConfigDeferMinutes = 15;
 export const alertBatchMaxSendAttempts = 5;
 export const alertBatchRetryBaseDelayMinutes = 15;
 export const alertBatchRetryMaxDelayMinutes = 12 * 60;
-export const categoryWeightToleranceOz = 0.05;
 export const defaultPendingBatchProcessLimit = 25;
 export const unsubscribeTokenSeparator = ".";
 export const defaultReplyToEmail = "support@dashboard.gold";
@@ -47,6 +51,7 @@ export interface AlertConfiguration {
   triggerOn: TriggerOn;
   type: AlertType;
   weight?: number;
+  weightGroup?: AlertCategoryWeightGroup;
 }
 
 export interface TriggeredAlertProduct {
@@ -224,8 +229,10 @@ export const assertValidAlertConfiguration = (config: AlertConfiguration): void 
   }
 
   if (config.type === "category") {
-    if (!config.metalType && !config.weight && !config.brand) {
-      throw new Error("Category alerts require at least one filter (metalType, weight, or brand)");
+    if (!config.metalType && !config.weight && !config.weightGroup && !config.brand) {
+      throw new Error(
+        "Category alerts require at least one filter (metalType, weight, weightGroup, or brand)",
+      );
     }
     if (config.triggerOn === "threshold_met") {
       throw new Error("Category alerts cannot use triggerOn=threshold_met");
@@ -360,6 +367,7 @@ export const matchesCategoryFilters = (
     brand?: string;
     metalType?: "gold" | "silver";
     weight?: number;
+    weightGroup?: AlertCategoryWeightGroup;
   },
   product: {
     brand: null | string;
@@ -391,6 +399,17 @@ export const matchesCategoryFilters = (
     }
 
     if (Math.abs(estimatedWeight - alert.weight) > categoryWeightToleranceOz) {
+      return false;
+    }
+  }
+
+  if (alert.weightGroup !== undefined) {
+    const estimatedWeight = getEstimatedWeightOz(product);
+    if (!estimatedWeight) {
+      return false;
+    }
+
+    if (!matchesCategoryWeightGroup(alert.weightGroup, estimatedWeight)) {
       return false;
     }
   }

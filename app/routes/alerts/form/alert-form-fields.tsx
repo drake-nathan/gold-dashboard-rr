@@ -16,27 +16,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
+import { categoryWeightGroupControlLabels, categoryWeightGroups } from "../weight-groups";
 import type { AlertFormType, AlertFormValues, ProductOption } from "./types";
 
 const getProductLabel = (product: ProductOption) => `${product.name} (${product.metalType})`;
+const anyBrandValue = "__any_brand__";
+
+const TYPE_DESCRIPTIONS: Record<AlertFormType, string> = {
+  category: "Watch a group of products by metal, weight, or brand.",
+  sku: "Track a specific Costco product and alert when it comes back in stock.",
+  threshold: "Alert when a product's markup over spot drops to your target.",
+};
 
 export const AlertFormFields = ({
+  brandOptions,
   onChange,
   productOptions,
+  showValidationErrors = false,
   values,
 }: {
+  brandOptions: string[];
   onChange: (update: Partial<AlertFormValues>) => void;
   productOptions: ProductOption[];
+  showValidationErrors?: boolean;
   values: AlertFormValues;
 }) => {
-  const TYPE_DESCRIPTIONS: Record<AlertFormType, string> = {
-    category: "Watch a group of products by metal, weight, or brand.",
-    sku: "Track a specific Costco product for restocks or price drops.",
-    threshold: "Alert when a product's markup over spot drops to your target.",
-  };
   const selectedProduct =
     productOptions.find((product) => product.productId === values.skuProductId) ?? null;
+  const mergedBrandOptions =
+    values.brand && !brandOptions.includes(values.brand)
+      ? [...brandOptions, values.brand].toSorted((a, b) => a.localeCompare(b))
+      : brandOptions;
 
   return (
     <>
@@ -48,23 +60,110 @@ export const AlertFormFields = ({
         value={values.formType}
       >
         <TabsList className="w-full">
+          <TabsTrigger className="flex-1" value="category">
+            Category
+          </TabsTrigger>
           <TabsTrigger className="flex-1" value="threshold">
             Threshold
           </TabsTrigger>
           <TabsTrigger className="flex-1" value="sku">
             Product
           </TabsTrigger>
-          <TabsTrigger className="flex-1" value="category">
-            Category
-          </TabsTrigger>
         </TabsList>
 
         <p className="mb-2 text-xs text-muted-foreground">{TYPE_DESCRIPTIONS[values.formType]}</p>
+
+        <TabsContent className="space-y-4" value="category">
+          <div className="space-y-1.5">
+            <Label>Metal</Label>
+            <ToggleGroup
+              className="w-full"
+              onValueChange={(groupValue) => {
+                const nextValue = groupValue[0];
+                if (!nextValue) return;
+                onChange({
+                  categoryMetal: nextValue === "any" ? "" : (nextValue as "gold" | "silver"),
+                });
+              }}
+              value={[values.categoryMetal || "gold"]}
+              variant="outline"
+            >
+              <ToggleGroupItem aria-label="Gold" className="flex-1" value="gold">
+                Gold
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Silver" className="flex-1" value="silver">
+                Silver
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Any metal" className="flex-1" value="any">
+                Any metal
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Weight</Label>
+            <ToggleGroup
+              className="w-full"
+              onValueChange={(groupValue) => {
+                const nextValue = groupValue[0];
+                if (!nextValue) return;
+                onChange({
+                  categoryWeightGroup: nextValue as AlertFormValues["categoryWeightGroup"],
+                });
+              }}
+              value={[values.categoryWeightGroup]}
+              variant="outline"
+            >
+              {categoryWeightGroups.map((group) => (
+                <ToggleGroupItem
+                  aria-label={categoryWeightGroupControlLabels[group]}
+                  className="flex-1"
+                  key={group}
+                  value={group}
+                >
+                  {categoryWeightGroupControlLabels[group]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="alert-brand">Brand</Label>
+            <Select
+              items={Object.fromEntries([
+                [anyBrandValue, "Any brand"],
+                ...mergedBrandOptions.map((brand) => [brand, brand]),
+              ])}
+              modal={false}
+              onValueChange={(value) => {
+                onChange({ brand: value === anyBrandValue ? "" : (value ?? "") });
+              }}
+              value={values.brand || anyBrandValue}
+            >
+              <SelectTrigger className="w-full" id="alert-brand">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent portal={false}>
+                <SelectItem value={anyBrandValue}>Any brand</SelectItem>
+                {mergedBrandOptions.map((brand) => (
+                  <SelectItem key={brand} value={brand}>
+                    {brand}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
 
         <TabsContent className="space-y-4" value="threshold">
           <div className="space-y-1.5">
             <Label htmlFor="alert-above-spot">Max Markup (%)</Label>
             <Input
+              aria-invalid={
+                showValidationErrors &&
+                values.formType === "threshold" &&
+                !values.aboveSpotThreshold.trim()
+              }
               id="alert-above-spot"
               onChange={(event) => {
                 onChange({ aboveSpotThreshold: event.target.value });
@@ -96,6 +195,9 @@ export const AlertFormFields = ({
               value={selectedProduct}
             >
               <ComboboxInput
+                aria-invalid={
+                  showValidationErrors && values.formType === "sku" && !values.skuProductId
+                }
                 className="w-full"
                 id="alert-product"
                 placeholder="Search products…"
@@ -112,103 +214,6 @@ export const AlertFormFields = ({
                 </ComboboxList>
               </ComboboxContent>
             </Combobox>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="alert-sku-trigger">Trigger On</Label>
-            <Select
-              items={{ in_stock: "Back in stock", price_drop: "Price drop" }}
-              modal={false}
-              onValueChange={(value) => {
-                if (!value) return;
-                onChange({
-                  skuTriggerOn: value,
-                });
-              }}
-              value={values.skuTriggerOn}
-            >
-              <SelectTrigger className="w-full" id="alert-sku-trigger">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent portal={false}>
-                <SelectItem value="in_stock">Back in stock</SelectItem>
-                <SelectItem value="price_drop">Price drop</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </TabsContent>
-
-        <TabsContent className="space-y-4" value="category">
-          <div className="space-y-1.5">
-            <Label htmlFor="alert-category-trigger">Trigger On</Label>
-            <Select
-              items={{ in_stock: "Back in stock", price_drop: "Price drop" }}
-              modal={false}
-              onValueChange={(value) => {
-                if (!value) return;
-                onChange({
-                  categoryTriggerOn: value,
-                });
-              }}
-              value={values.categoryTriggerOn}
-            >
-              <SelectTrigger id="alert-category-trigger">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent portal={false}>
-                <SelectItem value="in_stock">Back in stock</SelectItem>
-                <SelectItem value="price_drop">Price drop</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="alert-metal">Metal</Label>
-            <Select
-              items={{ any: "Any metal", gold: "Gold", silver: "Silver" }}
-              modal={false}
-              onValueChange={(value) => {
-                if (!value) return;
-                onChange({
-                  categoryMetal: value === "any" ? "" : (value as "gold" | "silver"),
-                });
-              }}
-              value={values.categoryMetal || "any"}
-            >
-              <SelectTrigger id="alert-metal">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent portal={false}>
-                <SelectItem value="any">Any metal</SelectItem>
-                <SelectItem value="gold">Gold</SelectItem>
-                <SelectItem value="silver">Silver</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="alert-weight">Weight (oz)</Label>
-            <Input
-              id="alert-weight"
-              onChange={(event) => {
-                onChange({ categoryWeight: event.target.value });
-              }}
-              placeholder="Optional (e.g. 1)"
-              type="number"
-              value={values.categoryWeight}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="alert-brand">Brand</Label>
-            <Input
-              id="alert-brand"
-              onChange={(event) => {
-                onChange({ brand: event.target.value });
-              }}
-              placeholder="Optional (e.g. PAMP)"
-              value={values.brand}
-            />
           </div>
         </TabsContent>
       </Tabs>

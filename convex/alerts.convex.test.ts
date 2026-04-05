@@ -171,6 +171,51 @@ test("getProductOptions reads the alert product option summary table", async () 
   ]);
 });
 
+test("getBrandOptions returns distinct non-empty brands from Costco products", async () => {
+  const t = convexTest(schema, modules);
+  const now = Date.now();
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: {
+      ...createProcessedProduct({
+        metalType: "gold",
+        name: "A Gold Bar",
+        productId: "sku-brand-a",
+      }),
+      brand: "PAMP",
+    },
+    timestamp: now,
+  });
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: {
+      ...createProcessedProduct({
+        metalType: "silver",
+        name: "B Silver Coin",
+        productId: "sku-brand-b",
+      }),
+      brand: "Valcambi",
+    },
+    timestamp: now,
+  });
+
+  await t.mutation(internal.costco.upsertProduct, {
+    product: {
+      ...createProcessedProduct({
+        metalType: "gold",
+        name: "C Gold Bar",
+        productId: "sku-brand-c",
+      }),
+      brand: "PAMP",
+    },
+    timestamp: now,
+  });
+
+  const brands = await t.query(api.alerts.getBrandOptions, {});
+
+  expect(brands).toStrictEqual(["PAMP", "Valcambi"]);
+});
+
 test("backfillAlertProductOptions populates summary rows for existing Costco products", async () => {
   const t = withMigrationsComponent();
   const now = Date.now();
@@ -362,6 +407,55 @@ test("alerts CRUD lifecycle persists changes for the owning user", async () => {
   });
 
   await expect(asUser.query(api.alerts.getAlerts, {})).resolves.toStrictEqual([]);
+});
+
+test("updateAlert clears omitted category filters when saving an edited category alert", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({ name: "Category User", subject: "user_category_edit" });
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Date.now() + 86_400_000,
+    metadata: { userId: "user_category_edit" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_category_edit",
+    stripeSubscriptionId: "sub_category_edit",
+  });
+
+  const created = await asUser.mutation(api.alerts.createAlert, {
+    brand: "PAMP",
+    cooldownMinutes: 30,
+    metalType: "gold",
+    name: "Original category alert",
+    triggerOn: "in_stock",
+    type: "category",
+    weightGroup: "100g",
+  });
+
+  await asUser.mutation(api.alerts.updateAlert, {
+    alertId: created.alertId,
+    cooldownMinutes: 90,
+    metalType: "gold",
+    name: "Metal-only category alert",
+    triggerOn: "in_stock",
+    type: "category",
+  });
+
+  const alertsAfterUpdate = await asUser.query(api.alerts.getAlerts, {});
+
+  expect(alertsAfterUpdate).toHaveLength(1);
+  expect(alertsAfterUpdate[0]).toMatchObject({
+    cooldownMinutes: 90,
+    metalType: "gold",
+    name: "Metal-only category alert",
+    triggerOn: "in_stock",
+    type: "category",
+  });
+  expect(alertsAfterUpdate[0].brand).toBeUndefined();
+  expect(alertsAfterUpdate[0].weight).toBeUndefined();
+  expect(alertsAfterUpdate[0].weightGroup).toBeUndefined();
 });
 
 test("updateAlert blocks re-enable when subscription becomes past_due", async () => {
@@ -879,6 +973,84 @@ test("evaluateAlertsForProducts triggers threshold alerts when spread threshold 
 
     expect(history).toHaveLength(1);
     expect(history[0].products[0].reason).toContain("above spot");
+  });
+});
+
+test("evaluateAlertsForProducts matches grouped category weights including other", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    name: "Category Weight User",
+    subject: "user_category_weight_1",
+  });
+  const evaluatedAt = Date.now();
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: evaluatedAt + 86_400_000,
+    metadata: { userId: "user_category_weight_1" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_category_weight_1",
+    stripeSubscriptionId: "sub_category_weight_1",
+  });
+
+  await insertCostcoProduct(t, {
+    currentPrice: 1000,
+    currentPricePerOunce: 1000,
+    name: "One Ounce Product",
+    productId: "sku_category_weight_1oz",
+  });
+
+  await insertCostcoProduct(t, {
+    currentPrice: 5000,
+    currentPricePerOunce: 500,
+    name: "Ten Ounce Product",
+    productId: "sku_category_weight_other",
+  });
+
+  await asUser.mutation(api.alerts.createAlert, {
+    cooldownMinutes: 60,
+    name: "1 oz alert",
+    triggerOn: "in_stock",
+    type: "category",
+    weightGroup: "1oz",
+  });
+
+  await asUser.mutation(api.alerts.createAlert, {
+    cooldownMinutes: 60,
+    name: "Other weight alert",
+    triggerOn: "in_stock",
+    type: "category",
+    weightGroup: "other",
+  });
+
+  const evaluation = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt,
+    productIds: ["sku_category_weight_1oz", "sku_category_weight_other"],
+    source: "category_weight_test",
+  });
+
+  expect(evaluation.triggeredAlerts).toBe(2);
+
+  await t.run(async (ctx) => {
+    const history = await ctx.db
+      .query("alertHistory")
+      .withIndex("by_user", (q) => q.eq("userId", "user_category_weight_1"))
+      .collect();
+
+    expect(history).toHaveLength(2);
+
+    const historyByAlertName = new Map(
+      history.map((entry) => [entry.products[0]?.productName ?? "", entry]),
+    );
+
+    expect(historyByAlertName.get("One Ounce Product")?.products[0]?.productId).toBe(
+      "sku_category_weight_1oz",
+    );
+    expect(historyByAlertName.get("Ten Ounce Product")?.products[0]?.productId).toBe(
+      "sku_category_weight_other",
+    );
   });
 });
 

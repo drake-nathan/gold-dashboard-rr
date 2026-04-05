@@ -28,6 +28,7 @@ import {
   triggerOnValidator,
 } from "./alerts/core";
 import { evaluateAlertsForProductsHelper } from "./alerts/evaluation";
+import { categoryWeightGroupValidator } from "./alerts/weightGroups";
 import { requireAuthIdentity } from "./lib/authIdentity";
 import { getPauseReasonFromSubscriptionStatus } from "./stripeUtils";
 import { getUserAlertEntitlements } from "./subscriptionEntitlements";
@@ -38,7 +39,7 @@ export const getAlerts = query({
     const identity = await requireAuthIdentity(ctx);
     const alerts = await listAlertsForIdentity(ctx, identity);
 
-    return alerts.toSorted((a, b) => b.updatedAt - a.updatedAt);
+    return alerts.toSorted((a, b) => b.createdAt - a.createdAt);
   },
 });
 
@@ -46,6 +47,23 @@ export const getProductOptions = query({
   args: {},
   handler: async (ctx) => {
     return takeAlertProductOptions(ctx);
+  },
+});
+
+export const getBrandOptions = query({
+  args: {},
+  handler: async (ctx) => {
+    const products = await ctx.db.query("costcoProducts").take(250);
+    const brands = new Set<string>();
+
+    for (const product of products) {
+      const brand = product.brand?.trim();
+      if (brand) {
+        brands.add(brand);
+      }
+    }
+
+    return [...brands].toSorted((a, b) => a.localeCompare(b));
   },
 });
 
@@ -62,6 +80,7 @@ export const createAlert = mutation({
     triggerOn: triggerOnValidator,
     type: alertTypeValidator,
     weight: v.optional(v.number()),
+    weightGroup: v.optional(categoryWeightGroupValidator),
   },
   handler: async (ctx, args) => {
     const identity = await requireAuthIdentity(ctx);
@@ -104,6 +123,7 @@ export const createAlert = mutation({
         profitThreshold: args.profitThreshold,
       }),
       ...(args.weight !== undefined && { weight: args.weight }),
+      ...(args.weightGroup !== undefined && { weightGroup: args.weightGroup }),
     });
 
     return { alertId, success: true };
@@ -124,6 +144,7 @@ export const updateAlert = mutation({
     triggerOn: v.optional(triggerOnValidator),
     type: v.optional(alertTypeValidator),
     weight: v.optional(v.number()),
+    weightGroup: v.optional(categoryWeightGroupValidator),
   },
   handler: async (ctx, args) => {
     const identity = await requireAuthIdentity(ctx);
@@ -142,17 +163,33 @@ export const updateAlert = mutation({
       throw new Error("cooldownMinutes must be greater than 0");
     }
 
-    const nextConfiguration: AlertConfiguration = {
-      aboveSpotThreshold: args.aboveSpotThreshold ?? alert.aboveSpotThreshold,
-      brand: args.brand ?? alert.brand,
-      metalType: args.metalType ?? alert.metalType,
-      productId: args.productId ?? alert.productId,
-      profitThreshold: args.profitThreshold ?? alert.profitThreshold,
-      triggerOn: args.triggerOn ?? alert.triggerOn,
-      type: args.type ?? alert.type,
-      weight: args.weight ?? alert.weight,
-    };
-    assertValidAlertConfiguration(nextConfiguration);
+    const hasConfigurationUpdate =
+      args.aboveSpotThreshold !== undefined ||
+      args.brand !== undefined ||
+      args.metalType !== undefined ||
+      args.productId !== undefined ||
+      args.profitThreshold !== undefined ||
+      args.triggerOn !== undefined ||
+      args.type !== undefined ||
+      args.weight !== undefined ||
+      args.weightGroup !== undefined;
+
+    let nextConfiguration: AlertConfiguration | null = null;
+    if (hasConfigurationUpdate) {
+      const nextType = args.type ?? alert.type;
+      nextConfiguration = {
+        aboveSpotThreshold: nextType === "threshold" ? args.aboveSpotThreshold : undefined,
+        brand: nextType === "category" ? args.brand : undefined,
+        metalType: nextType === "category" ? args.metalType : undefined,
+        productId: nextType === "sku" ? args.productId : undefined,
+        profitThreshold: nextType === "threshold" ? args.profitThreshold : undefined,
+        triggerOn: args.triggerOn ?? alert.triggerOn,
+        type: nextType,
+        weight: nextType === "category" ? args.weight : undefined,
+        weightGroup: nextType === "category" ? args.weightGroup : undefined,
+      };
+      assertValidAlertConfiguration(nextConfiguration);
+    }
 
     if (args.enabled === true && !alertEntitlements.canEnableAlerts) {
       throw new Error("Active subscription required to enable alerts");
@@ -165,23 +202,22 @@ export const updateAlert = mutation({
       userTokenIdentifier: identity.tokenIdentifier,
     };
 
-    if (args.aboveSpotThreshold !== undefined) {
-      updates.aboveSpotThreshold = args.aboveSpotThreshold;
+    if (nextConfiguration) {
+      updates.aboveSpotThreshold = nextConfiguration.aboveSpotThreshold;
+      updates.brand = nextConfiguration.brand;
+      updates.metalType = nextConfiguration.metalType;
+      updates.productId = nextConfiguration.productId;
+      updates.profitThreshold = nextConfiguration.profitThreshold;
+      updates.triggerOn = nextConfiguration.triggerOn;
+      updates.type = nextConfiguration.type;
+      updates.weight = nextConfiguration.weight;
+      updates.weightGroup = nextConfiguration.weightGroup;
     }
-    if (args.brand !== undefined) updates.brand = args.brand;
     if (args.cooldownMinutes !== undefined) {
       updates.cooldownMinutes = args.cooldownMinutes;
     }
     if (args.enabled !== undefined) updates.enabled = args.enabled;
-    if (args.metalType !== undefined) updates.metalType = args.metalType;
     if (args.name !== undefined) updates.name = args.name;
-    if (args.productId !== undefined) updates.productId = args.productId;
-    if (args.profitThreshold !== undefined) {
-      updates.profitThreshold = args.profitThreshold;
-    }
-    if (args.triggerOn !== undefined) updates.triggerOn = args.triggerOn;
-    if (args.type !== undefined) updates.type = args.type;
-    if (args.weight !== undefined) updates.weight = args.weight;
 
     if (args.enabled === true || args.enabled === false) {
       updates.pauseReason = undefined;

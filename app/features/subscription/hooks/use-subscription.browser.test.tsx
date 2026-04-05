@@ -214,11 +214,11 @@ test("returns past_due status for past due subscription", async () => {
 // =============================================================================
 
 // Test component that can trigger createCheckout
-const TestComponentWithActions = () => {
+const TestComponentWithActions = ({ returnPath }: { returnPath?: string }) => {
   const { createCheckout, isActionLoading, isLoading, isPro, subscription } = useSubscription();
 
   const handleCheckout = async () => {
-    await createCheckout();
+    await createCheckout(returnPath);
   };
 
   return (
@@ -253,4 +253,20 @@ test("isActionLoading stays false when priceId is missing", async () => {
 
   // Restore price ID for other tests
   vi.stubEnv("VITE_STRIPE_PRICE_ID", "price_test");
+});
+
+test("createCheckout forwards the return path to the checkout action", async () => {
+  vi.stubEnv("VITE_STRIPE_PRICE_ID", "price_test");
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockQueryResult = { isPro: false, status: "free", userId: "user_123" };
+  mockActionFn = vi.fn().mockResolvedValue({ url: "https://stripe.com/session" });
+
+  const screen = await render(<TestComponentWithActions returnPath="/alerts?type=sku" />);
+
+  await screen.getByTestId("checkout-button").click();
+
+  expect(mockActionFn).toHaveBeenCalledWith({
+    priceId: "price_test",
+    returnPath: "/alerts?type=sku",
+  });
 });
