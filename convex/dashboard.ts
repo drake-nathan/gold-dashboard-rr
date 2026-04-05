@@ -39,8 +39,8 @@ const toDashboardProduct = (
     pureBidPricePerOz: null | number;
     pureProductName: null | string;
     pureProductSku: null | string;
-    spread: null | number;
-    spreadPercentage: null | number;
+    pureSpread: null | number;
+    pureSpreadPercentage: null | number;
   },
 ) => ({
   currentInStock: product.currentInStock,
@@ -56,22 +56,22 @@ const toDashboardProduct = (
   pureBidPricePerOz: spreadData.pureBidPricePerOz,
   pureProductName: spreadData.pureProductName,
   pureProductSku: spreadData.pureProductSku,
-  spread: spreadData.spread,
-  spreadPercentage: spreadData.spreadPercentage,
+  pureSpread: spreadData.pureSpread,
+  pureSpreadPercentage: spreadData.pureSpreadPercentage,
   thumbnail: product.thumbnail,
   url: product.url,
 });
 
-const sortProductsBySpreadPercentage = <
+const sortProductsByPureSpreadPercentage = <
   T extends {
-    spreadPercentage: null | number;
+    pureSpreadPercentage: null | number;
   },
 >(
   products: T[],
 ): T[] =>
   products.toSorted((a, b) => {
-    const aSpread = a.spreadPercentage ?? 999;
-    const bSpread = b.spreadPercentage ?? 999;
+    const aSpread = a.pureSpreadPercentage ?? 999;
+    const bSpread = b.pureSpreadPercentage ?? 999;
     return aSpread - bSpread;
   });
 
@@ -192,10 +192,12 @@ const buildDashboardProductsResponse = async (ctx: QueryCtx) => {
     }
 
     const bidPrice = pureBidPricePerOz ?? fallbackBidPrice;
-    const spread =
+    const pureSpread =
       bidPrice && product.currentPricePerOunce ? product.currentPricePerOunce - bidPrice : null;
-    const spreadPercentage =
-      spread && product.currentPricePerOunce ? (spread / product.currentPricePerOunce) * 100 : null;
+    const pureSpreadPercentage =
+      pureSpread && product.currentPricePerOunce
+        ? (pureSpread / product.currentPricePerOunce) * 100
+        : null;
 
     return {
       isUsingGenericFallback,
@@ -203,18 +205,18 @@ const buildDashboardProductsResponse = async (ctx: QueryCtx) => {
       pureBidPricePerOz: bidPrice,
       pureProductName,
       pureProductSku,
-      spread,
-      spreadPercentage,
+      pureSpread,
+      pureSpreadPercentage,
     };
   };
 
   return {
-    goldProducts: sortProductsBySpreadPercentage(
+    goldProducts: sortProductsByPureSpreadPercentage(
       goldProducts.map((product) =>
         toDashboardProduct(product, calculateSpread(product, fallbackBidPrices.gold)),
       ),
     ),
-    silverProducts: sortProductsBySpreadPercentage(
+    silverProducts: sortProductsByPureSpreadPercentage(
       silverProducts.map((product) =>
         toDashboardProduct(product, calculateSpread(product, fallbackBidPrices.silver)),
       ),
@@ -277,11 +279,11 @@ export const getStats = query({
       ...summary,
       goldProducts: {
         ...summary.goldProducts,
-        bestSpread: products.goldProducts,
+        productsByPureSpread: products.goldProducts,
       },
       silverProducts: {
         ...summary.silverProducts,
-        bestSpread: products.silverProducts,
+        productsByPureSpread: products.silverProducts,
       },
     };
   },

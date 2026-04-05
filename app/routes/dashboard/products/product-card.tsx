@@ -72,8 +72,8 @@ export const ProductCard = ({
     product_id: product.productId,
     product_name: product.name,
     pure_product_sku: product.pureProductSku ?? null,
+    pure_spread_percentage: product.pureSpreadPercentage ?? null,
     source: "dashboard_product_card",
-    spread_percentage: product.spreadPercentage ?? null,
   };
 
   return (

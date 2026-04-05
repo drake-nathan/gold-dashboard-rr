@@ -50,8 +50,8 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
   useMigrationToast(isMigrating);
 
   const filteredProducts = filterProducts(
-    stats.goldProducts.bestSpread,
-    stats.silverProducts.bestSpread,
+    stats.goldProducts.productsByPureSpread,
+    stats.silverProducts.productsByPureSpread,
     { metalFilter, showOutOfStock },
   );
   const hasCompleteCalculatorSettings = [

@@ -117,8 +117,8 @@ export const sortProducts = (
           return aProfit - bProfit;
         }
 
-        const aSpread = a.spreadPercentage ?? -999;
-        const bSpread = b.spreadPercentage ?? -999;
+        const aSpread = a.pureSpreadPercentage ?? -999;
+        const bSpread = b.pureSpreadPercentage ?? -999;
         return bSpread - aSpread;
       });
       break;
@@ -131,8 +131,8 @@ export const sortProducts = (
           return bProfit - aProfit;
         }
 
-        const aSpread = a.spreadPercentage ?? 999;
-        const bSpread = b.spreadPercentage ?? 999;
+        const aSpread = a.pureSpreadPercentage ?? 999;
+        const bSpread = b.pureSpreadPercentage ?? 999;
         return aSpread - bSpread;
       });
       break;

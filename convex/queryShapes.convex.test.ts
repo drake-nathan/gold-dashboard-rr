@@ -196,7 +196,7 @@ test("dashboard queries keep mixed product and summary shapes aligned", async ()
     pureBidPricePerOz: 2450,
     pureProductName: "Matched Gold Bar",
     pureProductSku: "gold-direct",
-    spread: 49,
+    pureSpread: 49,
   });
 
   expect(products.silverProducts[0]).toMatchObject({
@@ -208,7 +208,7 @@ test("dashboard queries keep mixed product and summary shapes aligned", async ()
     pureBidPricePerOz: 34,
     pureProductName: "Generic Silver Fallback",
     pureProductSku: "silver-fallback",
-    spread: 5,
+    pureSpread: 5,
   });
 });
 

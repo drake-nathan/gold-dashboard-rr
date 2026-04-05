@@ -139,7 +139,7 @@ const baseLoaderData = {
         lastInStockAt: null,
         productId: "gold-in-stock",
         pureBidPrice: 95,
-        spreadPercentage: 5,
+        pureSpreadPercentage: 5,
       },
       {
         currentInStock: false,
@@ -147,7 +147,7 @@ const baseLoaderData = {
         lastInStockAt: 250,
         productId: "gold-out-of-stock",
         pureBidPrice: 100,
-        spreadPercentage: 10,
+        pureSpreadPercentage: 10,
       },
     ],
     silverProducts: [
@@ -157,7 +157,7 @@ const baseLoaderData = {
         lastInStockAt: 500,
         productId: "silver-out-of-stock",
         pureBidPrice: 45,
-        spreadPercentage: 8,
+        pureSpreadPercentage: 8,
       },
     ],
   },

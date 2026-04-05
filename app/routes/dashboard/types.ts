@@ -6,10 +6,10 @@ type DashboardProducts = FunctionReturnType<typeof api.dashboard.getDashboardPro
 
 export interface DashboardStats extends DashboardSummary {
   goldProducts: DashboardSummary["goldProducts"] & {
-    bestSpread: DashboardProducts["goldProducts"];
+    productsByPureSpread: DashboardProducts["goldProducts"];
   };
   silverProducts: DashboardSummary["silverProducts"] & {
-    bestSpread: DashboardProducts["silverProducts"];
+    productsByPureSpread: DashboardProducts["silverProducts"];
   };
 }
 

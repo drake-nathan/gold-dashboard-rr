@@ -36,8 +36,8 @@ const mockGoldProduct: ProductCardData = {
   pureBidPricePerOz: 1950,
   pureProductName: "Test Gold Bar",
   pureProductSku: "GOLD-2OZ",
-  spread: 150,
-  spreadPercentage: 7.5,
+  pureSpread: 150,
+  pureSpreadPercentage: 7.5,
   thumbnail: "https://example.com/image.jpg",
   url: "https://costco.com/test",
 };

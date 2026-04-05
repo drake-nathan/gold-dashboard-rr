@@ -123,6 +123,6 @@ test("dashboard products use related pure products when present", async () => {
   expect(products.goldProducts[0]).toMatchObject({
     pureBidPrice: 2450,
     pureProductName: "1 oz Gold Bar",
-    spread: 50,
+    pureSpread: 50,
   });
 });

@@ -98,11 +98,11 @@ const Home = ({ loaderData }: Route.ComponentProps) => {
     ...summary,
     goldProducts: {
       ...summary.goldProducts,
-      bestSpread: products.goldProducts,
+      productsByPureSpread: products.goldProducts,
     },
     silverProducts: {
       ...summary.silverProducts,
-      bestSpread: products.silverProducts,
+      productsByPureSpread: products.silverProducts,
     },
   };
 
