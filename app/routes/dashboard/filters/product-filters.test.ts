@@ -1,7 +1,33 @@
 import { test } from "vitest";
 
+import { DEFAULT_PRESET_CARDS } from "@/features/credit-cards/lib/credit-cards";
+
+import { PURE_FEE_TIERS } from "../calculator/lib/pure-fee-tiers";
+import type { CalculatorSettings } from "../calculator/types";
 import type { ProductCardData } from "../types";
 import { filterProducts, shouldAutoFlipToOutOfStock, sortProducts } from "./product-filters";
+
+const mockMarketPrices = [
+  {
+    assetType: "gold",
+    currentPrice: 2000,
+    percentChange: 0,
+    symbol: "XAU",
+  },
+  {
+    assetType: "silver",
+    currentPrice: 25,
+    percentChange: 0,
+    symbol: "XAG",
+  },
+] as const;
+
+const mockCalculatorSettings: CalculatorSettings = {
+  costcoMembershipEnabled: true,
+  creditCard: DEFAULT_PRESET_CARDS[0],
+  pureFeeTier: PURE_FEE_TIERS[0],
+  quantity: 1,
+};
 
 // Mock product data helpers
 const createMockProduct = (overrides: Partial<ProductCardData> = {}): ProductCardData => {
@@ -120,49 +146,104 @@ test("filterProducts: returns empty array when no products match", ({ expect }) 
 
 // === SORT PRODUCTS TESTS ===
 
-test("sortProducts: sorts by spread ascending (default)", ({ expect }) => {
+test("sortProducts: sorts profit high to low using calculated net profit", ({ expect }) => {
   const products = [
-    createMockProduct({ spreadPercentage: 10 }),
-    createMockProduct({ spreadPercentage: 5 }),
-    createMockProduct({ spreadPercentage: 15 }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "highest-profit",
+      pureBidPrice: 120,
+      spreadPercentage: 20,
+    }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "middle-profit",
+      pureBidPrice: 105,
+      spreadPercentage: 5,
+    }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "lowest-profit",
+      pureBidPrice: 90,
+      spreadPercentage: -10,
+    }),
   ];
 
-  const result = sortProducts(products, "profit-desc");
+  const result = sortProducts(products, "profit-desc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
-  expect(result[0]?.spreadPercentage).toBe(5);
-  expect(result[1]?.spreadPercentage).toBe(10);
-  expect(result[2]?.spreadPercentage).toBe(15);
+  expect(result.map((product) => product.productId)).toEqual([
+    "highest-profit",
+    "middle-profit",
+    "lowest-profit",
+  ]);
 });
 
-test("sortProducts: sorts by spread descending", ({ expect }) => {
+test("sortProducts: sorts profit low to high using calculated net profit", ({ expect }) => {
   const products = [
-    createMockProduct({ spreadPercentage: 10 }),
-    createMockProduct({ spreadPercentage: 5 }),
-    createMockProduct({ spreadPercentage: 15 }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "highest-profit",
+      pureBidPrice: 120,
+      spreadPercentage: 20,
+    }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "middle-profit",
+      pureBidPrice: 105,
+      spreadPercentage: 5,
+    }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "lowest-profit",
+      pureBidPrice: 90,
+      spreadPercentage: -10,
+    }),
   ];
 
-  const result = sortProducts(products, "profit-asc");
+  const result = sortProducts(products, "profit-asc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
-  expect(result[0]?.spreadPercentage).toBe(15);
-  expect(result[1]?.spreadPercentage).toBe(10);
-  expect(result[2]?.spreadPercentage).toBe(5);
+  expect(result.map((product) => product.productId)).toEqual([
+    "lowest-profit",
+    "middle-profit",
+    "highest-profit",
+  ]);
 });
 
-test("sortProducts: handles null spread percentages (profit-desc)", ({ expect }) => {
+test("sortProducts: does not fall back to spread percentage when profit sorting", ({ expect }) => {
   const products = [
-    createMockProduct({ spreadPercentage: 10 }),
-    createMockProduct({ spreadPercentage: null }),
-    createMockProduct({ spreadPercentage: 5 }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "high-spread-low-profit",
+      pureBidPrice: 101,
+      spreadPercentage: 50,
+    }),
+    createMockProduct({
+      currentPrice: 100,
+      productId: "low-spread-high-profit",
+      pureBidPrice: 110,
+      spreadPercentage: 1,
+    }),
   ];
 
-  const result = sortProducts(products, "profit-desc");
+  const result = sortProducts(products, "profit-desc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
-  expect(result[0]?.spreadPercentage).toBe(5);
-  expect(result[1]?.spreadPercentage).toBe(10);
-  expect(result[2]?.spreadPercentage).toBe(null); // null should be last (treated as 999)
+  expect(result.map((product) => product.productId)).toEqual([
+    "low-spread-high-profit",
+    "high-spread-low-profit",
+  ]);
 });
 
-test("sortProducts: handles null spread percentages (profit-asc)", ({ expect }) => {
+test("sortProducts: handles null spread percentages when profit context is unavailable", ({
+  expect,
+}) => {
   const products = [
     createMockProduct({ spreadPercentage: 10 }),
     createMockProduct({ spreadPercentage: null }),
@@ -239,7 +320,10 @@ test("sortProducts: does not mutate original array", ({ expect }) => {
   ];
 
   const original = [...products];
-  sortProducts(products, "profit-desc");
+  sortProducts(products, "profit-desc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
   expect(products).toEqual(original); // Original unchanged
 });
@@ -253,10 +337,13 @@ test("sortProducts: places products without bids at bottom (profit-desc)", ({ ex
     createMockProduct({ pureBidPrice: 90, spreadPercentage: 5 }),
   ];
 
-  const result = sortProducts(products, "profit-desc");
+  const result = sortProducts(products, "profit-desc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
-  expect(result[0]?.spreadPercentage).toBe(5);
-  expect(result[1]?.spreadPercentage).toBe(10);
+  expect(result[0]?.pureBidPrice).toBe(95);
+  expect(result[1]?.pureBidPrice).toBe(90);
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
 });
 
@@ -267,10 +354,13 @@ test("sortProducts: places products without bids at bottom (profit-asc)", ({ exp
     createMockProduct({ pureBidPrice: 90, spreadPercentage: 15 }),
   ];
 
-  const result = sortProducts(products, "profit-asc");
+  const result = sortProducts(products, "profit-asc", {
+    calculatorSettings: mockCalculatorSettings,
+    marketPrices: [...mockMarketPrices],
+  });
 
-  expect(result[0]?.spreadPercentage).toBe(15);
-  expect(result[1]?.spreadPercentage).toBe(10);
+  expect(result[0]?.pureBidPrice).toBe(90);
+  expect(result[1]?.pureBidPrice).toBe(95);
   expect(result[2]?.pureBidPrice).toBe(null); // Without bid at bottom
 });
 

@@ -1,11 +1,12 @@
 import { usePostHog } from "posthog-js/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useIsClient } from "usehooks-ts";
 
 import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
 import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary";
 
 import { CalculatorSettingsDrawer } from "./calculator/calculator-settings-drawer";
+import { calculateProductMetrics } from "./calculator/product-calculations";
 import { CardManagerDrawer } from "./cards/card-manager-drawer";
 import { Filters } from "./filters/filters";
 import { filterProducts, sortProducts } from "./filters/product-filters";
@@ -53,7 +54,39 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
     stats.silverProducts.bestSpread,
     { metalFilter, showOutOfStock },
   );
-  const sortedProducts = sortProducts(filteredProducts, sortOption);
+  const hasCompleteCalculatorSettings = [
+    calculatorSettings.creditCard,
+    calculatorSettings.pureFeeTier,
+  ].every((value) => Boolean(value as unknown));
+  const productCalculationsByProduct = useMemo(() => {
+    if (!hasCompleteCalculatorSettings) {
+      return new Map();
+    }
+
+    return new Map(
+      filteredProducts.map((product) => [
+        product,
+        calculateProductMetrics(product, stats.marketPrices, calculatorSettings),
+      ]),
+    );
+  }, [calculatorSettings, filteredProducts, hasCompleteCalculatorSettings, stats.marketPrices]);
+  const netProfitByProduct = useMemo(() => {
+    if (!hasCompleteCalculatorSettings) {
+      return undefined;
+    }
+
+    return new Map(
+      filteredProducts.map((product) => [
+        product,
+        productCalculationsByProduct.get(product)?.netProfit ?? -Infinity,
+      ]),
+    );
+  }, [filteredProducts, hasCompleteCalculatorSettings, productCalculationsByProduct]);
+  const sortedProducts = sortProducts(filteredProducts, sortOption, {
+    calculatorSettings,
+    marketPrices: stats.marketPrices,
+    netProfitByProduct,
+  });
 
   useEffect(() => {
     if (hasTrackedInitialView.current || !isInitialized) {
@@ -170,6 +203,7 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
               {sortedProducts.map((product) => (
                 <ProductCard
+                  calculations={productCalculationsByProduct.get(product)}
                   calculatorSettings={calculatorSettings}
                   key={product.productId}
                   marketPrices={stats.marketPrices}

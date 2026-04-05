@@ -10,23 +10,48 @@ import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/format-time";
 import { generatePureProductUrl } from "@/utils/pure-url";
 
-import { calculateProductMetrics } from "../calculator/product-calculations";
+import {
+  calculateProductMetrics,
+  type ProductCalculations,
+} from "../calculator/product-calculations";
 import type { CalculatorSettings } from "../calculator/types";
 import type { DashboardMarketPrice, ProductCardData } from "../types";
 import { PriceRow } from "./price-row";
+import {
+  getInitialCashPositionDisplay,
+  getPointEconomicsDisplay,
+  getPostCashbackCashPositionDisplay,
+} from "./product-card-metric-copy";
 
 interface ProductCardProps {
+  calculations?: ProductCalculations;
   calculatorSettings: CalculatorSettings;
   marketPrices: DashboardMarketPrice[];
   product: ProductCardData;
 }
 
-export const ProductCard = ({ calculatorSettings, marketPrices, product }: ProductCardProps) => {
+export const ProductCard = ({
+  calculations,
+  calculatorSettings,
+  marketPrices,
+  product,
+}: ProductCardProps) => {
   const isClient = useIsClient();
   const posthog = usePostHog();
 
   // Calculate all metrics using utility function
-  const calc = calculateProductMetrics(product, marketPrices, calculatorSettings);
+  const calc = calculations ?? calculateProductMetrics(product, marketPrices, calculatorSettings);
+  const initialCashPosition =
+    calc.initialCashLoss !== null ? getInitialCashPositionDisplay(calc.initialCashLoss) : null;
+  const postCashbackCashPosition =
+    calc.netCostAfterCostcoCashback !== null
+      ? getPostCashbackCashPositionDisplay(
+          calc.netCostAfterCostcoCashback,
+          calculatorSettings.costcoMembershipEnabled,
+        )
+      : null;
+  const pointEconomics =
+    calc.pricePerPoint !== null ? getPointEconomicsDisplay(calc.pricePerPoint) : null;
 
   // Generate Collect Pure URL if we have the SKU
   const collectPureUrl = product.pureProductSku
@@ -162,13 +187,17 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
                   valueClassName="font-semibold"
                 />
               )}
-              {calc.initialCashLoss !== null && (
+              {initialCashPosition && (
                 <PriceRow
-                  label="Initial Cash Loss:"
+                  label={initialCashPosition.label}
                   labelClassName="text-xs text-muted-foreground"
-                  tooltip="Money you're down immediately after buying and selling (before any cashback)"
-                  value={`-${formatCurrency(calc.initialCashLoss)}`}
-                  valueClassName="text-xs font-medium text-amber-600 dark:text-amber-400"
+                  tooltip={initialCashPosition.tooltip}
+                  value={initialCashPosition.value}
+                  valueClassName={`text-xs font-medium ${
+                    initialCashPosition.isGain
+                      ? "text-green-600 dark:text-green-400"
+                      : "text-amber-600 dark:text-amber-400"
+                  }`}
                 />
               )}
             </>
@@ -235,25 +264,25 @@ export const ProductCard = ({ calculatorSettings, marketPrices, product }: Produ
                       valueClassName="text-xs font-medium"
                     />
                   )}
-                  {calc.netCostAfterCostcoCashback !== null && (
+                  {postCashbackCashPosition && (
                     <PriceRow
-                      label="Net Cost (after Costco 2%):"
+                      label={postCashbackCashPosition.label}
                       labelClassName="text-xs text-muted-foreground"
-                      tooltip="Out-of-pocket cost after selling to Pure and receiving Costco Executive cashback"
-                      value={
-                        calc.netCostAfterCostcoCashback >= 0
-                          ? `-${formatCurrency(calc.netCostAfterCostcoCashback)}`
-                          : `+${formatCurrency(Math.abs(calc.netCostAfterCostcoCashback))}`
-                      }
-                      valueClassName="text-xs font-medium"
+                      tooltip={postCashbackCashPosition.tooltip}
+                      value={postCashbackCashPosition.value}
+                      valueClassName={`text-xs font-medium ${
+                        postCashbackCashPosition.isGain ? "text-green-600 dark:text-green-400" : ""
+                      }`}
                     />
                   )}
-                  {calc.pricePerPoint !== null && (
+                  {pointEconomics && (
                     <PriceRow
-                      label="Price per Point:"
-                      tooltip="Effective cost per point earned (net cost / points earned)"
-                      value={`${(calc.pricePerPoint * 100).toFixed(2)}¢`}
-                      valueClassName="font-semibold"
+                      label={pointEconomics.label}
+                      tooltip={pointEconomics.tooltip}
+                      value={pointEconomics.value}
+                      valueClassName={`font-semibold ${
+                        pointEconomics.isBeingPaid ? "text-green-600 dark:text-green-400" : ""
+                      }`}
                     />
                   )}
                 </>

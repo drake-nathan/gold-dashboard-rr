@@ -1,9 +1,22 @@
-import type { ProductCardData } from "../types";
+import { calculateProductMetrics } from "../calculator/product-calculations";
+import type { CalculatorSettings } from "../calculator/types";
+import type { DashboardMarketPrice, ProductCardData } from "../types";
 import type { MetalFilter, SortOption } from "./filter-types";
 
 export interface FilterOptions {
   metalFilter: MetalFilter;
   showOutOfStock: boolean;
+}
+
+interface SortContext {
+  calculatorSettings: {
+    costcoMembershipEnabled: CalculatorSettings["costcoMembershipEnabled"];
+    creditCard: CalculatorSettings["creditCard"] | null;
+    pureFeeTier: CalculatorSettings["pureFeeTier"] | null;
+    quantity: CalculatorSettings["quantity"];
+  };
+  marketPrices: DashboardMarketPrice[];
+  netProfitByProduct?: Map<ProductCardData, number>;
 }
 
 /**
@@ -40,10 +53,39 @@ export const filterProducts = (
 export const sortProducts = (
   products: ProductCardData[],
   sortOption: SortOption,
+  context?: SortContext,
 ): ProductCardData[] => {
   // Separate products with and without Pure bids
   const withBids = products.filter((p) => p.pureBidPrice !== null);
   const withoutBids = products.filter((p) => p.pureBidPrice === null);
+  const completeSortContext =
+    context &&
+    context.calculatorSettings.creditCard !== null &&
+    context.calculatorSettings.pureFeeTier !== null
+      ? {
+          calculatorSettings: {
+            ...context.calculatorSettings,
+            creditCard: context.calculatorSettings.creditCard,
+            pureFeeTier: context.calculatorSettings.pureFeeTier,
+          },
+          marketPrices: context.marketPrices,
+        }
+      : null;
+  const netProfitByProduct =
+    context?.netProfitByProduct && (sortOption === "profit-asc" || sortOption === "profit-desc")
+      ? context.netProfitByProduct
+      : completeSortContext && (sortOption === "profit-asc" || sortOption === "profit-desc")
+        ? new Map(
+            withBids.map((product) => [
+              product,
+              calculateProductMetrics(
+                product,
+                completeSortContext.marketPrices,
+                completeSortContext.calculatorSettings,
+              ).netProfit ?? -Infinity,
+            ]),
+          )
+        : null;
 
   // Sort products with bids according to the selected option
   let sorted: ProductCardData[] = [];
@@ -69,6 +111,12 @@ export const sortProducts = (
     }
     case "profit-asc": {
       sorted = withBids.toSorted((a, b) => {
+        if (netProfitByProduct) {
+          const aProfit = netProfitByProduct.get(a) ?? -Infinity;
+          const bProfit = netProfitByProduct.get(b) ?? -Infinity;
+          return aProfit - bProfit;
+        }
+
         const aSpread = a.spreadPercentage ?? -999;
         const bSpread = b.spreadPercentage ?? -999;
         return bSpread - aSpread;
@@ -77,6 +125,12 @@ export const sortProducts = (
     }
     case "profit-desc": {
       sorted = withBids.toSorted((a, b) => {
+        if (netProfitByProduct) {
+          const aProfit = netProfitByProduct.get(a) ?? -Infinity;
+          const bProfit = netProfitByProduct.get(b) ?? -Infinity;
+          return bProfit - aProfit;
+        }
+
         const aSpread = a.spreadPercentage ?? 999;
         const bSpread = b.spreadPercentage ?? 999;
         return aSpread - bSpread;
