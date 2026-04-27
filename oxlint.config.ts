@@ -21,14 +21,41 @@ export default defineConfig({
       files: ["**/*.test.{ts,tsx}", "**/*.browser.test.{ts,tsx}", "**/*.convex.test.{ts,tsx}"],
       rules: {
         "eslint/no-loop-func": "off",
+        // We use vitest, not jest. oxlint bundles both rulesets and many rules
+        // fire from both plugins simultaneously — including some with autofixes
+        // that don't see each other's edits (see prefer-expect-assertions).
+        // Disable every jest/* rule that has a vitest counterpart, plus
+        // jest-only rules that don't apply to vitest.
+        "jest/max-expects": "off",
+        "jest/no-conditional-in-test": "off",
+        "jest/no-done-callback": "off", // vitest has no done callback
+        "jest/no-hooks": "off",
+        "jest/no-untyped-mock-factory": "off",
+        "jest/prefer-called-with": "off",
+        "jest/prefer-ending-with-an-expect": "off",
+        "jest/prefer-expect-assertions": "off",
+        "jest/prefer-hooks-in-order": "off",
+        "jest/prefer-spy-on": "off",
+        "jest/prefer-strict-equal": "off",
         "jest/require-hook": "off",
+        "jest/require-top-level-describe": "off",
         "jsdoc/check-tag-names": "off",
         "typescript/consistent-return": "off",
         "typescript/no-unsafe-return": "off",
         "typescript/strict-void-return": "off",
         "typescript/unbound-method": "off",
         "unicorn/consistent-function-scoping": "off",
+        "vitest/max-expects": "off",
+        "vitest/no-conditional-expect": "off",
+        "vitest/no-conditional-in-test": "off",
+        // Project convention (see .claude/rules/testing.md): simple test() calls,
+        // not describe/it. So disable describe/hooks-shaped rules.
+        "vitest/no-hooks": "off",
+        // Conflicts with vitest's `({ expect }) => ...` fixture pattern — the
+        // rule misreads it as shadowing.
+        "vitest/prefer-expect-assertions": "off",
         "vitest/require-mock-type-parameters": "off",
+        "vitest/require-top-level-describe": "off",
       },
     },
     {
@@ -83,6 +110,10 @@ export default defineConfig({
     "eslint/no-nested-ternary": "off",
     "eslint/no-ternary": "off",
     "eslint/no-undef": "off",
+    "eslint/no-underscore-dangle": [
+      "warn",
+      { allow: ["_id", "_creationTime", "_storageId", "__serialized__"] },
+    ],
     "eslint/no-warning-comments": "off",
     "eslint/prefer-destructuring": "off",
     "eslint/require-await": "off",

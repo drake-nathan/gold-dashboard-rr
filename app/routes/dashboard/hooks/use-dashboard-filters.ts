@@ -25,7 +25,7 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
   const metalFilter = (searchParams.get("metal") as MetalFilter | null) ?? "all";
   const sortOption = (searchParams.get("sort") as null | SortOption) ?? "profit-desc";
   const urlShowOutOfStock = searchParams.get("showOOS") === "true";
-  const [showOutOfStock, setShowOutOfStockLocal] = useState(urlShowOutOfStock);
+  const [showOutOfStockLocal, setShowOutOfStockLocal] = useState(urlShowOutOfStock);
 
   // External system sync: keep local state in sync with browser URL (for back/forward nav).
   useEffect(() => {
@@ -131,7 +131,7 @@ export const useDashboardFilters = (stats: DashboardStats): UseDashboardFiltersR
     setMetalFilter,
     setShowOutOfStock,
     setSortOption,
-    showOutOfStock,
+    showOutOfStock: showOutOfStockLocal,
     sortOption,
   };
 };

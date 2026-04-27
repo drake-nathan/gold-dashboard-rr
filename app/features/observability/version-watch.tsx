@@ -55,7 +55,7 @@ export const VersionWatch = () => {
 
   useEffect(() => {
     if (!clientRelease) {
-      return;
+      return undefined;
     }
 
     let cancelled = false;

@@ -18,7 +18,6 @@ const assertPresent: <T>(value: T, message: string) => asserts value is NonNulla
   value,
   message,
 ) => {
-  // oxlint-disable-next-line typescript/no-unnecessary-condition -- generic assertion helper must handle both null and undefined across call sites
   if (value === null || value === undefined) {
     throw new Error(message);
   }

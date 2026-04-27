@@ -28,8 +28,7 @@ export const filterProducts = (
   options: FilterOptions,
 ): ProductCardData[] => {
   // Combine products based on metal filter
-  let filtered: ProductCardData[] = [];
-
+  let filtered: ProductCardData[];
   if (options.metalFilter === "all") {
     filtered = [...goldProducts, ...silverProducts];
   } else if (options.metalFilter === "gold") {
@@ -88,8 +87,7 @@ export const sortProducts = (
         : null;
 
   // Sort products with bids according to the selected option
-  let sorted: ProductCardData[] = [];
-
+  let sorted: ProductCardData[];
   switch (sortOption) {
     case "last-in-stock": {
       sorted = withBids.toSorted((a, b) => {
