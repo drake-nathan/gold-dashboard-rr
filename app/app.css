@@ -197,6 +197,17 @@
     pointer-events: none;
   }
 
+  /* Collapsible panel animation */
+  [data-slot="collapsible-content"] {
+    overflow: hidden;
+    transition: height 200ms ease-out;
+  }
+
+  [data-slot="collapsible-content"][data-starting-style],
+  [data-slot="collapsible-content"][data-ending-style] {
+    height: 0;
+  }
+
   /* Enhanced focus states for better accessibility */
   button:focus-visible,
   a:focus-visible,

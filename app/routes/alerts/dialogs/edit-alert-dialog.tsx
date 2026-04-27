@@ -87,7 +87,7 @@ export const EditAlertDialog = ({
       }}
       open
     >
-      <DialogContent className="flex max-h-[85vh] flex-col">
+      <DialogContent className="top-10 flex max-h-[calc(100vh-5rem)] -translate-y-0 flex-col sm:top-16 sm:max-h-[calc(100vh-8rem)]">
         <DialogHeader>
           <DialogTitle>Edit Alert</DialogTitle>
           <DialogDescription>Update the configuration for this alert.</DialogDescription>

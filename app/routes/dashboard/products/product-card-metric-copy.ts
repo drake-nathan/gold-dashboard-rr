@@ -18,18 +18,17 @@ export const getInitialCashPositionDisplay = (amount: number): CashPositionDispl
   if (amount < 0) {
     return {
       isGain: true,
-      label: "Cash left over:",
+      label: "Cash gain before rewards:",
       tooltip:
-        "Collect Pure pays you more than your Costco purchase price before any cashback or points.",
+        "Pure payout already exceeds your Costco price before Costco cashback or card points.",
       value: formatCurrency(Math.abs(amount)),
     };
   }
 
   return {
     isGain: false,
-    label: "Out-of-pocket cost:",
-    tooltip:
-      "Cash you still have tied up immediately after buying at Costco and selling to Pure, before any cashback or points.",
+    label: "Cash out-of-pocket:",
+    tooltip: "Cash still tied up after the Pure sale, before Costco cashback or card points.",
     value: formatCurrency(amount),
   };
 };
@@ -42,7 +41,7 @@ export const getPostCashbackCashPositionDisplay = (
     if (!costcoMembershipEnabled) {
       return {
         isGain: true,
-        label: "Cash left over after sale:",
+        label: "Net after sale:",
         tooltip:
           "Collect Pure already leaves you ahead on cash before valuing any credit card rewards or points.",
         value: formatCurrency(Math.abs(amount)),
@@ -51,9 +50,9 @@ export const getPostCashbackCashPositionDisplay = (
 
     return {
       isGain: true,
-      label: "Cash left over after Costco 2%:",
+      label: "Net after Executive 2%:",
       tooltip:
-        "Your Costco Executive cashback already covers the initial spread, so you're ahead before valuing any points.",
+        "After the Pure sale and Costco Executive cashback, you're ahead on cash before valuing points.",
       value: formatCurrency(Math.abs(amount)),
     };
   }
@@ -61,7 +60,7 @@ export const getPostCashbackCashPositionDisplay = (
   if (!costcoMembershipEnabled) {
     return {
       isGain: false,
-      label: "Out-of-pocket after sale:",
+      label: "Net cost after sale:",
       tooltip:
         "Cash you still have tied up after selling to Pure, before valuing any credit card rewards or points.",
       value: formatCurrency(amount),
@@ -70,9 +69,9 @@ export const getPostCashbackCashPositionDisplay = (
 
   return {
     isGain: false,
-    label: "Out-of-pocket after Costco 2%:",
+    label: "Net cost after Executive 2%:",
     tooltip:
-      "Cash you still have tied up after selling to Pure and factoring in Costco Executive cashback.",
+      "Cash still tied up after the Pure sale and Costco Executive cashback, before valuing points.",
     value: formatCurrency(amount),
   };
 };
@@ -81,18 +80,18 @@ export const getPointEconomicsDisplay = (pricePerPoint: number): PointEconomicsD
   if (pricePerPoint < 0) {
     return {
       isBeingPaid: true,
-      label: "Paid per Point:",
+      label: "Cost per point:",
       tooltip:
-        "A negative cost per point means the cashback already more than covers the spread, so you're getting paid while earning points.",
-      value: `${(Math.abs(pricePerPoint) * 100).toFixed(2)}¢`,
+        "A negative cost means the Pure sale plus Costco cashback already put you ahead before valuing points.",
+      value: `-${(Math.abs(pricePerPoint) * 100).toFixed(2)}¢`,
     };
   }
 
   return {
     isBeingPaid: false,
-    label: "Cost per Point:",
+    label: "Cost per point:",
     tooltip:
-      "Effective cash cost per point earned after selling to Pure and receiving Costco Executive cashback.",
+      "Effective cash cost for each point after the Pure sale and Costco Executive cashback.",
     value: `${(pricePerPoint * 100).toFixed(2)}¢`,
   };
 };

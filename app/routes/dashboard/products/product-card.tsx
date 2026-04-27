@@ -134,8 +134,8 @@ export const ProductCard = ({
         <div className="space-y-1.5 rounded-lg border bg-muted/50 p-3">
           {/* === SECTION 1: Purchase Details === */}
           <PriceRow
-            label="Costco Price:"
-            tooltip="Purchase price from Costco per unit"
+            label="Costco price:"
+            tooltip="Your buy price at Costco before any resale, cashback, or points."
             value={
               <>
                 {calc.aboveSpotPercentage !== null && (
@@ -143,7 +143,7 @@ export const ProductCard = ({
                     {formatPercentage(calc.aboveSpotPercentage)} markup
                   </span>
                 )}
-                -{formatCurrency(calc.unitCostcoPrice)}
+                {formatCurrency(calc.unitCostcoPrice)}
                 {calc.quantity > 1 && (
                   <span className="mt-0.5 block text-right text-xs font-light text-muted-foreground italic">
                     {calc.quantity}x = {formatCurrency(calc.costcoPrice)}
@@ -157,7 +157,7 @@ export const ProductCard = ({
             <>
               <div className="my-1.5 border-t border-border/50" />
               <PriceRow
-                label="Pure Bid:"
+                label="Pure bid:"
                 labelClassName="text-xs text-muted-foreground"
                 tooltip="Amount Collect Pure will pay per unit"
                 value={
@@ -173,7 +173,7 @@ export const ProductCard = ({
                 valueClassName="text-xs font-medium"
               />
               <PriceRow
-                label={`Pure Fee (${formatPercentage(calc.pureFeePercentage)}):`}
+                label={`Pure fee (${formatPercentage(calc.pureFeePercentage)}):`}
                 labelClassName="text-xs text-muted-foreground"
                 tooltip="Fee deducted when selling to Collect Pure (total for all units)"
                 value={`-${formatCurrency(calc.pureFee)}`}
@@ -181,7 +181,7 @@ export const ProductCard = ({
               />
               {calc.purePayout !== null && (
                 <PriceRow
-                  label="Pure Payout:"
+                  label="Pure payout:"
                   tooltip="Total cash you'll receive from Collect Pure after fees (all units)"
                   value={`+${formatCurrency(calc.purePayout)}`}
                   valueClassName="font-semibold"
@@ -217,7 +217,7 @@ export const ProductCard = ({
                     // Show breakdown when SUB is active
                     <>
                       <PriceRow
-                        label="Base Points Earned:"
+                        label="Base points earned:"
                         labelClassName="text-xs text-muted-foreground"
                         tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x base points on ${formatCurrency(calc.costcoPrice)}`}
                         value={calc.basePointsEarned.toLocaleString("en-US", {
@@ -226,7 +226,7 @@ export const ProductCard = ({
                         valueClassName="text-xs font-medium"
                       />
                       <PriceRow
-                        label="SUB Bonus Points:"
+                        label="SUB bonus points:"
                         labelClassName="text-xs font-medium text-primary"
                         tooltip={`Proportional signup bonus points for this purchase (${calculatorSettings.creditCard.signupBonus?.pointsBonus.toLocaleString("en-US")} points ÷ ${formatCurrency(calculatorSettings.creditCard.signupBonus?.spendRequirement ?? 0)} spend × ${formatCurrency(calc.costcoPrice)})`}
                         value={`+${calc.signupBonusPoints.toLocaleString("en-US", {
@@ -236,7 +236,7 @@ export const ProductCard = ({
                       />
                       {calc.spendProgress !== null && calc.spendProgressPercentage !== null && (
                         <PriceRow
-                          label="SUB Progress:"
+                          label="SUB progress:"
                           labelClassName="text-xs text-muted-foreground italic"
                           tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
                           value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
@@ -244,7 +244,7 @@ export const ProductCard = ({
                         />
                       )}
                       <PriceRow
-                        label="Total Points:"
+                        label="Total points:"
                         tooltip="Total points earned (base + SUB bonus)"
                         value={calc.pointsEarned.toLocaleString("en-US", {
                           maximumFractionDigits: 0,
@@ -255,7 +255,7 @@ export const ProductCard = ({
                   ) : (
                     // Show simple total when no SUB
                     <PriceRow
-                      label="Points Earned:"
+                      label="Points earned:"
                       labelClassName="text-xs text-muted-foreground"
                       tooltip={`${calculatorSettings.creditCard.pointsPerDollar}x points on ${formatCurrency(calc.costcoPrice)}`}
                       value={calc.pointsEarned.toLocaleString("en-US", {
@@ -296,7 +296,7 @@ export const ProductCard = ({
                     <>
                       {calc.costcoCashback > 0 && (
                         <PriceRow
-                          label={`Costco Cashback (${formatPercentage(calc.costcoCashbackPercentage)}):`}
+                          label={`Costco cashback (${formatPercentage(calc.costcoCashbackPercentage)}):`}
                           labelClassName="text-xs text-muted-foreground"
                           tooltip="Costco Executive membership 2% cashback"
                           value={`+${formatCurrency(calc.costcoCashback)}`}
@@ -304,14 +304,14 @@ export const ProductCard = ({
                         />
                       )}
                       <PriceRow
-                        label={`Card Cashback (${formatPercentage(calc.creditCardCashbackPercentage)}):`}
+                        label={`Card cashback (${formatPercentage(calc.creditCardCashbackPercentage)}):`}
                         labelClassName="text-xs text-muted-foreground"
                         tooltip="Base credit card cashback (without SUB)"
                         value={`+${formatCurrency(calc.creditCardCashback)}`}
                         valueClassName="text-xs font-medium"
                       />
                       <PriceRow
-                        label={`SUB Bonus (${formatPercentage(calc.signupBonusCashbackPercentage)}):`}
+                        label={`SUB bonus (${formatPercentage(calc.signupBonusCashbackPercentage)}):`}
                         labelClassName="text-xs font-medium text-primary"
                         tooltip="Signup bonus cashback on this purchase"
                         value={`+${formatCurrency(calc.signupBonusCashback)}`}
@@ -319,7 +319,7 @@ export const ProductCard = ({
                       />
                       {calc.spendProgress !== null && calc.spendProgressPercentage !== null && (
                         <PriceRow
-                          label="SUB Progress:"
+                          label="SUB progress:"
                           labelClassName="text-xs text-muted-foreground italic"
                           tooltip={`This purchase is ${formatCurrency(calc.spendProgress)} toward your SUB spend requirement`}
                           value={`${formatPercentage(calc.spendProgressPercentage)} of SUB`}
@@ -327,7 +327,7 @@ export const ProductCard = ({
                         />
                       )}
                       <PriceRow
-                        label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                        label={`Total cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
                         tooltip="Combined cashback from all sources"
                         value={`+${formatCurrency(calc.totalCashback)}`}
                         valueClassName="font-semibold"
@@ -336,7 +336,7 @@ export const ProductCard = ({
                   ) : (
                     // Show combined total when no SUB
                     <PriceRow
-                      label={`Total Cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
+                      label={`Total cashback (${formatPercentage(calc.totalCashbackPercentage)}):`}
                       labelClassName="text-xs text-muted-foreground"
                       tooltip={`Costco Executive: ${formatPercentage(calc.costcoCashbackPercentage, 1)} + Credit Card: ${formatPercentage(calc.creditCardCashbackPercentage)}`}
                       value={`+${formatCurrency(calc.totalCashback)}`}
@@ -351,9 +351,9 @@ export const ProductCard = ({
             <>
               <div className="my-2 border-t" />
               <PriceRow
-                label="Net Profit:"
+                label="Net profit:"
                 labelClassName="text-base font-semibold"
-                tooltip="Final profit/loss after receiving all cashback"
+                tooltip="Final profit or loss after the Pure sale and all cashback or point value included in your settings."
                 value={
                   <>
                     <span className="sr-only">{calc.netProfit >= 0 ? "Profit" : "Loss"}:</span>
@@ -364,8 +364,9 @@ export const ProductCard = ({
               />
               {calc.netProfitPercentage !== null && (
                 <PriceRow
-                  label="Return:"
+                  label="Return on spend:"
                   labelClassName="text-xs text-muted-foreground"
+                  tooltip="Net profit as a percentage of your Costco purchase price."
                   value={`${calc.netProfitPercentage >= 0 ? "+" : ""}${formatPercentage(calc.netProfitPercentage)}`}
                   valueClassName={`text-base font-bold ${calc.profitColor}`}
                 />
