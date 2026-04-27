@@ -8,4 +8,5 @@ export default [
     route("terms", "routes/terms.tsx"),
   ]),
   route("admin", "routes/admin/index.tsx"),
+  route("version", "routes/version.ts"),
 ] satisfies RouteConfig;

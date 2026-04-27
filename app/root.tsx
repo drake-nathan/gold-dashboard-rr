@@ -23,6 +23,7 @@ import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Toaster } from "./components/ui/sonner";
 import { ObservabilitySync } from "./features/observability/observability-sync";
+import { VersionWatch } from "./features/observability/version-watch";
 import { resolveAppRelease, resolveObservabilityEnvironment } from "./lib/observability-config";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
@@ -141,6 +142,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           <ObservabilitySync />
+          <VersionWatch />
           <Outlet />
         </ConvexProviderWithClerk>
       </ClerkProvider>
