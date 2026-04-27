@@ -14,7 +14,12 @@ export const resolveAsChild = (children: React.ReactNode, asChild = false) => {
   return { children: undefined, render: child };
 };
 
-export const Slot = ({ children, ...props }: React.HTMLAttributes<HTMLElement>) => {
+type SlotProps = Omit<React.HTMLAttributes<HTMLElement>, "style"> & {
+  children?: React.ReactNode;
+  style?: unknown;
+};
+
+export const Slot = ({ children, ...props }: SlotProps) => {
   const child = React.Children.only(children);
 
   if (!React.isValidElement<Record<string, unknown>>(child)) {
@@ -42,8 +47,8 @@ export const Slot = ({ children, ...props }: React.HTMLAttributes<HTMLElement>) 
 
 export const mergeRenderStyle = <TState,>(
   baseStyle: React.CSSProperties,
-  style?: ((state: TState) => React.CSSProperties) | React.CSSProperties,
-) =>
+  style?: ((state: TState) => React.CSSProperties | undefined) | React.CSSProperties,
+): ((state: TState) => React.CSSProperties) | React.CSSProperties =>
   typeof style === "function"
     ? (state: TState) => ({ ...baseStyle, ...style(state) })
     : { ...baseStyle, ...style };
