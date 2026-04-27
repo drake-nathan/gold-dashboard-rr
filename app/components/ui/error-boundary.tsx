@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/react-router";
 import { AlertTriangle, RefreshCw } from "lucide-react";
+import { posthog } from "posthog-js";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { Button } from "./button";
@@ -57,9 +57,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       console.error("ErrorBoundary caught an error:", error, errorInfo);
     }
 
-    Sentry.captureException(error, {
-      contexts: { react: { componentStack: errorInfo.componentStack } },
-    });
+    if (typeof window !== "undefined") {
+      posthog.captureException(error, {
+        $exception_component_stack: errorInfo.componentStack,
+      });
+    }
 
     // Call optional error handler
     this.props.onError?.(error, errorInfo);

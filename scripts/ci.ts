@@ -10,7 +10,6 @@ const tasks = [
   { script: "test", title: "Test" },
   { script: "test:convex", title: "Test (Convex)" },
   { script: "test:browser", title: "Test (Browser)" },
-  { script: "verify:runtime", title: "Verify Runtime" },
 ];
 
 const runScript = (script: string): Promise<string> => {

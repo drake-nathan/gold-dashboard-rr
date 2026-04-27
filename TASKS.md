@@ -29,7 +29,7 @@
 - Test on real mobile devices
 - Data freshness indicators
 - Fallback UI when market prices fail
-- Sentry: structured logs for alerts, checkout, and auth flows
+- Structured logs for alerts, checkout, and auth flows
 - Match status UI (currently manual via Convex dashboard)
 
 ## Later

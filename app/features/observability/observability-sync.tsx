@@ -1,5 +1,4 @@
 import { useAuth } from "@clerk/react-router";
-import * as Sentry from "@sentry/react-router";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 
@@ -14,7 +13,7 @@ export const ObservabilitySync = () => {
   const previousUserIdRef = useRef<null | string>(null);
   const lastIdentifiedIdRef = useRef<null | string>(null);
   const appEnvironment = resolveObservabilityEnvironment(
-    import.meta.env.VITE_SENTRY_ENVIRONMENT,
+    import.meta.env.VITE_APP_ENVIRONMENT,
     import.meta.env.MODE,
   );
   const appRelease = resolveAppRelease(import.meta.env.VITE_APP_RELEASE);
@@ -51,13 +50,6 @@ export const ObservabilitySync = () => {
     }
 
     posthog.register(sharedProperties);
-
-    Sentry.setTag("anonymous_id", anonymousId);
-    Sentry.setTag("auth_state", authState);
-    Sentry.setTag("environment", appEnvironment);
-    Sentry.setTag("release", appRelease ?? "unreleased");
-    Sentry.setTag("user_id", userId ?? "anonymous");
-    Sentry.setUser({ id: userId ?? anonymousId });
     previousUserIdRef.current = userId ?? null;
   }, [anonymousId, appEnvironment, appRelease, isLoaded, isSignedIn, posthog, userId]);
 

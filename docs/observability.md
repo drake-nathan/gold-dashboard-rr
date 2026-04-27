@@ -4,13 +4,12 @@ Canonical reference for observability architecture, instrumentation rules, and o
 
 ## Purpose
 
-This project uses observability for three distinct jobs:
+This project uses observability for two distinct jobs:
 
-- **Sentry**: errors, traces, profiles, replays, and operational debugging
-- **PostHog**: product analytics and behavior events
+- **PostHog**: product analytics, behavior events, **and error tracking**
 - **Structured logs**: high-signal operational breadcrumbs for critical business workflows
 
-If you touch Sentry, PostHog, logging, tracing, or release/environment tagging, update this document with the code change.
+If you touch PostHog, logging, or release/environment tagging, update this document with the code change.
 
 ## Source Of Truth
 
@@ -25,19 +24,18 @@ Use this document as the durable subsystem guide for both humans and agents.
 
 ### Entry points
 
-| Area                      | Responsibility                                                             | File                                                |
-| ------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- |
-| Browser Sentry bootstrap  | Client SDK init, tracing, replay, browser profiling, client-side filtering | `app/entry.client.tsx`                              |
-| Server Sentry bootstrap   | Server SDK init, profiling, server-side filtering                          | `instrument.server.js`                              |
-| React Router server hooks | Request wrapping, server instrumentation, SSR error handling               | `app/entry.server.tsx`                              |
-| PostHog provider          | PostHog app bootstrap and default shared properties                        | `app/root.tsx`                                      |
-| Shared identity sync      | Align PostHog and Sentry user/tag state                                    | `app/features/observability/observability-sync.tsx` |
-| Shared config helpers     | Canonical environment and release normalization                            | `app/lib/observability-config.js`                   |
-| Noise filtering           | Drop known framework/bot/noise events before ingest                        | `app/lib/sentry-event-filters.js`                   |
+| Area                      | Responsibility                                               | File                                                |
+| ------------------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| PostHog provider          | Browser SDK init, client-side error capture, default props   | `app/root.tsx`                                      |
+| PostHog server client     | Node SDK singleton for server-side error capture             | `app/lib/posthog-server.ts`                         |
+| React Router server hooks | `handleError` forwards uncaught loader/action errors         | `app/entry.server.tsx`                              |
+| Shared identity sync      | Identify user/anonymous in PostHog and register shared props | `app/features/observability/observability-sync.tsx` |
+| Shared config helpers     | Canonical environment and release normalization              | `app/lib/observability-config.js`                   |
+| Noise filtering           | Drop known framework/bot/noise events before ingest          | `app/lib/posthog-event-filters.js`                  |
 
 ### Shared identity model
 
-Both Sentry and PostHog should use the same core identifiers where possible:
+PostHog should consistently see the same core identifiers across both analytics and exception events:
 
 - `anonymous_id`: stable browser-scoped fallback identity
 - `user_id`: authenticated user identifier when present
@@ -52,29 +50,16 @@ Current normalization rules live in `app/lib/observability-config.js`:
 
 ## Tool Boundaries
 
-### Sentry owns
-
-Send data to Sentry when the goal is diagnosis of failures or degraded performance:
-
-- Unhandled client and server exceptions
-- Route/render/loader/action failures
-- Trace and profiling data
-- Session replay for error sessions
-- Operational breadcrumbs attached to error and trace context
-- Structured logs that help explain failures in critical flows
-
-Do not use Sentry as the primary destination for product analytics or funnel reporting.
-
 ### PostHog owns
 
-Send data to PostHog when the goal is product understanding:
+PostHog is the single ingest point for both product and operational telemetry:
 
-- User actions and feature usage
-- Funnel and retention events
-- CTA clicks and workflow completion steps
-- Shared user/environment/release properties for segmenting analytics
+- **Product analytics**: user actions, feature usage, funnel/retention events, CTA clicks
+- **Error tracking**: unhandled client and server exceptions, route/render/loader/action failures
+- **Session replay** (via PostHog project settings) for context around errors and UX research
+- Shared user/environment/release properties for segmenting both kinds of data
 
-Do not use PostHog as the primary system for exception reporting. `capture_exceptions` stays disabled because Sentry handles error tracking.
+Client-side capture happens automatically via `capture_exceptions: true`; manual `posthog.captureException(error)` calls supplement React error boundaries. Server-side capture happens in `entry.server.tsx#handleError` via the `posthog-node` SDK.
 
 ### Structured logs own
 
@@ -110,17 +95,13 @@ When adding a new analytics event, document:
 - The required properties
 - Whether the event is user-facing analytics, operational, or both
 
-### Sentry tags and contexts
+### PostHog exception properties
 
-Keep a small stable set of tags that support filtering and correlation:
+Exception events (`$exception`) come with rich PostHog-managed fields. Add custom properties only when they materially improve debugging:
 
-- `environment`
-- `release`
-- `auth_state`
-- `anonymous_id`
-- `user_id`
-
-Add feature-specific tags only when they materially improve debugging and will remain stable over time.
+- `$exception_component_stack` for React error boundaries
+- Domain identifiers (alert_id, subscription_id, etc.) where the call site has them
+- Avoid free-form prose; prefer enum-like values that filter cleanly
 
 ### Structured log fields
 
@@ -142,10 +123,8 @@ Prefer predictable enums over free-form prose in filterable fields.
 
 Observability data should always be segmentable by environment and, when possible, by release.
 
-- `VITE_SENTRY_ENVIRONMENT` is the canonical explicit env override
+- `VITE_APP_ENVIRONMENT` is the canonical explicit env override
 - `VITE_APP_RELEASE` is the preferred shared release identifier
-- Local `bun run dev` sessions default to Sentry disabled, even when `VITE_SENTRY_DSN` is present
-- `VITE_SENTRY_LOCAL_ENABLED=true` is the explicit opt-in for local Sentry debugging
 - Hosted builds should set `VITE_APP_RELEASE` to the git SHA
 - Local development may omit `VITE_APP_RELEASE`
 
@@ -155,9 +134,9 @@ See `docs/environment-variables.md` for the configuration matrix and setup locat
 
 Observability is only useful if it is low-noise and safe to inspect.
 
-- Keep Sentry noise filters up to date in `app/lib/sentry-event-filters.js`
-- Avoid sending secrets, tokens, raw payment details, or other sensitive values in PostHog properties, Sentry tags, or logs
-- Treat replay, profiling, and `sendDefaultPii` changes as security-sensitive and review them deliberately
+- Keep the PostHog noise filters up to date in `app/lib/posthog-event-filters.js`
+- Avoid sending secrets, tokens, raw payment details, or other sensitive values in PostHog properties or logs
+- Treat replay and PII-bearing properties as security-sensitive and review them deliberately
 - If a new class of expected noise appears, filter it close to ingest instead of training people to ignore it in the UI
 
 ## Sampling
@@ -166,10 +145,9 @@ Sampling and cost-sensitive settings should be documented here whenever they cha
 
 Current code paths configure:
 
-- Sentry traces in browser and server bootstraps
-- Browser profiling
-- Replay-on-error
-- Console logging integration for `warn` and `error`
+- PostHog client SDK with automatic exception capture (`capture_exceptions: true`)
+- PostHog Node SDK with `flushAt: 1, flushInterval: 0` so server-side exceptions land promptly
+- Session replay sampling is controlled in the PostHog project dashboard, not the code
 
 When you adjust these settings, update both the code and this document with the reason.
 
@@ -189,15 +167,15 @@ When adding or changing observability behavior:
 
 - Confirm the expected env vars are present
 - Trigger one PostHog event and verify shared properties include `environment` and `release` when set
-- Trigger one Sentry capture path and verify normalized `environment`, `release`, and identity tags
-- Verify known bot/framework noise is still dropped by the Sentry filters
+- Trigger a thrown error in a route/component and verify it appears in PostHog → Error tracking with the expected identity properties
+- Verify known bot/framework noise is still dropped by the filters
 
 ### Incident triage
 
 Start with the signal type that matches the question:
 
-- Product behavior question: PostHog
-- Error or slow request question: Sentry
+- Product behavior question: PostHog → Insights / Replays
+- Error or failed-request question: PostHog → Error tracking
 - Critical workflow state transition question with no exception: structured logs
 
 Correlate across systems with shared fields:

@@ -83,12 +83,15 @@ const Privacy = () => {
 
           <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">4.1 PostHog</h3>
           <p>
-            We use PostHog for product analytics and user experience research. PostHog collects:
+            We use PostHog for product analytics, user experience research, and error tracking.
+            PostHog collects:
           </p>
           <ul className="mt-2 ml-6 list-disc space-y-1">
             <li>Page views and user interactions</li>
             <li>Session recordings (anonymized) for heatmaps and UX analysis</li>
             <li>Feature usage statistics</li>
+            <li>Technical errors and exceptions for debugging</li>
+            <li>Device and browser information for debugging</li>
           </ul>
           <p className="mt-2">
             PostHog data is stored securely and used only for improving our service. Learn more:{" "}
@@ -99,26 +102,6 @@ const Privacy = () => {
               target="_blank"
             >
               PostHog Privacy Policy
-            </a>
-          </p>
-
-          <h3 className="mt-4 mb-2 text-xl font-medium text-foreground">4.2 Sentry</h3>
-          <p>We use Sentry for error tracking and performance monitoring. Sentry collects:</p>
-          <ul className="mt-2 ml-6 list-disc space-y-1">
-            <li>Technical errors and exceptions</li>
-            <li>Performance data (page load times, API response times)</li>
-            <li>Session replays when errors occur (anonymized, limited to error context)</li>
-            <li>Device and browser information for debugging</li>
-          </ul>
-          <p className="mt-2">
-            Sentry data is used solely for identifying and fixing technical issues. Learn more:{" "}
-            <a
-              className="text-primary hover:underline"
-              href="https://sentry.io/privacy/"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Sentry Privacy Policy
             </a>
           </p>
         </section>
@@ -169,10 +152,7 @@ const Privacy = () => {
               <strong>Convex:</strong> Database and backend services
             </li>
             <li>
-              <strong>PostHog:</strong> Product analytics and session recordings
-            </li>
-            <li>
-              <strong>Sentry:</strong> Error tracking and performance monitoring
+              <strong>PostHog:</strong> Product analytics, session recordings, and error tracking
             </li>
             <li>
               <strong>Google AdSense:</strong> Display advertising

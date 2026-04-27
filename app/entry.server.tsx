@@ -1,14 +1,37 @@
 import { PassThrough } from "node:stream";
 
 import { createReadableStreamFromReadable } from "@react-router/node";
-import * as Sentry from "@sentry/react-router";
 import { isbot } from "isbot";
 import { type RenderToPipeableStreamOptions, renderToPipeableStream } from "react-dom/server";
 import { type AppLoadContext, type EntryContext, ServerRouter } from "react-router";
 
-export const handleError = Sentry.createSentryHandleError({
-  logErrors: false,
-});
+import { shouldDropServerError } from "@/lib/posthog-event-filters";
+import { getPostHogServer } from "@/lib/posthog-server";
+
+export const handleError = (
+  error: unknown,
+  { request }: { request: Request },
+): undefined | void => {
+  if (request.signal.aborted) {
+    return;
+  }
+
+  const status = error instanceof Response ? error.status : undefined;
+  if (shouldDropServerError({ error, request, status })) {
+    return;
+  }
+
+  const posthog = getPostHogServer();
+  if (!posthog) {
+    return;
+  }
+
+  const captured = error instanceof Error ? error : new Error(String(error));
+  posthog.captureException(captured, undefined, {
+    $current_url: request.url,
+    method: request.method,
+  });
+};
 
 export const streamTimeout = 5000;
 
@@ -29,7 +52,6 @@ const handleRequest = async (
 
   return new Promise((resolve, reject) => {
     let shellRendered = false;
-    let statusCode = responseStatusCode;
     const userAgent = request.headers.get("user-agent");
 
     // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
@@ -47,7 +69,6 @@ const handleRequest = async (
       <ServerRouter context={routerContext} url={request.url} />,
       {
         onError: (error: unknown) => {
-          statusCode = 500;
           // Log streaming rendering errors from inside the shell.  Don't log
           // errors encountered during initial shell rendering since they'll
           // reject and get logged in handleDocumentRequest.
@@ -71,14 +92,13 @@ const handleRequest = async (
           const stream = createReadableStreamFromReadable(body);
 
           responseHeaders.set("Content-Type", "text/html");
-          responseHeaders.set("Document-Policy", "js-profiling");
 
-          pipe(Sentry.getMetaTagTransformer(body));
+          pipe(body);
 
           resolve(
             new Response(stream, {
               headers: responseHeaders,
-              status: statusCode,
+              status: responseStatusCode,
             }),
           );
         },
@@ -87,6 +107,4 @@ const handleRequest = async (
   });
 };
 
-export default Sentry.wrapSentryHandleRequest(handleRequest);
-
-export const unstable_instrumentations = [Sentry.createSentryServerInstrumentation()];
+export default handleRequest;

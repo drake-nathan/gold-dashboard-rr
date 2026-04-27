@@ -5,7 +5,7 @@
   "scripts": {
     "build": "react-router build",
     "ci": "bun run scripts/ci.ts",
-    "dev": "NODE_OPTIONS='--import ./instrument.server.js' react-router dev",
+    "dev": "react-router dev",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "lint": "oxlint",
@@ -13,7 +13,7 @@
     "snapshot:export": "bun run scripts/snapshot.ts export",
     "snapshot:import": "bun run scripts/snapshot.ts import",
     "snapshot:sync": "bun run scripts/snapshot.ts sync",
-    "start": "NODE_ENV=production NODE_OPTIONS='--import ./instrument.server.js' react-router-serve ./build/server/index.js",
+    "start": "NODE_ENV=production react-router-serve ./build/server/index.js",
     "test": "vitest run --silent",
     "test:browser": "vitest run --config=vitest.browser.config.ts --silent",
     "test:browser:watch": "vitest --config=vitest.browser.config.ts",
@@ -24,8 +24,7 @@
     "test:watch": "vitest",
     "ts": "tsgo",
     "ts:convex": "tsgo -p convex/tsconfig.json",
-    "typegen": "react-router typegen",
-    "verify:runtime": "bun run scripts/verify-runtime.ts"
+    "typegen": "react-router typegen"
   },
   "dependencies": {
     "@base-ui/react": "1.4.1",
@@ -36,8 +35,6 @@
     "@hookform/resolvers": "5.2.2",
     "@react-router/node": "7.14.2",
     "@react-router/serve": "7.14.2",
-    "@sentry/profiling-node": "10.50.0",
-    "@sentry/react-router": "10.50.0",
     "babel-plugin-react-compiler": "1.0.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -47,6 +44,7 @@
     "lucide-react": "1.11.0",
     "next-themes": "0.4.6",
     "posthog-js": "1.372.3",
+    "posthog-node": "5.30.6",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-hook-form": "7.74.0",

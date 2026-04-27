@@ -15,20 +15,12 @@ const mockPostHog = {
   reset: vi.fn(),
 };
 
-const mockSetTag = vi.fn();
-const mockSetUser = vi.fn();
-
 vi.mock("@clerk/react-router", () => ({
   useAuth: () => mockAuthState,
 }));
 
 vi.mock("posthog-js/react", () => ({
   usePostHog: () => mockPostHog,
-}));
-
-vi.mock("@sentry/react-router", () => ({
-  setTag: (...args: unknown[]) => mockSetTag(...args),
-  setUser: (...args: unknown[]) => mockSetUser(...args),
 }));
 
 vi.mock("./anonymous-id", () => ({
@@ -40,10 +32,8 @@ beforeEach(() => {
   mockPostHog.identify.mockClear();
   mockPostHog.register.mockClear();
   mockPostHog.reset.mockClear();
-  mockSetTag.mockClear();
-  mockSetUser.mockClear();
   vi.stubEnv("VITE_APP_RELEASE", "abc123");
-  vi.stubEnv("VITE_SENTRY_ENVIRONMENT", "develop");
+  vi.stubEnv("VITE_APP_ENVIRONMENT", "develop");
 });
 
 test("resets PostHog identity on logout and restores the anonymous identity", async () => {

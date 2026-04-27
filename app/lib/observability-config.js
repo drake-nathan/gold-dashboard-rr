@@ -1,5 +1,5 @@
 /**
- * Normalize the app environment value so Sentry and PostHog use the same vocabulary.
+ * Normalize the app environment value so observability tools share the same vocabulary.
  *
  * @param {null | string | undefined} explicitValue - Preferred environment value.
  * @param {null | string | undefined} fallbackValue - Fallback environment value.
@@ -47,30 +47,4 @@ export const resolveAppRelease = (...values) => {
   }
 
   return null;
-};
-
-/**
- * Decide whether Sentry should initialize for the current runtime.
- *
- * Default policy:
- * - production and hosted preview runtimes: enabled when a DSN is present
- * - local dev runtimes: disabled unless explicitly re-enabled
- *
- * @param {{
- *   dsn?: null | string;
- *   isLocalDevRuntime?: boolean;
- *   localOverride?: null | string;
- * }} options - Runtime flags and env values.
- * @returns {boolean} True when Sentry should initialize.
- */
-export const shouldEnableSentry = ({ dsn, isLocalDevRuntime = false, localOverride } = {}) => {
-  if (typeof dsn !== "string" || dsn.trim().length === 0) {
-    return false;
-  }
-
-  if (!isLocalDevRuntime) {
-    return true;
-  }
-
-  return typeof localOverride === "string" && localOverride.trim().toLowerCase() === "true";
 };

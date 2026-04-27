@@ -142,7 +142,7 @@ The backend uses Convex for serverless functions and real-time data:
 ## Documentation
 
 - **[CLAUDE.md](./CLAUDE.md)** - Complete project documentation including tech stack, database schema, API integrations, and UI implementation
-- **[docs/observability.md](./docs/observability.md)** - Observability architecture and operating conventions for Sentry, PostHog, logs, and tracing
+- **[docs/observability.md](./docs/observability.md)** - Observability architecture and operating conventions for PostHog (analytics + error tracking) and structured logs
 - **[TASKS.md](./TASKS.md)** - Task board with current priorities
 
 ## Key Features

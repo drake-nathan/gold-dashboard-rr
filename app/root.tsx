@@ -1,10 +1,10 @@
 import { ClerkProvider, useAuth } from "@clerk/react-router";
 import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { shadcn } from "@clerk/ui/themes";
-import * as Sentry from "@sentry/react-router";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { AlertTriangle, Home as HomeIcon, RefreshCw } from "lucide-react";
+import { posthog } from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 
 import "./app.css";
@@ -25,6 +25,7 @@ import { Toaster } from "./components/ui/sonner";
 import { ObservabilitySync } from "./features/observability/observability-sync";
 import { VersionWatch } from "./features/observability/version-watch";
 import { resolveAppRelease, resolveObservabilityEnvironment } from "./lib/observability-config";
+import { shouldDropClientEvent } from "./lib/posthog-event-filters";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
@@ -98,7 +99,7 @@ const clerkApiKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const posthogKey = import.meta.env.VITE_PUBLIC_POSTHOG_KEY;
 const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 const appEnvironment = resolveObservabilityEnvironment(
-  import.meta.env.VITE_SENTRY_ENVIRONMENT,
+  import.meta.env.VITE_APP_ENVIRONMENT,
   import.meta.env.MODE,
 );
 const appRelease = resolveAppRelease(import.meta.env.VITE_APP_RELEASE);
@@ -124,7 +125,13 @@ const App = ({ loaderData }: Route.ComponentProps) => {
       apiKey={posthogKey}
       options={{
         api_host: posthogHost,
-        capture_exceptions: false, // Sentry handles error tracking
+        before_send: (event) => {
+          if (event && shouldDropClientEvent(event)) {
+            return null;
+          }
+          return event;
+        },
+        capture_exceptions: true,
         debug: false,
         defaults: "2025-05-24",
         loaded: (client) => {
@@ -225,8 +232,8 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   const errorMessage = isError ? error.message : "An unexpected error occurred";
   const errorStack = isError ? error.stack : undefined;
 
-  if (error && error instanceof Error) {
-    Sentry.captureException(error);
+  if (error instanceof Error && typeof window !== "undefined") {
+    posthog.captureException(error);
   }
 
   return (

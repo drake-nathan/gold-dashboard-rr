@@ -1,14 +1,9 @@
 import { reactRouter } from "@react-router/dev/vite";
-import { sentryReactRouter } from "@sentry/react-router";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import babel from "vite-plugin-babel";
 import devtoolsJson from "vite-plugin-devtools-json";
-export default defineConfig((config) => ({
-  optimizeDeps: {
-    exclude: ["@sentry/react-router"],
-  },
-
+export default defineConfig(() => ({
   plugins: [
     tailwindcss(),
     reactRouter(),
@@ -20,14 +15,6 @@ export default defineConfig((config) => ({
       filter: /\.[jt]sx?$/,
     }),
     devtoolsJson(),
-    sentryReactRouter(
-      {
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT,
-      },
-      config,
-    ),
   ],
 
   resolve: {

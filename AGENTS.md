@@ -141,7 +141,7 @@ These files contain detailed reference material. Read them when working on the r
 - **`convex/AGENTS.md`** — Convex architecture, safety rules, key files
 - **`.claude/docs/market-prices.md`** — Gold API + FMP integration, cron schedules, % change calculation
 - **`.claude/docs/docker.md`** — Docker build/run/test commands, Dockerfile details
-- **`docs/observability.md`** — Sentry, PostHog, structured logging, tracing, shared tags, and runbook conventions
+- **`docs/observability.md`** — PostHog (analytics + error tracking), structured logging, shared properties, and runbook conventions
 - **`.claude/docs/known-issues.md`** — Babel preset, env var flow in SSR, Vite config gotchas
 - **`docs/environment-variables.md`** — Complete env var reference with setup checklists
 

@@ -32,7 +32,7 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 - Test alerts and subscription flows on real mobile devices.
   Source of truth: `TASKS.md` Up Next
 - Add fallback and observability follow-ups that materially affect alerts UX and supportability.
-  Source of truth: `TASKS.md` Up Next (`Fallback UI when market prices fail`, `Sentry: structured logs for alerts, checkout, and auth flows`)
+  Source of truth: `TASKS.md` Up Next (`Fallback UI when market prices fail`, `Structured logs for alerts, checkout, and auth flows`)
 
 ## Exit Criteria
 
