@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSubscription } from "@/features/subscription/hooks/use-subscription";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
 import { ThemeMenuItems } from "./theme-toggle";
 import { UserButtonWithPro } from "./user-button-with-pro";
@@ -19,6 +20,7 @@ import { UserButtonWithPro } from "./user-button-with-pro";
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
   const { isPro } = useSubscription();
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
 
   return (
     <DropdownMenu>
@@ -55,7 +57,7 @@ export const MobileMenu = () => {
           </DropdownMenuItem>
         </Show>
         <Show when="signed-in">
-          {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
+          {alertsEnabled ? (
             <DropdownMenuItem asChild>
               <Link to="/alerts">
                 <Bell className="mr-2 h-4 w-4" />

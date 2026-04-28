@@ -2,7 +2,7 @@
 
 ## Now
 
-- Alerts: UI polish + test coverage → [.epics/alerts.md]
+- Alerts: prod admin smoke-test (PostHog `alerts-beta`), then UI polish + test coverage → [.epics/alerts.md]
 - Observability strategy docs + rollout plan → [.epics/observability-overhaul.md]
 
 ## Epics

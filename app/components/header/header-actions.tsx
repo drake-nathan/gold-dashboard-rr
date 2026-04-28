@@ -4,11 +4,13 @@ import { Link, useLocation } from "react-router";
 
 import { UpgradeButton } from "@/components/subscription/upgrade-button";
 import { Button } from "@/components/ui/button";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
 export const HeaderActions = () => {
   const { openSignIn, openSignUp } = useClerk();
   const location = useLocation();
   const isAlertsPage = location.pathname === "/alerts";
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
 
   return (
     <>
@@ -33,7 +35,7 @@ export const HeaderActions = () => {
         </Button>
       </Show>
       <Show when="signed-in">
-        {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
+        {alertsEnabled ? (
           <Button asChild size="sm" variant="outline">
             <Link to={isAlertsPage ? "/" : "/alerts"}>
               {isAlertsPage ? (

@@ -24,8 +24,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./com
 import { Toaster } from "./components/ui/sonner";
 import { ObservabilitySync } from "./features/observability/observability-sync";
 import { VersionWatch } from "./features/observability/version-watch";
+import { type FeatureFlagValues } from "./lib/feature-flags";
+import { evaluateFeatureFlags } from "./lib/feature-flags.server";
 import { resolveAppRelease, resolveObservabilityEnvironment } from "./lib/observability-config";
 import { shouldDropClientEvent } from "./lib/posthog-event-filters";
+import { FeatureFlagProvider } from "./providers/feature-flag-provider";
 import { THEME_STORAGE_KEY, ThemeProvider } from "./providers/theme-provider";
 
 export const links: Route.LinksFunction = () => [
@@ -50,7 +53,16 @@ export const links: Route.LinksFunction = () => [
 
 export const middleware = [clerkMiddleware()];
 
-export const loader = rootAuthLoader;
+export const loader = async (args: Route.LoaderArgs) => {
+  return rootAuthLoader(args, async ({ request }) => {
+    const distinctId = request.auth.userId ?? null;
+    const featureFlags = await evaluateFeatureFlags(distinctId);
+    return {
+      featureFlags,
+      posthogDistinctId: distinctId,
+    };
+  });
+};
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -120,6 +132,9 @@ if (!posthogKey || !posthogHost) {
 const convex = new ConvexReactClient(convexUrl);
 
 const App = ({ loaderData }: Route.ComponentProps) => {
+  const featureFlags: FeatureFlagValues = loaderData.featureFlags;
+  const distinctId = loaderData.posthogDistinctId;
+
   return (
     <PostHogProvider
       apiKey={posthogKey}
@@ -130,6 +145,10 @@ const App = ({ loaderData }: Route.ComponentProps) => {
             return null;
           }
           return event;
+        },
+        bootstrap: {
+          featureFlags,
+          ...(distinctId ? { distinctID: distinctId, isIdentifiedID: true } : {}),
         },
         capture_exceptions: true,
         debug: false,
@@ -148,9 +167,11 @@ const App = ({ loaderData }: Route.ComponentProps) => {
         publishableKey={clerkApiKey}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-          <ObservabilitySync />
-          <VersionWatch />
-          <Outlet />
+          <FeatureFlagProvider flags={featureFlags}>
+            <ObservabilitySync />
+            <VersionWatch />
+            <Outlet />
+          </FeatureFlagProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>
     </PostHogProvider>

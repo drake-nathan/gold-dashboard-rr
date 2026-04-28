@@ -5,6 +5,7 @@ import { SubscriptionPageContent } from "@/components/subscription/subscription-
 import { Skeleton } from "@/components/ui/skeleton";
 import { useManagePortal } from "@/features/subscription/hooks/use-manage-portal";
 import { cn } from "@/lib/cn";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
 /** Skeleton sizes account for the avatar + 2px border on each side (p-[2px] wrapper) */
 const SKELETON_SIZES: Record<string, string> = {
@@ -14,6 +15,7 @@ const SKELETON_SIZES: Record<string, string> = {
 
 export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?: string }) => {
   const { handleManagePortal, isLoading, isPro } = useManagePortal();
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
   const showProRing = !isLoading && isPro;
 
   // While subscription status is loading, show a skeleton circle matching
@@ -48,13 +50,15 @@ export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?:
             />
           </UserButton.MenuItems>
         ) : null}
-        <UserButton.UserProfilePage
-          label="Subscription"
-          labelIcon={<Crown className="size-4" />}
-          url="subscription"
-        >
-          <SubscriptionPageContent />
-        </UserButton.UserProfilePage>
+        {alertsEnabled ? (
+          <UserButton.UserProfilePage
+            label="Subscription"
+            labelIcon={<Crown className="size-4" />}
+            url="subscription"
+          >
+            <SubscriptionPageContent />
+          </UserButton.UserProfilePage>
+        ) : null}
       </UserButton>
     </div>
   );

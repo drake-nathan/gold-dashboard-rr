@@ -4,6 +4,11 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   optimizeDeps: {
+    // posthog-node is server-only and uses Node globals (process). In browser
+    // tests it's never executed (loaders are mocked or unreached), but Vite
+    // still pre-bundles every import in the graph; excluding it prevents the
+    // optimization step from failing on `process is not defined`.
+    exclude: ["posthog-node"],
     include: [
       "@base-ui/react/alert-dialog",
       "@base-ui/react/button",

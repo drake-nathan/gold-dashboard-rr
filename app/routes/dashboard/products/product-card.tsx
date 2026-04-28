@@ -6,6 +6,7 @@ import { useIsClient } from "usehooks-ts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 import { formatCurrency, formatPercentage, formatWeight } from "@/utils/format";
 import { formatRelativeTime } from "@/utils/format-time";
 import { generatePureProductUrl } from "@/utils/pure-url";
@@ -38,6 +39,7 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const isClient = useIsClient();
   const posthog = usePostHog();
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
 
   // Calculate all metrics using utility function
   const calc = calculations ?? calculateProductMetrics(product, marketPrices, calculatorSettings);
@@ -112,7 +114,7 @@ export const ProductCard = ({
           ) : null}
         </div>
 
-        {import.meta.env.VITE_STRIPE_ENABLED === "true" ? (
+        {alertsEnabled ? (
           <div className="mt-3">
             <Button asChild className="w-full" size="sm" variant="outline">
               <Link

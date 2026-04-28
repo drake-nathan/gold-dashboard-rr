@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
+
+import { FEATURE_FLAGS, type FeatureFlagValues } from "@/lib/feature-flags";
+import { FeatureFlagProvider } from "@/providers/feature-flag-provider";
 
 import { MobileMenu } from "./mobile-menu";
 
@@ -38,10 +41,6 @@ vi.mock("./theme-toggle", () => ({
   ThemeMenuItems: () => <div>Theme Items</div>,
 }));
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
   mockShowWhen = "signed-out";
@@ -49,12 +48,17 @@ beforeEach(() => {
   mockSubscription = { isPro: false };
 });
 
-test("shows signed-out auth actions without querying admin status", async () => {
-  const screen = await render(
-    <MemoryRouter>
-      <MobileMenu />
-    </MemoryRouter>,
+const renderMobileMenu = (flags: FeatureFlagValues = {}) =>
+  render(
+    <FeatureFlagProvider flags={flags}>
+      <MemoryRouter>
+        <MobileMenu />
+      </MemoryRouter>
+    </FeatureFlagProvider>,
   );
+
+test("shows signed-out auth actions without querying admin status", async () => {
+  const screen = await renderMobileMenu();
 
   await screen.getByRole("button", { name: "Open menu" }).click();
 
@@ -65,17 +69,12 @@ test("shows signed-out auth actions without querying admin status", async () => 
   expect(useQueryMock).not.toHaveBeenCalled();
 });
 
-test("shows signed-in alerts and account actions without admin chrome", async () => {
+test("shows alerts and account actions when alerts-beta flag is enabled", async () => {
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
   mockSubscription = { isPro: true };
-  vi.stubEnv("VITE_STRIPE_ENABLED", "true");
 
-  const screen = await render(
-    <MemoryRouter>
-      <MobileMenu />
-    </MemoryRouter>,
-  );
+  const screen = await renderMobileMenu({ [FEATURE_FLAGS.ALERTS_BETA]: true });
 
   await screen.getByRole("button", { name: "Open menu" }).click();
 
@@ -84,4 +83,17 @@ test("shows signed-in alerts and account actions without admin chrome", async ()
   await expect.element(screen.getByText(/^Pro$/)).toBeInTheDocument();
   expect(document.body.textContent).not.toContain("Admin");
   expect(useQueryMock).not.toHaveBeenCalled();
+});
+
+test("hides the alerts entry when the alerts-beta flag is disabled", async () => {
+  mockShowWhen = "signed-in";
+  mockAuthState = { isSignedIn: true };
+  mockSubscription = { isPro: true };
+
+  const screen = await renderMobileMenu();
+
+  await screen.getByRole("button", { name: "Open menu" }).click();
+
+  await expect.element(screen.getByText("Account Avatar")).toBeInTheDocument();
+  expect(document.body.textContent).not.toContain("Alerts");
 });

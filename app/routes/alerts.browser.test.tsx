@@ -47,6 +47,15 @@ vi.mock("convex/_generated/api", () => ({
   },
 }));
 
+// Server-only module — stub it so the browser bundler doesn't pull posthog-node.
+vi.mock("@/lib/feature-flags.server", () => ({
+  evaluateFeatureFlags: vi.fn(),
+}));
+
+vi.mock("@clerk/react-router/server", () => ({
+  getAuth: vi.fn(),
+}));
+
 vi.mock("@clerk/react-router", () => ({
   SignIn: () => <div>Mock Sign In</div>,
   useAuth: () => mockAuthState,

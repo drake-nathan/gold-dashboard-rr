@@ -5,6 +5,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
+import { FEATURE_FLAGS, type FeatureFlagValues } from "@/lib/feature-flags";
+import { FeatureFlagProvider } from "@/providers/feature-flag-provider";
+
 import { UpgradeButton } from "./upgrade-button";
 
 // Track mock state
@@ -42,6 +45,13 @@ vi.mock("sonner", () => ({
   },
 }));
 
+const flagsOn: FeatureFlagValues = { [FEATURE_FLAGS.ALERTS_BETA]: true };
+
+const renderUpgradeButton = (
+  ui: React.ReactElement = <UpgradeButton />,
+  flags: FeatureFlagValues = flagsOn,
+) => render(<FeatureFlagProvider flags={flags}>{ui}</FeatureFlagProvider>);
+
 beforeEach(() => {
   mockAuthState = { isSignedIn: true };
   mockSubscription = {
@@ -54,7 +64,7 @@ beforeEach(() => {
 });
 
 test("renders upgrade button for free users", async () => {
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
   await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeInTheDocument();
 });
@@ -62,7 +72,7 @@ test("renders upgrade button for free users", async () => {
 test("hides button while subscription is loading", async () => {
   mockSubscription.isLoading = true;
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
   const buttons = screen.container.querySelectorAll("button");
 
@@ -72,9 +82,8 @@ test("hides button while subscription is loading", async () => {
 test("hides button for Pro users", async () => {
   mockSubscription.isPro = true;
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
-  // Button should not exist for Pro users
   const buttons = screen.container.querySelectorAll("button");
 
   expect(buttons).toHaveLength(0);
@@ -83,7 +92,7 @@ test("hides button for Pro users", async () => {
 test("disables button when action is loading", async () => {
   mockSubscription.isActionLoading = true;
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
   await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
 });
@@ -91,7 +100,7 @@ test("disables button when action is loading", async () => {
 test("disables button when user is not signed in", async () => {
   mockAuthState.isSignedIn = false;
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
   await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
 });
@@ -100,7 +109,7 @@ test("calls createCheckout when clicked", async () => {
   // Return no URL to prevent window.location.href navigation which kills the Vitest iframe
   mockSubscription.createCheckout = vi.fn().mockResolvedValue({});
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
   const button = screen.getByRole("button", { name: /upgrade to pro/i });
   await button.click();
@@ -124,7 +133,7 @@ test("calls createCheckout when clicked", async () => {
 });
 
 test("renders custom text when provided", async () => {
-  const screen = await render(<UpgradeButton text="Go Pro Now" />);
+  const screen = await renderUpgradeButton(<UpgradeButton text="Go Pro Now" />);
 
   await expect.element(screen.getByRole("button", { name: /go pro now/i })).toBeInTheDocument();
 });
@@ -132,9 +141,16 @@ test("renders custom text when provided", async () => {
 test("hides button when Stripe is disabled", async () => {
   mockSubscription.isEnabled = false;
 
-  const screen = await render(<UpgradeButton />);
+  const screen = await renderUpgradeButton();
 
-  // Button should not exist when Stripe is disabled
+  const buttons = screen.container.querySelectorAll("button");
+
+  expect(buttons).toHaveLength(0);
+});
+
+test("hides button when the alerts-beta flag is disabled", async () => {
+  const screen = await renderUpgradeButton(<UpgradeButton />, {});
+
   const buttons = screen.container.querySelectorAll("button");
 
   expect(buttons).toHaveLength(0);
