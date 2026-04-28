@@ -256,6 +256,8 @@ Current client/build-time args in Dockerfile:
 - `VITE_APP_ENVIRONMENT`
 - `VITE_APP_RELEASE`
 - `VITE_ADSENSE_CLIENT_ID`
+- `VITE_STRIPE_ENABLED`
+- `VITE_STRIPE_PRICE_ID`
 
 ### Convex Environment Variables
 
