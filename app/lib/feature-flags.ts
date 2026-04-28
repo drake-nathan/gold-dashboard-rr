@@ -21,8 +21,3 @@ export const useFeatureFlag = (key: FeatureFlagKey): boolean => {
   const value = flags[key] ?? FEATURE_FLAG_DEFAULTS[key];
   return Boolean(value);
 };
-
-export const useFeatureFlagValue = (key: FeatureFlagKey): boolean | string => {
-  const flags = useContext(FeatureFlagContext);
-  return flags[key] ?? FEATURE_FLAG_DEFAULTS[key];
-};

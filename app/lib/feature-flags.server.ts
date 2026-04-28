@@ -38,7 +38,11 @@ export const evaluateFeatureFlags = async (
       }),
     );
     return Object.fromEntries(entries);
-  } catch {
+  } catch (error) {
+    // Silent fallback would hide real PostHog outages — log so this surfaces
+    // in server logs and PostHog's server-side error capture (entry.server.tsx
+    // wires up captureException via the global handler).
+    console.error("Feature flag evaluation failed; falling back to defaults", error);
     return buildDefaults();
   }
 };
