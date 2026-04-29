@@ -22,6 +22,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
         success: <CircleCheckIcon className="size-4" />,
         warning: <TriangleAlertIcon className="size-4" />,
       }}
+      // Lift above the floating FeedbackButton (bottom-right, h-12 + bottom-6 ≈ 72px).
+      offset={{ bottom: "88px", left: "16px", right: "16px", top: "16px" }}
       style={
         {
           "--border-radius": "var(--radius)",

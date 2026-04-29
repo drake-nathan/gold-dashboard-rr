@@ -26,6 +26,7 @@ import type * as costco_matching from "../costco/matching.js";
 import type * as costco_productState from "../costco/productState.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
+import type * as feedback from "../feedback.js";
 import type * as fmp from "../fmp.js";
 import type * as http from "../http.js";
 import type * as lib_authIdentity from "../lib/authIdentity.js";
@@ -68,6 +69,7 @@ declare const fullApi: ApiFromModules<{
   "costco/productState": typeof costco_productState;
   crons: typeof crons;
   dashboard: typeof dashboard;
+  feedback: typeof feedback;
   fmp: typeof fmp;
   http: typeof http;
   "lib/authIdentity": typeof lib_authIdentity;

@@ -22,6 +22,7 @@ import type { Route } from "./+types/root";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card";
 import { Toaster } from "./components/ui/sonner";
+import { FeedbackButton } from "./features/feedback/feedback-button";
 import { ObservabilitySync } from "./features/observability/observability-sync";
 import { VersionWatch } from "./features/observability/version-watch";
 import { type FeatureFlagValues } from "./lib/feature-flags";
@@ -171,6 +172,7 @@ const App = ({ loaderData }: Route.ComponentProps) => {
             <ObservabilitySync />
             <VersionWatch />
             <Outlet />
+            <FeedbackButton />
           </FeatureFlagProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>
