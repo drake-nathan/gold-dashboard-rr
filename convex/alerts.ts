@@ -67,20 +67,31 @@ export const getBrandOptions = query({
   },
 });
 
+// `null` is accepted on clearable fields so the form can use one payload shape
+// for both create and update. On create, null is treated as "not set". On update,
+// null means "clear this field"; undefined means "leave existing value alone".
+const clearableMetalType = v.optional(v.union(metalTypeValidator, v.null()));
+const clearableString = v.optional(v.union(v.string(), v.null()));
+const clearableNumber = v.optional(v.union(v.number(), v.null()));
+const clearableWeightGroup = v.optional(v.union(categoryWeightGroupValidator, v.null()));
+
+const coalesceProvided = <T>(value: null | T | undefined): T | undefined =>
+  value === null ? undefined : value;
+
 export const createAlert = mutation({
   args: {
-    aboveSpotThreshold: v.optional(v.number()),
-    brand: v.optional(v.string()),
+    aboveSpotThreshold: clearableNumber,
+    brand: clearableString,
     cooldownMinutes: v.optional(v.number()),
     enabled: v.optional(v.boolean()),
-    metalType: v.optional(metalTypeValidator),
+    metalType: clearableMetalType,
     name: v.string(),
-    productId: v.optional(v.string()),
-    profitThreshold: v.optional(v.number()),
+    productId: clearableString,
+    profitThreshold: clearableNumber,
     triggerOn: triggerOnValidator,
     type: alertTypeValidator,
-    weight: v.optional(v.number()),
-    weightGroup: v.optional(categoryWeightGroupValidator),
+    weight: clearableNumber,
+    weightGroup: clearableWeightGroup,
   },
   handler: async (ctx, args) => {
     const identity = await requireAuthIdentity(ctx);
@@ -95,7 +106,25 @@ export const createAlert = mutation({
       throw new Error("cooldownMinutes must be greater than 0");
     }
 
-    assertValidAlertConfiguration(args);
+    const aboveSpotThreshold = coalesceProvided(args.aboveSpotThreshold);
+    const brand = coalesceProvided(args.brand);
+    const metalType = coalesceProvided(args.metalType);
+    const productId = coalesceProvided(args.productId);
+    const profitThreshold = coalesceProvided(args.profitThreshold);
+    const weight = coalesceProvided(args.weight);
+    const weightGroup = coalesceProvided(args.weightGroup);
+
+    assertValidAlertConfiguration({
+      aboveSpotThreshold,
+      brand,
+      metalType,
+      productId,
+      profitThreshold,
+      triggerOn: args.triggerOn,
+      type: args.type,
+      weight,
+      weightGroup,
+    });
 
     const enabled = args.enabled ?? true;
     if (enabled && !alertEntitlements.canEnableAlerts) {
@@ -103,6 +132,7 @@ export const createAlert = mutation({
     }
 
     const now = Date.now();
+
     const alertId = await ctx.db.insert("alerts", {
       cooldownMinutes,
       createdAt: now,
@@ -113,17 +143,13 @@ export const createAlert = mutation({
       updatedAt: now,
       userId: identity.subject,
       userTokenIdentifier: identity.tokenIdentifier,
-      ...(args.aboveSpotThreshold !== undefined && {
-        aboveSpotThreshold: args.aboveSpotThreshold,
-      }),
-      ...(args.brand !== undefined && { brand: args.brand }),
-      ...(args.metalType !== undefined && { metalType: args.metalType }),
-      ...(args.productId !== undefined && { productId: args.productId }),
-      ...(args.profitThreshold !== undefined && {
-        profitThreshold: args.profitThreshold,
-      }),
-      ...(args.weight !== undefined && { weight: args.weight }),
-      ...(args.weightGroup !== undefined && { weightGroup: args.weightGroup }),
+      ...(aboveSpotThreshold !== undefined && { aboveSpotThreshold }),
+      ...(brand !== undefined && { brand }),
+      ...(metalType !== undefined && { metalType }),
+      ...(productId !== undefined && { productId }),
+      ...(profitThreshold !== undefined && { profitThreshold }),
+      ...(weight !== undefined && { weight }),
+      ...(weightGroup !== undefined && { weightGroup }),
     });
 
     return { alertId, success: true };
@@ -132,19 +158,19 @@ export const createAlert = mutation({
 
 export const updateAlert = mutation({
   args: {
-    aboveSpotThreshold: v.optional(v.number()),
+    aboveSpotThreshold: clearableNumber,
     alertId: v.id("alerts"),
-    brand: v.optional(v.string()),
+    brand: clearableString,
     cooldownMinutes: v.optional(v.number()),
     enabled: v.optional(v.boolean()),
-    metalType: v.optional(metalTypeValidator),
+    metalType: clearableMetalType,
     name: v.optional(v.string()),
-    productId: v.optional(v.string()),
-    profitThreshold: v.optional(v.number()),
+    productId: clearableString,
+    profitThreshold: clearableNumber,
     triggerOn: v.optional(triggerOnValidator),
     type: v.optional(alertTypeValidator),
-    weight: v.optional(v.number()),
-    weightGroup: v.optional(categoryWeightGroupValidator),
+    weight: clearableNumber,
+    weightGroup: clearableWeightGroup,
   },
   handler: async (ctx, args) => {
     const identity = await requireAuthIdentity(ctx);
@@ -174,19 +200,42 @@ export const updateAlert = mutation({
       args.weight !== undefined ||
       args.weightGroup !== undefined;
 
+    // Field merge contract: callers that omit a field get the existing value (when
+    // type is unchanged); callers that pass null clear it. Switching alert types
+    // drops fields that don't apply to the new type.
     let nextConfiguration: AlertConfiguration | null = null;
     if (hasConfigurationUpdate) {
       const nextType = args.type ?? alert.type;
+      const sameType = nextType === alert.type;
+      const resolve = <T>(
+        arg: null | T | undefined,
+        existing: T | undefined,
+        allowedForType: boolean,
+      ): T | undefined => {
+        if (!allowedForType) return undefined;
+        if (arg === null) return undefined;
+        if (arg === undefined) return sameType ? existing : undefined;
+        return arg;
+      };
+
       nextConfiguration = {
-        aboveSpotThreshold: nextType === "threshold" ? args.aboveSpotThreshold : undefined,
-        brand: nextType === "category" ? args.brand : undefined,
-        metalType: nextType === "category" ? args.metalType : undefined,
-        productId: nextType === "sku" ? args.productId : undefined,
-        profitThreshold: nextType === "threshold" ? args.profitThreshold : undefined,
+        aboveSpotThreshold: resolve(
+          args.aboveSpotThreshold,
+          alert.aboveSpotThreshold,
+          nextType === "threshold",
+        ),
+        brand: resolve(args.brand, alert.brand, nextType === "category"),
+        metalType: resolve(args.metalType, alert.metalType, nextType !== "sku"),
+        productId: resolve(args.productId, alert.productId, nextType === "sku"),
+        profitThreshold: resolve(
+          args.profitThreshold,
+          alert.profitThreshold,
+          nextType === "threshold",
+        ),
         triggerOn: args.triggerOn ?? alert.triggerOn,
         type: nextType,
-        weight: nextType === "category" ? args.weight : undefined,
-        weightGroup: nextType === "category" ? args.weightGroup : undefined,
+        weight: resolve(args.weight, alert.weight, nextType === "category"),
+        weightGroup: resolve(args.weightGroup, alert.weightGroup, nextType === "category"),
       };
       assertValidAlertConfiguration(nextConfiguration);
     }

@@ -3,6 +3,7 @@ import { type GenericActionCtx, type GenericDataModel, httpRouter } from "convex
 
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { type UnsubscribeKind, unsubscribePayloadFor } from "./alerts/core";
 
 const http = httpRouter();
 type StripeWebhookCtx = Pick<GenericActionCtx<GenericDataModel>, "runMutation" | "runQuery">;
@@ -46,10 +47,7 @@ const applySubscriptionStatusToAlerts = async (
 
 const UNSUBSCRIBE_TOKEN_SEPARATOR = ".";
 
-/**
- * Create an HMAC-SHA256 signature for the given data using the unsubscribe secret.
- */
-const signUnsubscribeToken = async (userId: string, secret: string): Promise<string> => {
+const computeSignatureHex = async (payload: string, secret: string): Promise<string> => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -58,17 +56,20 @@ const signUnsubscribeToken = async (userId: string, secret: string): Promise<str
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(userId));
-  const signatureHex = [...new Uint8Array(signature)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return `${userId}${UNSUBSCRIBE_TOKEN_SEPARATOR}${signatureHex}`;
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return [...new Uint8Array(signature)].map((b) => b.toString(16).padStart(2, "0")).join("");
 };
 
 /**
- * Verify an unsubscribe token and return the userId if valid.
+ * Verify an unsubscribe token under the given kind. Tokens are bound to their kind
+ * via the signed payload (see unsubscribePayloadFor), so an alerts token cannot be
+ * promoted to digest by appending `&kind=digest`, and vice versa.
  */
-const verifyUnsubscribeToken = async (token: string, secret: string): Promise<null | string> => {
+const verifyUnsubscribeToken = async (
+  token: string,
+  kind: UnsubscribeKind,
+  secret: string,
+): Promise<null | string> => {
   const separatorIndex = token.indexOf(UNSUBSCRIBE_TOKEN_SEPARATOR);
   if (separatorIndex === -1) {
     return null;
@@ -81,10 +82,7 @@ const verifyUnsubscribeToken = async (token: string, secret: string): Promise<nu
     return null;
   }
 
-  const expectedToken = await signUnsubscribeToken(userId, secret);
-  const expectedSignature = expectedToken.slice(
-    expectedToken.indexOf(UNSUBSCRIBE_TOKEN_SEPARATOR) + 1,
-  );
+  const expectedSignature = await computeSignatureHex(unsubscribePayloadFor(userId, kind), secret);
 
   // Constant-time comparison (bitwise ops intentional for security)
   if (providedSignature.length !== expectedSignature.length) {
@@ -115,19 +113,53 @@ const unsubscribeHandler = httpAction(async (ctx, request) => {
     return new Response("Missing token", { status: 400 });
   }
 
-  const userId = await verifyUnsubscribeToken(token, secret);
+  const kind: UnsubscribeKind = url.searchParams.get("kind") === "digest" ? "digest" : "alerts";
+
+  const userId = await verifyUnsubscribeToken(token, kind, secret);
   if (!userId) {
     return new Response("Invalid or expired token", { status: 403 });
   }
 
-  // Handle both POST (RFC 8058 one-click) and GET (user clicking link)
-  if (request.method === "POST" || request.method === "GET") {
-    const result = await ctx.runMutation(internal.alerts.disableAllAlertsForUser, { userId });
+  if (request.method !== "POST" && request.method !== "GET") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  if (kind === "digest") {
+    const result = await ctx.runMutation(internal.userSettings.disableDigestForUser, {
+      userId,
+    });
 
     if (request.method === "GET") {
       const siteUrl = process.env.SITE_URL ?? "";
       const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : "";
+      const message = result.changed
+        ? "You will no longer receive the market digest."
+        : "The market digest was already disabled for your account.";
       const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Digest Unsubscribed</title>
+<style>body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fafafa;color:#333}
+.card{background:#fff;border-radius:8px;padding:2rem;max-width:400px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+a{color:#b8860b;text-decoration:none}</style></head>
+<body><div class="card">
+<h1>Digest Disabled</h1>
+<p>${message}</p>
+${alertsUrl ? `<p><a href="${alertsUrl}">Manage notifications</a></p>` : ""}
+</div></body></html>`;
+
+      return new Response(html, {
+        headers: { "Content-Type": "text/html" },
+        status: 200,
+      });
+    }
+    return new Response("OK", { status: 200 });
+  }
+
+  const result = await ctx.runMutation(internal.alerts.disableAllAlertsForUser, { userId });
+
+  if (request.method === "GET") {
+    const siteUrl = process.env.SITE_URL ?? "";
+    const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : "";
+    const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Unsubscribed</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fafafa;color:#333}
 .card{background:#fff;border-radius:8px;padding:2rem;max-width:400px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.1)}
@@ -139,17 +171,12 @@ a{color:#b8860b;text-decoration:none}</style></head>
 ${alertsUrl ? `<p><a href="${alertsUrl}">Manage your alerts</a></p>` : ""}
 </div></body></html>`;
 
-      return new Response(html, {
-        headers: { "Content-Type": "text/html" },
-        status: 200,
-      });
-    }
-
-    // POST response (RFC 8058)
-    return new Response("OK", { status: 200 });
+    return new Response(html, {
+      headers: { "Content-Type": "text/html" },
+      status: 200,
+    });
   }
-
-  return new Response("Method not allowed", { status: 405 });
+  return new Response("OK", { status: 200 });
 });
 
 http.route({

@@ -157,6 +157,32 @@ export const AlertFormFields = ({
 
         <TabsContent className="space-y-4" value="threshold">
           <div className="space-y-1.5">
+            <Label>Metal</Label>
+            <ToggleGroup
+              className="w-full"
+              onValueChange={(groupValue) => {
+                const nextValue = groupValue[0];
+                if (!nextValue) return;
+                onChange({
+                  thresholdMetal: nextValue === "any" ? "" : (nextValue as "gold" | "silver"),
+                });
+              }}
+              value={[values.thresholdMetal || "any"]}
+              variant="outline"
+            >
+              <ToggleGroupItem aria-label="Gold" className="flex-1" value="gold">
+                Gold
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Silver" className="flex-1" value="silver">
+                Silver
+              </ToggleGroupItem>
+              <ToggleGroupItem aria-label="Both metals" className="flex-1" value="any">
+                Both
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="alert-above-spot">Max Markup (%)</Label>
             <Input
               aria-invalid={

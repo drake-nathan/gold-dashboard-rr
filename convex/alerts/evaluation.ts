@@ -107,12 +107,12 @@ export const evaluateAlertsForProductsHelper = async (
 
   const latestGoldSpot = await ctx.db
     .query("collectPurePrices")
-    .withIndex("by_metal", (q) => q.eq("metalType", "gold"))
+    .withIndex("by_metal_and_time", (q) => q.eq("metalType", "gold"))
     .order("desc")
     .first();
   const latestSilverSpot = await ctx.db
     .query("collectPurePrices")
-    .withIndex("by_metal", (q) => q.eq("metalType", "silver"))
+    .withIndex("by_metal_and_time", (q) => q.eq("metalType", "silver"))
     .order("desc")
     .first();
 
@@ -156,6 +156,8 @@ export const evaluateAlertsForProductsHelper = async (
       candidateProducts = matchedProduct ? [matchedProduct] : [];
     } else if (alert.type === "category") {
       candidateProducts = products.filter((product) => matchesCategoryFilters(alert, product));
+    } else if (alert.metalType) {
+      candidateProducts = products.filter((product) => product.metalType === alert.metalType);
     }
 
     const triggeredProducts: TriggeredAlertProduct[] = [];

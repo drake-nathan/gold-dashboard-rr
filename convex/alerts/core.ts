@@ -450,7 +450,7 @@ export const formatAlertDigest = (
   const pluralizedProducts = totalProducts === 1 ? "item" : "items";
   const subject = `Dashboard.Gold: ${totalProducts} ${pluralizedProducts} triggered`;
   const manageAlertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
-  const dashboardUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/dashboard` : undefined;
+  const dashboardUrl = siteUrl;
 
   const textLines: string[] = [
     "Dashboard.Gold Alert Digest",
@@ -606,13 +606,18 @@ export const resolveAlertRecipientEmail = async (
   return email;
 };
 
-export const buildUnsubscribeUrl = async (userId: string): Promise<null | string> => {
-  const secret = process.env.UNSUBSCRIBE_SECRET;
-  const convexUrl = process.env.CONVEX_SITE_URL;
-  if (!secret || !convexUrl) {
-    return null;
-  }
+export type UnsubscribeKind = "alerts" | "digest";
 
+/**
+ * Compose the HMAC-signed payload for an unsubscribe token.
+ * Legacy "alerts" tokens sign userId only — keep that shape so unsubscribe links
+ * already in inboxes still verify. Other kinds bind kind into the payload so the
+ * `&kind=` query parameter cannot be swapped to repurpose the token.
+ */
+export const unsubscribePayloadFor = (userId: string, kind: UnsubscribeKind): string =>
+  kind === "alerts" ? userId : `${kind}|${userId}`;
+
+const signUnsubscribePayload = async (payload: string, secret: string): Promise<string> => {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -621,12 +626,24 @@ export const buildUnsubscribeUrl = async (userId: string): Promise<null | string
     false,
     ["sign"],
   );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(userId));
-  const signatureHex = [...new Uint8Array(signature)]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return [...new Uint8Array(signature)].map((b) => b.toString(16).padStart(2, "0")).join("");
+};
+
+export const buildUnsubscribeUrl = async (
+  userId: string,
+  kind: UnsubscribeKind = "alerts",
+): Promise<null | string> => {
+  const secret = process.env.UNSUBSCRIBE_SECRET;
+  const convexUrl = process.env.CONVEX_SITE_URL;
+  if (!secret || !convexUrl) {
+    return null;
+  }
+
+  const signatureHex = await signUnsubscribePayload(unsubscribePayloadFor(userId, kind), secret);
   const token = `${userId}${unsubscribeTokenSeparator}${signatureHex}`;
-  return `${convexUrl.replace(/\/+$/, "")}/unsubscribe?token=${encodeURIComponent(token)}`;
+  const base = `${convexUrl.replace(/\/+$/, "")}/unsubscribe?token=${encodeURIComponent(token)}`;
+  return kind === "alerts" ? base : `${base}&kind=${kind}`;
 };
 
 export const sendAlertEmail = async (

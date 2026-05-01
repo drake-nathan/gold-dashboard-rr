@@ -44,6 +44,13 @@ vi.mock("convex/_generated/api", () => ({
       getProductOptions: "getProductOptions",
       updateAlert: "updateAlert",
     },
+    digests: {
+      sendPreviewDigest: "sendPreviewDigest",
+    },
+    userSettings: {
+      getSettings: "getSettings",
+      updateDigestPreferences: "updateDigestPreferences",
+    },
   },
 }));
 
@@ -62,6 +69,7 @@ vi.mock("@clerk/react-router", () => ({
 }));
 
 vi.mock("convex/react", () => ({
+  useAction: () => vi.fn(),
   useMutation: (ref: string) => {
     if (ref === "createAlert") return createAlertMock;
     if (ref === "updateAlert") return updateAlertMock;
@@ -85,6 +93,10 @@ vi.mock("convex/react", () => ({
 
     if (ref === "getProductOptions") {
       return mockProductOptions;
+    }
+
+    if (ref === "getSettings") {
+      return null;
     }
 
     return undefined;
@@ -178,6 +190,7 @@ test("prefills the form from search params and creates a threshold alert when si
     aboveSpotThreshold: 3,
     cooldownMinutes: 60,
     enabled: true,
+    metalType: null,
     name: "Deal Watcher",
     triggerOn: "threshold_met",
     type: "threshold",

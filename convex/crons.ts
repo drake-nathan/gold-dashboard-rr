@@ -80,6 +80,10 @@ if (ENABLE_CRONS) {
     internal.alerts.processPendingAlertBatches,
     {},
   );
+
+  // Send opt-in market digest emails once per day at 15:00 UTC (~10 AM ET / 7 AM PT).
+  // Daily subscribers receive every run; weekly subscribers only on their chosen weekday.
+  crons.cron("send-market-digests", "0 15 * * *", internal.digests.sendMarketDigests, {});
 }
 
 export default crons;

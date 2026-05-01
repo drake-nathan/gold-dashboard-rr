@@ -7,9 +7,20 @@
 import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 
-import { api } from "./_generated/api";
+import stripeComponentSchema from "../node_modules/@convex-dev/stripe/dist/component/schema.js";
+import { api, components, internal } from "./_generated/api";
 import schema from "./schema";
 import { modules } from "./test.setup";
+
+const stripeComponentModules = import.meta.glob(
+  "../node_modules/@convex-dev/stripe/dist/component/**/*.js",
+);
+
+const withStripeComponent = () => {
+  const t = convexTest(schema, modules);
+  t.registerComponent("stripe", stripeComponentSchema, stripeComponentModules);
+  return t;
+};
 
 // ============================================================================
 // getSettings Tests
@@ -253,4 +264,116 @@ test("markMigrationComplete updates existing settings", async () => {
     lastSelectedCardId: "my-card",
     localStorageMigrated: true,
   });
+});
+
+// ============================================================================
+// Digest Preferences Tests
+// ============================================================================
+
+const setupProUser = async (t: ReturnType<typeof withStripeComponent>, subject: string) => {
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Date.now() + 86_400_000,
+    metadata: { userId: subject },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: `cus_${subject}`,
+    stripeSubscriptionId: `sub_${subject}`,
+  });
+};
+
+test("updateDigestPreferences requires Pro subscription to enable", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({ name: "Free User", subject: "free_user_1" });
+
+  await expect(
+    asUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "daily" }),
+  ).rejects.toThrow("Active Pro subscription required");
+});
+
+test("updateDigestPreferences allows turning off without subscription", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({ name: "Free User", subject: "free_user_2" });
+
+  const result = await asUser.mutation(api.userSettings.updateDigestPreferences, {
+    frequency: "off",
+  });
+
+  expect(result).toStrictEqual({ success: true });
+  const settings = await asUser.query(api.userSettings.getSettings, {});
+  expect(settings?.digestFrequency).toBe("off");
+});
+
+test("updateDigestPreferences persists daily/weekly for Pro user and exposes via getSettings", async () => {
+  const t = withStripeComponent();
+  await setupProUser(t, "pro_digest_1");
+  const asUser = t.withIdentity({ name: "Pro User", subject: "pro_digest_1" });
+
+  await asUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "weekly" });
+
+  const settings = await asUser.query(api.userSettings.getSettings, {});
+  expect(settings).toMatchObject({
+    digestFrequency: "weekly",
+    digestWeeklyDayOfWeek: 1,
+  });
+});
+
+test("listDigestSubscribers returns only matching frequency", async () => {
+  const t = withStripeComponent();
+  await setupProUser(t, "pro_digest_daily");
+  await setupProUser(t, "pro_digest_weekly");
+
+  const asDailyUser = t.withIdentity({ name: "Daily", subject: "pro_digest_daily" });
+  const asWeeklyUser = t.withIdentity({ name: "Weekly", subject: "pro_digest_weekly" });
+  await asDailyUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "daily" });
+  await asWeeklyUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "weekly" });
+
+  const dailySubs = await t.query(internal.userSettings.listDigestSubscribers, {
+    frequency: "daily",
+  });
+  const weeklySubs = await t.query(internal.userSettings.listDigestSubscribers, {
+    frequency: "weekly",
+  });
+
+  expect(dailySubs).toHaveLength(1);
+  expect(dailySubs[0].userId).toBe("pro_digest_daily");
+  expect(weeklySubs).toHaveLength(1);
+  expect(weeklySubs[0].userId).toBe("pro_digest_weekly");
+});
+
+test("disableDigestForUser flips an enabled subscription to off", async () => {
+  const t = withStripeComponent();
+  await setupProUser(t, "pro_digest_unsub");
+  const asUser = t.withIdentity({ name: "Unsub", subject: "pro_digest_unsub" });
+  await asUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "daily" });
+
+  const result = await t.mutation(internal.userSettings.disableDigestForUser, {
+    userId: "pro_digest_unsub",
+  });
+
+  expect(result).toStrictEqual({ changed: true, success: true });
+  const settings = await asUser.query(api.userSettings.getSettings, {});
+  expect(settings?.digestFrequency).toBe("off");
+});
+
+test("markDigestSent updates digestLastSentAt", async () => {
+  const t = withStripeComponent();
+  await setupProUser(t, "pro_digest_marked");
+  const asUser = t.withIdentity({
+    name: "Marked",
+    subject: "pro_digest_marked",
+    tokenIdentifier: "pro_digest_marked",
+  });
+  await asUser.mutation(api.userSettings.updateDigestPreferences, { frequency: "daily" });
+
+  const sentAt = Date.now();
+  const result = await t.mutation(internal.userSettings.markDigestSent, {
+    sentAt,
+    userTokenIdentifier: "pro_digest_marked",
+  });
+
+  expect(result).toStrictEqual({ success: true });
+  const settings = await asUser.query(api.userSettings.getSettings, {});
+  expect(settings?.digestLastSentAt).toBe(sentAt);
 });

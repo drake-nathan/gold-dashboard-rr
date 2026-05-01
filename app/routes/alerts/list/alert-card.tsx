@@ -38,6 +38,10 @@ const buildDescription = (alert: Doc<"alerts">): string => {
     }
   }
 
+  if (alert.type === "threshold" && alert.metalType) {
+    parts.push(alert.metalType.charAt(0).toUpperCase() + alert.metalType.slice(1));
+  }
+
   if (alert.type !== "threshold") {
     parts.push(alert.triggerOn === "in_stock" ? "Back in stock" : "Price drop");
   }

@@ -409,7 +409,7 @@ test("alerts CRUD lifecycle persists changes for the owning user", async () => {
   await expect(asUser.query(api.alerts.getAlerts, {})).resolves.toStrictEqual([]);
 });
 
-test("updateAlert clears omitted category filters when saving an edited category alert", async () => {
+test("updateAlert clears category filters when explicit null is supplied", async () => {
   const t = withStripeComponent();
   const asUser = t.withIdentity({ name: "Category User", subject: "user_category_edit" });
 
@@ -434,13 +434,17 @@ test("updateAlert clears omitted category filters when saving an edited category
     weightGroup: "100g",
   });
 
+  // Mirrors what buildAlertPayload sends: explicit null on every clearable
+  // field for the alert's type. Omitted fields would be preserved instead.
   await asUser.mutation(api.alerts.updateAlert, {
     alertId: created.alertId,
+    brand: null,
     cooldownMinutes: 90,
     metalType: "gold",
     name: "Metal-only category alert",
     triggerOn: "in_stock",
     type: "category",
+    weightGroup: null,
   });
 
   const alertsAfterUpdate = await asUser.query(api.alerts.getAlerts, {});
@@ -973,6 +977,140 @@ test("evaluateAlertsForProducts triggers threshold alerts when spread threshold 
 
     expect(history).toHaveLength(1);
     expect(history[0].products[0].reason).toContain("above spot");
+  });
+});
+
+test("updateAlert merges threshold config: partial metalType update preserves aboveSpotThreshold", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    name: "Partial Update User",
+    subject: "user_partial_1",
+    tokenIdentifier: "clerk|partial-1",
+  });
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: Date.now() + 86_400_000,
+    metadata: { userId: "clerk|partial-1" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_partial_1",
+    stripeSubscriptionId: "sub_partial_1",
+  });
+
+  const created = await asUser.mutation(api.alerts.createAlert, {
+    aboveSpotThreshold: 2,
+    cooldownMinutes: 60,
+    name: "Threshold w/ metal",
+    triggerOn: "threshold_met",
+    type: "threshold",
+  });
+
+  // Pure partial update: only metalType supplied. Threshold field must survive.
+  await asUser.mutation(api.alerts.updateAlert, {
+    alertId: created.alertId,
+    metalType: "gold",
+  });
+
+  const alerts = await asUser.query(api.alerts.getAlerts, {});
+  expect(alerts).toHaveLength(1);
+  expect(alerts[0]).toMatchObject({
+    aboveSpotThreshold: 2,
+    metalType: "gold",
+    type: "threshold",
+  });
+
+  // Explicit null clears the field; aboveSpotThreshold is still preserved.
+  await asUser.mutation(api.alerts.updateAlert, {
+    alertId: created.alertId,
+    metalType: null,
+  });
+
+  const cleared = await asUser.query(api.alerts.getAlerts, {});
+  expect(cleared[0].metalType).toBeUndefined();
+  expect(cleared[0].aboveSpotThreshold).toBe(2);
+});
+
+test("evaluateAlertsForProducts threshold alert respects metalType filter", async () => {
+  const t = withStripeComponent();
+  const asUser = t.withIdentity({
+    name: "Threshold Metal User",
+    subject: "user_threshold_metal_1",
+  });
+  const evaluatedAt = Date.now();
+
+  await t.mutation(components.stripe.private.handleSubscriptionCreated, {
+    cancelAtPeriodEnd: false,
+    currentPeriodEnd: evaluatedAt + 86_400_000,
+    metadata: { userId: "user_threshold_metal_1" },
+    priceId: "price_pro_monthly",
+    quantity: 1,
+    status: "active",
+    stripeCustomerId: "cus_threshold_metal_1",
+    stripeSubscriptionId: "sub_threshold_metal_1",
+  });
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("collectPurePrices", {
+      askPrice: null,
+      bidPrice: 100,
+      isMock: false,
+      metalType: "gold",
+      spotPrice: 100,
+      timestamp: evaluatedAt,
+    });
+    await ctx.db.insert("collectPurePrices", {
+      askPrice: null,
+      bidPrice: 30,
+      isMock: false,
+      metalType: "silver",
+      spotPrice: 30,
+      timestamp: evaluatedAt,
+    });
+  });
+
+  await insertCostcoProduct(t, {
+    currentPrice: 101,
+    currentPricePerOunce: 101,
+    metalType: "gold",
+    name: "Gold Bar",
+    productId: "sku_gold_threshold",
+  });
+  await insertCostcoProduct(t, {
+    currentPrice: 30.3,
+    currentPricePerOunce: 30.3,
+    metalType: "silver",
+    name: "Silver Coin",
+    productId: "sku_silver_threshold",
+  });
+
+  await asUser.mutation(api.alerts.createAlert, {
+    aboveSpotThreshold: 5,
+    cooldownMinutes: 60,
+    metalType: "gold",
+    name: "Gold-only markup",
+    triggerOn: "threshold_met",
+    type: "threshold",
+  });
+
+  const evaluation = await t.mutation(internal.alerts.evaluateAlertsForProducts, {
+    evaluatedAt,
+    productIds: ["sku_gold_threshold", "sku_silver_threshold"],
+    source: "threshold_metal_test",
+  });
+
+  expect(evaluation.triggeredAlerts).toBe(1);
+
+  await t.run(async (ctx) => {
+    const history = await ctx.db
+      .query("alertHistory")
+      .withIndex("by_user", (q) => q.eq("userId", "user_threshold_metal_1"))
+      .collect();
+
+    expect(history).toHaveLength(1);
+    expect(history[0].products).toHaveLength(1);
+    expect(history[0].products[0].productId).toBe("sku_gold_threshold");
   });
 });
 

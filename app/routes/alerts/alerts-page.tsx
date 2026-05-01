@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { CreateAlertDialog } from "./dialogs/create-alert-dialog";
 import { EditAlertDialog } from "./dialogs/edit-alert-dialog";
+import { DigestSettingsCard } from "./digest/digest-settings-card";
 import { useAlertsPage } from "./hooks/use-alerts-page";
 import { AlertCard } from "./list/alert-card";
 
@@ -85,6 +86,10 @@ const SignedInAlertsPage = () => {
             <UpgradeButton size="sm" />
           </div>
         ) : null}
+
+        <div className="mb-6">
+          <DigestSettingsCard canSendAlerts={alertEntitlements.canSendAlerts} />
+        </div>
 
         <div>
           <div className="mb-4 flex items-center justify-between">

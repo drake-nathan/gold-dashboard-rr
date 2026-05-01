@@ -28,6 +28,7 @@ export interface AlertFormValues {
   name: string;
   skuProductId: string;
   skuTriggerOn: "in_stock";
+  thresholdMetal: "" | "gold" | "silver";
 }
 
 export const defaultFormValues: AlertFormValues = {
@@ -41,13 +42,14 @@ export const defaultFormValues: AlertFormValues = {
   name: "",
   skuProductId: "",
   skuTriggerOn: "in_stock",
+  thresholdMetal: "",
 };
 
 export const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues => ({
   aboveSpotThreshold:
     alert.aboveSpotThreshold !== undefined ? String(alert.aboveSpotThreshold) : "",
   brand: alert.brand ?? "",
-  categoryMetal: alert.metalType ?? "",
+  categoryMetal: alert.type === "category" ? (alert.metalType ?? "") : "",
   categoryWeightGroup: inferCategoryWeightGroup({
     weight: alert.weight,
     weightGroup: alert.weightGroup,
@@ -58,6 +60,7 @@ export const alertFormValuesFromDoc = (alert: Doc<"alerts">): AlertFormValues =>
   name: alert.name,
   skuProductId: alert.productId ?? "",
   skuTriggerOn: "in_stock",
+  thresholdMetal: alert.type === "threshold" ? (alert.metalType ?? "") : "",
 });
 
 export const getFormValidationError = (values: AlertFormValues): boolean => {
@@ -80,17 +83,19 @@ export const getValidationErrorMessage = (values: AlertFormValues): null | strin
 export const buildAlertPayload = (values: AlertFormValues, productOptions?: ProductOption[]) => {
   let triggerOn: TriggerOn = "threshold_met";
   const name = values.name.trim() || generateAlertName(values, productOptions);
+  // Explicit null on clearable fields tells the Convex update mutation to clear
+  // them; undefined would mean "leave existing value alone" after the merge fix.
   const payload: {
-    aboveSpotThreshold?: number;
-    brand?: string;
+    aboveSpotThreshold?: null | number;
+    brand?: null | string;
     cooldownMinutes: number;
     enabled: boolean;
-    metalType?: "gold" | "silver";
+    metalType?: "gold" | "silver" | null;
     name: string;
-    productId?: string;
+    productId?: null | string;
     triggerOn: TriggerOn;
     type: AlertFormType;
-    weightGroup?: StoredCategoryWeightGroup;
+    weightGroup?: null | StoredCategoryWeightGroup;
   } = {
     cooldownMinutes: values.cooldownMinutes,
     enabled: values.enabled,
@@ -108,27 +113,17 @@ export const buildAlertPayload = (values: AlertFormValues, productOptions?: Prod
   if (values.formType === "category") {
     triggerOn = "in_stock";
     payload.triggerOn = triggerOn;
-
-    if (values.categoryMetal) {
-      payload.metalType = values.categoryMetal;
-    }
-
-    if (values.categoryWeightGroup !== "any") {
-      payload.weightGroup = values.categoryWeightGroup;
-    }
-
+    payload.metalType = values.categoryMetal || null;
+    payload.weightGroup = values.categoryWeightGroup === "any" ? null : values.categoryWeightGroup;
     const trimmedBrand = values.brand.trim();
-    if (trimmedBrand) {
-      payload.brand = trimmedBrand;
-    }
+    payload.brand = trimmedBrand || null;
   }
 
   if (values.formType === "threshold") {
     const parsedAboveSpot = Number.parseFloat(values.aboveSpotThreshold);
-
-    if (values.aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot)) {
-      payload.aboveSpotThreshold = parsedAboveSpot;
-    }
+    payload.aboveSpotThreshold =
+      values.aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot) ? parsedAboveSpot : null;
+    payload.metalType = values.thresholdMetal || null;
   }
 
   return payload;
@@ -140,7 +135,11 @@ export const generateAlertName = (
 ): string => {
   if (values.formType === "threshold") {
     const pct = values.aboveSpotThreshold.trim();
-    return pct ? `Markup \u2264 ${pct}%` : "Markup alert";
+    const metal = values.thresholdMetal
+      ? values.thresholdMetal.charAt(0).toUpperCase() + values.thresholdMetal.slice(1)
+      : "";
+    const base = pct ? `Markup \u2264 ${pct}%` : "Markup alert";
+    return metal ? `${metal} ${base.toLowerCase()}` : base;
   }
 
   if (values.formType === "sku") {

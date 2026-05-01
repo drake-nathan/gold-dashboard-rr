@@ -308,10 +308,15 @@ export default defineSchema({
   userSettings: defineTable({
     costcoMembershipEnabled: v.boolean(), // Executive membership toggle
     createdAt: v.number(),
+    digestFrequency: v.optional(v.union(v.literal("off"), v.literal("daily"), v.literal("weekly"))),
+    digestLastSentAt: v.optional(v.number()),
+    digestWeeklyDayOfWeek: v.optional(v.number()), // 0 = Sunday, 1 = Monday, ...
     lastSelectedCardId: v.optional(v.string()), // Last selected credit card
     localStorageMigrated: v.boolean(), // Track if migration from localStorage is complete
     updatedAt: v.number(),
     userId: v.string(), // Clerk subject retained for reference
     userTokenIdentifier: v.string(), // Canonical Convex auth identity key
-  }).index("by_user_token_identifier", ["userTokenIdentifier"]),
+  })
+    .index("by_user_token_identifier", ["userTokenIdentifier"])
+    .index("by_digest_frequency", ["digestFrequency"]),
 });

@@ -96,7 +96,7 @@ test("category payload includes metal, grouped weight, and brand when set", () =
   });
 });
 
-test("category payload omits empty optional fields", () => {
+test("category payload sets metalType and clears unused optional fields with null", () => {
   const payload = buildAlertPayload(
     withDefaults({
       categoryMetal: "silver",
@@ -106,11 +106,13 @@ test("category payload omits empty optional fields", () => {
   );
 
   expect(payload.metalType).toBe("silver");
-  expect(payload.weightGroup).toBeUndefined();
-  expect(payload.brand).toBeUndefined();
+  // null tells the Convex update mutation to clear the field on the alert,
+  // distinct from undefined (which would preserve the existing value).
+  expect(payload.weightGroup).toBeNull();
+  expect(payload.brand).toBeNull();
 });
 
-test("threshold payload ignores non-numeric strings", () => {
+test("threshold payload clears aboveSpotThreshold for non-numeric strings", () => {
   const payload = buildAlertPayload(
     withDefaults({
       aboveSpotThreshold: "abc",
@@ -119,5 +121,27 @@ test("threshold payload ignores non-numeric strings", () => {
     }),
   );
 
-  expect(payload.aboveSpotThreshold).toBeUndefined();
+  expect(payload.aboveSpotThreshold).toBeNull();
+});
+
+test("threshold payload sends metalType when set, null when both metals selected", () => {
+  const goldOnly = buildAlertPayload(
+    withDefaults({
+      aboveSpotThreshold: "2",
+      formType: "threshold",
+      name: "Gold deals",
+      thresholdMetal: "gold",
+    }),
+  );
+  expect(goldOnly.metalType).toBe("gold");
+
+  const both = buildAlertPayload(
+    withDefaults({
+      aboveSpotThreshold: "2",
+      formType: "threshold",
+      name: "All deals",
+      thresholdMetal: "",
+    }),
+  );
+  expect(both.metalType).toBeNull();
 });
