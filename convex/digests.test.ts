@@ -59,7 +59,7 @@ const outOfStockProduct = {
   productId: "gold-2",
 };
 
-test("buildDigestRowsFromProducts skips out-of-stock and computes markup with matched bid first", () => {
+test("buildDigestRowsFromProducts skips out-of-stock and derives per-oz bid from total bid", () => {
   const rows = buildDigestRowsFromProducts(
     [goldProduct, silverProduct, outOfStockProduct],
     new Map([["pure-gold-1", 100]]),
@@ -67,6 +67,7 @@ test("buildDigestRowsFromProducts skips out-of-stock and computes markup with ma
       ["gold", 99],
       ["silver", 30],
     ]),
+    { gold: 100, silver: 33 },
   );
 
   const ids = rows.map((row) => row.productName);
@@ -78,10 +79,33 @@ test("buildDigestRowsFromProducts skips out-of-stock and computes markup with ma
 
   const silver = rows.find((row) => row.metalType === "silver");
   expect(silver?.bidPerOunce).toBe(30);
-  expect(silver?.markupPercent).toBeCloseTo(((35 - 30) / 30) * 100);
+  expect(silver?.markupPercent).toBeCloseTo(((35 - 33) / 33) * 100);
 });
 
-test("buildDigestRowsFromProducts sorts gold before silver and best markup first within metal", () => {
+test("buildDigestRowsFromProducts derives per-oz bid for non-1oz items via costco weight", () => {
+  const tenGramProduct = {
+    ...baseProduct,
+    currentPrice: 1549.99,
+    currentPricePerOunce: 4821.01,
+    metalType: "gold" as const,
+    name: "10 Gram Gold Bar",
+    productId: "gold-10g",
+    pureProductId: "pure-10g",
+  };
+  const rows = buildDigestRowsFromProducts(
+    [tenGramProduct],
+    // Total bid for the 10g item is 1488.70
+    new Map([["pure-10g", 1488.7]]),
+    new Map([["gold", 4500]]),
+    { gold: 4627, silver: null },
+  );
+
+  const tenG = rows[0];
+  expect(tenG.bidPerOunce).toBeCloseTo(4630.05, 0);
+});
+
+test("buildDigestRowsFromProducts sorts gold before silver and lowest spread vs bid first", () => {
+  // Same bid for all gold rows; cheaper costco price → smaller spread vs bid → ranked first.
   const cheaperGold = {
     ...goldProduct,
     currentPrice: 101,
@@ -97,9 +121,27 @@ test("buildDigestRowsFromProducts sorts gold before silver and best markup first
       ["gold", 99],
       ["silver", 30],
     ]),
+    { gold: 100, silver: 33 },
   );
 
   expect(rows.map((row) => row.productName)).toEqual(["Cheap Gold", "Gold Round", "Silver Bar"]);
+});
+
+test("buildDigestRowsFromProducts surfaces thumbnail and dashboard-style spreadPercent", () => {
+  const withThumb = {
+    ...goldProduct,
+    thumbnail: "https://example.com/thumb.png",
+  };
+  const rows = buildDigestRowsFromProducts(
+    [withThumb],
+    new Map([["pure-gold-1", 100]]),
+    new Map([["gold", 99]]),
+    { gold: 100, silver: null },
+  );
+  const row = rows[0];
+  expect(row.thumbnail).toBe("https://example.com/thumb.png");
+  // (105 - 100) / 105 * 100 ≈ 4.76
+  expect(row.spreadPercent).toBeCloseTo(4.76, 1);
 });
 
 test("formatMarketDigest renders cadence label, totals, table headers, and unsubscribe link", () => {
@@ -110,6 +152,8 @@ test("formatMarketDigest renders cadence label, totals, table headers, and unsub
       metalType: "gold",
       pricePerOunce: 101,
       productName: "Gold Round",
+      spreadPercent: 0.99,
+      thumbnail: null,
       totalPrice: 101,
       url: "https://www.costco.com/gold-round.html",
     },
@@ -118,6 +162,7 @@ test("formatMarketDigest renders cadence label, totals, table headers, and unsub
   const digest = formatMarketDigest(rows, {
     frequency: "weekly",
     siteUrl: "https://dashboard.gold",
+    spotByMetal: { gold: 100, silver: 30 },
     unsubscribeUrl: "https://example.com/unsubscribe?token=abc&kind=digest",
   });
 
@@ -126,6 +171,8 @@ test("formatMarketDigest renders cadence label, totals, table headers, and unsub
   expect(digest.html).toContain("Gold Round");
   expect(digest.html).toContain("$101.00");
   expect(digest.html).toContain("+1.00%");
+  expect(digest.html).toContain("Gold spot");
+  expect(digest.html).toContain("vs Spot");
   expect(digest.html).toContain("https://dashboard.gold/dashboard");
   expect(digest.html).toContain("https://example.com/unsubscribe?token=abc&kind=digest");
   expect(digest.text).toContain("Dashboard.Gold Weekly Digest");

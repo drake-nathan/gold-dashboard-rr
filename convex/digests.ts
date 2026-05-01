@@ -37,8 +37,15 @@ export interface DigestProductRow {
   metalType: "gold" | "silver";
   pricePerOunce: null | number;
   productName: string;
+  spreadPercent: null | number;
+  thumbnail: null | string;
   totalPrice: number;
   url: string;
+}
+
+export interface DigestSpotPrice {
+  gold: null | number;
+  silver: null | number;
 }
 
 export interface MarketDigestContent {
@@ -62,24 +69,56 @@ const formatPerOunce = (value: null | number): string => (value === null ? "—"
 
 const titleCase = (value: string): string => value.charAt(0).toUpperCase() + value.slice(1);
 
+const renderSpotBanner = (spotByMetal: DigestSpotPrice): string => {
+  const parts: string[] = [];
+  if (spotByMetal.gold !== null) {
+    parts.push(
+      `Gold spot <strong class="dg-text" style="color:#333;">${formatUsd(spotByMetal.gold)}/oz</strong>`,
+    );
+  }
+  if (spotByMetal.silver !== null) {
+    parts.push(
+      `Silver spot <strong class="dg-text" style="color:#333;">${formatUsd(spotByMetal.silver)}/oz</strong>`,
+    );
+  }
+  if (parts.length === 0) return "";
+  return `<div class="dg-meta" style="text-align:center;padding:0 0 16px;font-size:12px;color:#888;">${parts.join(' <span class="dg-divider" style="color:#ccc;">&middot;</span> ')}</div>`;
+};
+
 export const buildDigestRowsFromProducts = (
   products: Doc<"costcoProducts">[],
-  pureBidByProductId: Map<string, null | number>,
+  pureTotalBidByProductId: Map<string, null | number>,
   fallbackBidByMetal: Map<"gold" | "silver", null | number>,
+  spotByMetal: DigestSpotPrice,
 ): DigestProductRow[] => {
   const rows: DigestProductRow[] = [];
   for (const product of products) {
     if (!product.currentInStock) continue;
 
-    const matchedBid = product.pureProductId
-      ? (pureBidByProductId.get(product.pureProductId) ?? null)
-      : null;
-    const fallbackBid = fallbackBidByMetal.get(product.metalType) ?? null;
-    const bid = matchedBid ?? fallbackBid;
-
+    // Derive product weight from costco-side numbers — pureProducts.currentBidPricePerOz can be
+    // stale or wrong for individual products, so we always recompute per-oz from total bid here.
     const pricePerOunce = product.currentPricePerOunce ?? null;
+    const weightOz =
+      pricePerOunce && pricePerOunce > 0 ? product.currentPrice / pricePerOunce : null;
+
+    const matchedTotalBid = product.pureProductId
+      ? (pureTotalBidByProductId.get(product.pureProductId) ?? null)
+      : null;
+    const matchedBidPerOz =
+      matchedTotalBid !== null && weightOz && weightOz > 0 ? matchedTotalBid / weightOz : null;
+    const fallbackBid = fallbackBidByMetal.get(product.metalType) ?? null;
+    const bid = matchedBidPerOz ?? fallbackBid;
+
+    // Markup is vs spot (matches the dashboard's "% markup"), not vs Pure bid.
+    const spot = spotByMetal[product.metalType];
     const markup =
-      bid && bid > 0 && pricePerOunce !== null ? ((pricePerOunce - bid) / bid) * 100 : null;
+      spot && spot > 0 && pricePerOunce !== null ? ((pricePerOunce - spot) / spot) * 100 : null;
+
+    // Spread vs Pure bid relative to price — matches dashboard's pureSpreadPercentage sort key.
+    const spreadPercent =
+      bid && pricePerOunce && pricePerOunce > 0
+        ? ((pricePerOunce - bid) / pricePerOunce) * 100
+        : null;
 
     rows.push({
       bidPerOunce: bid,
@@ -87,6 +126,8 @@ export const buildDigestRowsFromProducts = (
       metalType: product.metalType,
       pricePerOunce,
       productName: product.name,
+      spreadPercent,
+      thumbnail: product.thumbnail ?? null,
       totalPrice: product.currentPrice,
       url: product.url,
     });
@@ -94,9 +135,9 @@ export const buildDigestRowsFromProducts = (
 
   return rows.toSorted((a, b) => {
     if (a.metalType !== b.metalType) return a.metalType.localeCompare(b.metalType);
-    const aMarkup = a.markupPercent ?? Number.POSITIVE_INFINITY;
-    const bMarkup = b.markupPercent ?? Number.POSITIVE_INFINITY;
-    return aMarkup - bMarkup;
+    const aSpread = a.spreadPercent ?? 999;
+    const bSpread = b.spreadPercent ?? 999;
+    return aSpread - bSpread;
   });
 };
 
@@ -105,6 +146,7 @@ export const formatMarketDigest = (
   args: {
     frequency: DigestFrequency;
     siteUrl?: string;
+    spotByMetal?: DigestSpotPrice;
     unsubscribeUrl?: string;
   },
 ): MarketDigestContent => {
@@ -150,34 +192,43 @@ export const formatMarketDigest = (
     const rowsHtml = metalRows
       .map((row) => {
         const markupColor =
-          row.markupPercent !== null && row.markupPercent <= 0
-            ? "#16a34a"
-            : row.markupPercent !== null && row.markupPercent < 3
-              ? "#b8860b"
-              : "#666";
-        const productCell = row.url
+          row.markupPercent === null
+            ? "#666"
+            : row.markupPercent <= 0
+              ? "#16a34a"
+              : row.markupPercent < 3
+                ? "#b8860b"
+                : row.markupPercent < 6
+                  ? "#666"
+                  : "#b91c1c";
+        const productLink = row.url
           ? `<a href="${escapeHtml(row.url)}" style="color:#b8860b;text-decoration:none;">${escapeHtml(row.productName)}</a>`
           : escapeHtml(row.productName);
+        const thumbCell = row.thumbnail
+          ? `<img src="${escapeHtml(row.thumbnail)}" alt="" width="40" height="40" style="display:block;width:40px;height:40px;border-radius:6px;border:1px solid #e5e5e5;object-fit:cover;background:#fafafa;" />`
+          : `<div style="width:40px;height:40px;border-radius:6px;background:#f5f5f0;border:1px solid #e5e5e5;"></div>`;
         return `<tr>
-<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;">${productCell}</td>
-<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;">${formatUsd(row.totalPrice)}</td>
-<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;">${formatPerOunce(row.pricePerOunce)}</td>
-<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;">${formatPerOunce(row.bidPerOunce)}</td>
-<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;color:${markupColor};">${formatPercent(row.markupPercent)}</td>
+<td class="dg-cell" style="padding:8px 0 8px 12px;border-bottom:1px solid #f0f0f0;width:40px;vertical-align:middle;">${thumbCell}</td>
+<td class="dg-cell" style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;vertical-align:middle;">${productLink}</td>
+<td class="dg-cell" style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;vertical-align:middle;">${formatUsd(row.totalPrice)}</td>
+<td class="dg-cell dg-muted" style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;vertical-align:middle;">${formatPerOunce(row.pricePerOunce)}</td>
+<td class="dg-cell dg-muted" style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;vertical-align:middle;">${formatPerOunce(row.bidPerOunce)}</td>
+<td class="dg-cell" style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:14px;text-align:right;white-space:nowrap;color:${markupColor};vertical-align:middle;font-weight:600;">${formatPercent(row.markupPercent)}</td>
 </tr>`;
       })
       .join("");
 
     sections.push(
       `<div style="margin-bottom:24px;">
-<h3 style="margin:0 0 8px;font-size:15px;font-weight:600;color:#333;">${titleCase(metal)} <span style="color:#999;font-weight:400;">(${metalRows.length})</span></h3>
-<table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e5e5;border-radius:6px;">
+<h3 class="dg-section" style="margin:0 0 8px;font-size:15px;font-weight:600;color:#333;">${titleCase(metal)} <span style="color:#999;font-weight:400;">(${metalRows.length})</span></h3>
+<table class="dg-table" style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e5e5;border-radius:6px;">
 <thead><tr>
-<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Product</th>
-<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Price</th>
-<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">$/oz</th>
-<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Bid/oz</th>
-<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Markup</th>
+<th class="dg-th" style="padding:8px 0 8px 12px;text-align:left;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;width:40px;"></th>
+<th class="dg-th" style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Product</th>
+<th class="dg-th" style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Price</th>
+<th class="dg-th" style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">$/oz</th>
+<th class="dg-th" style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">Bid/oz</th>
+<th class="dg-th" style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;color:#666;border-bottom:2px solid #e5e5e5;text-transform:uppercase;letter-spacing:0.5px;">vs Spot</th>
 </tr></thead>
 <tbody>${rowsHtml}</tbody>
 </table>
@@ -208,25 +259,62 @@ export const formatMarketDigest = (
     );
   }
 
+  const spotBanner = args.spotByMetal ? renderSpotBanner(args.spotByMetal) : "";
+
   const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<style>
+  @media (prefers-color-scheme: dark) {
+    body, .dg-body { background-color: #0f0f0e !important; }
+    .dg-card { background-color: #1a1a17 !important; border-color: #2b2b27 !important; }
+    .dg-table { background-color: #1a1a17 !important; border-color: #2b2b27 !important; }
+    .dg-cell { border-color: #2b2b27 !important; color: #e5e5e5 !important; }
+    .dg-th { color: #999 !important; border-color: #2b2b27 !important; }
+    .dg-section, .dg-text, .dg-brand { color: #f5f5f0 !important; }
+    .dg-muted { color: #a3a3a3 !important; }
+    .dg-meta, .dg-footer { color: #888 !important; }
+    .dg-divider { color: #444 !important; }
+    .dg-thumb-empty { background: #1f1f1c !important; border-color: #2b2b27 !important; }
+  }
+</style>
+</head>
+<body class="dg-body" style="margin:0;padding:0;background-color:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:680px;margin:0 auto;padding:20px;">
 
-<div style="text-align:center;padding:24px 0 16px;">
-<h1 style="margin:0;font-size:22px;font-weight:700;color:#b8860b;letter-spacing:-0.5px;">Dashboard.Gold</h1>
-<p style="margin:6px 0 0;font-size:13px;color:#888;">${cadenceLabel} digest</p>
+<div style="text-align:center;padding:24px 0 12px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;border-collapse:collapse;">
+<tr>
+<td style="vertical-align:middle;padding-right:10px;">
+<div style="width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,#facc15,#eab308,#ca8a04);box-shadow:0 1px 3px rgba(202,138,4,0.3);text-align:center;line-height:40px;">
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#422006" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;">
+<rect x="3" y="5" width="18" height="14" rx="2"/>
+<path d="M7 9h10M7 12h10M7 15h10"/>
+</svg>
+</div>
+</td>
+<td style="vertical-align:middle;text-align:left;">
+<div class="dg-brand" style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#1a1a1a;line-height:1;">Dashboard<span style="color:#b8860b;">.Gold</span></div>
+<div class="dg-meta" style="font-size:11px;color:#888;line-height:1;margin-top:4px;">${cadenceLabel} digest</div>
+</td>
+</tr>
+</table>
 </div>
 
-<div style="background:#ffffff;border-radius:8px;border:1px solid #e5e5e5;padding:24px;margin-bottom:16px;">
-<p style="margin:0 0 16px;font-size:14px;color:#333;">
-${totalCount} ${itemsLabel} currently in stock. Sorted by best markup over spot.
+${spotBanner}
+
+<div class="dg-card" style="background:#ffffff;border-radius:8px;border:1px solid #e5e5e5;padding:24px;margin-bottom:16px;">
+<p class="dg-text" style="margin:0 0 16px;font-size:14px;color:#333;">
+${totalCount} ${itemsLabel} currently in stock. Sorted by best deal first.
 </p>
 ${sections.join("")}
 </div>
 
-<div style="text-align:center;padding:16px 0;font-size:12px;color:#999;">
-${footerLinks.join(' <span style="color:#ccc;">&middot;</span> ')}
+<div class="dg-footer" style="text-align:center;padding:16px 0;font-size:12px;color:#999;">
+${footerLinks.join(' <span class="dg-divider" style="color:#ccc;">&middot;</span> ')}
 </div>
 
 </div>
@@ -288,26 +376,48 @@ const collectDigestRowsForActiveProducts = async (ctx: QueryCtx) => {
     )
   ).filter((p): p is Doc<"pureProducts"> => p !== null);
 
-  const pureBidByProductId = new Map<string, null | number>(
-    pureProducts.map((p) => [p.pureProductId, p.currentBidPricePerOz]),
+  const pureTotalBidByProductId = new Map<string, null | number>(
+    pureProducts.map((p) => [p.pureProductId, p.currentBidPrice]),
   );
 
-  const latestGold = await ctx.db
-    .query("collectPurePrices")
-    .withIndex("by_metal_and_time", (q) => q.eq("metalType", "gold"))
-    .order("desc")
-    .first();
-  const latestSilver = await ctx.db
-    .query("collectPurePrices")
-    .withIndex("by_metal_and_time", (q) => q.eq("metalType", "silver"))
-    .order("desc")
-    .first();
+  const [latestGold, latestSilver, goldMarket, silverMarket] = await Promise.all([
+    ctx.db
+      .query("collectPurePrices")
+      .withIndex("by_metal_and_time", (q) => q.eq("metalType", "gold"))
+      .order("desc")
+      .first(),
+    ctx.db
+      .query("collectPurePrices")
+      .withIndex("by_metal_and_time", (q) => q.eq("metalType", "silver"))
+      .order("desc")
+      .first(),
+    ctx.db
+      .query("marketPrices")
+      .withIndex("by_symbol", (q) => q.eq("symbol", "XAU"))
+      .first(),
+    ctx.db
+      .query("marketPrices")
+      .withIndex("by_symbol", (q) => q.eq("symbol", "XAG"))
+      .first(),
+  ]);
   const fallbackBidByMetal = new Map<"gold" | "silver", null | number>([
     ["gold", latestGold?.bidPrice ?? null],
     ["silver", latestSilver?.bidPrice ?? null],
   ]);
+  const spotByMetal: DigestSpotPrice = {
+    gold: goldMarket?.currentPrice ?? null,
+    silver: silverMarket?.currentPrice ?? null,
+  };
 
-  return buildDigestRowsFromProducts(products, pureBidByProductId, fallbackBidByMetal);
+  return {
+    rows: buildDigestRowsFromProducts(
+      products,
+      pureTotalBidByProductId,
+      fallbackBidByMetal,
+      spotByMetal,
+    ),
+    spotByMetal,
+  };
 };
 
 export const collectDigestRows = internalQuery({
@@ -324,6 +434,7 @@ const sendDigestForUser = async (
     frequency: DigestFrequency;
     rows: DigestProductRow[];
     sentAt: number;
+    spotByMetal: DigestSpotPrice;
     user: {
       userId: string;
       userTokenIdentifier: string;
@@ -349,6 +460,7 @@ const sendDigestForUser = async (
   const digest = formatMarketDigest(args.rows, {
     frequency: args.frequency,
     siteUrl: args.deliveryConfig.siteUrl,
+    spotByMetal: args.spotByMetal,
     unsubscribeUrl: unsubscribeUrl ?? undefined,
   });
 
@@ -445,7 +557,7 @@ export const sendMarketDigests = internalAction({
       };
     }
 
-    const rows = await ctx.runQuery(internal.digests.collectDigestRows, {});
+    const { rows, spotByMetal } = await ctx.runQuery(internal.digests.collectDigestRows, {});
 
     let sent = 0;
     let failed = 0;
@@ -462,6 +574,7 @@ export const sendMarketDigests = internalAction({
           frequency,
           rows,
           sentAt: evaluatedAt,
+          spotByMetal,
           user: {
             userId: entry.userId,
             userTokenIdentifier: entry.userTokenIdentifier,
@@ -514,11 +627,12 @@ export const sendPreviewDigest = action({
         return { error: "No recipient email on file", success: false };
       }
 
-      const rows = await ctx.runQuery(internal.digests.collectDigestRows, {});
+      const { rows, spotByMetal } = await ctx.runQuery(internal.digests.collectDigestRows, {});
       const unsubscribeUrl = await buildUnsubscribeUrl(identity.tokenIdentifier, "digest");
       const digest = formatMarketDigest(rows, {
         frequency: "daily",
         siteUrl: deliveryConfig.siteUrl,
+        spotByMetal,
         unsubscribeUrl: unsubscribeUrl ?? undefined,
       });
       const subjectPrefix = "[Preview] ";
