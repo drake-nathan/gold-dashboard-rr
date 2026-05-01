@@ -173,7 +173,9 @@ test("formatMarketDigest renders cadence label, totals, table headers, and unsub
   expect(digest.html).toContain("+1.00%");
   expect(digest.html).toContain("Gold spot");
   expect(digest.html).toContain("vs Spot");
-  expect(digest.html).toContain("https://dashboard.gold/dashboard");
+  expect(digest.html).toContain('href="https://dashboard.gold"');
+  expect(digest.html).not.toContain("https://dashboard.gold/dashboard");
+  expect(digest.html).toContain("https://dashboard.gold/alerts");
   expect(digest.html).toContain("https://example.com/unsubscribe?token=abc&kind=digest");
   expect(digest.text).toContain("Dashboard.Gold Weekly Digest");
   expect(digest.text).toContain("Stop receiving this digest");

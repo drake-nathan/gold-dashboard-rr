@@ -155,8 +155,8 @@ export const formatMarketDigest = (
   const itemsLabel = totalCount === 1 ? "item" : "items";
   const subject = `Dashboard.Gold ${cadenceLabel} Digest: ${totalCount} ${itemsLabel} in stock`;
 
-  const dashboardUrl = args.siteUrl ? `${args.siteUrl.replace(/\/+$/, "")}/dashboard` : undefined;
-  const alertsUrl = args.siteUrl ? `${args.siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
+  const dashboardUrl = args.siteUrl ? args.siteUrl.replace(/\/+$/, "") : undefined;
+  const alertsUrl = dashboardUrl ? `${dashboardUrl}/alerts` : undefined;
 
   const byMetal = new Map<"gold" | "silver", DigestProductRow[]>();
   for (const row of rows) {
