@@ -28,15 +28,14 @@ export const evaluateFeatureFlags = async (
   }
 
   try {
-    const entries = await Promise.all(
-      ALL_FEATURE_FLAGS.map(async (key): Promise<[FeatureFlagKey, boolean | string]> => {
-        const value = await posthog.getFeatureFlag(key, distinctId);
-        if (value === undefined) {
-          return [key, FEATURE_FLAG_DEFAULTS[key]];
-        }
-        return [key, value];
-      }),
-    );
+    const flags = await posthog.evaluateFlags(distinctId, { flagKeys: [...ALL_FEATURE_FLAGS] });
+    const entries = ALL_FEATURE_FLAGS.map((key): [FeatureFlagKey, boolean | string] => {
+      const value = flags.getFlag(key);
+      if (value === undefined) {
+        return [key, FEATURE_FLAG_DEFAULTS[key]];
+      }
+      return [key, value];
+    });
     return Object.fromEntries(entries);
   } catch (error) {
     // Silent fallback would hide real PostHog outages — log so this surfaces
