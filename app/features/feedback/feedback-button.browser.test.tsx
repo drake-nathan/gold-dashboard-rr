@@ -72,8 +72,8 @@ test("opens the dialog and submits feedback through the action", async () => {
   expect(payload.path).toBe("/dashboard");
   expect(payload.posthogDistinctId).toBe("distinct_test");
   expect(payload.posthogSessionId).toBe("session_test");
-  expect(payload.userAgent).toEqual(expect.any(String));
-  expect(payload.viewport).toMatch(/^\d+x\d+$/);
+  expect(payload.userAgent).toStrictEqual(expect.any(String));
+  expect(payload.viewport).toMatch(/^\d+x\d+$/u);
   expect(payload.website).toBeUndefined();
 
   expect(captureMock).toHaveBeenCalledWith(

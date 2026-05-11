@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import type { Route } from "./+types/index";
 import { DashboardContent } from "./dashboard-content";
-import { type DashboardMarketPrice, type DashboardStats, type ProductCardData } from "./types";
+import { type DashboardStats } from "./types";
 
 export type { DashboardMarketPrice, DashboardStats, ProductCardData } from "./types";
 

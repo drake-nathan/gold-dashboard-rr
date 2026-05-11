@@ -64,7 +64,7 @@ test("renders alerts and upgrade actions when signed in with the alerts-beta fla
 
   const screen = await renderHeaderActions({ [FEATURE_FLAGS.ALERTS_BETA]: true });
 
-  await expect.element(screen.getByRole("link", { name: /alerts/i })).toBeInTheDocument();
+  await expect.element(screen.getByRole("link", { name: /alerts/iu })).toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
   expect(screen.container.textContent).not.toContain("Admin");
   expect(useQueryMock).not.toHaveBeenCalled();

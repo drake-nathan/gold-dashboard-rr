@@ -68,7 +68,7 @@ const TestComponent = () => {
 
 test("shows error toast when openPortal returns error", async () => {
   const { toast } = await import("sonner");
-  mockSubscription.openPortal = vi.fn().mockResolvedValue({ error: "Something went wrong" });
+  vi.spyOn(mockSubscription, "openPortal").mockResolvedValue({ error: "Something went wrong" });
 
   const screen = await render(<TestComponent />);
   await screen.getByTestId("manage-button").click();
@@ -78,7 +78,7 @@ test("shows error toast when openPortal returns error", async () => {
 
 test("shows fallback error when no URL and no error returned", async () => {
   const { toast } = await import("sonner");
-  mockSubscription.openPortal = vi.fn().mockResolvedValue({});
+  vi.spyOn(mockSubscription, "openPortal").mockResolvedValue({});
 
   const screen = await render(<TestComponent />);
   await screen.getByTestId("manage-button").click();
@@ -92,9 +92,9 @@ test("shows fallback error when no URL and no error returned", async () => {
 
 test("does not show error toast on successful URL response", async () => {
   const { toast } = await import("sonner");
-  mockSubscription.openPortal = vi
-    .fn()
-    .mockResolvedValue({ url: "https://billing.stripe.com/portal/123" });
+  vi.spyOn(mockSubscription, "openPortal").mockResolvedValue({
+    url: "https://billing.stripe.com/portal/123",
+  });
 
   // Prevent actual navigation which breaks the Vitest browser iframe
   const preventNav = (e: BeforeUnloadEvent) => {

@@ -29,7 +29,7 @@ const buildPostHogUrls = (
 ): { personUrl?: string; sessionUrl?: string } => {
   const baseRaw = process.env.POSTHOG_PROJECT_URL?.trim();
   if (!baseRaw) return {};
-  const base = baseRaw.replace(/\/+$/, "");
+  const base = baseRaw.replace(/\/+$/u, "");
   return {
     personUrl: distinctId ? `${base}/person/${encodeURIComponent(distinctId)}` : undefined,
     sessionUrl: sessionId ? `${base}/replay/${encodeURIComponent(sessionId)}` : undefined,
@@ -45,7 +45,7 @@ const escapeHtml = (value: string): string =>
     .replaceAll("'", "&#39;");
 
 // RFC 5322-lite: good enough to reject obvious garbage without false-rejecting valid addresses.
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 
 export interface FeedbackSubmitResult {
   ok: boolean;

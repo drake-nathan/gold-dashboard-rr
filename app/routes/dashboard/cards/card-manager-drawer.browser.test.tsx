@@ -48,7 +48,7 @@ test("displays cashback percentages correctly", async () => {
   const screen = await renderCardManagerDrawer();
 
   // Chase Freedom Unlimited: 1.5 * 2.1 = 3.15%
-  const chaseCashback = screen.getByText(/3\.15%/);
+  const chaseCashback = screen.getByText(/3\.15%/u);
 
   await expect.element(chaseCashback).toBeInTheDocument();
 });
@@ -56,7 +56,7 @@ test("displays cashback percentages correctly", async () => {
 test("shows 'Add Custom Card' button when not in edit mode", async () => {
   const screen = await renderCardManagerDrawer();
 
-  const addButton = screen.getByRole("button", { name: /Add Custom Card/ });
+  const addButton = screen.getByRole("button", { name: /Add Custom Card/u });
 
   await expect.element(addButton).toBeInTheDocument();
 });
@@ -64,7 +64,7 @@ test("shows 'Add Custom Card' button when not in edit mode", async () => {
 test("shows 'Reset All' button", async () => {
   const screen = await renderCardManagerDrawer();
 
-  const resetAllButton = screen.getByRole("button", { name: /Reset All/ });
+  const resetAllButton = screen.getByRole("button", { name: /Reset All/u });
 
   await expect.element(resetAllButton).toBeInTheDocument();
 });
@@ -75,7 +75,7 @@ test("opens create form when clicking 'Add Custom Card'", async () => {
   const screen = await renderCardManagerDrawer();
 
   // Click "Add Custom Card"
-  const addButton = screen.getByRole("button", { name: /Add Custom Card/ });
+  const addButton = screen.getByRole("button", { name: /Add Custom Card/u });
   await addButton.click();
 
   // Verify form is visible
@@ -93,7 +93,7 @@ test("cancels create mode and hides form", async () => {
   const screen = await renderCardManagerDrawer();
 
   // Click "Add Custom Card"
-  const addButton = screen.getByRole("button", { name: /Add Custom Card/ });
+  const addButton = screen.getByRole("button", { name: /Add Custom Card/u });
   await addButton.click();
 
   // Verify form is visible
@@ -110,7 +110,7 @@ test("cancels create mode and hides form", async () => {
 
   // Verify "Add Custom Card" button is visible again
   const addButtonAgain = screen.getByRole("button", {
-    name: /Add Custom Card/,
+    name: /Add Custom Card/u,
   });
 
   await expect.element(addButtonAgain).toBeInTheDocument();
@@ -123,7 +123,7 @@ test("adds a custom card with valid data", async () => {
   const screen = await renderCardManagerDrawer([...DEFAULT_PRESET_CARDS], onCardsChange);
 
   // Click "Add Custom Card"
-  const addButton = screen.getByRole("button", { name: /Add Custom Card/ });
+  const addButton = screen.getByRole("button", { name: /Add Custom Card/u });
   await addButton.click();
 
   // Fill in form
@@ -183,7 +183,7 @@ test("deletes a custom card with confirmation", async () => {
   await deleteButton.click();
 
   // Confirmation dialog should appear
-  const confirmDialog = screen.getByText(/Are you sure you want to delete/);
+  const confirmDialog = screen.getByText(/Are you sure you want to delete/u);
 
   await expect.element(confirmDialog).toBeInTheDocument();
 
@@ -251,12 +251,12 @@ test("resets all cards to defaults", async () => {
   );
 
   // Click "Reset All" button
-  const resetAllButton = screen.getByRole("button", { name: /Reset All/ });
+  const resetAllButton = screen.getByRole("button", { name: /Reset All/u });
   await resetAllButton.click();
 
   // Confirmation dialog should appear
   const confirmDialog = screen.getByText(
-    /This will delete all custom cards and reset all preset cards/,
+    /This will delete all custom cards and reset all preset cards/u,
   );
 
   await expect.element(confirmDialog).toBeInTheDocument();
@@ -275,7 +275,7 @@ test("updates cashback calculation when form values change", async () => {
   const screen = await renderCardManagerDrawer();
 
   // Click "Add Custom Card"
-  const addButton = screen.getByRole("button", { name: /Add Custom Card/ });
+  const addButton = screen.getByRole("button", { name: /Add Custom Card/u });
   await addButton.click();
 
   // Enter initial values: 1 points/$ @ 1¢/point = 1.00% cashback

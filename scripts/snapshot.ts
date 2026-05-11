@@ -441,7 +441,7 @@ const importSnapshot = async (snapshotPath?: string): Promise<boolean> => {
       allSuccess = false;
     } else {
       // Extract document count from output
-      const match = /Added (?<count>[\d,]+) documents/.exec(importResult.output);
+      const match = /Added (?<count>[\d,]+) documents/u.exec(importResult.output);
       const count = match?.groups?.count ?? data.length.toString();
       updateStep(stepIndex, "success", `${count} docs`, (Date.now() - stepStart) / 1000);
     }

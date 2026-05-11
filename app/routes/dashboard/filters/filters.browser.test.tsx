@@ -53,7 +53,7 @@ test("renders inline desktop filters when the desktop media query matches", asyn
   await expect
     .element(screen.getByRole("switch", { name: "Show Out of Stock" }))
     .toBeInTheDocument();
-  await expect.element(screen.getByRole("button", { name: /settings/i })).toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: /settings/iu })).toBeInTheDocument();
 });
 
 test("opens the mobile sheet when the layout is mobile", async () => {
@@ -61,7 +61,7 @@ test("opens the mobile sheet when the layout is mobile", async () => {
 
   const screen = await renderFilters();
 
-  const button = screen.getByRole("button", { name: /filters & calculator/i });
+  const button = screen.getByRole("button", { name: /filters & calculator/iu });
   await button.click();
 
   await expect

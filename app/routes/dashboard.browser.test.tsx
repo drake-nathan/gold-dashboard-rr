@@ -246,7 +246,7 @@ test("captures dashboard_viewed after the auto-flip settles", async () => {
     );
 
     expect(dashboardViewedCalls).toHaveLength(1);
-    expect(dashboardViewedCalls[0]?.[1]).toEqual(
+    expect(dashboardViewedCalls[0]?.[1]).toStrictEqual(
       expect.objectContaining({
         show_out_of_stock: true,
         sort_option: "last-in-stock",

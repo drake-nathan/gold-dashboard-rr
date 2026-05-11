@@ -5,7 +5,11 @@ import { isbot } from "isbot";
 import { type RenderToPipeableStreamOptions, renderToPipeableStream } from "react-dom/server";
 import { type AppLoadContext, type EntryContext, ServerRouter } from "react-router";
 
-import { shouldDropServerError } from "@/lib/posthog-event-filters";
+import {
+  getServerExceptionDistinctId,
+  normalizeServerException,
+  shouldDropServerError,
+} from "@/lib/posthog-event-filters";
 import { getPostHogServer } from "@/lib/posthog-server";
 
 export const handleError = (
@@ -26,10 +30,12 @@ export const handleError = (
     return;
   }
 
-  const captured = error instanceof Error ? error : new Error(String(error));
-  posthog.captureException(captured, undefined, {
+  const normalized = normalizeServerException(error, request);
+  const distinctId = getServerExceptionDistinctId(request);
+  posthog.captureException(normalized.error, distinctId, {
     $current_url: request.url,
     method: request.method,
+    ...normalized.properties,
   });
 };
 

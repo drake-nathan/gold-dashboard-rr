@@ -80,7 +80,7 @@ test("shows alerts and account actions when alerts-beta flag is enabled", async 
 
   await expect.element(screen.getByText("Alerts")).toBeInTheDocument();
   await expect.element(screen.getByText("Account Avatar")).toBeInTheDocument();
-  await expect.element(screen.getByText(/^Pro$/)).toBeInTheDocument();
+  await expect.element(screen.getByText(/^Pro$/u)).toBeInTheDocument();
   expect(document.body.textContent).not.toContain("Admin");
   expect(useQueryMock).not.toHaveBeenCalled();
 });

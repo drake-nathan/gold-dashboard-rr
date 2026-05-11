@@ -63,7 +63,7 @@ export const PURE_FALLBACK_IDS: Record<string, Record<string, string>> = {
 export const extractWeightInOz = (metalWeight: null | string): null | number => {
   if (!metalWeight) return null;
 
-  const weightMatch = /(?<weight>\d+(?:\.\d+)?)\s*(?:troy\s+)?(?<unit>gram|g|ounce|oz)/i.exec(
+  const weightMatch = /(?<weight>\d+(?:\.\d+)?)\s*(?:troy\s+)?(?<unit>gram|g|ounce|oz)/iu.exec(
     metalWeight,
   );
 
@@ -138,13 +138,13 @@ export const extractCountMultiplier = (name: string): number => {
   const lowerName = name.toLowerCase();
 
   // Match patterns like "20-count", "20 count", "20-pack", "20 pack"
-  const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/i.exec(lowerName);
+  const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/iu.exec(lowerName);
   if (countMatch?.groups?.count) {
     return Number.parseInt(countMatch.groups.count, 10);
   }
 
   // Match patterns like "box of 20", "set of 20"
-  const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/i.exec(lowerName);
+  const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/iu.exec(lowerName);
   if (ofMatch?.groups?.count) {
     return Number.parseInt(ofMatch.groups.count, 10);
   }

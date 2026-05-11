@@ -16,9 +16,9 @@ vi.mock("convex/nextjs", () => ({
 const createLoaderArgs = (): Route.LoaderArgs => ({
   context: new Map(),
   params: {},
+  pattern: "/admin",
   request: new Request("http://localhost/admin"),
-  unstable_pattern: "/admin",
-  unstable_url: new URL("http://localhost/admin"),
+  url: new URL("http://localhost/admin"),
 });
 
 const resetAdminRouteMocks = () => {

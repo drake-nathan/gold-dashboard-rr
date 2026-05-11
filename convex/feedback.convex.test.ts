@@ -54,14 +54,14 @@ test("submit sends an email to the support address with anonymous metadata", asy
       path: "/alerts?foo=1",
     });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toStrictEqual({ ok: true });
     expect(fetchMock).toHaveBeenCalledOnce();
 
     const requestInit = fetchMock.mock.calls[0][1] as RequestInit;
     const body = typeof requestInit.body === "string" ? JSON.parse(requestInit.body) : null;
     if (!body) throw new Error("Expected JSON body");
 
-    expect(body.to).toEqual(["support@example.com"]);
+    expect(body.to).toStrictEqual(["support@example.com"]);
     expect(body.from).toBe("alerts@example.com");
     expect(body.reply_to).toBe("user@example.com");
     expect(body.subject).toContain("Pricing column is wrong");
@@ -179,7 +179,7 @@ test("submit silently no-ops when the honeypot field is filled", async () => {
       website: "https://spammy.example",
     });
 
-    expect(result).toEqual({ ok: true });
+    expect(result).toStrictEqual({ ok: true });
     expect(fetchMock).not.toHaveBeenCalled();
     expect(consoleWarn).toHaveBeenCalledWith("Feedback honeypot tripped", expect.any(Object));
   } finally {
@@ -226,7 +226,7 @@ test("submit rejects messages that are too short", async () => {
 
   try {
     await expect(t.action(api.feedback.submit, { message: "  " })).rejects.toThrow(
-      /longer message/i,
+      /longer message/iu,
     );
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
@@ -246,7 +246,7 @@ test("submit rejects invalid email addresses", async () => {
         email: "not-an-email",
         message: "This should be rejected",
       }),
-    ).rejects.toThrow(/email address/i);
+    ).rejects.toThrow(/email address/iu);
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
     fetchMock.mockRestore();
@@ -264,7 +264,7 @@ test("submit fails fast when Resend is not configured", async () => {
 
   try {
     await expect(t.action(api.feedback.submit, { message: "Anything at all" })).rejects.toThrow(
-      /isn't configured/i,
+      /isn't configured/iu,
     );
     expect(consoleError).toHaveBeenCalledWith(
       "Feedback delivery is not configured",
@@ -287,7 +287,7 @@ test("submit fails when SUPPORT_EMAIL is missing even if Resend is configured", 
 
   try {
     await expect(t.action(api.feedback.submit, { message: "Anything at all" })).rejects.toThrow(
-      /isn't configured/i,
+      /isn't configured/iu,
     );
     expect(fetchMock).not.toHaveBeenCalled();
   } finally {
@@ -311,7 +311,7 @@ test("submit surfaces a generic error when Resend returns a failure", async () =
   try {
     await expect(
       t.action(api.feedback.submit, { message: "This will fail to send" }),
-    ).rejects.toThrow(/couldn't send feedback/i);
+    ).rejects.toThrow(/couldn't send feedback/iu);
     expect(consoleError).toHaveBeenCalled();
   } finally {
     consoleError.mockRestore();

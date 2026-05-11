@@ -18,9 +18,9 @@ vi.mock("@/lib/feature-flags.server", () => ({
 const createLoaderArgs = (): Route.LoaderArgs => ({
   context: new Map(),
   params: {},
+  pattern: "/alerts",
   request: new Request("http://localhost/alerts"),
-  unstable_pattern: "/alerts",
-  unstable_url: new URL("http://localhost/alerts"),
+  url: new URL("http://localhost/alerts"),
 });
 
 const resetMocks = () => {

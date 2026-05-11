@@ -71,7 +71,7 @@ test("buildDigestRowsFromProducts skips out-of-stock and derives per-oz bid from
   );
 
   const ids = rows.map((row) => row.productName);
-  expect(ids).toEqual(["Gold Round", "Silver Bar"]);
+  expect(ids).toStrictEqual(["Gold Round", "Silver Bar"]);
 
   const gold = rows.find((row) => row.metalType === "gold");
   expect(gold?.bidPerOunce).toBe(100);
@@ -124,7 +124,11 @@ test("buildDigestRowsFromProducts sorts gold before silver and lowest spread vs 
     { gold: 100, silver: 33 },
   );
 
-  expect(rows.map((row) => row.productName)).toEqual(["Cheap Gold", "Gold Round", "Silver Bar"]);
+  expect(rows.map((row) => row.productName)).toStrictEqual([
+    "Cheap Gold",
+    "Gold Round",
+    "Silver Bar",
+  ]);
 });
 
 test("buildDigestRowsFromProducts surfaces thumbnail and dashboard-style spreadPercent", () => {

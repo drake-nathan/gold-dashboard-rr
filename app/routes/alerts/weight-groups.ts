@@ -68,6 +68,6 @@ export const formatStoredCategoryWeightGroup = (group: StoredCategoryWeightGroup
 export const formatLegacyWeightOz = (weight: number): string => {
   const rounded = Number.isInteger(weight)
     ? String(weight)
-    : weight.toFixed(2).replace(/\.?0+$/, "");
+    : weight.toFixed(2).replace(/\.?0+$/u, "");
   return `${rounded} oz`;
 };

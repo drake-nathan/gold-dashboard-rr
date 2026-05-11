@@ -155,7 +155,7 @@ export const formatMarketDigest = (
   const itemsLabel = totalCount === 1 ? "item" : "items";
   const subject = `Dashboard.Gold ${cadenceLabel} Digest: ${totalCount} ${itemsLabel} in stock`;
 
-  const dashboardUrl = args.siteUrl ? args.siteUrl.replace(/\/+$/, "") : undefined;
+  const dashboardUrl = args.siteUrl ? args.siteUrl.replace(/\/+$/u, "") : undefined;
   const alertsUrl = dashboardUrl ? `${dashboardUrl}/alerts` : undefined;
 
   const byMetal = new Map<"gold" | "silver", DigestProductRow[]>();

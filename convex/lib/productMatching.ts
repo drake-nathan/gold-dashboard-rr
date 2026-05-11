@@ -20,8 +20,8 @@ const genericPhrases = new Set([
 export const normalizeProductName = (value: string) =>
   value
     .toLowerCase()
-    .replaceAll(/[^\s\w]/g, " ")
-    .replaceAll(/\s+/g, " ")
+    .replaceAll(/[^\s\w]/gu, " ")
+    .replaceAll(/\s+/gu, " ")
     .trim();
 
 export const scorePureProductCandidate = (
@@ -44,7 +44,7 @@ export const scorePureProductCandidate = (
 
   if (pureProduct.manufacturer) {
     const manufacturer = pureProduct.manufacturer.toLowerCase();
-    const manufacturerVariants = [manufacturer, manufacturer.replaceAll(/\s+/g, "")];
+    const manufacturerVariants = [manufacturer, manufacturer.replaceAll(/\s+/gu, "")];
 
     if (manufacturerVariants.some((variant) => costcoNameLower.includes(variant))) {
       score += 100;
@@ -62,7 +62,7 @@ export const scorePureProductCandidate = (
     }
   }
 
-  const pureWords = pureNameLower.split(/\s+/);
+  const pureWords = pureNameLower.split(/\s+/u);
   for (let index = 0; index < pureWords.length - 1; index++) {
     const twoWord = `${pureWords[index]} ${pureWords[index + 1]}`;
     const threeWord =

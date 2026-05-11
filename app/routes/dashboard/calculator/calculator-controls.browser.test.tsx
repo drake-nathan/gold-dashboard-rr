@@ -49,7 +49,7 @@ test("opens settings from the settings button", async () => {
     />,
   );
 
-  await screen.getByRole("button", { name: /settings/i }).click();
+  await screen.getByRole("button", { name: /settings/iu }).click();
 
   expect(onOpenSettings).toHaveBeenCalled();
 });

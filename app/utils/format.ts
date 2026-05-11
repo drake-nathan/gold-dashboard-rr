@@ -26,19 +26,19 @@ export const formatPercentage = (value: number, decimals = 2): string => {
  */
 export const formatWeight = (weight: string): string => {
   // Handle Troy Ounce variations
-  const troyOunceMatch = /^(?<weight>\d+(?:\.\d+)?)\s*troy\s*ounces?$/i.exec(weight);
+  const troyOunceMatch = /^(?<weight>\d+(?:\.\d+)?)\s*troy\s*ounces?$/iu.exec(weight);
   if (troyOunceMatch?.groups) {
     return `${troyOunceMatch.groups.weight}oz`;
   }
 
   // Handle Gram variations
-  const gramMatch = /^(?<weight>\d+(?:\.\d+)?)\s*grams?\s*(?:weight)?$/i.exec(weight);
+  const gramMatch = /^(?<weight>\d+(?:\.\d+)?)\s*grams?\s*(?:weight)?$/iu.exec(weight);
   if (gramMatch?.groups) {
     return `${gramMatch.groups.weight}g`;
   }
 
   // Handle generic ounce (oz) variations
-  const ounceMatch = /^(?<weight>\d+(?:\.\d+)?)\s*oz$/i.exec(weight);
+  const ounceMatch = /^(?<weight>\d+(?:\.\d+)?)\s*oz$/iu.exec(weight);
   if (ounceMatch?.groups) {
     return `${ounceMatch.groups.weight}oz`;
   }

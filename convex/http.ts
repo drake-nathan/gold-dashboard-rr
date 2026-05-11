@@ -131,7 +131,7 @@ const unsubscribeHandler = httpAction(async (ctx, request) => {
 
     if (request.method === "GET") {
       const siteUrl = process.env.SITE_URL ?? "";
-      const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : "";
+      const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/u, "")}/alerts` : "";
       const message = result.changed
         ? "You will no longer receive the market digest."
         : "The market digest was already disabled for your account.";
@@ -158,7 +158,7 @@ ${alertsUrl ? `<p><a href="${alertsUrl}">Manage notifications</a></p>` : ""}
 
   if (request.method === "GET") {
     const siteUrl = process.env.SITE_URL ?? "";
-    const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : "";
+    const alertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/u, "")}/alerts` : "";
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Unsubscribed</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#fafafa;color:#333}

@@ -78,8 +78,8 @@ test("shows access denied details for signed-in non-admin users", async () => {
   );
 
   await expect.element(screen.getByText("Access Denied")).toBeInTheDocument();
-  await expect.element(screen.getByText(/Signed in as: admin@example.com/)).toBeInTheDocument();
-  await expect.element(screen.getByText(/Token ID: clerk\|user-123/)).toBeInTheDocument();
+  await expect.element(screen.getByText(/Signed in as: admin@example.com/u)).toBeInTheDocument();
+  await expect.element(screen.getByText(/Token ID: clerk\|user-123/u)).toBeInTheDocument();
 });
 
 test("renders the admin dashboard for authorized users", async () => {

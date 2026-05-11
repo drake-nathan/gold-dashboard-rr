@@ -207,7 +207,7 @@ test("adds custom card with auto-generated ID", () => {
     valuePerPoint: 0.02,
   });
 
-  expect(newCard.id).toMatch(/^custom-/);
+  expect(newCard.id).toMatch(/^custom-/u);
   expect(newCard.isPreset).toBeFalsy();
   expect(newCard.isCustomizable).toBeFalsy();
   expect(newCard.name).toBe("My Custom Card");

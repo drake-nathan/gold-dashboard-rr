@@ -66,7 +66,9 @@ beforeEach(() => {
 test("renders upgrade button for free users", async () => {
   const screen = await renderUpgradeButton();
 
-  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("button", { name: /upgrade to pro/iu }))
+    .toBeInTheDocument();
 });
 
 test("hides button while subscription is loading", async () => {
@@ -94,7 +96,7 @@ test("disables button when action is loading", async () => {
 
   const screen = await renderUpgradeButton();
 
-  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: /upgrade to pro/iu })).toBeDisabled();
 });
 
 test("disables button when user is not signed in", async () => {
@@ -102,20 +104,20 @@ test("disables button when user is not signed in", async () => {
 
   const screen = await renderUpgradeButton();
 
-  await expect.element(screen.getByRole("button", { name: /upgrade to pro/i })).toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: /upgrade to pro/iu })).toBeDisabled();
 });
 
 test("calls createCheckout when clicked", async () => {
   // Return no URL to prevent window.location.href navigation which kills the Vitest iframe
-  mockSubscription.createCheckout = vi.fn().mockResolvedValue({});
+  vi.spyOn(mockSubscription, "createCheckout").mockResolvedValue({});
 
   const screen = await renderUpgradeButton();
 
-  const button = screen.getByRole("button", { name: /upgrade to pro/i });
+  const button = screen.getByRole("button", { name: /upgrade to pro/iu });
   await button.click();
 
   await expect
-    .element(screen.getByRole("heading", { name: /alerts require a pro subscription/i }))
+    .element(screen.getByRole("heading", { name: /alerts require a pro subscription/iu }))
     .toBeInTheDocument();
   expect(mockSubscription.createCheckout).not.toHaveBeenCalled();
 
@@ -135,7 +137,7 @@ test("calls createCheckout when clicked", async () => {
 test("renders custom text when provided", async () => {
   const screen = await renderUpgradeButton(<UpgradeButton text="Go Pro Now" />);
 
-  await expect.element(screen.getByRole("button", { name: /go pro now/i })).toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: /go pro now/iu })).toBeInTheDocument();
 });
 
 test("hides button when Stripe is disabled", async () => {

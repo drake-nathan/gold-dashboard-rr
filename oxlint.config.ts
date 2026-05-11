@@ -51,6 +51,9 @@ export default defineConfig({
         // Project convention (see .claude/rules/testing.md): simple test() calls,
         // not describe/it. So disable describe/hooks-shaped rules.
         "vitest/no-hooks": "off",
+        // Aggressive autofix rewrites `toHaveBeenCalled()` → `toHaveBeenCalledWith()`
+        // (no args), which silently flips the assertion to "called with zero args".
+        "vitest/prefer-called-with": "off",
         // Conflicts with vitest's `({ expect }) => ...` fixture pattern — the
         // rule misreads it as shadowing.
         "vitest/prefer-expect-assertions": "off",
@@ -136,6 +139,7 @@ export default defineConfig({
     "jsdoc/require-returns": "off",
     "jsdoc/require-returns-type": "off",
     "jsx-a11y/anchor-ambiguous-text": "warn",
+    "jsx-a11y/prefer-tag-over-role": "off",
     "perfectionist/sort-array-includes": ["warn", { order: "asc", type: "natural" }],
     "perfectionist/sort-decorators": ["warn", { order: "asc", type: "natural" }],
     "perfectionist/sort-enums": ["warn", { order: "asc", type: "natural" }],
@@ -175,6 +179,7 @@ export default defineConfig({
     "unicorn/no-array-callback-reference": "off",
     "unicorn/no-array-for-each": "warn",
     "unicorn/no-await-expression-member": "off",
+    "unicorn/no-negated-condition": "off",
     "unicorn/no-nested-ternary": "off",
     "unicorn/no-null": "off",
     "unicorn/no-useless-undefined": "off",
@@ -187,6 +192,8 @@ export default defineConfig({
     "vitest/prefer-called-times": "off",
     "vitest/prefer-import-in-mock": "off",
     "vitest/prefer-strict-boolean-matchers": "off",
+    "vitest/require-hook": "off",
+    "vitest/require-to-throw-message": "off",
   },
   settings: {
     react: {

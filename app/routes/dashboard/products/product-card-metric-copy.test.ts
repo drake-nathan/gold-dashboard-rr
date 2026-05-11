@@ -7,7 +7,7 @@ import {
 } from "./product-card-metric-copy";
 
 test("describes a positive immediate spread as out-of-pocket cost", () => {
-  expect(getInitialCashPositionDisplay(1932.14)).toEqual({
+  expect(getInitialCashPositionDisplay(1932.14)).toStrictEqual({
     isGain: false,
     label: "Cash out-of-pocket:",
     tooltip: "Cash still tied up after the Pure sale, before Costco cashback or card points.",
@@ -16,7 +16,7 @@ test("describes a positive immediate spread as out-of-pocket cost", () => {
 });
 
 test("describes a negative immediate spread as a cash gain", () => {
-  expect(getInitialCashPositionDisplay(-12.34)).toEqual({
+  expect(getInitialCashPositionDisplay(-12.34)).toStrictEqual({
     isGain: true,
     label: "Cash gain before rewards:",
     tooltip: "Pure payout already exceeds your Costco price before Costco cashback or card points.",
@@ -25,7 +25,7 @@ test("describes a negative immediate spread as a cash gain", () => {
 });
 
 test("describes a negative post-cashback position as cash left over", () => {
-  expect(getPostCashbackCashPositionDisplay(-7.89, true)).toEqual({
+  expect(getPostCashbackCashPositionDisplay(-7.89, true)).toStrictEqual({
     isGain: true,
     label: "Net after Executive 2%:",
     tooltip:
@@ -35,7 +35,7 @@ test("describes a negative post-cashback position as cash left over", () => {
 });
 
 test("describes a non-member post-sale position without referencing Costco cashback", () => {
-  expect(getPostCashbackCashPositionDisplay(7.89, false)).toEqual({
+  expect(getPostCashbackCashPositionDisplay(7.89, false)).toStrictEqual({
     isGain: false,
     label: "Net cost after sale:",
     tooltip:
@@ -45,7 +45,7 @@ test("describes a non-member post-sale position without referencing Costco cashb
 });
 
 test("describes a negative price per point as being paid for points", () => {
-  expect(getPointEconomicsDisplay(-0.1323)).toEqual({
+  expect(getPointEconomicsDisplay(-0.1323)).toStrictEqual({
     isBeingPaid: true,
     label: "Cost per point:",
     tooltip:
@@ -55,7 +55,7 @@ test("describes a negative price per point as being paid for points", () => {
 });
 
 test("describes a positive price per point as a normal cost", () => {
-  expect(getPointEconomicsDisplay(0.0185)).toEqual({
+  expect(getPointEconomicsDisplay(0.0185)).toStrictEqual({
     isBeingPaid: false,
     label: "Cost per point:",
     tooltip:

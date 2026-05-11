@@ -118,7 +118,7 @@ test("savePureFeeTier: throws error when data fails validation", () => {
 
   // Mock setItem to throw
   const originalSetItem = localStorage.setItem;
-  localStorage.setItem = vi.fn(() => {
+  vi.spyOn(localStorage, "setItem").mockImplementation(() => {
     throw new Error("Storage error");
   });
 

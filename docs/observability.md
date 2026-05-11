@@ -59,7 +59,7 @@ PostHog is the single ingest point for both product and operational telemetry:
 - **Session replay** (via PostHog project settings) for context around errors and UX research
 - Shared user/environment/release properties for segmenting both kinds of data
 
-Client-side capture happens automatically via `capture_exceptions: true`; manual `posthog.captureException(error)` calls supplement React error boundaries. Server-side capture happens in `entry.server.tsx#handleError` via the `posthog-node` SDK.
+Client-side capture happens automatically via `capture_exceptions: true`; manual `posthog.captureException(error)` calls supplement React error boundaries. Server-side capture happens in `entry.server.tsx#handleError` via the `posthog-node` SDK. Server errors are normalized before capture so React Router response-shaped errors keep their status/data context instead of collapsing into `[object Object]`.
 
 ### Structured logs own
 
@@ -100,6 +100,7 @@ When adding a new analytics event, document:
 Exception events (`$exception`) come with rich PostHog-managed fields. Add custom properties only when they materially improve debugging:
 
 - `$exception_component_stack` for React error boundaries
+- `status`, `status_text`, `request_path`, `original_error_type`, and bounded `error_data` for server-side route errors
 - Domain identifiers (alert_id, subscription_id, etc.) where the call site has them
 - Avoid free-form prose; prefer enum-like values that filter cleanly
 
@@ -135,6 +136,7 @@ See `docs/environment-variables.md` for the configuration matrix and setup locat
 Observability is only useful if it is low-noise and safe to inspect.
 
 - Keep the PostHog noise filters up to date in `app/lib/posthog-event-filters.js`
+- Drop scanner/framework server errors before ingest, especially route misses for WordPress probes, `.env`, `.git`, and similar paths
 - Avoid sending secrets, tokens, raw payment details, or other sensitive values in PostHog properties or logs
 - Treat replay and PII-bearing properties as security-sensitive and review them deliberately
 - If a new class of expected noise appears, filter it close to ingest instead of training people to ignore it in the UI

@@ -33,3 +33,11 @@ interface ServerErrorContext {
 
 export function shouldDropClientEvent(event: PostHogEventLike): boolean;
 export function shouldDropServerError(input: ServerErrorContext): boolean;
+export function normalizeServerException(
+  error: unknown,
+  request?: { headers?: Headers; method?: string; url?: string },
+): {
+  error: Error;
+  properties: Record<string, boolean | number | string>;
+};
+export function getServerExceptionDistinctId(request?: { headers?: Headers }): string;

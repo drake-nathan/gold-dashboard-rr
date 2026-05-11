@@ -228,7 +228,7 @@ test("pURE_FALLBACK_IDS: has silver fallback IDs", () => {
 });
 
 test("pURE_FALLBACK_IDS: all IDs are valid UUIDs", () => {
-  const uuidRegex = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i;
+  const uuidRegex = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/iu;
 
   for (const id of Object.values(PURE_FALLBACK_IDS.gold)) {
     expect(id).toMatch(uuidRegex);

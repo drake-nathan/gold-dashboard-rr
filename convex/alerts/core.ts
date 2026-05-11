@@ -449,7 +449,7 @@ export const formatAlertDigest = (
   );
   const pluralizedProducts = totalProducts === 1 ? "item" : "items";
   const subject = `Dashboard.Gold: ${totalProducts} ${pluralizedProducts} triggered`;
-  const manageAlertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/, "")}/alerts` : undefined;
+  const manageAlertsUrl = siteUrl ? `${siteUrl.replace(/\/+$/u, "")}/alerts` : undefined;
   const dashboardUrl = siteUrl;
 
   const textLines: string[] = [
@@ -642,7 +642,7 @@ export const buildUnsubscribeUrl = async (
 
   const signatureHex = await signUnsubscribePayload(unsubscribePayloadFor(userId, kind), secret);
   const token = `${userId}${unsubscribeTokenSeparator}${signatureHex}`;
-  const base = `${convexUrl.replace(/\/+$/, "")}/unsubscribe?token=${encodeURIComponent(token)}`;
+  const base = `${convexUrl.replace(/\/+$/u, "")}/unsubscribe?token=${encodeURIComponent(token)}`;
   return kind === "alerts" ? base : `${base}&kind=${kind}`;
 };
 
@@ -660,7 +660,7 @@ export const sendAlertEmail = async (
     } else {
       const unsubscribeDestinations = [`<mailto:${config.replyToEmail}?subject=unsubscribe>`];
       if (config.siteUrl) {
-        unsubscribeDestinations.push(`<${config.siteUrl.replace(/\/+$/, "")}/alerts>`);
+        unsubscribeDestinations.push(`<${config.siteUrl.replace(/\/+$/u, "")}/alerts>`);
       }
       emailHeaders["List-Unsubscribe"] = unsubscribeDestinations.join(", ");
     }
