@@ -88,9 +88,9 @@ test("does not show for Pro users", async () => {
   mockSubscription.isPro = true;
 
   const FeatureAnnouncementModal = await importModal();
-  const screen = await render(<FeatureAnnouncementModal />);
+  await render(<FeatureAnnouncementModal />);
 
-  expect(screen.container.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Alerts are live");
 });
 
 test("does not show for signed-in users when paid features are not enabled", async () => {
@@ -98,9 +98,9 @@ test("does not show for signed-in users when paid features are not enabled", asy
   mockSubscription.isEnabled = false;
 
   const FeatureAnnouncementModal = await importModal();
-  const screen = await render(<FeatureAnnouncementModal />);
+  await render(<FeatureAnnouncementModal />);
 
-  expect(screen.container.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Alerts are live");
 });
 
 // =============================================================================
@@ -112,9 +112,9 @@ test("does not show for anonymous first-time visitors", async () => {
   seedFirstVisit();
 
   const FeatureAnnouncementModal = await importModal();
-  const screen = await render(<FeatureAnnouncementModal />);
+  await render(<FeatureAnnouncementModal />);
 
-  expect(screen.container.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Alerts are live");
 });
 
 test("shows for anonymous return visitors when paid-features is on", async () => {
@@ -133,9 +133,9 @@ test("does not show for anonymous return visitors when paid-features is off", as
   seedReturnVisit();
 
   const FeatureAnnouncementModal = await importModal();
-  const screen = await render(<FeatureAnnouncementModal />);
+  await render(<FeatureAnnouncementModal />);
 
-  expect(screen.container.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Alerts are live");
 });
 
 // =============================================================================
@@ -146,17 +146,35 @@ test("does not show after the user has dismissed it", async () => {
   localStorage.setItem(DISMISSED_KEY, "true");
 
   const FeatureAnnouncementModal = await importModal();
-  const screen = await render(<FeatureAnnouncementModal />);
+  await render(<FeatureAnnouncementModal />);
 
-  expect(screen.container.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Alerts are live");
 });
 
-test("renders a dismiss button alongside the primary CTA", async () => {
-  // Click-driven dismissal persistence is exercised by manual QA — Base UI's
-  // dialog overlay intercepts pointer events in test mode, making click-on-button
-  // assertions flaky here. We just verify the dismiss affordance is present.
+test("immediately closes when Maybe Later is clicked and persists the dismissal", async () => {
+  // Regression: a previous refactor dropped the in-memory dismissed state,
+  // so clicking Maybe Later wrote to localStorage but didn't trigger a
+  // re-render — the modal stayed visible until the next mount. Guard against
+  // it by asserting the modal text is gone after the click.
+  //
+  // We click the raw HTMLButtonElement (not a Locator) because Base UI's
+  // dialog overlay intercepts playwright pointer events; raw .click() bypasses
+  // that. Same pattern as `app/components/ui/dialog.browser.test.tsx`.
   const FeatureAnnouncementModal = await importModal();
   const screen = await render(<FeatureAnnouncementModal />);
 
-  await expect.element(screen.getByRole("button", { name: "Maybe Later" })).toBeInTheDocument();
+  await expect.element(screen.getByText("Alerts are live")).toBeInTheDocument();
+
+  const dismissButton = [...document.querySelectorAll("button")].find((button) =>
+    button.textContent.includes("Maybe Later"),
+  );
+
+  if (!dismissButton) {
+    throw new Error("Maybe Later button not found");
+  }
+
+  dismissButton.click();
+
+  await expect.poll(() => document.body.textContent).not.toContain("Alerts are live");
+  expect(localStorage.getItem(DISMISSED_KEY)).toBe("true");
 });
