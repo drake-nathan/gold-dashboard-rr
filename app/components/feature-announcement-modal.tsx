@@ -1,18 +1,22 @@
 /**
  * Feature Announcement Modal
  *
- * Announces the new account/sync feature to existing users.
+ * One-shot announcement to existing signed-in free users that paid alerts
+ * have launched. Not an evergreen marketing surface — sets a fresh dismissal
+ * key and an expiration date so it disappears once the announcement window
+ * closes, even for users who never explicitly dismissed it.
  *
  * Display conditions:
- * - User has existing localStorage data (CREDIT_CARDS_STORAGE_KEY)
- * - User hasn't dismissed the modal before
- * - Current date is before expiration (Feb 1, 2026)
- * - User is not signed in
+ * - User is signed in
+ * - paid-features PostHog flag is on for this user
+ * - User is not already Pro
+ * - User hasn't dismissed this announcement
+ * - Current date is before EXPIRATION_DATE
  */
 
-import { useAuth, useClerk } from "@clerk/react-router";
-import { CloudIcon, MonitorSmartphoneIcon, SparklesIcon } from "lucide-react";
-import { useState } from "react";
+import { useAuth } from "@clerk/react-router";
+import { BellRingIcon, MailIcon, SparklesIcon } from "lucide-react";
+import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
 
 import { Button } from "@/components/ui/button";
@@ -24,59 +28,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CREDIT_CARDS_STORAGE_KEY } from "@/features/credit-cards/lib/credit-cards";
+import { useSubscription } from "@/features/subscription/hooks/use-subscription";
 
-// localStorage key for tracking dismissal
-const DISMISSED_KEY = "feature-announcement-dismissed";
+// localStorage key for tracking dismissal of this specific announcement.
+// Use a versioned key so previous announcements' dismissals don't suppress
+// this one, and so a future announcement can ship with its own key.
+const DISMISSED_KEY = "announcement-alerts-launch-dismissed";
 
-// Expiration date: 2 weeks from Jan 18, 2026
-const EXPIRATION_DATE = new Date("2026-02-01T00:00:00");
+// The announcement window closes on this date regardless of dismissal state.
+const EXPIRATION_DATE = new Date("2026-07-01T00:00:00");
 
-/**
- * Check if the modal should be shown (client-side only)
- */
-const checkShouldShow = (isSignedIn: boolean): boolean => {
-  // Don't show for signed-in users
-  if (isSignedIn) return false;
-
-  // Don't show after expiration date
-  if (new Date() > EXPIRATION_DATE) return false;
-
-  // Don't show if already dismissed
-  if (localStorage.getItem(DISMISSED_KEY) === "true") return false;
-
-  // Only show if user has existing localStorage data
-  const existingData = localStorage.getItem(CREDIT_CARDS_STORAGE_KEY);
-  if (!existingData) return false;
-
-  return true;
-};
+const isDismissed = (): boolean => localStorage.getItem(DISMISSED_KEY) === "true";
 
 export const FeatureAnnouncementModal = () => {
-  const { openSignIn, openSignUp } = useClerk();
-  const { isLoaded, isSignedIn } = useAuth();
   const isClient = useIsClient();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const { isEnabled, isLoading: isSubLoading, isPro } = useSubscription();
 
-  // Derive whether to show from current state (no effect needed)
-  const shouldShow = isClient && isLoaded && !isDismissed && checkShouldShow(isSignedIn);
+  // Anonymous and Pro users never see this. isEnabled already collapses
+  // (paid-features flag) AND (Stripe wired in env) into one signal.
+  const isEligible = isClient && isAuthLoaded && isSignedIn && !isSubLoading && isEnabled && !isPro;
+
+  const shouldShow = isEligible && new Date() < EXPIRATION_DATE && !isDismissed();
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISSED_KEY, "true");
-    setIsDismissed(true);
   };
 
-  const handleSignUp = () => {
-    handleDismiss();
-    openSignUp();
-  };
-
-  const handleSignIn = () => {
-    handleDismiss();
-    openSignIn();
-  };
-
-  // Don't render anything if not showing
   if (!shouldShow) return null;
 
   return (
@@ -84,56 +62,45 @@ export const FeatureAnnouncementModal = () => {
       onOpenChange={(open) => {
         if (!open) handleDismiss();
       }}
-      open={shouldShow}
+      open
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <SparklesIcon className="h-5 w-5 text-yellow-500" />
-            New: Sync Your Credit Cards
+            Alerts are live
           </DialogTitle>
           <DialogDescription className="text-base">
-            Your custom credit cards can now be saved to the cloud.
+            Get notified the moment a Costco product hits the spread you&apos;re watching for.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <div className="flex gap-3">
-            <CloudIcon className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
+            <BellRingIcon className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
             <div>
-              <p className="font-medium">Keep your custom cards</p>
+              <p className="font-medium">Price &amp; restock alerts</p>
               <p className="text-sm text-muted-foreground">
-                Create a free account and your existing credit cards—including any custom points
-                values you&apos;ve set—will automatically migrate.
+                Watch a specific product, a metal + weight category, or a markup threshold across
+                all of Costco&apos;s gold and silver.
               </p>
             </div>
           </div>
 
           <div className="flex gap-3">
-            <MonitorSmartphoneIcon className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
+            <MailIcon className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
             <div>
-              <p className="font-medium">Access on any device</p>
+              <p className="font-medium">Batched email digests</p>
               <p className="text-sm text-muted-foreground">
-                Your cards and calculator settings stay in sync whether you&apos;re on your phone,
-                tablet, or computer.
+                One clean email when something hits — no noise, no spam, unsubscribe anytime.
               </p>
             </div>
-          </div>
-
-          <div className="rounded-md bg-muted/50 p-3">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Coming soon:</span> Custom price alerts
-              so you never miss a deal.
-            </p>
           </div>
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button className="w-full" onClick={handleSignUp} size="lg">
-            Create Free Account
-          </Button>
-          <Button className="w-full" onClick={handleSignIn} size="lg" variant="outline">
-            I Already Have an Account
+          <Button asChild className="w-full" onClick={handleDismiss} size="lg">
+            <Link to="/alerts">See Alerts</Link>
           </Button>
           <Button className="w-full" onClick={handleDismiss} size="lg" variant="ghost">
             Maybe Later
