@@ -15,6 +15,14 @@ export const HeaderActions = () => {
   return (
     <>
       <Show when="signed-out">
+        {alertsEnabled ? (
+          <Button asChild size="sm" variant="outline">
+            <Link to="/alerts">
+              <Bell className="h-4 w-4" />
+              <span className="ml-1.5">Alerts</span>
+            </Link>
+          </Button>
+        ) : null}
         <Button
           onClick={() => {
             openSignIn();

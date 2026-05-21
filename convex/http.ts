@@ -4,6 +4,7 @@ import { type GenericActionCtx, type GenericDataModel, httpRouter } from "convex
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { type UnsubscribeKind, unsubscribePayloadFor } from "./alerts/core";
+import { captureServerEvent } from "./posthog";
 
 const http = httpRouter();
 type StripeWebhookCtx = Pick<GenericActionCtx<GenericDataModel>, "runMutation" | "runQuery">;
@@ -194,6 +195,32 @@ http.route({
 // Register Stripe webhook handler at /stripe/webhook
 registerRoutes(http, components.stripe, {
   events: {
+    "customer.subscription.created": async (ctx, event) => {
+      const subscription = event.data.object;
+      const metadataUserId =
+        typeof subscription.metadata.userId === "string" ? subscription.metadata.userId : undefined;
+      const userId = await resolveUserIdFromSubscription(ctx, subscription.id, metadataUserId);
+
+      // Mirror the alert-entitlement update path so created subscriptions
+      // immediately reflect their starting status (typically `active` or
+      // `trialing`) on alert gates, without waiting for the first `updated`.
+      await applySubscriptionStatusToAlerts(ctx, {
+        status: subscription.status,
+        stripeSubscriptionId: subscription.id,
+        userId: metadataUserId,
+      });
+
+      if (userId) {
+        await captureServerEvent({
+          distinctId: userId,
+          event: "subscription_activated",
+          properties: {
+            status: subscription.status,
+            stripe_subscription_id: subscription.id,
+          },
+        });
+      }
+    },
     "customer.subscription.deleted": async (ctx, event) => {
       const subscription = event.data.object;
       const metadataUserId =

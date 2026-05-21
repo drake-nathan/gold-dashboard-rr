@@ -1,5 +1,13 @@
-import { SignIn, useAuth } from "@clerk/react-router";
-import { Bell, Loader2, Plus, TriangleAlert } from "lucide-react";
+import { useAuth, useClerk } from "@clerk/react-router";
+import {
+  Bell,
+  BellRingIcon,
+  Loader2,
+  MailIcon,
+  Plus,
+  SparklesIcon,
+  TriangleAlert,
+} from "lucide-react";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
 
@@ -189,18 +197,73 @@ export const AlertsPage = () => {
   }
 
   if (!isSignedIn) {
-    return (
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="flex flex-col items-center">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">Alerts</h1>
-            <p className="text-sm text-muted-foreground">Sign in to manage your alerts</p>
-          </div>
-          <SignIn fallbackRedirectUrl="/alerts" forceRedirectUrl="/alerts" routing="hash" />
-        </div>
-      </main>
-    );
+    return <SignedOutAlertsPitch />;
   }
 
   return <SignedInAlertsPage />;
+};
+
+const SignedOutAlertsPitch = () => {
+  const { openSignIn, openSignUp } = useClerk();
+
+  const handleSignUp = () => {
+    openSignUp({ fallbackRedirectUrl: "/alerts", forceRedirectUrl: "/alerts" });
+  };
+
+  const handleSignIn = () => {
+    openSignIn({ fallbackRedirectUrl: "/alerts", forceRedirectUrl: "/alerts" });
+  };
+
+  return (
+    <main className="container mx-auto max-w-2xl flex-1 px-4 py-12">
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          Never miss a Costco gold deal
+        </h1>
+        <p className="mt-3 text-base text-muted-foreground">
+          Get notified the moment a product hits the spread you&apos;re watching for.
+        </p>
+      </div>
+
+      <div className="space-y-5 rounded-lg border bg-card p-6">
+        <div className="flex gap-3">
+          <BellRingIcon className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
+          <div>
+            <p className="font-medium">Price &amp; restock alerts</p>
+            <p className="text-sm text-muted-foreground">
+              Watch a specific product, a metal + weight category, or a markup threshold across all
+              of Costco&apos;s gold and silver.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <MailIcon className="mt-0.5 h-5 w-5 shrink-0 text-green-500" />
+          <div>
+            <p className="font-medium">Batched email digests</p>
+            <p className="text-sm text-muted-foreground">
+              One clean email when something hits — no noise, no spam, unsubscribe anytime.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center gap-3 border-t pt-5">
+          <p className="text-sm text-muted-foreground">
+            Pro <span className="font-semibold text-foreground">$8/mo</span> — cancel any time.
+          </p>
+          <Button className="w-full" onClick={handleSignUp} size="lg">
+            <SparklesIcon className="size-4" />
+            Sign up to get started
+          </Button>
+          <button
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+            onClick={handleSignIn}
+            type="button"
+          >
+            Already have an account? Sign in
+          </button>
+        </div>
+      </div>
+    </main>
+  );
 };

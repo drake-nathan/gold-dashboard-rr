@@ -64,9 +64,15 @@ vi.mock("@clerk/react-router/server", () => ({
   getAuth: vi.fn(),
 }));
 
+const openSignInMock = vi.fn();
+const openSignUpMock = vi.fn();
+
 vi.mock("@clerk/react-router", () => ({
-  SignIn: () => <div>Mock Sign In</div>,
   useAuth: () => mockAuthState,
+  useClerk: () => ({
+    openSignIn: openSignInMock,
+    openSignUp: openSignUpMock,
+  }),
 }));
 
 vi.mock("convex/react", () => ({
@@ -155,14 +161,37 @@ beforeEach(() => {
   deleteAlertMock.mockResolvedValue({});
 });
 
-test("shows sign-in gating when the alerts route is opened signed out", async () => {
+test("shows the anonymous pitch when the alerts route is opened signed out", async () => {
   const screen = await renderAlertsRoute("/alerts");
 
-  await expect.element(screen.getByRole("heading", { name: "Alerts" })).toBeInTheDocument();
-  await expect.element(screen.getByText("Sign in to manage your alerts")).toBeInTheDocument();
-  await expect.element(screen.getByText("Mock Sign In")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("heading", { name: "Never miss a Costco gold deal" }))
+    .toBeInTheDocument();
+  await expect.element(screen.getByText(/\$8\/mo/u)).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("button", { name: /sign up to get started/iu }))
+    .toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("button", { name: /already have an account.*sign in/iu }))
+    .toBeInTheDocument();
   expect(useQueryMock).not.toHaveBeenCalledWith("getAlerts", expect.anything());
   expect(useQueryMock).not.toHaveBeenCalledWith("getProductOptions", expect.anything());
+});
+
+test("anonymous pitch CTAs open Clerk modals with /alerts as the redirect", async () => {
+  const screen = await renderAlertsRoute("/alerts");
+
+  await screen.getByRole("button", { name: /sign up to get started/iu }).click();
+  expect(openSignUpMock).toHaveBeenCalledWith({
+    fallbackRedirectUrl: "/alerts",
+    forceRedirectUrl: "/alerts",
+  });
+
+  await screen.getByRole("button", { name: /already have an account.*sign in/iu }).click();
+  expect(openSignInMock).toHaveBeenCalledWith({
+    fallbackRedirectUrl: "/alerts",
+    forceRedirectUrl: "/alerts",
+  });
 });
 
 test("shows the empty state with a create CTA when signed in with no alerts", async () => {

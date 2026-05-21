@@ -1,98 +1,57 @@
 import { useAuth } from "@clerk/react-router";
 import { Sparkles } from "lucide-react";
-import { useCallback, useState } from "react";
-import { useLocation } from "react-router";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
-import { UpgradeDialog } from "@/components/subscription/upgrade-dialog";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/subscription/hooks/use-subscription";
+import { type UpgradeFlowSource, useUpgradeFlow } from "@/features/subscription/use-upgrade-flow";
 
 interface UpgradeButtonProps {
   className?: string;
-  /**
-   * Size variant for the button
-   */
   size?: "default" | "lg" | "sm";
   /**
-   * Text to display on the button
+   * Attribution for `upgrade_dialog_opened`. Defaults to `header` since that's
+   * where this button has historically lived; callers in new surfaces should
+   * pass their own source so the PostHog funnel attributes correctly.
    */
+  source?: UpgradeFlowSource;
   text?: string;
 }
 
-/**
- * Button to upgrade to Pro subscription.
- * Handles checkout flow and redirects to Stripe.
- */
 export const UpgradeButton = ({
   className,
   size = "default",
+  source = "header",
   text = "Upgrade to Pro",
 }: UpgradeButtonProps) => {
   const { isSignedIn } = useAuth();
-  const location = useLocation();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { createCheckout, isActionLoading, isEnabled, isLoading, isPro } = useSubscription();
+  const { isActionLoading, isEnabled, isLoading, isPro } = useSubscription();
+  const { open } = useUpgradeFlow();
 
-  const handleCheckout = useCallback(async () => {
+  const handleClick = useCallback(() => {
     if (!isSignedIn) {
       toast.error("Please sign in to upgrade");
       return;
     }
-
-    try {
-      const result = await createCheckout(`${location.pathname}${location.search}${location.hash}`);
-
-      if (result.error) {
-        toast.error(result.error);
-        return;
-      }
-
-      if (result.url) {
-        window.location.assign(result.url);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
-    } catch {
-      toast.error("Failed to start checkout. Please try again.");
-    }
-  }, [createCheckout, isSignedIn, location.hash, location.pathname, location.search]);
-
-  const handleUpgradeClick = useCallback(() => {
-    if (!isSignedIn) {
-      toast.error("Please sign in to upgrade");
-      return;
-    }
-
-    setIsDialogOpen(true);
-  }, [isSignedIn]);
+    open(source);
+  }, [isSignedIn, open, source]);
 
   // Hide while loading to prevent flashing the upgrade button to Pro users
-  // before their subscription status resolves. The dialog renders unconditionally
-  // so its exit animation can't be interrupted by a re-render that unmounts the tree.
-  const showButton = isEnabled && !isPro && !isLoading;
+  // before their subscription status resolves.
+  if (!isEnabled || isPro || isLoading) {
+    return null;
+  }
 
   return (
-    <>
-      {showButton && (
-        <Button
-          className={className}
-          disabled={isActionLoading || !isSignedIn}
-          onClick={handleUpgradeClick}
-          size={size}
-        >
-          <Sparkles className="size-4" />
-          {text}
-        </Button>
-      )}
-      <UpgradeDialog
-        isLoading={isActionLoading}
-        onConfirm={() => {
-          void handleCheckout();
-        }}
-        onOpenChange={setIsDialogOpen}
-        open={isDialogOpen}
-      />
-    </>
+    <Button
+      className={className}
+      disabled={isActionLoading || !isSignedIn}
+      onClick={handleClick}
+      size={size}
+    >
+      <Sparkles className="size-4" />
+      {text}
+    </Button>
   );
 };

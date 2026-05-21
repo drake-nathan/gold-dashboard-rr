@@ -25,6 +25,7 @@ import { Toaster } from "./components/ui/sonner";
 import { FeedbackButton } from "./features/feedback/feedback-button";
 import { ObservabilitySync } from "./features/observability/observability-sync";
 import { VersionWatch } from "./features/observability/version-watch";
+import { UpgradeFlowProvider } from "./features/subscription/upgrade-flow-provider";
 import { type FeatureFlagValues } from "./lib/feature-flags";
 import { evaluateFeatureFlags } from "./lib/feature-flags.server";
 import { resolveAppRelease, resolveObservabilityEnvironment } from "./lib/observability-config";
@@ -171,8 +172,10 @@ const App = ({ loaderData }: Route.ComponentProps) => {
           <FeatureFlagProvider flags={featureFlags}>
             <ObservabilitySync />
             <VersionWatch />
-            <Outlet />
-            <FeedbackButton />
+            <UpgradeFlowProvider>
+              <Outlet />
+              <FeedbackButton />
+            </UpgradeFlowProvider>
           </FeatureFlagProvider>
         </ConvexProviderWithClerk>
       </ClerkProvider>

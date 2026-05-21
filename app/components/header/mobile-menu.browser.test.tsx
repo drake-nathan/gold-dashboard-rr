@@ -65,8 +65,19 @@ test("shows signed-out auth actions without querying admin status", async () => 
   await expect.element(screen.getByText("Theme Items")).toBeInTheDocument();
   await expect.element(screen.getByText("Sign In")).toBeInTheDocument();
   await expect.element(screen.getByText("Sign Up")).toBeInTheDocument();
+  expect(document.body.textContent).not.toContain("Alerts");
   expect(screen.container.textContent).not.toContain("Admin");
   expect(useQueryMock).not.toHaveBeenCalled();
+});
+
+test("exposes the Alerts entry to signed-out users when paid features are enabled", async () => {
+  const screen = await renderMobileMenu({ [FEATURE_FLAGS.PAID_FEATURES]: true });
+
+  await screen.getByRole("button", { name: "Open menu" }).click();
+
+  await expect.element(screen.getByRole("menuitem", { name: /alerts/iu })).toBeInTheDocument();
+  await expect.element(screen.getByText("Sign In")).toBeInTheDocument();
+  await expect.element(screen.getByText("Sign Up")).toBeInTheDocument();
 });
 
 test("shows alerts and account actions when paid-features flag is enabled", async () => {

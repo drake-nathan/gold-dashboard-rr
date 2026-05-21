@@ -18,12 +18,19 @@ let mockSubscription = {
 };
 let mockPaidFeaturesOn = true;
 
+const captureMock = vi.fn();
+const openUpgradeFlowMock = vi.fn();
+
 vi.mock("@clerk/react-router", () => ({
   useAuth: () => mockAuthState,
 }));
 
 vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
+}));
+
+vi.mock("@/features/subscription/use-upgrade-flow", () => ({
+  useUpgradeFlow: () => ({ open: openUpgradeFlowMock }),
 }));
 
 vi.mock("@/lib/feature-flags", async (importActual) => {
@@ -34,15 +41,16 @@ vi.mock("@/lib/feature-flags", async (importActual) => {
   };
 });
 
+vi.mock("posthog-js/react", () => ({
+  usePostHog: () => ({ capture: captureMock }),
+}));
+
 vi.mock("react-router", () => ({
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
 }));
 
-// Helper that simulates a return visit by pre-seeding visit count to 2.
-// The module's module-load increment would bump to 3 on first import, but
-// vitest's module cache means we set the count before importing.
 const seedReturnVisit = () => {
   localStorage.setItem(VISIT_COUNT_KEY, "2");
   sessionStorage.setItem(SESSION_COUNTED_KEY, "true");
@@ -67,6 +75,8 @@ beforeEach(() => {
   // Mark the session as counted so the module-load increment is a no-op,
   // and tests fully control the visit count.
   sessionStorage.setItem(SESSION_COUNTED_KEY, "true");
+  captureMock.mockClear();
+  openUpgradeFlowMock.mockClear();
   vi.resetModules();
 });
 
@@ -74,14 +84,47 @@ beforeEach(() => {
 // Signed-in path
 // =============================================================================
 
-test("shows the announcement to signed-in free users with paid features enabled", async () => {
+test("shows the upgrade-flavored pitch to signed-in free users", async () => {
   const FeatureAnnouncementModal = await importModal();
   const screen = await render(<FeatureAnnouncementModal />);
 
-  await expect.element(screen.getByText("Alerts are live")).toBeInTheDocument();
+  await expect.element(screen.getByText("Never miss a Costco gold deal")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("button", { name: /upgrade to pro.*\$8\/mo/iu }))
+    .toBeInTheDocument();
   await expect
     .element(screen.getByRole("link", { name: "See Alerts" }))
     .toHaveAttribute("href", "/alerts");
+});
+
+test("fires announcement_modal_shown with the signed-in audience", async () => {
+  const FeatureAnnouncementModal = await importModal();
+  await render(<FeatureAnnouncementModal />);
+
+  await expect
+    .poll(() => captureMock.mock.calls)
+    .toContainEqual(["announcement_modal_shown", { audience: "signed_in_free" }]);
+});
+
+test("primary CTA opens the upgrade flow and persists dismissal", async () => {
+  const FeatureAnnouncementModal = await importModal();
+  await render(<FeatureAnnouncementModal />);
+
+  const upgradeButton = [...document.querySelectorAll("button")].find((b) =>
+    b.textContent.includes("Upgrade to Pro"),
+  );
+
+  if (!upgradeButton) throw new Error("Upgrade button not found");
+
+  upgradeButton.click();
+
+  expect(openUpgradeFlowMock).toHaveBeenCalledWith("announcement_modal");
+  expect(captureMock).toHaveBeenCalledWith("announcement_modal_cta_clicked", {
+    audience: "signed_in_free",
+    cta: "upgrade",
+  });
+  expect(localStorage.getItem(DISMISSED_KEY)).toBe("true");
+  await expect.poll(() => document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
 test("does not show for Pro users", async () => {
@@ -90,17 +133,16 @@ test("does not show for Pro users", async () => {
   const FeatureAnnouncementModal = await importModal();
   await render(<FeatureAnnouncementModal />);
 
-  expect(document.body.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
 test("does not show for signed-in users when paid features are not enabled", async () => {
-  // isEnabled=false covers both env-level Stripe-off and paid-features flag-off.
   mockSubscription.isEnabled = false;
 
   const FeatureAnnouncementModal = await importModal();
   await render(<FeatureAnnouncementModal />);
 
-  expect(document.body.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
 // =============================================================================
@@ -114,7 +156,7 @@ test("does not show for anonymous first-time visitors", async () => {
   const FeatureAnnouncementModal = await importModal();
   await render(<FeatureAnnouncementModal />);
 
-  expect(document.body.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
 test("shows for anonymous return visitors when paid-features is on", async () => {
@@ -124,7 +166,13 @@ test("shows for anonymous return visitors when paid-features is on", async () =>
   const FeatureAnnouncementModal = await importModal();
   const screen = await render(<FeatureAnnouncementModal />);
 
-  await expect.element(screen.getByText("Alerts are live")).toBeInTheDocument();
+  await expect.element(screen.getByText("Never miss a Costco gold deal")).toBeInTheDocument();
+  await expect
+    .element(screen.getByRole("link", { name: "Get Alerts" }))
+    .toHaveAttribute("href", "/alerts");
+  // Anonymous variant does NOT show the upgrade button — that pitch happens
+  // on the /alerts page after signup.
+  expect(document.body.textContent).not.toContain("Upgrade to Pro");
 });
 
 test("does not show for anonymous return visitors when paid-features is off", async () => {
@@ -135,7 +183,7 @@ test("does not show for anonymous return visitors when paid-features is off", as
   const FeatureAnnouncementModal = await importModal();
   await render(<FeatureAnnouncementModal />);
 
-  expect(document.body.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
 // =============================================================================
@@ -148,22 +196,14 @@ test("does not show after the user has dismissed it", async () => {
   const FeatureAnnouncementModal = await importModal();
   await render(<FeatureAnnouncementModal />);
 
-  expect(document.body.textContent).not.toContain("Alerts are live");
+  expect(document.body.textContent).not.toContain("Never miss a Costco gold deal");
 });
 
-test("immediately closes when Maybe Later is clicked and persists the dismissal", async () => {
-  // Regression: a previous refactor dropped the in-memory dismissed state,
-  // so clicking Maybe Later wrote to localStorage but didn't trigger a
-  // re-render — the modal stayed visible until the next mount. Guard against
-  // it by asserting the modal text is gone after the click.
-  //
-  // We click the raw HTMLButtonElement (not a Locator) because Base UI's
-  // dialog overlay intercepts playwright pointer events; raw .click() bypasses
-  // that. Same pattern as `app/components/ui/dialog.browser.test.tsx`.
+test("maybe Later closes the modal, persists, and emits a dismissed event", async () => {
   const FeatureAnnouncementModal = await importModal();
   const screen = await render(<FeatureAnnouncementModal />);
 
-  await expect.element(screen.getByText("Alerts are live")).toBeInTheDocument();
+  await expect.element(screen.getByText("Never miss a Costco gold deal")).toBeInTheDocument();
 
   const dismissButton = [...document.querySelectorAll("button")].find((button) =>
     button.textContent.includes("Maybe Later"),
@@ -175,6 +215,10 @@ test("immediately closes when Maybe Later is clicked and persists the dismissal"
 
   dismissButton.click();
 
-  await expect.poll(() => document.body.textContent).not.toContain("Alerts are live");
+  await expect.poll(() => document.body.textContent).not.toContain("Never miss a Costco gold deal");
   expect(localStorage.getItem(DISMISSED_KEY)).toBe("true");
+  expect(captureMock).toHaveBeenCalledWith("announcement_modal_dismissed", {
+    audience: "signed_in_free",
+    method: "maybe_later",
+  });
 });

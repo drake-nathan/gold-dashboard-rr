@@ -39,6 +39,14 @@ export const MobileMenu = () => {
         {/* Auth Section */}
         <DropdownMenuSeparator />
         <Show when="signed-out">
+          {alertsEnabled ? (
+            <DropdownMenuItem asChild>
+              <Link to="/alerts">
+                <Bell className="mr-2 h-4 w-4" />
+                Alerts
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             onClick={() => {
               openSignIn();

@@ -3,6 +3,7 @@
 ## Now
 
 - Alerts: error-state polish + remaining test coverage, then ramp `paid-features` to all signed-in users → [.epics/alerts.md]
+- Launch paid features — modal rework, full upgrade-funnel PostHog instrumentation, signed-out /alerts pitch page, signed-out Alerts header link → [.tasks/launch-paid-features.md]
 - Delete the legacy `alerts-beta` PostHog flag after the `paid-features` rollout has been live for a release
 - Observability strategy docs + rollout plan → [.epics/observability-overhaul.md]
 
@@ -19,6 +20,7 @@
 - Standardize remaining UI primitive composition on Base UI `render` and reduce compatibility-only `asChild` usage
 - Remove temporary Convex `dashboard:getStats` compatibility query after stale cached clients age out
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]
+- Review the paid-features launch funnel in PostHog after the announcement modal ships — confirm `announcement_modal_shown` → `upgrade_dialog_opened` → `upgrade_checkout_started` → `subscription_activated` → `alert_created` is flowing, identify the biggest drop-off, and decide whether to iterate copy/CTA before Phase 2 (email blast)
 - Replace hardcoded dashboard OG/site URL with the canonical site URL source
 - Split `app/features/credit-cards/hooks/use-user-credit-cards.ts` → [.tasks/split-user-credit-cards-hook.md]
 - Loading skeletons instead of empty states

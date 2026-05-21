@@ -1,6 +1,7 @@
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
+import { captureServerEvent } from "../posthog";
 import { getUserAlertEntitlements } from "../subscriptionEntitlements";
 import {
   type AlertHistoryDoc,
@@ -281,6 +282,18 @@ export const processPendingAlertBatchesHelper = async (
       status: "sent",
     });
     sentBatches++;
+
+    // Funnel close-out: every paid sub eventually proves the conversion by
+    // receiving the first alert email. `subject` is the Clerk userId, same
+    // distinct_id the client uses, so this event joins back to upgrade.
+    await captureServerEvent({
+      distinctId: getStoredIdentity(batch).subject,
+      event: "alert_email_sent",
+      properties: {
+        alert_count: batch.alerts.length,
+        batch_id: batch._id,
+      },
+    });
   }
 
   return {

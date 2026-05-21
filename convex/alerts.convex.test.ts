@@ -1380,10 +1380,15 @@ test("processPendingAlertBatches sends due batches and marks history notified", 
 
     expect(processResult.sentBatches).toBe(1);
     expect(processResult.failedSends).toBe(0);
-    expect(fetchMock).toHaveBeenCalledOnce();
 
-    const fetchCall = fetchMock.mock.calls[0];
-    const requestInit = fetchCall[1] as RequestInit;
+    const resendCall = fetchMock.mock.calls.find(
+      ([url]) => typeof url === "string" && url.includes("api.resend.com"),
+    );
+    if (!resendCall) {
+      throw new Error("Expected a Resend fetch call");
+    }
+
+    const requestInit = resendCall[1] as RequestInit;
     const requestBody = typeof requestInit.body === "string" ? JSON.parse(requestInit.body) : null;
 
     expect(requestBody).not.toBeNull();

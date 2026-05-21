@@ -1,22 +1,26 @@
 /**
  * Feature Announcement Modal
  *
- * One-shot announcement that paid alerts have launched. Two eligible
- * audiences:
+ * Conversion CTA for the paid-alerts launch. Two audiences:
  *
- *   1. Signed-in free users with paid features enabled — they can convert
- *      now via the Pro upgrade flow.
- *   2. Anonymous users on their second-or-later visit, when paid-features
- *      is rolled out — first-visit-only would be too aggressive, but a
- *      returning visitor is a stronger sign of intent.
+ *   1. Signed-in free users with paid features enabled — primary CTA opens
+ *      the global UpgradeDialog via `useUpgradeFlow`, surfacing price + Stripe
+ *      checkout. Secondary CTA links to /alerts for the curious.
+ *   2. Anonymous users on their 2nd-or-later visit, when paid-features is
+ *      rolled out — primary CTA routes to /alerts, which is the public-facing
+ *      pitch surface. We don't try to checkout from here; anonymous → signup
+ *      → upgrade is a real flow that needs the /alerts page to do the work.
  *
- * Not an evergreen marketing surface — the announcement window closes on
- * EXPIRATION_DATE regardless of dismissal.
+ * Dismissal model: explicit dismissal (Maybe Later, CTA clicks) is permanent
+ * via localStorage. Accidental closes (outside-click, Esc) are session-only —
+ * an accidental tap shouldn't kill the pitch for the entire window. The
+ * announcement window itself closes on EXPIRATION_DATE regardless.
  */
 
 import { useAuth } from "@clerk/react-router";
 import { BellRingIcon, MailIcon, SparklesIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { usePostHog } from "posthog-js/react";
+import { type ComponentProps, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
 
@@ -30,21 +34,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSubscription } from "@/features/subscription/hooks/use-subscription";
+import { useUpgradeFlow } from "@/features/subscription/use-upgrade-flow";
 import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
-// localStorage keys
 const DISMISSED_KEY = "announcement-alerts-launch-dismissed";
 const VISIT_COUNT_KEY = "site-visit-count";
-// sessionStorage key — ensures the visit counter increments at most once
-// per browser session even if the module is re-imported (HMR, tab refresh
-// would create a new session anyway).
 const SESSION_COUNTED_KEY = "site-visit-session-counted";
 
-// Anonymous visitors must have visited at least this many times before the
-// modal is eligible to show. 2 = first return visit.
 const MIN_VISITS_FOR_ANON_MODAL = 2;
-
-// The announcement window closes on this date regardless of dismissal state.
 const EXPIRATION_DATE = new Date("2026-07-01T00:00:00");
 
 // Record this visit once per session at module load. Module-level (rather
@@ -85,14 +82,15 @@ const getVisitCount = (): number => {
 
 // Dev-only override. Append `?preview-announcement=...` to any URL in a dev
 // build:
-//   - `?preview-announcement=1`     bypasses eligibility gates (auth, Pro,
-//                                   visit count, expiration) but RESPECTS
-//                                   dismissal — so the dismiss button works
-//                                   naturally and you can test the full flow.
+//   - `?preview-announcement=1`     bypasses eligibility gates but respects
+//                                   dismissal so the dismiss button works
+//                                   naturally.
 //   - `?preview-announcement=fresh` same as `=1`, and also clears the
-//                                   dismissed-flag on render. Use this to
-//                                   re-preview after dismissing.
-// Gated on the dev MODE so it can never accidentally fire in production.
+//                                   dismissed-flag on render. Re-preview
+//                                   after dismissing.
+// Append `&audience=anonymous` to preview the anonymous variant; default is
+// the signed-in variant.
+// Gated on dev MODE so it can never fire in production.
 type DevPreviewMode = "fresh" | "off" | "on";
 
 const getDevPreviewMode = (): DevPreviewMode => {
@@ -104,35 +102,38 @@ const getDevPreviewMode = (): DevPreviewMode => {
   return "off";
 };
 
+type Audience = "anonymous" | "signed_in_free";
+type DismissMethod = "esc" | "maybe_later" | "outside_click";
+
 export const FeatureAnnouncementModal = () => {
   const isClient = useIsClient();
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const { isEnabled, isLoading: isSubLoading, isPro } = useSubscription();
   const isPaidFeaturesOn = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
+  const posthog = usePostHog();
+  const { open: openUpgradeFlow } = useUpgradeFlow();
 
-  // Signed-in free users on a paid-features-enabled env. isEnabled already
-  // collapses (paid-features flag) AND (Stripe wired in env) into one signal.
   const isSignedInEligible = isAuthLoaded && isSignedIn && !isSubLoading && isEnabled && !isPro;
-
-  // Anonymous return visitors. We don't gate on isEnabled because anonymous
-  // users can't checkout from here anyway — the CTA routes them through
-  // sign-in first. We do gate on the paid-features flag so the announcement
-  // never appears before the feature is rolled out for them.
   const isAnonymousEligible =
     isAuthLoaded && !isSignedIn && isPaidFeaturesOn && getVisitCount() >= MIN_VISITS_FOR_ANON_MODAL;
 
   const devPreview = getDevPreviewMode();
+  const previewAudience: Audience =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("audience") === "anonymous"
+      ? "anonymous"
+      : "signed_in_free";
 
-  // In-memory dismissal mirror. localStorage alone isn't enough: writes to
-  // it don't trigger a re-render, so a click on Maybe Later wouldn't visibly
-  // close the modal until the next mount. We pair the localStorage write
-  // with this state so React knows to re-render and re-evaluate shouldShow.
+  const audience: Audience = isSignedInEligible
+    ? "signed_in_free"
+    : isAnonymousEligible
+      ? "anonymous"
+      : previewAudience;
+
+  // In-memory mirror so dismissal visibly closes the modal even when we
+  // don't persist (accidental close path) or before localStorage settles.
   const [hasDismissedInSession, setHasDismissedInSession] = useState(false);
 
-  // Dev-only: when `?preview-announcement=fresh` is set, clear the dismissed
-  // flag so the modal re-appears for re-testing. Effect is the right home
-  // for this: it syncs the URL param to a browser API (localStorage), only
-  // in development. No-op otherwise.
   useEffect(() => {
     if (devPreview !== "fresh") return;
     try {
@@ -140,8 +141,6 @@ export const FeatureAnnouncementModal = () => {
     } catch {
       // ignore — preview is best-effort
     }
-    // Also reset the in-memory mirror in case the user dismissed earlier in
-    // the same React session and then navigated to `=fresh`.
     setHasDismissedInSession(false);
   }, [devPreview]);
 
@@ -154,32 +153,85 @@ export const FeatureAnnouncementModal = () => {
     !hasDismissedInSession &&
     !isDismissed();
 
-  const handleDismiss = () => {
+  // Fire `announcement_modal_shown` once per mount when the modal becomes
+  // visible. Ref guards against duplicate emissions across re-renders.
+  const hasCapturedShown = useRef(false);
+  useEffect(() => {
+    if (!shouldShow || hasCapturedShown.current) return;
+    hasCapturedShown.current = true;
+    posthog.capture("announcement_modal_shown", { audience });
+  }, [shouldShow, audience, posthog]);
+
+  const persistDismissal = useCallback(() => {
     setHasDismissedInSession(true);
     try {
       localStorage.setItem(DISMISSED_KEY, "true");
     } catch {
-      // See above — degrade silently if storage is unavailable.
+      // Degrade silently if storage is unavailable.
     }
+  }, []);
+
+  const handleDismissExplicit = useCallback(
+    (method: DismissMethod) => {
+      posthog.capture("announcement_modal_dismissed", { audience, method });
+      persistDismissal();
+    },
+    [audience, persistDismissal, posthog],
+  );
+
+  const handleDialogOpenChange: ComponentProps<typeof Dialog>["onOpenChange"] = (
+    nextOpen,
+    details,
+  ) => {
+    if (nextOpen) return;
+    // Accidental closes (backdrop / Esc) only dismiss the current session —
+    // the user gets the modal again on their next visit.
+    if (details.reason === "outside-press") {
+      posthog.capture("announcement_modal_dismissed", { audience, method: "outside_click" });
+      setHasDismissedInSession(true);
+      return;
+    }
+    if (details.reason === "escape-key") {
+      posthog.capture("announcement_modal_dismissed", { audience, method: "esc" });
+      setHasDismissedInSession(true);
+      return;
+    }
+    // Programmatic closes (button clicks) handle their own dismissal logic
+    // before flipping the dialog state, so we don't double-fire here.
+    setHasDismissedInSession(true);
+  };
+
+  const handlePrimaryCta = () => {
+    if (audience === "signed_in_free") {
+      posthog.capture("announcement_modal_cta_clicked", { audience, cta: "upgrade" });
+      persistDismissal();
+      openUpgradeFlow("announcement_modal");
+      return;
+    }
+    posthog.capture("announcement_modal_cta_clicked", { audience, cta: "get_alerts" });
+    persistDismissal();
+  };
+
+  const handleSecondaryCta = () => {
+    posthog.capture("announcement_modal_cta_clicked", { audience, cta: "see_alerts" });
+    persistDismissal();
   };
 
   if (!shouldShow) return null;
 
+  const isSignedInVariant = audience === "signed_in_free";
+
   return (
-    <Dialog
-      onOpenChange={(open) => {
-        if (!open) handleDismiss();
-      }}
-      open
-    >
+    <Dialog onOpenChange={handleDialogOpenChange} open>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <SparklesIcon className="h-5 w-5 text-yellow-500" />
-            Alerts are live
+            Never miss a Costco gold deal
           </DialogTitle>
           <DialogDescription className="text-base">
-            Get notified the moment a Costco product hits the spread you&apos;re watching for.
+            Alerts are live. Get notified the moment a product hits the spread you&apos;re watching
+            for.
           </DialogDescription>
         </DialogHeader>
 
@@ -207,10 +259,35 @@ export const FeatureAnnouncementModal = () => {
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col">
-          <Button asChild className="w-full" onClick={handleDismiss} size="lg">
-            <Link to="/alerts">See Alerts</Link>
-          </Button>
-          <Button className="w-full" onClick={handleDismiss} size="lg" variant="ghost">
+          {isSignedInVariant ? (
+            <Button className="w-full" onClick={handlePrimaryCta} size="lg">
+              <SparklesIcon className="size-4" />
+              Upgrade to Pro — $8/mo
+            </Button>
+          ) : (
+            <Button asChild className="w-full" onClick={handlePrimaryCta} size="lg">
+              <Link to="/alerts">Get Alerts</Link>
+            </Button>
+          )}
+          {isSignedInVariant ? (
+            <Button
+              asChild
+              className="w-full"
+              onClick={handleSecondaryCta}
+              size="lg"
+              variant="ghost"
+            >
+              <Link to="/alerts">See Alerts</Link>
+            </Button>
+          ) : null}
+          <Button
+            className="w-full"
+            onClick={() => {
+              handleDismissExplicit("maybe_later");
+            }}
+            size="lg"
+            variant="ghost"
+          >
             Maybe Later
           </Button>
         </DialogFooter>

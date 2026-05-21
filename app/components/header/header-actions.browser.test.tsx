@@ -55,7 +55,18 @@ test("renders sign-in and sign-up actions when signed out without querying admin
 
   await expect.element(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: "Sign Up" })).toBeInTheDocument();
+  expect(screen.container.textContent).not.toContain("Alerts");
   expect(useQueryMock).not.toHaveBeenCalled();
+});
+
+test("exposes the Alerts link to signed-out visitors when paid features are enabled", async () => {
+  const screen = await renderHeaderActions({ [FEATURE_FLAGS.PAID_FEATURES]: true });
+
+  await expect
+    .element(screen.getByRole("link", { name: /alerts/iu }))
+    .toHaveAttribute("href", "/alerts");
+  await expect.element(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+  await expect.element(screen.getByRole("button", { name: "Sign Up" })).toBeInTheDocument();
 });
 
 test("renders alerts and upgrade actions when signed in with the paid-features flag enabled", async () => {

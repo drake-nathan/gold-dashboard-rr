@@ -5,6 +5,7 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
+import { UpgradeFlowProvider } from "@/features/subscription/upgrade-flow-provider";
 import { FEATURE_FLAGS, type FeatureFlagValues } from "@/lib/feature-flags";
 import { FeatureFlagProvider } from "@/providers/feature-flag-provider";
 
@@ -19,6 +20,7 @@ let mockSubscription = {
   isLoading: false,
   isPro: false,
 };
+const captureMock = vi.fn();
 
 // Mock Clerk
 vi.mock("@clerk/react-router", () => ({
@@ -38,6 +40,10 @@ vi.mock("@/features/subscription/hooks/use-subscription", () => ({
   useSubscription: () => mockSubscription,
 }));
 
+vi.mock("posthog-js/react", () => ({
+  usePostHog: () => ({ capture: captureMock }),
+}));
+
 // Mock sonner toast
 vi.mock("sonner", () => ({
   toast: {
@@ -50,7 +56,12 @@ const flagsOn: FeatureFlagValues = { [FEATURE_FLAGS.PAID_FEATURES]: true };
 const renderUpgradeButton = (
   ui: React.ReactElement = <UpgradeButton />,
   flags: FeatureFlagValues = flagsOn,
-) => render(<FeatureFlagProvider flags={flags}>{ui}</FeatureFlagProvider>);
+) =>
+  render(
+    <FeatureFlagProvider flags={flags}>
+      <UpgradeFlowProvider>{ui}</UpgradeFlowProvider>
+    </FeatureFlagProvider>,
+  );
 
 beforeEach(() => {
   mockAuthState = { isSignedIn: true };
@@ -61,6 +72,7 @@ beforeEach(() => {
     isLoading: false,
     isPro: false,
   };
+  captureMock.mockClear();
 });
 
 test("renders upgrade button for free users", async () => {
@@ -107,8 +119,8 @@ test("disables button when user is not signed in", async () => {
   await expect.element(screen.getByRole("button", { name: /upgrade to pro/iu })).toBeDisabled();
 });
 
-test("calls createCheckout when clicked", async () => {
-  // Return no URL to prevent window.location.href navigation which kills the Vitest iframe
+test("opens upgrade dialog and fires upgrade_checkout_started when continuing", async () => {
+  // Return no URL to prevent window.location.assign which kills the Vitest iframe
   vi.spyOn(mockSubscription, "createCheckout").mockResolvedValue({});
 
   const screen = await renderUpgradeButton();
@@ -119,6 +131,7 @@ test("calls createCheckout when clicked", async () => {
   await expect
     .element(screen.getByRole("heading", { name: /alerts require a pro subscription/iu }))
     .toBeInTheDocument();
+  expect(captureMock).toHaveBeenCalledWith("upgrade_dialog_opened", { source: "header" });
   expect(mockSubscription.createCheckout).not.toHaveBeenCalled();
 
   const continueButton = [...document.querySelectorAll("button")].find((candidate) =>
@@ -132,6 +145,7 @@ test("calls createCheckout when clicked", async () => {
   continueButton.click();
 
   expect(mockSubscription.createCheckout).toHaveBeenCalledWith("/alerts?type=sku");
+  expect(captureMock).toHaveBeenCalledWith("upgrade_checkout_started");
 });
 
 test("renders custom text when provided", async () => {
