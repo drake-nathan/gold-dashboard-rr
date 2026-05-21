@@ -37,6 +37,7 @@ import type * as lib_pureApiParsing from "../lib/pureApiParsing.js";
 import type * as lib_queries from "../lib/queries.js";
 import type * as marketPrices from "../marketPrices.js";
 import type * as migrations from "../migrations.js";
+import type * as posthog from "../posthog.js";
 import type * as pure from "../pure.js";
 import type * as snapshotExport from "../snapshotExport.js";
 import type * as stripe from "../stripe.js";
@@ -81,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "lib/queries": typeof lib_queries;
   marketPrices: typeof marketPrices;
   migrations: typeof migrations;
+  posthog: typeof posthog;
   pure: typeof pure;
   snapshotExport: typeof snapshotExport;
   stripe: typeof stripe;

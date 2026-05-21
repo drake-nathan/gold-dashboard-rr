@@ -12,41 +12,41 @@ Comprehensive reference for managing environment variables across all environmen
 
 ## Quick Reference
 
-| Variable                     | Type   | Required    | Env-Specific | Description                                                                                                                                            |
-| ---------------------------- | ------ | ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Variable                     | Type            | Required    | Env-Specific | Description                                                                                                                                                                  |
+| ---------------------------- | --------------- | ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Convex**                   |
-| `CONVEX_DEPLOYMENT`          | Server | Yes         | Yes          | Convex deployment identifier (`prod:xxx` or `dev:xxx`)                                                                                                 |
-| `VITE_CONVEX_URL`            | Client | Yes         | Yes          | Convex deployment URL                                                                                                                                  |
-| `ENABLE_CRONS`               | Convex | No          | Yes          | Enable cron jobs (prod only)                                                                                                                           |
+| `CONVEX_DEPLOYMENT`          | Server          | Yes         | Yes          | Convex deployment identifier (`prod:xxx` or `dev:xxx`)                                                                                                                       |
+| `VITE_CONVEX_URL`            | Client          | Yes         | Yes          | Convex deployment URL                                                                                                                                                        |
+| `ENABLE_CRONS`               | Convex          | No          | Yes          | Enable cron jobs (prod only)                                                                                                                                                 |
 | **API Keys**                 |
-| `UNWRANGLE_API_KEY`          | Convex | Yes         | No           | Costco product data API                                                                                                                                |
-| `PURE_API_KEY`               | Convex | Yes         | No           | Collect Pure spot/bid prices                                                                                                                           |
-| `GOLD_API_KEY`               | Convex | No          | No           | Gold API (not actively used)                                                                                                                           |
-| `FMP_API_KEY`                | Convex | Yes         | No           | Financial Modeling Prep (S&P 500)                                                                                                                      |
+| `UNWRANGLE_API_KEY`          | Convex          | Yes         | No           | Costco product data API                                                                                                                                                      |
+| `PURE_API_KEY`               | Convex          | Yes         | No           | Collect Pure spot/bid prices                                                                                                                                                 |
+| `GOLD_API_KEY`               | Convex          | No          | No           | Gold API (not actively used)                                                                                                                                                 |
+| `FMP_API_KEY`                | Convex          | Yes         | No           | Financial Modeling Prep (S&P 500)                                                                                                                                            |
 | **Clerk Auth**               |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Client | Yes         | Yes          | Clerk frontend key (pk_test/pk_live)                                                                                                                   |
-| `CLERK_SECRET_KEY`           | Convex | Yes         | Yes          | Clerk backend key (sk_test/sk_live)                                                                                                                    |
-| `CLERK_JWT_ISSUER_DOMAIN`    | Convex | Yes         | Yes          | Clerk JWT issuer domain                                                                                                                                |
-| `ADMIN_USER_IDS`             | Convex | No          | Yes          | Comma-separated admin Clerk user IDs                                                                                                                   |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Client          | Yes         | Yes          | Clerk frontend key (pk_test/pk_live)                                                                                                                                         |
+| `CLERK_SECRET_KEY`           | Convex          | Yes         | Yes          | Clerk backend key (sk_test/sk_live)                                                                                                                                          |
+| `CLERK_JWT_ISSUER_DOMAIN`    | Convex          | Yes         | Yes          | Clerk JWT issuer domain                                                                                                                                                      |
+| `ADMIN_USER_IDS`             | Convex          | No          | Yes          | Comma-separated admin Clerk user IDs                                                                                                                                         |
 | **Stripe**                   |
-| `VITE_STRIPE_ENABLED`        | Client | No          | Yes          | Build-level switch: is Stripe wired up in this env? (Per-user UI exposure is gated by the PostHog `paid-features` flag, not this var.)                 |
-| `STRIPE_SECRET_KEY`          | Convex | If Stripe   | Yes          | Stripe backend key (sk_test/sk_live)                                                                                                                   |
-| `STRIPE_WEBHOOK_SECRET`      | Convex | If Stripe   | Yes          | Stripe webhook signing secret                                                                                                                          |
-| `STRIPE_PRICE_ID`            | Convex | If Stripe   | Yes          | Pro subscription price ID                                                                                                                              |
-| `VITE_STRIPE_PRICE_ID`       | Client | If Stripe   | Yes          | Same price ID (client-side)                                                                                                                            |
-| `SITE_URL`                   | Convex | If Stripe   | Yes          | Site URL for Stripe redirects and alert email links                                                                                                    |
+| `VITE_STRIPE_ENABLED`        | Client          | No          | Yes          | Build-level switch: is Stripe wired up in this env? (Per-user UI exposure is gated by the PostHog `paid-features` flag, not this var.)                                       |
+| `STRIPE_SECRET_KEY`          | Convex          | If Stripe   | Yes          | Stripe backend key (sk_test/sk_live)                                                                                                                                         |
+| `STRIPE_WEBHOOK_SECRET`      | Convex          | If Stripe   | Yes          | Stripe webhook signing secret                                                                                                                                                |
+| `STRIPE_PRICE_ID`            | Convex          | If Stripe   | Yes          | Pro subscription price ID                                                                                                                                                    |
+| `VITE_STRIPE_PRICE_ID`       | Client          | If Stripe   | Yes          | Same price ID (client-side)                                                                                                                                                  |
+| `SITE_URL`                   | Convex          | If Stripe   | Yes          | Site URL for Stripe redirects and alert email links                                                                                                                          |
 | **Resend (Alerts)**          |
-| `RESEND_API_KEY`             | Convex | If Alerts   | Yes          | Resend API key for sending alert digests                                                                                                               |
-| `RESEND_FROM_EMAIL`          | Convex | If Alerts   | Yes          | Sender address (e.g. `alerts@dashboard.gold`)                                                                                                          |
-| `RESEND_REPLY_TO_EMAIL`      | Convex | No          | Yes          | Optional reply-to for alerts (default `support@dashboard.gold`)                                                                                        |
-| `SUPPORT_EMAIL`              | Convex | If Feedback | Yes          | Recipient address for in-app feedback submissions (e.g. `support@dashboard.gold`). Submissions fail if unset.                                          |
-| `POSTHOG_PROJECT_URL`        | Convex | No          | Yes          | Base URL of your PostHog project (e.g. `https://us.posthog.com/project/242217`). When set, feedback emails get clickable PostHog person/session links. |
-| `UNSUBSCRIBE_SECRET`         | Convex | If Alerts   | No           | HMAC secret for signing one-click unsubscribe tokens                                                                                                   |
+| `RESEND_API_KEY`             | Convex          | If Alerts   | Yes          | Resend API key for sending alert digests                                                                                                                                     |
+| `RESEND_FROM_EMAIL`          | Convex          | If Alerts   | Yes          | Sender address (e.g. `alerts@dashboard.gold`)                                                                                                                                |
+| `RESEND_REPLY_TO_EMAIL`      | Convex          | No          | Yes          | Optional reply-to for alerts (default `support@dashboard.gold`)                                                                                                              |
+| `SUPPORT_EMAIL`              | Convex          | If Feedback | Yes          | Recipient address for in-app feedback submissions (e.g. `support@dashboard.gold`). Submissions fail if unset.                                                                |
+| `POSTHOG_PROJECT_URL`        | Convex          | No          | Yes          | Base URL of your PostHog project (e.g. `https://us.posthog.com/project/242217`). When set, feedback emails get clickable PostHog person/session links.                       |
+| `UNSUBSCRIBE_SECRET`         | Convex          | If Alerts   | No           | HMAC secret for signing one-click unsubscribe tokens                                                                                                                         |
 | **Observability (PostHog)**  |
-| `VITE_PUBLIC_POSTHOG_KEY`    | Client | Yes         | Yes          | PostHog API key (used by browser SDK and server SDK)                                                                                                   |
-| `VITE_PUBLIC_POSTHOG_HOST`   | Client | Yes         | No           | PostHog host URL                                                                                                                                       |
-| `VITE_APP_ENVIRONMENT`       | Client | No          | Yes          | Canonical observability environment name (`develop`/`production`)                                                                                      |
-| `VITE_APP_RELEASE`           | Client | No          | Yes          | Shared app release identifier (use the git SHA in hosted builds)                                                                                       |
+| `VITE_PUBLIC_POSTHOG_KEY`    | Client + Convex | Yes         | Yes          | PostHog API key. Required on the frontend (browser SDK + RR server SDK) AND on Convex (server-side capture of `subscription_activated`, `alert_email_sent`).                 |
+| `VITE_PUBLIC_POSTHOG_HOST`   | Client + Convex | Yes         | No           | PostHog host URL. Same value goes in both Convex and frontend env.                                                                                                           |
+| `VITE_APP_ENVIRONMENT`       | Client + Convex | No          | Yes          | Canonical observability environment name (`develop`/`production`). Optional on Convex — falls back to `NODE_ENV`. Sets the `environment` property on server-captured events. |
+| `VITE_APP_RELEASE`           | Client + Convex | No          | Yes          | Shared app release identifier (use the git SHA in hosted builds). Optional on Convex — falls back to `RAILWAY_GIT_COMMIT_SHA`.                                               |
 
 **Type Legend:**
 
@@ -223,11 +223,25 @@ All API keys are **shared** across environments (no test/prod split):
 | `VITE_APP_ENVIRONMENT`     | Canonical environment name such as `develop` or `production`                 |
 | `VITE_APP_RELEASE`         | Git SHA for the current build, registered as a PostHog person/event property |
 
-PostHog uses the same project for all environments. The browser SDK (in `app/root.tsx`) and the Node SDK (in `app/lib/posthog-server.ts`) both read `VITE_PUBLIC_POSTHOG_KEY` and `VITE_PUBLIC_POSTHOG_HOST`; the server SDK also picks up `VITE_APP_ENVIRONMENT` and `VITE_APP_RELEASE` (with `RAILWAY_GIT_COMMIT_SHA` as a release fallback). For observability architecture, event ownership, and runbook guidance, see `docs/observability.md`.
+PostHog uses the same project for all environments. Three capture surfaces all share the same key + host:
+
+- **Browser SDK** in `app/root.tsx` — client-side events, error tracking, session recording.
+- **React Router server SDK** in `app/lib/posthog-server.ts` (Node SDK) — server-side capture from RR loaders/actions and SSR error boundary.
+- **Convex server capture** in `convex/posthog.ts` (HTTP `/capture/` via `fetch`) — server-side capture from Convex http actions and internal actions. Used for `subscription_activated` (Stripe webhook) and `alert_email_sent` (alert batch processor).
+
+The Convex deployment has its own env namespace separate from Railway/frontend. Set `VITE_PUBLIC_POSTHOG_KEY` and `VITE_PUBLIC_POSTHOG_HOST` on **both** dev and prod Convex deployments via `npx convex env set [--prod] <key> <value>` — otherwise server-side capture silently no-ops and the funnel is missing its post-checkout events. Optional: `VITE_APP_ENVIRONMENT` and `VITE_APP_RELEASE` (each falls back to `NODE_ENV` / `RAILWAY_GIT_COMMIT_SHA` respectively).
+
+For observability architecture, event ownership, and runbook guidance, see `docs/observability.md`.
 
 ### PostHog Feature Flags
 
-Feature gates for closed betas live in PostHog, not env vars. Flag keys are declared in [app/lib/feature-flags.ts](../app/lib/feature-flags.ts) and evaluated server-side in the root loader using the Clerk `userId` as the distinct ID. Values are bootstrapped into the client through `PostHogProvider` `options.bootstrap` and surfaced through a React context, so SSR-rendered UI sees the right value with no flicker.
+Feature gates for closed betas live in PostHog, not env vars. Flag keys are declared in [app/lib/feature-flags.ts](../app/lib/feature-flags.ts) and evaluated server-side in the root loader. Identity precedence for the evaluation:
+
+1. **Clerk `userId`** for signed-in requests — most stable, persists across devices.
+2. **PostHog cookie `distinct_id`** for returning anonymous visitors — keeps SSR aligned with client-side eval so percentage rollouts stay stable across requests.
+3. **Per-request UUID** for true first-time anonymous visitors — they have no client-side state yet, so the bootstrapped value becomes their stable identity from that response forward.
+
+Values are bootstrapped into the client through `PostHogProvider` `options.bootstrap` and surfaced through a React context, so SSR-rendered UI sees the right value with no flicker — including for anonymous visitors targeted by flag-gated surfaces like the signed-out `/alerts` pitch page and the "Alerts" header link.
 
 Current flags:
 

@@ -58,7 +58,7 @@ export const middleware = [clerkMiddleware()];
 export const loader = async (args: Route.LoaderArgs) => {
   return rootAuthLoader(args, async ({ request }) => {
     const distinctId = request.auth.userId ?? null;
-    const featureFlags = await evaluateFeatureFlags(distinctId);
+    const featureFlags = await evaluateFeatureFlags(distinctId, request);
     return {
       featureFlags,
       posthogDistinctId: distinctId,
