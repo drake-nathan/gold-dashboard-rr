@@ -1,17 +1,17 @@
 /**
  * Feature Announcement Modal
  *
- * One-shot announcement to existing signed-in free users that paid alerts
- * have launched. Not an evergreen marketing surface — sets a fresh dismissal
- * key and an expiration date so it disappears once the announcement window
- * closes, even for users who never explicitly dismissed it.
+ * One-shot announcement that paid alerts have launched. Two eligible
+ * audiences:
  *
- * Display conditions:
- * - User is signed in
- * - paid-features PostHog flag is on for this user
- * - User is not already Pro
- * - User hasn't dismissed this announcement
- * - Current date is before EXPIRATION_DATE
+ *   1. Signed-in free users with paid features enabled — they can convert
+ *      now via the Pro upgrade flow.
+ *   2. Anonymous users on their second-or-later visit, when paid-features
+ *      is rolled out — first-visit-only would be too aggressive, but a
+ *      returning visitor is a stronger sign of intent.
+ *
+ * Not an evergreen marketing surface — the announcement window closes on
+ * EXPIRATION_DATE regardless of dismissal.
  */
 
 import { useAuth } from "@clerk/react-router";
@@ -29,30 +29,88 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSubscription } from "@/features/subscription/hooks/use-subscription";
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
-// localStorage key for tracking dismissal of this specific announcement.
-// Use a versioned key so previous announcements' dismissals don't suppress
-// this one, and so a future announcement can ship with its own key.
+// localStorage keys
 const DISMISSED_KEY = "announcement-alerts-launch-dismissed";
+const VISIT_COUNT_KEY = "site-visit-count";
+// sessionStorage key — ensures the visit counter increments at most once
+// per browser session even if the module is re-imported (HMR, tab refresh
+// would create a new session anyway).
+const SESSION_COUNTED_KEY = "site-visit-session-counted";
+
+// Anonymous visitors must have visited at least this many times before the
+// modal is eligible to show. 2 = first return visit.
+const MIN_VISITS_FOR_ANON_MODAL = 2;
 
 // The announcement window closes on this date regardless of dismissal state.
 const EXPIRATION_DATE = new Date("2026-07-01T00:00:00");
 
-const isDismissed = (): boolean => localStorage.getItem(DISMISSED_KEY) === "true";
+// Record this visit once per session at module load. Module-level (rather
+// than useEffect) because the project policy is to avoid Effects for
+// browser-API sync, and this is the natural shape: once on the client when
+// the module first imports.
+if (typeof window !== "undefined") {
+  try {
+    if (sessionStorage.getItem(SESSION_COUNTED_KEY) !== "true") {
+      const previous = Number(localStorage.getItem(VISIT_COUNT_KEY) ?? "0");
+      const next = Number.isFinite(previous) ? previous + 1 : 1;
+      localStorage.setItem(VISIT_COUNT_KEY, String(next));
+      sessionStorage.setItem(SESSION_COUNTED_KEY, "true");
+    }
+  } catch {
+    // Storage may be unavailable (private mode, quota). The modal just
+    // won't show for these users — acceptable degradation.
+  }
+}
+
+const isDismissed = (): boolean => {
+  try {
+    return localStorage.getItem(DISMISSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
+
+const getVisitCount = (): number => {
+  try {
+    const raw = localStorage.getItem(VISIT_COUNT_KEY);
+    const n = Number(raw ?? "0");
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+};
 
 export const FeatureAnnouncementModal = () => {
   const isClient = useIsClient();
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const { isEnabled, isLoading: isSubLoading, isPro } = useSubscription();
+  const isPaidFeaturesOn = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
 
-  // Anonymous and Pro users never see this. isEnabled already collapses
-  // (paid-features flag) AND (Stripe wired in env) into one signal.
-  const isEligible = isClient && isAuthLoaded && isSignedIn && !isSubLoading && isEnabled && !isPro;
+  // Signed-in free users on a paid-features-enabled env. isEnabled already
+  // collapses (paid-features flag) AND (Stripe wired in env) into one signal.
+  const isSignedInEligible = isAuthLoaded && isSignedIn && !isSubLoading && isEnabled && !isPro;
 
-  const shouldShow = isEligible && new Date() < EXPIRATION_DATE && !isDismissed();
+  // Anonymous return visitors. We don't gate on isEnabled because anonymous
+  // users can't checkout from here anyway — the CTA routes them through
+  // sign-in first. We do gate on the paid-features flag so the announcement
+  // never appears before the feature is rolled out for them.
+  const isAnonymousEligible =
+    isAuthLoaded && !isSignedIn && isPaidFeaturesOn && getVisitCount() >= MIN_VISITS_FOR_ANON_MODAL;
+
+  const shouldShow =
+    isClient &&
+    (isSignedInEligible || isAnonymousEligible) &&
+    new Date() < EXPIRATION_DATE &&
+    !isDismissed();
 
   const handleDismiss = () => {
-    localStorage.setItem(DISMISSED_KEY, "true");
+    try {
+      localStorage.setItem(DISMISSED_KEY, "true");
+    } catch {
+      // See above — degrade silently if storage is unavailable.
+    }
   };
 
   if (!shouldShow) return null;
