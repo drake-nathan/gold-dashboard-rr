@@ -75,12 +75,23 @@ export const RouteErrorPage = ({
   }
 
   const isError = error instanceof Error;
-  if (isError && typeof window !== "undefined") {
-    posthog.captureException(error);
-  }
   const errorMessage = isError ? error.message : "An unexpected error occurred";
   const errorStack = isError ? error.stack : undefined;
   const isDev = import.meta.env.MODE === "development";
+
+  if (typeof window !== "undefined") {
+    // Normalize non-Error throws (strings, plain objects) so PostHog still
+    // captures the failure with a usable stack trace and original type tag.
+    const captured = isError
+      ? error
+      : new Error(typeof error === "string" ? error : "Non-Error thrown from route");
+    posthog.captureException(captured, {
+      $current_url: window.location.href,
+      original_error_type: isError ? error.constructor.name : typeof error,
+      route_path: window.location.pathname,
+      source: "route_error_boundary",
+    });
+  }
 
   return (
     <main className="container mx-auto flex flex-1 items-center justify-center px-4 py-8">

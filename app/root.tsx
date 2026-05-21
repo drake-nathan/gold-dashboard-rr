@@ -255,8 +255,17 @@ export const ErrorBoundary = ({ error }: Route.ErrorBoundaryProps) => {
   const errorMessage = isError ? error.message : "An unexpected error occurred";
   const errorStack = isError ? error.stack : undefined;
 
-  if (error instanceof Error && typeof window !== "undefined") {
-    posthog.captureException(error);
+  if (typeof window !== "undefined") {
+    const captured =
+      error instanceof Error
+        ? error
+        : new Error(typeof error === "string" ? error : "Non-Error thrown from root");
+    posthog.captureException(captured, {
+      $current_url: window.location.href,
+      original_error_type: error instanceof Error ? error.constructor.name : typeof error,
+      route_path: window.location.pathname,
+      source: "root_error_boundary",
+    });
   }
 
   return (
