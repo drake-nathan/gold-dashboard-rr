@@ -16,6 +16,7 @@
 
 import { useAuth } from "@clerk/react-router";
 import { BellRingIcon, MailIcon, SparklesIcon } from "lucide-react";
+import { useEffect } from "react";
 import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
 
@@ -82,14 +83,25 @@ const getVisitCount = (): number => {
   }
 };
 
-// Dev-only override: append `?preview-announcement=1` to any URL in a dev
-// build to force the modal open, bypassing all gates (auth state, Pro
-// status, visit count, expiration, dismissal). Gated on the dev MODE so it
-// can never accidentally fire in a production build.
-const isDevPreview = (): boolean => {
-  if (import.meta.env.MODE !== "development") return false;
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("preview-announcement") === "1";
+// Dev-only override. Append `?preview-announcement=...` to any URL in a dev
+// build:
+//   - `?preview-announcement=1`     bypasses eligibility gates (auth, Pro,
+//                                   visit count, expiration) but RESPECTS
+//                                   dismissal — so the dismiss button works
+//                                   naturally and you can test the full flow.
+//   - `?preview-announcement=fresh` same as `=1`, and also clears the
+//                                   dismissed-flag on render. Use this to
+//                                   re-preview after dismissing.
+// Gated on the dev MODE so it can never accidentally fire in production.
+type DevPreviewMode = "fresh" | "off" | "on";
+
+const getDevPreviewMode = (): DevPreviewMode => {
+  if (import.meta.env.MODE !== "development") return "off";
+  if (typeof window === "undefined") return "off";
+  const value = new URLSearchParams(window.location.search).get("preview-announcement");
+  if (value === "fresh") return "fresh";
+  if (value === "1") return "on";
+  return "off";
 };
 
 export const FeatureAnnouncementModal = () => {
@@ -109,12 +121,28 @@ export const FeatureAnnouncementModal = () => {
   const isAnonymousEligible =
     isAuthLoaded && !isSignedIn && isPaidFeaturesOn && getVisitCount() >= MIN_VISITS_FOR_ANON_MODAL;
 
+  const devPreview = getDevPreviewMode();
+
+  // Dev-only: when `?preview-announcement=fresh` is set, clear the dismissed
+  // flag so the modal re-appears for re-testing. Effect is the right home
+  // for this: it syncs the URL param to a browser API (localStorage), only
+  // in development. No-op otherwise.
+  useEffect(() => {
+    if (devPreview !== "fresh") return;
+    try {
+      localStorage.removeItem(DISMISSED_KEY);
+    } catch {
+      // ignore — preview is best-effort
+    }
+  }, [devPreview]);
+
+  const isPreviewing = devPreview !== "off";
+
   const shouldShow =
     isClient &&
-    (isDevPreview() ||
-      ((isSignedInEligible || isAnonymousEligible) &&
-        new Date() < EXPIRATION_DATE &&
-        !isDismissed()));
+    (isPreviewing || isSignedInEligible || isAnonymousEligible) &&
+    new Date() < EXPIRATION_DATE &&
+    !isDismissed();
 
   const handleDismiss = () => {
     try {
