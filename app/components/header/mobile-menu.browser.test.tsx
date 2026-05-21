@@ -69,12 +69,12 @@ test("shows signed-out auth actions without querying admin status", async () => 
   expect(useQueryMock).not.toHaveBeenCalled();
 });
 
-test("shows alerts and account actions when alerts-beta flag is enabled", async () => {
+test("shows alerts and account actions when paid-features flag is enabled", async () => {
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
   mockSubscription = { isPro: true };
 
-  const screen = await renderMobileMenu({ [FEATURE_FLAGS.ALERTS_BETA]: true });
+  const screen = await renderMobileMenu({ [FEATURE_FLAGS.PAID_FEATURES]: true });
 
   await screen.getByRole("button", { name: "Open menu" }).click();
 
@@ -85,7 +85,7 @@ test("shows alerts and account actions when alerts-beta flag is enabled", async 
   expect(useQueryMock).not.toHaveBeenCalled();
 });
 
-test("hides the alerts entry when the alerts-beta flag is disabled", async () => {
+test("hides the alerts entry when the paid-features flag is disabled", async () => {
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
   mockSubscription = { isPro: true };

@@ -10,7 +10,7 @@ export const HeaderActions = () => {
   const { openSignIn, openSignUp } = useClerk();
   const location = useLocation();
   const isAlertsPage = location.pathname === "/alerts";
-  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
 
   return (
     <>

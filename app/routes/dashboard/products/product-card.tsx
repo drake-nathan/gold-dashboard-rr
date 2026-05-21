@@ -39,7 +39,7 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const isClient = useIsClient();
   const posthog = usePostHog();
-  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
 
   // Calculate all metrics using utility function
   const calc = calculations ?? calculateProductMetrics(product, marketPrices, calculatorSettings);

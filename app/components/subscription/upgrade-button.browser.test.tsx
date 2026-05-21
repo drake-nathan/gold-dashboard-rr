@@ -45,7 +45,7 @@ vi.mock("sonner", () => ({
   },
 }));
 
-const flagsOn: FeatureFlagValues = { [FEATURE_FLAGS.ALERTS_BETA]: true };
+const flagsOn: FeatureFlagValues = { [FEATURE_FLAGS.PAID_FEATURES]: true };
 
 const renderUpgradeButton = (
   ui: React.ReactElement = <UpgradeButton />,
@@ -140,18 +140,12 @@ test("renders custom text when provided", async () => {
   await expect.element(screen.getByRole("button", { name: /go pro now/iu })).toBeInTheDocument();
 });
 
-test("hides button when Stripe is disabled", async () => {
+test("hides button when paid features are not enabled for this user", async () => {
+  // isEnabled collapses both gates (env-level Stripe wiring + paid-features flag)
+  // into a single signal from useSubscription. The button trusts that.
   mockSubscription.isEnabled = false;
 
   const screen = await renderUpgradeButton();
-
-  const buttons = screen.container.querySelectorAll("button");
-
-  expect(buttons).toHaveLength(0);
-});
-
-test("hides button when the alerts-beta flag is disabled", async () => {
-  const screen = await renderUpgradeButton(<UpgradeButton />, {});
 
   const buttons = screen.container.querySelectorAll("button");
 

@@ -39,10 +39,10 @@ test("allows signed-out visitors through so the in-page sign-in renders", async 
   expect(evaluateFeatureFlagsMock).not.toHaveBeenCalled();
 });
 
-test("redirects signed-in users to / when the alerts-beta flag is off", async () => {
+test("redirects signed-in users to / when the paid-features flag is off", async () => {
   resetMocks();
   getAuthMock.mockResolvedValue({ userId: "user_123" });
-  evaluateFeatureFlagsMock.mockResolvedValue({ [FEATURE_FLAGS.ALERTS_BETA]: false });
+  evaluateFeatureFlagsMock.mockResolvedValue({ [FEATURE_FLAGS.PAID_FEATURES]: false });
 
   const { loader } = await import("./alerts");
 
@@ -54,10 +54,10 @@ test("redirects signed-in users to / when the alerts-beta flag is off", async ()
   expect(evaluateFeatureFlagsMock).toHaveBeenCalledWith("user_123");
 });
 
-test("permits signed-in users when the alerts-beta flag is on", async () => {
+test("permits signed-in users when the paid-features flag is on", async () => {
   resetMocks();
   getAuthMock.mockResolvedValue({ userId: "user_admin" });
-  evaluateFeatureFlagsMock.mockResolvedValue({ [FEATURE_FLAGS.ALERTS_BETA]: true });
+  evaluateFeatureFlagsMock.mockResolvedValue({ [FEATURE_FLAGS.PAID_FEATURES]: true });
 
   const { loader } = await import("./alerts");
 

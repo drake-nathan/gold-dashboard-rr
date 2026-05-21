@@ -15,7 +15,7 @@ const SKELETON_SIZES: Record<string, string> = {
 
 export const UserButtonWithPro = ({ avatarSize = "size-[32px]" }: { avatarSize?: string }) => {
   const { handleManagePortal, isLoading, isPro } = useManagePortal();
-  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
   const showProRing = !isLoading && isPro;
 
   // While subscription status is loading, show a skeleton circle matching

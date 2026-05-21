@@ -26,7 +26,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   }
 
   const flags = await evaluateFeatureFlags(auth.userId);
-  if (!flags[FEATURE_FLAGS.ALERTS_BETA]) {
+  if (!flags[FEATURE_FLAGS.PAID_FEATURES]) {
     // React Router idiom: redirect() returns a Response.
     // oxlint-disable-next-line typescript/only-throw-error
     throw redirect("/");

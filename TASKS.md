@@ -2,7 +2,8 @@
 
 ## Now
 
-- Alerts: error-state polish + remaining test coverage, then ramp `alerts-beta` to all signed-in users → [.epics/alerts.md]
+- Alerts: error-state polish + remaining test coverage, then ramp `paid-features` to all signed-in users → [.epics/alerts.md]
+- Delete the legacy `alerts-beta` PostHog flag after the `paid-features` rollout has been live for a release
 - Observability strategy docs + rollout plan → [.epics/observability-overhaul.md]
 
 ## Epics

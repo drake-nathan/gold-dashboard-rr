@@ -58,11 +58,11 @@ test("renders sign-in and sign-up actions when signed out without querying admin
   expect(useQueryMock).not.toHaveBeenCalled();
 });
 
-test("renders alerts and upgrade actions when signed in with the alerts-beta flag enabled", async () => {
+test("renders alerts and upgrade actions when signed in with the paid-features flag enabled", async () => {
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
 
-  const screen = await renderHeaderActions({ [FEATURE_FLAGS.ALERTS_BETA]: true });
+  const screen = await renderHeaderActions({ [FEATURE_FLAGS.PAID_FEATURES]: true });
 
   await expect.element(screen.getByRole("link", { name: /alerts/iu })).toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();
@@ -70,7 +70,7 @@ test("renders alerts and upgrade actions when signed in with the alerts-beta fla
   expect(useQueryMock).not.toHaveBeenCalled();
 });
 
-test("hides the alerts link when the alerts-beta flag is disabled", async () => {
+test("hides the alerts link when the paid-features flag is disabled", async () => {
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
 

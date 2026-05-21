@@ -7,6 +7,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
+import { FEATURE_FLAGS, type FeatureFlagValues } from "@/lib/feature-flags";
+import { FeatureFlagProvider } from "@/providers/feature-flag-provider";
+
 // Import after mocks are set up
 import { useSubscription } from "./use-subscription";
 
@@ -32,6 +35,11 @@ vi.mock("convex/react", () => ({
 
 // Mock the environment variable for Stripe enabled
 vi.stubEnv("VITE_STRIPE_ENABLED", "true");
+
+const flagsOn: FeatureFlagValues = { [FEATURE_FLAGS.PAID_FEATURES]: true };
+
+const renderWithFlags = (ui: React.ReactElement, flags: FeatureFlagValues = flagsOn) =>
+  render(<FeatureFlagProvider flags={flags}>{ui}</FeatureFlagProvider>);
 
 // Test component that exposes the hook's state
 const TestComponent = () => {
@@ -73,7 +81,7 @@ beforeEach(() => {
 test("shows loading when auth is not loaded", async () => {
   mockAuthState = { isLoaded: false, isSignedIn: false };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("true");
 });
@@ -82,7 +90,7 @@ test("shows loading when signed in but query is pending", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: true };
   mockQueryResult = undefined;
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("true");
 });
@@ -90,7 +98,7 @@ test("shows loading when signed in but query is pending", async () => {
 test("not loading when auth loaded and signed out", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: false };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
 });
@@ -102,11 +110,29 @@ test("not loading when auth loaded and signed out", async () => {
 test("returns anonymous status when signed out", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: false };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("anonymous");
+});
+
+// =============================================================================
+// Feature Gating Tests
+// =============================================================================
+
+test("returns disabled state when the paid-features flag is off", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  // Even with a subscription query result, flag-off must force the disabled state.
+  mockQueryResult = { isPro: true, status: "active", userId: "user_123" };
+
+  const screen = await renderWithFlags(<TestComponent />, {});
+
+  // Disabled-state shape: anonymous, not pro, not loading, no entitlements.
+  await expect.element(screen.getByTestId("status")).toHaveTextContent("anonymous");
+  await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
+  await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
+  await expect.element(screen.getByTestId("canManageAlerts")).toHaveTextContent("false");
 });
 
 // =============================================================================
@@ -117,7 +143,7 @@ test("returns free status for user without subscription", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: true };
   mockQueryResult = { isPro: false, status: "free", userId: "user_123" };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
@@ -140,7 +166,7 @@ test("uses alert entitlements returned by subscription query", async () => {
     userId: "user_123",
   };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("canCreateAlerts")).toHaveTextContent("true");
   await expect.element(screen.getByTestId("canSendAlerts")).toHaveTextContent("true");
@@ -156,7 +182,7 @@ test("returns pro status for user with active subscription", async () => {
     userId: "user_123",
   };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isLoading")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("true");
@@ -173,7 +199,7 @@ test("returns trialing status for user in trial", async () => {
     userId: "user_123",
   };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("true");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("trialing");
@@ -188,7 +214,7 @@ test("returns canceled status for canceled subscription", async () => {
     userId: "user_123",
   };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("canceled");
@@ -203,7 +229,7 @@ test("returns past_due status for past due subscription", async () => {
     userId: "user_123",
   };
 
-  const screen = await render(<TestComponent />);
+  const screen = await renderWithFlags(<TestComponent />);
 
   await expect.element(screen.getByTestId("isPro")).toHaveTextContent("false");
   await expect.element(screen.getByTestId("status")).toHaveTextContent("past_due");
@@ -240,7 +266,7 @@ test("isActionLoading stays false when priceId is missing", async () => {
   mockAuthState = { isLoaded: true, isSignedIn: true };
   mockQueryResult = { isPro: false, status: "free", userId: "user_123" };
 
-  const screen = await render(<TestComponentWithActions />);
+  const screen = await renderWithFlags(<TestComponentWithActions />);
 
   // Verify initial state
   await expect.element(screen.getByTestId("isActionLoading")).toHaveTextContent("false");
@@ -261,7 +287,7 @@ test("createCheckout forwards the return path to the checkout action", async () 
   mockQueryResult = { isPro: false, status: "free", userId: "user_123" };
   mockActionFn = vi.fn().mockResolvedValue({ url: "https://stripe.com/session" });
 
-  const screen = await render(<TestComponentWithActions returnPath="/alerts?type=sku" />);
+  const screen = await renderWithFlags(<TestComponentWithActions returnPath="/alerts?type=sku" />);
 
   await screen.getByTestId("checkout-button").click();
 

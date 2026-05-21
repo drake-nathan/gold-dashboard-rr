@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 
 export const FEATURE_FLAGS = {
-  ALERTS_BETA: "alerts-beta",
+  PAID_FEATURES: "paid-features",
 } as const;
 
 export type FeatureFlagKey = (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS];
@@ -9,7 +9,7 @@ export type FeatureFlagKey = (typeof FEATURE_FLAGS)[keyof typeof FEATURE_FLAGS];
 export const ALL_FEATURE_FLAGS: FeatureFlagKey[] = Object.values(FEATURE_FLAGS);
 
 export const FEATURE_FLAG_DEFAULTS: Record<FeatureFlagKey, boolean | string> = {
-  [FEATURE_FLAGS.ALERTS_BETA]: false,
+  [FEATURE_FLAGS.PAID_FEATURES]: false,
 };
 
 export type FeatureFlagValues = Partial<Record<FeatureFlagKey, boolean | string>>;

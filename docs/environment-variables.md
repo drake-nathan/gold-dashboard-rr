@@ -29,7 +29,7 @@ Comprehensive reference for managing environment variables across all environmen
 | `CLERK_JWT_ISSUER_DOMAIN`    | Convex | Yes         | Yes          | Clerk JWT issuer domain                                                                                                                                |
 | `ADMIN_USER_IDS`             | Convex | No          | Yes          | Comma-separated admin Clerk user IDs                                                                                                                   |
 | **Stripe**                   |
-| `VITE_STRIPE_ENABLED`        | Client | No          | Yes          | Build-level switch: is Stripe wired up in this env? (Per-user UI exposure is gated by the PostHog `alerts-beta` flag, not this var.)                   |
+| `VITE_STRIPE_ENABLED`        | Client | No          | Yes          | Build-level switch: is Stripe wired up in this env? (Per-user UI exposure is gated by the PostHog `paid-features` flag, not this var.)                 |
 | `STRIPE_SECRET_KEY`          | Convex | If Stripe   | Yes          | Stripe backend key (sk_test/sk_live)                                                                                                                   |
 | `STRIPE_WEBHOOK_SECRET`      | Convex | If Stripe   | Yes          | Stripe webhook signing secret                                                                                                                          |
 | `STRIPE_PRICE_ID`            | Convex | If Stripe   | Yes          | Pro subscription price ID                                                                                                                              |
@@ -231,9 +231,9 @@ Feature gates for closed betas live in PostHog, not env vars. Flag keys are decl
 
 Current flags:
 
-| Flag          | Purpose                                                                                                         | Default |
-| ------------- | --------------------------------------------------------------------------------------------------------------- | ------- |
-| `alerts-beta` | Gates the Alerts UI (header link, mobile menu, `/alerts` route loader). Target admin Clerk user IDs in PostHog. | `false` |
+| Flag            | Purpose                                                                                                                                                                                                                                                  | Default |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `paid-features` | Single per-user gate for paid-tier UI (Upgrade button, `/alerts` route + header links, in-stock alert CTA). Combines with the env-level `VITE_STRIPE_ENABLED` check inside `useSubscription`. Target admin Clerk user IDs / `is_admin: true` in PostHog. | `false` |
 
 Flags are an exposure control (UI visibility, route reachability), not an authorization control. Authorization (admin permissions, subscription entitlements) stays in Convex (`requireAdmin`, `getUserAlertEntitlements`) and remains in force regardless of flag state.
 

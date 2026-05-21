@@ -20,7 +20,7 @@ import { UserButtonWithPro } from "./user-button-with-pro";
 export const MobileMenu = () => {
   const { openSignIn, openSignUp } = useClerk();
   const { isPro } = useSubscription();
-  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
+  const alertsEnabled = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
 
   return (
     <DropdownMenu>

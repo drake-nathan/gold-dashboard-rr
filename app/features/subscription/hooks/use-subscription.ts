@@ -10,6 +10,8 @@ import { api } from "convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
 import { useCallback, useRef, useState } from "react";
 
+import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
+
 export interface AlertEntitlements {
   canCreateAlerts: boolean;
   canEnableAlerts: boolean;
@@ -46,8 +48,9 @@ interface UseSubscriptionReturn {
   isActionLoading: boolean;
 
   /**
-   * Whether Stripe is enabled (feature flag)
-   * Components should hide subscription UI when false
+   * Whether paid features (subscriptions + alerts) are exposed to this user.
+   * True when the `paid-features` PostHog flag is on AND Stripe is wired up
+   * in the current environment. Components hide subscription UI when false.
    */
   isEnabled: boolean;
 
@@ -93,16 +96,24 @@ export const useSubscription = (): UseSubscriptionReturn => {
     shouldPauseEnabledAlerts: true,
   };
 
-  // Feature flag check - must be checked before conditional hook usage
-  const isStripeEnabled = import.meta.env.VITE_STRIPE_ENABLED === "true";
+  // Env-level capability: is Stripe wired up at all in this environment?
+  // This is a build-time switch, not per-user gating. Required so a dev env
+  // without Stripe keys can never accidentally surface checkout UI even if
+  // the PostHog flag is flipped on.
+  const isStripeWired = import.meta.env.VITE_STRIPE_ENABLED === "true";
+
+  // Per-user gating: is this user in the paid-features rollout?
+  const isPaidFeaturesFlagOn = useFeatureFlag(FEATURE_FLAGS.PAID_FEATURES);
+
+  const isEnabled = isStripeWired && isPaidFeaturesFlagOn;
 
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  // Query subscription status (only when signed in AND Stripe is enabled)
+  // Query subscription status (only when signed in AND paid features are exposed)
   const subscriptionQuery = useQuery(
     api.stripe.getSubscriptionStatus,
-    isStripeEnabled && isSignedIn ? {} : "skip",
+    isEnabled && isSignedIn ? {} : "skip",
   );
 
   // Cache the last successful query result to prevent UI flash during revalidation.
@@ -124,8 +135,8 @@ export const useSubscription = (): UseSubscriptionReturn => {
 
   const createCheckout = useCallback(
     async (returnPath?: string) => {
-      if (!isStripeEnabled) {
-        return { error: "Stripe is not enabled" };
+      if (!isEnabled) {
+        return { error: "Subscriptions are not available" };
       }
       if (!isSignedIn) {
         return { error: "You must be logged in to subscribe" };
@@ -145,11 +156,11 @@ export const useSubscription = (): UseSubscriptionReturn => {
         throw error;
       }
     },
-    [isStripeEnabled, isSignedIn, createCheckoutSession],
+    [isEnabled, isSignedIn, createCheckoutSession],
   );
 
   const openPortal = useCallback(async () => {
-    if (!isStripeEnabled) {
+    if (!isEnabled) {
       return { error: "Stripe is not enabled" };
     }
     if (!isSignedIn) {
@@ -163,10 +174,11 @@ export const useSubscription = (): UseSubscriptionReturn => {
     } finally {
       setIsActionLoading(false);
     }
-  }, [isStripeEnabled, isSignedIn, createPortalSession]);
+  }, [isEnabled, isSignedIn, createPortalSession]);
 
-  // When Stripe is disabled, return disabled state
-  if (!isStripeEnabled) {
+  // When paid features are not exposed (env-disabled OR flag off), return
+  // a disabled state so subscription UI stays hidden.
+  if (!isEnabled) {
     return {
       alertEntitlements: anonymousAlertEntitlements,
       createCheckout,

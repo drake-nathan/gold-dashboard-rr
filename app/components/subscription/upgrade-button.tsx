@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { UpgradeDialog } from "@/components/subscription/upgrade-dialog";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/features/subscription/hooks/use-subscription";
-import { FEATURE_FLAGS, useFeatureFlag } from "@/lib/feature-flags";
 
 interface UpgradeButtonProps {
   className?: string;
@@ -34,7 +33,6 @@ export const UpgradeButton = ({
   const location = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { createCheckout, isActionLoading, isEnabled, isLoading, isPro } = useSubscription();
-  const isFlagEnabled = useFeatureFlag(FEATURE_FLAGS.ALERTS_BETA);
 
   const handleCheckout = useCallback(async () => {
     if (!isSignedIn) {
@@ -72,7 +70,7 @@ export const UpgradeButton = ({
   // Hide while loading to prevent flashing the upgrade button to Pro users
   // before their subscription status resolves. The dialog renders unconditionally
   // so its exit animation can't be interrupted by a re-render that unmounts the tree.
-  const showButton = isEnabled && isFlagEnabled && !isPro && !isLoading;
+  const showButton = isEnabled && !isPro && !isLoading;
 
   return (
     <>
