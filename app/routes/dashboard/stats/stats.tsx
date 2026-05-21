@@ -9,70 +9,78 @@ interface StatsProps {
   totalCashbackPercentage: number;
 }
 
+interface MarketAssetConfig {
+  assetType: DashboardMarketPrice["assetType"];
+  fractionDigits: number;
+  label: string;
+  valueColor: string;
+}
+
+const MARKET_ASSETS: MarketAssetConfig[] = [
+  {
+    assetType: "gold",
+    fractionDigits: 2,
+    label: "Gold (XAU)",
+    valueColor: "text-xl font-bold text-yellow-600 dark:text-yellow-400",
+  },
+  {
+    assetType: "silver",
+    fractionDigits: 2,
+    label: "Silver (XAG)",
+    valueColor: "text-xl font-bold text-slate-500 dark:text-slate-400",
+  },
+  {
+    assetType: "bitcoin",
+    fractionDigits: 0,
+    label: "Bitcoin (BTC)",
+    valueColor: "text-xl font-bold text-orange-600 dark:text-orange-400",
+  },
+  {
+    assetType: "sp500",
+    fractionDigits: 2,
+    label: "S&P 500",
+    valueColor: "text-xl font-bold text-blue-600 dark:text-blue-400",
+  },
+];
+
+const UNAVAILABLE_VALUE_CLASS = "text-xl font-bold text-muted-foreground";
+
 export const Stats = ({ lastFetch, marketPrices, totalCashbackPercentage }: StatsProps) => {
   const isClient = useIsClient();
-
-  // Find each asset in market prices
-  const gold = marketPrices.find((p) => p.assetType === "gold");
-  const silver = marketPrices.find((p) => p.assetType === "silver");
-  const bitcoin = marketPrices.find((p) => p.assetType === "bitcoin");
-  const sp500 = marketPrices.find((p) => p.assetType === "sp500");
 
   return (
     <div className="mb-6 flex flex-wrap justify-center gap-3 xl:justify-between">
       {/* Market Prices - grouped on desktop */}
       <div className="contents xl:flex xl:flex-wrap xl:gap-3">
-        {gold ? (
-          <StatCard
-            label="Gold (XAU)"
-            percentChange={gold.percentChange}
-            value={`$${gold.currentPrice.toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 2,
-            })}`}
-            valueColor="text-xl font-bold text-yellow-600 dark:text-yellow-400"
-            variant="market"
-          />
-        ) : null}
+        {MARKET_ASSETS.map((asset) => {
+          const price = marketPrices.find((p) => p.assetType === asset.assetType);
 
-        {silver ? (
-          <StatCard
-            label="Silver (XAG)"
-            percentChange={silver.percentChange}
-            value={`$${silver.currentPrice.toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 2,
-            })}`}
-            valueColor="text-xl font-bold text-slate-500 dark:text-slate-400"
-            variant="market"
-          />
-        ) : null}
+          if (!price) {
+            return (
+              <StatCard
+                key={asset.assetType}
+                label={`${asset.label} (unavailable)`}
+                value="—"
+                valueColor={UNAVAILABLE_VALUE_CLASS}
+                variant="market"
+              />
+            );
+          }
 
-        {bitcoin ? (
-          <StatCard
-            label="Bitcoin (BTC)"
-            percentChange={bitcoin.percentChange}
-            value={`$${bitcoin.currentPrice.toLocaleString("en-US", {
-              maximumFractionDigits: 0,
-              minimumFractionDigits: 0,
-            })}`}
-            valueColor="text-xl font-bold text-orange-600 dark:text-orange-400"
-            variant="market"
-          />
-        ) : null}
-
-        {sp500 ? (
-          <StatCard
-            label="S&P 500"
-            percentChange={sp500.percentChange}
-            value={`$${sp500.currentPrice.toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 2,
-            })}`}
-            valueColor="text-xl font-bold text-blue-600 dark:text-blue-400"
-            variant="market"
-          />
-        ) : null}
+          return (
+            <StatCard
+              key={asset.assetType}
+              label={asset.label}
+              percentChange={price.percentChange}
+              value={`$${price.currentPrice.toLocaleString("en-US", {
+                maximumFractionDigits: asset.fractionDigits,
+                minimumFractionDigits: asset.fractionDigits,
+              })}`}
+              valueColor={asset.valueColor}
+              variant="market"
+            />
+          );
+        })}
       </div>
 
       {/* Cashback and Timestamp - grouped on desktop */}

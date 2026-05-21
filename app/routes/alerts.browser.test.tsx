@@ -5,7 +5,7 @@ import { render } from "vitest-browser-react";
 import AlertsRoute from "./alerts";
 
 let mockAuthState = { isLoaded: true, isSignedIn: false };
-let mockAlerts: {
+interface MockAlert {
   _id: string;
   cooldownMinutes: number;
   enabled: boolean;
@@ -13,7 +13,8 @@ let mockAlerts: {
   pauseReason?: "billing_hold" | "inactive_subscription";
   triggerOn: "in_stock" | "price_drop" | "threshold_met";
   type: "category" | "sku" | "threshold";
-}[] = [];
+}
+let mockAlerts: MockAlert[] | undefined = [];
 let mockBrandOptions: string[] = [];
 let mockProductOptions: { metalType: string; name: string; productId: string }[] = [];
 let mockSubscription = {
@@ -162,6 +163,31 @@ test("shows sign-in gating when the alerts route is opened signed out", async ()
   await expect.element(screen.getByText("Mock Sign In")).toBeInTheDocument();
   expect(useQueryMock).not.toHaveBeenCalledWith("getAlerts", expect.anything());
   expect(useQueryMock).not.toHaveBeenCalledWith("getProductOptions", expect.anything());
+});
+
+test("shows the empty state with a create CTA when signed in with no alerts", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockAlerts = [];
+
+  const screen = await renderAlertsRoute("/alerts");
+
+  await expect.element(screen.getByText("No alerts yet")).toBeInTheDocument();
+  await expect
+    .element(screen.getByText("Create your first alert to get notified about deals and restocks."))
+    .toBeInTheDocument();
+  // The empty state surfaces a second Create Alert CTA inside the empty card,
+  // alongside the persistent header CTA.
+  const createAlertButtons = screen.getByRole("button", { name: "Create Alert" }).elements();
+  expect(createAlertButtons).toHaveLength(2);
+});
+
+test("shows the loading state while the alerts query is pending", async () => {
+  mockAuthState = { isLoaded: true, isSignedIn: true };
+  mockAlerts = undefined;
+
+  const screen = await renderAlertsRoute("/alerts");
+
+  await expect.element(screen.getByText("Loading alerts...")).toBeInTheDocument();
 });
 
 test("prefills the form from search params and creates a threshold alert when signed in", async () => {

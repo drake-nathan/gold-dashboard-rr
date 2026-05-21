@@ -2,7 +2,7 @@
 
 ## Now
 
-- Alerts: prod admin smoke-test (PostHog `alerts-beta`), then UI polish + test coverage → [.epics/alerts.md]
+- Alerts: error-state polish + remaining test coverage, then ramp `alerts-beta` to all signed-in users → [.epics/alerts.md]
 - Observability strategy docs + rollout plan → [.epics/observability-overhaul.md]
 
 ## Epics
@@ -14,7 +14,6 @@
 
 ## Up Next
 
-- Refactor alerts from standalone page to dashboard drawer → [.epics/alerts.md]
 - Define a canonical env schema and replace ad hoc env validation/access across app, Convex, Docker, and hosted config → [.epics/environment-config-hardening.md]
 - Standardize remaining UI primitive composition on Base UI `render` and reduce compatibility-only `asChild` usage
 - Remove temporary Convex `dashboard:getStats` compatibility query after stale cached clients age out

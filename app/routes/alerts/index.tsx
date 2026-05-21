@@ -1,6 +1,7 @@
 import { getAuth } from "@clerk/react-router/server";
-import { redirect } from "react-router";
+import { redirect, useRouteError } from "react-router";
 
+import { RouteErrorPage } from "@/components/ui/route-error-page";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { evaluateFeatureFlags } from "@/lib/feature-flags.server";
 
@@ -35,3 +36,15 @@ export const loader = async (args: Route.LoaderArgs) => {
 };
 
 export default AlertsPage;
+
+export const ErrorBoundary = () => {
+  const error = useRouteError();
+
+  return (
+    <RouteErrorPage
+      description="Something went wrong while loading your alerts. Your saved alerts are safe — refreshing usually fixes this."
+      error={error}
+      title="Couldn't load alerts"
+    />
+  );
+};

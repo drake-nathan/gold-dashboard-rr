@@ -5,12 +5,12 @@
 
 ## Goal
 
-Finish the alerts/subscriptions feature to production quality by tightening the route structure, closing the main UI polish gaps, and adding the missing route-level confidence for the user flows that already exist.
+Roll the alerts/subscriptions feature out to all signed-in users. The owner has been running a paid subscription against prod for several weeks; remaining work is targeted polish and a public flag rollout.
 
 ## Plan
 
-- Ship the alerts UI to prod behind a PostHog `alerts-beta` flag so admins can verify Stripe + Resend end-to-end before public exposure.
-- Once the closed beta validates the prod path, close the remaining UI polish and coverage gaps and roll the flag out.
+- Close the remaining UI polish gaps (error states, mobile) and any high-value coverage gaps.
+- Ramp the `alerts-beta` PostHog flag to all signed-in users.
 
 ## Completed
 
@@ -25,26 +25,27 @@ Finish the alerts/subscriptions feature to production quality by tightening the 
 
 ## Remaining
 
-- Confirm prod env vars before flipping the flag on (Stripe secrets/price IDs, Resend keys, `ENABLE_CRONS=true`, `ADMIN_USER_IDS` includes admin Clerk IDs). Smoke-test in prod end-to-end as an admin: create alert → trigger threshold → verify digest email.
-- Add focused route/browser tests for dashboard filters, alerts flows, and admin access, with alerts called out explicitly.
-  Source of truth: `TASKS.md` Up Next and `.tasks/route-test-coverage.md`
-- Polish the `/alerts` experience around empty/loading/error states and responsive behavior.
+- Polish the `/alerts` experience around error states and responsive behavior (empty + loading states already covered).
   Source of truth: this epic and `TASKS.md` Now
-- Refactor alerts from a standalone page to a drawer on the dashboard (list + create/edit dialogs stay as-is, nav opens drawer instead of navigating).
+- Add focused route/browser tests for the highest-value alerts flows still uncovered (digest preferences, edit/delete, upgrade gating).
   Source of truth: `TASKS.md` Up Next
-- Decide whether shared public chrome should move into a layout route for dashboard and alerts.
-  Source of truth: `TASKS.md` Up Next and `.tasks/public-layout-route.md`
 - Test alerts and subscription flows on real mobile devices.
   Source of truth: `TASKS.md` Up Next
-- Add fallback and observability follow-ups that materially affect alerts UX and supportability.
+- Add observability follow-ups that materially affect alerts UX and supportability.
   Source of truth: `TASKS.md` Up Next (`Fallback UI when market prices fail`, `Structured logs for alerts, checkout, and auth flows`)
 - Public rollout: ramp `alerts-beta` to all signed-in users in PostHog once the polish items above land.
 
+### Dropped from scope
+
+- Drawer refactor — owner prefers the standalone `/alerts` page; local stash exists if this is ever revisited.
+- Shared public chrome / layout route decision — not blocking launch; revisit independently.
+- Pre-launch prod env-var checklist and admin smoke-test — owner has been running a paid subscription against the prod flow for several weeks (2026-05-20).
+
 ## Exit Criteria
 
-- `/alerts` has focused browser coverage for signed-out gating and at least one signed-in happy path.
+- `/alerts` has focused browser coverage for signed-out gating, signed-in happy path, empty state, and loading state.
 - The alerts/subscription UI handles loading, empty, and error states intentionally on desktop and mobile.
-- Shared chrome decisions for dashboard/alerts are settled enough that alerts UI ownership is clear.
+- `alerts-beta` flag is rolled out to all signed-in users.
 - Remaining supportability gaps that directly affect alerts flows are either shipped or explicitly moved out of this epic.
 
 ## Decisions
