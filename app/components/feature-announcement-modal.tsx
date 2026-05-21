@@ -82,6 +82,16 @@ const getVisitCount = (): number => {
   }
 };
 
+// Dev-only override: append `?preview-announcement=1` to any URL in a dev
+// build to force the modal open, bypassing all gates (auth state, Pro
+// status, visit count, expiration, dismissal). Gated on the dev MODE so it
+// can never accidentally fire in a production build.
+const isDevPreview = (): boolean => {
+  if (import.meta.env.MODE !== "development") return false;
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("preview-announcement") === "1";
+};
+
 export const FeatureAnnouncementModal = () => {
   const isClient = useIsClient();
   const { isLoaded: isAuthLoaded, isSignedIn } = useAuth();
@@ -101,9 +111,10 @@ export const FeatureAnnouncementModal = () => {
 
   const shouldShow =
     isClient &&
-    (isSignedInEligible || isAnonymousEligible) &&
-    new Date() < EXPIRATION_DATE &&
-    !isDismissed();
+    (isDevPreview() ||
+      ((isSignedInEligible || isAnonymousEligible) &&
+        new Date() < EXPIRATION_DATE &&
+        !isDismissed()));
 
   const handleDismiss = () => {
     try {
