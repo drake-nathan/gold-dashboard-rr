@@ -16,7 +16,7 @@
 
 import { useAuth } from "@clerk/react-router";
 import { BellRingIcon, MailIcon, SparklesIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useIsClient } from "usehooks-ts";
 
@@ -123,6 +123,12 @@ export const FeatureAnnouncementModal = () => {
 
   const devPreview = getDevPreviewMode();
 
+  // In-memory dismissal mirror. localStorage alone isn't enough: writes to
+  // it don't trigger a re-render, so a click on Maybe Later wouldn't visibly
+  // close the modal until the next mount. We pair the localStorage write
+  // with this state so React knows to re-render and re-evaluate shouldShow.
+  const [hasDismissedInSession, setHasDismissedInSession] = useState(false);
+
   // Dev-only: when `?preview-announcement=fresh` is set, clear the dismissed
   // flag so the modal re-appears for re-testing. Effect is the right home
   // for this: it syncs the URL param to a browser API (localStorage), only
@@ -134,6 +140,9 @@ export const FeatureAnnouncementModal = () => {
     } catch {
       // ignore — preview is best-effort
     }
+    // Also reset the in-memory mirror in case the user dismissed earlier in
+    // the same React session and then navigated to `=fresh`.
+    setHasDismissedInSession(false);
   }, [devPreview]);
 
   const isPreviewing = devPreview !== "off";
@@ -142,9 +151,11 @@ export const FeatureAnnouncementModal = () => {
     isClient &&
     (isPreviewing || isSignedInEligible || isAnonymousEligible) &&
     new Date() < EXPIRATION_DATE &&
+    !hasDismissedInSession &&
     !isDismissed();
 
   const handleDismiss = () => {
+    setHasDismissedInSession(true);
     try {
       localStorage.setItem(DISMISSED_KEY, "true");
     } catch {
