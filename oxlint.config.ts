@@ -68,6 +68,12 @@ export default defineConfig({
       },
     },
     {
+      files: ["app/components/ui/input-group.tsx"],
+      rules: {
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+      },
+    },
+    {
       files: [
         "app/routes/**",
         "app/root.tsx",

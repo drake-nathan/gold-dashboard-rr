@@ -142,9 +142,10 @@ export const FeedbackButton = () => {
             Honeypot field — visually and assistively hidden, never tab-reachable.
             Real users will never fill this; bots scraping the form will.
           */}
-          <div aria-hidden="true" className="hidden" tabIndex={-1}>
-            <label htmlFor="feedback-website">Website</label>
+          <label aria-hidden="true" className="hidden" tabIndex={-1}>
+            Website
             <input
+              aria-label="Website"
               autoComplete="off"
               id="feedback-website"
               name="website"
@@ -155,7 +156,7 @@ export const FeedbackButton = () => {
               type="text"
               value={website}
             />
-          </div>
+          </label>
           <div className="space-y-2">
             <Label htmlFor="feedback-message">Message</Label>
             <Textarea

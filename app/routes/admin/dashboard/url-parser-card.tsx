@@ -75,16 +75,22 @@ export const UrlParserCard = () => {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex gap-2">
-          <input
-            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
-            onChange={(event) => {
-              setUrl(event.target.value);
-              setError(null);
-              setParsedSku(null);
-            }}
-            placeholder="Paste a Collect Pure product URL..."
-            value={url}
-          />
+          <label className="flex-1">
+            <span className="sr-only" id="pure-product-url-label">
+              Collect Pure product URL
+            </span>
+            <input
+              aria-labelledby="pure-product-url-label"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+              onChange={(event) => {
+                setUrl(event.target.value);
+                setError(null);
+                setParsedSku(null);
+              }}
+              placeholder="Paste a Collect Pure product URL..."
+              value={url}
+            />
+          </label>
           <Button onClick={parseUrl} size="sm">
             Parse
           </Button>

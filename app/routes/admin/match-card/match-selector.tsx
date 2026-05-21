@@ -56,11 +56,12 @@ export const MatchSelector = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium" htmlFor="pure-url-input">
+        <label className="text-sm font-medium" htmlFor="pure-url-input" id="pure-url-label">
           Paste Pure URL
         </label>
         <div className="mt-1 flex gap-2">
           <input
+            aria-labelledby="pure-url-label"
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
             id="pure-url-input"
             onChange={(event) => {
@@ -96,10 +97,11 @@ export const MatchSelector = ({
       </div>
 
       <div>
-        <label className="text-sm font-medium" htmlFor="pure-search-input">
+        <label className="text-sm font-medium" htmlFor="pure-search-input" id="pure-search-label">
           Search Pure Products
         </label>
         <input
+          aria-labelledby="pure-search-label"
           className="mt-1 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
           id="pure-search-input"
           onChange={(event) => {
