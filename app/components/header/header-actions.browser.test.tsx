@@ -51,7 +51,7 @@ const renderHeaderActions = (flags: FeatureFlagValues = {}) =>
   );
 
 test("renders sign-in and sign-up actions when signed out without querying admin status", async () => {
-  const screen = await renderHeaderActions();
+  const screen = await renderHeaderActions({ [FEATURE_FLAGS.PAID_FEATURES]: false });
 
   await expect.element(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: "Sign Up" })).toBeInTheDocument();
@@ -85,7 +85,7 @@ test("hides the alerts link when the paid-features flag is disabled", async () =
   mockShowWhen = "signed-in";
   mockAuthState = { isSignedIn: true };
 
-  const screen = await renderHeaderActions();
+  const screen = await renderHeaderActions({ [FEATURE_FLAGS.PAID_FEATURES]: false });
 
   expect(screen.container.textContent).not.toContain("Alerts");
   await expect.element(screen.getByRole("button", { name: "Upgrade to Pro" })).toBeInTheDocument();

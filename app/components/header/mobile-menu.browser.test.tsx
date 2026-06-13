@@ -58,7 +58,7 @@ const renderMobileMenu = (flags: FeatureFlagValues = {}) =>
   );
 
 test("shows signed-out auth actions without querying admin status", async () => {
-  const screen = await renderMobileMenu();
+  const screen = await renderMobileMenu({ [FEATURE_FLAGS.PAID_FEATURES]: false });
 
   await screen.getByRole("button", { name: "Open menu" }).click();
 
@@ -101,7 +101,7 @@ test("hides the alerts entry when the paid-features flag is disabled", async () 
   mockAuthState = { isSignedIn: true };
   mockSubscription = { isPro: true };
 
-  const screen = await renderMobileMenu();
+  const screen = await renderMobileMenu({ [FEATURE_FLAGS.PAID_FEATURES]: false });
 
   await screen.getByRole("button", { name: "Open menu" }).click();
 

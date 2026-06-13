@@ -126,7 +126,9 @@ test("returns disabled state when the paid-features flag is off", async () => {
   // Even with a subscription query result, flag-off must force the disabled state.
   mockQueryResult = { isPro: true, status: "active", userId: "user_123" };
 
-  const screen = await renderWithFlags(<TestComponent />, {});
+  const screen = await renderWithFlags(<TestComponent />, {
+    [FEATURE_FLAGS.PAID_FEATURES]: false,
+  });
 
   // Disabled-state shape: anonymous, not pro, not loading, no entitlements.
   await expect.element(screen.getByTestId("status")).toHaveTextContent("anonymous");
