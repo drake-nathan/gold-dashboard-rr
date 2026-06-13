@@ -1,5 +1,5 @@
 import { components } from "./_generated/api";
-import type { QueryCtx } from "./_generated/server";
+import type { ActionCtx } from "./_generated/server";
 import type { AuthUserIdentity } from "./lib/authIdentity";
 import {
   type AlertEntitlements,
@@ -8,7 +8,7 @@ import {
   type SubscriptionStatusResult,
 } from "./stripeUtils";
 
-type SubscriptionLookupCtx = Pick<QueryCtx, "runQuery">;
+type SubscriptionLookupCtx = Pick<ActionCtx, "runQuery">;
 type SubscriptionIdentity = AuthUserIdentity | string;
 
 export interface UserAlertEntitlementsResult {
