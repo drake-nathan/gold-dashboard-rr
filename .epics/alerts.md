@@ -1,16 +1,16 @@
 > **Status:** In Progress
 > **Started:** 2024-12-27
 
-# Alerts & Subscriptions
+# Alerts
 
 ## Goal
 
-Roll the alerts/subscriptions feature out to all signed-in users. The owner has been running a paid subscription against prod for several weeks; remaining work is targeted polish and a public flag rollout.
+Keep the `/alerts` feature healthy as a free, supported part of the dashboard. Paid-subscription monetization was **shelved 2026-06-13** (0 conversions in 3 weeks post-launch; pivoted to cutting infra cost + a donation button — see [.tasks/replace-unwrangle.md] and git history). Remaining work here is targeted polish and coverage, not a paid rollout.
 
 ## Plan
 
 - Close the remaining UI polish gaps (error states, mobile) and any high-value coverage gaps.
-- Ramp the `paid-features` PostHog flag to all signed-in users.
+- Decide alerts gating now that monetization is off the table: ungate to all signed-in users, or leave the `paid-features` flag dormant.
 
 ## Completed
 
@@ -33,7 +33,7 @@ Roll the alerts/subscriptions feature out to all signed-in users. The owner has 
   Source of truth: `TASKS.md` Up Next
 - Add observability follow-ups that materially affect alerts UX and supportability.
   Source of truth: `TASKS.md` Up Next (`Fallback UI when market prices fail`, `Structured logs for alerts, checkout, and auth flows`)
-- Public rollout: ramp `paid-features` to all signed-in users in PostHog once the polish items above land.
+- Decide alerts gating now that paid subs are shelved: ungate to all signed-in users, or leave the `paid-features` flag dormant.
 
 ### Dropped from scope
 
@@ -45,7 +45,7 @@ Roll the alerts/subscriptions feature out to all signed-in users. The owner has 
 
 - `/alerts` has focused browser coverage for signed-out gating, signed-in happy path, empty state, and loading state.
 - The alerts/subscription UI handles loading, empty, and error states intentionally on desktop and mobile.
-- `paid-features` flag is rolled out to all signed-in users.
+- Alerts gating decision made (ungate vs. dormant flag) and reflected in the UI.
 - Remaining supportability gaps that directly affect alerts flows are either shipped or explicitly moved out of this epic.
 
 ## Decisions
