@@ -2,7 +2,7 @@ import { v } from "convex/values";
 
 interface AuthCtx {
   auth: {
-    getUserIdentity(): Promise<null | { tokenIdentifier?: null | string }>;
+    getUserIdentity: () => Promise<null | { tokenIdentifier?: null | string }>;
   };
 }
 
