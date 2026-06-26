@@ -13,7 +13,7 @@ export default defineConfig(() => ({
         plugins: [["babel-plugin-react-compiler", {}]],
         presets: ["@babel/preset-typescript"],
       },
-      filter: /\.[jt]sx?$/u,
+      include: /\.[jt]sx?$/u,
     }),
     devtoolsJson(),
   ],

@@ -181,6 +181,8 @@ const getAllInStockProducts = async (ctx: MutationCtx) => {
 export const markUnseenProductsOutOfStockHelper = async (
   ctx: MutationCtx,
   args: {
+    /** Which stored field the seen set is matched against. Defaults to productId. */
+    matchField?: "productId" | "retailerId";
     seenProductIds: string[];
     timestamp: number;
   },
@@ -189,9 +191,13 @@ export const markUnseenProductsOutOfStockHelper = async (
   let productsUpdated = 0;
   const updatedProductIds: string[] = [];
   const seenIds = new Set(args.seenProductIds);
+  const matchField = args.matchField ?? "productId";
 
   for (const product of await getAllInStockProducts(ctx)) {
-    if (seenIds.has(product.productId)) {
+    const key = matchField === "retailerId" ? product.retailerId : product.productId;
+    // When matching on retailerId, a product with no retailerId can't be confirmed
+    // gone — leave it untouched rather than risk a false out-of-stock.
+    if (key == null || seenIds.has(key)) {
       continue;
     }
 

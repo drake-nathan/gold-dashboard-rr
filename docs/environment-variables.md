@@ -19,7 +19,10 @@ Comprehensive reference for managing environment variables across all environmen
 | `VITE_CONVEX_URL`            | Client          | Yes         | Yes          | Convex deployment URL                                                                                                                                                        |
 | `ENABLE_CRONS`               | Convex          | No          | Yes          | Enable cron jobs (prod only)                                                                                                                                                 |
 | **API Keys**                 |
-| `UNWRANGLE_API_KEY`          | Convex          | Yes         | No           | Costco product data API                                                                                                                                                      |
+| `UNWRANGLE_API_KEY`          | Convex          | Yes         | No           | Costco product data API (default provider)                                                                                                                                   |
+| `COSTCO_PROVIDER`            | Convex          | No          | No           | Costco data provider: `unwrangle` (default) or `bright`                                                                                                                      |
+| `BRIGHT_DATA_API_KEY`        | Convex          | No          | No           | Bright Data Web Unlocker key (required when `COSTCO_PROVIDER=bright`)                                                                                                        |
+| `BRIGHT_DATA_ZONE`           | Convex          | No          | No           | Bright Data Web Unlocker zone (default `gold_dashboard`)                                                                                                                     |
 | `PURE_API_KEY`               | Convex          | Yes         | No           | Collect Pure spot/bid prices                                                                                                                                                 |
 | `GOLD_API_KEY`               | Convex          | No          | No           | Gold API (not actively used)                                                                                                                                                 |
 | `FMP_API_KEY`                | Convex          | Yes         | No           | Financial Modeling Prep (S&P 500)                                                                                                                                            |
@@ -172,12 +175,22 @@ Railway preview deployments should use the **dev** Convex deployment and **test*
 
 All API keys are **shared** across environments (no test/prod split):
 
-| Variable            | Service                                                      | Dashboard                                   |
-| ------------------- | ------------------------------------------------------------ | ------------------------------------------- |
-| `UNWRANGLE_API_KEY` | [Unwrangle](https://unwrangle.com)                           | Costco product search & details             |
-| `PURE_API_KEY`      | Collect Pure                                                 | Spot prices and bid prices                  |
-| `GOLD_API_KEY`      | [Gold API](https://gold-api.com)                             | Not actively used (free tier needs no auth) |
-| `FMP_API_KEY`       | [Financial Modeling Prep](https://financialmodelingprep.com) | S&P 500 quotes                              |
+| Variable              | Service                                                      | Dashboard                                   |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------- |
+| `UNWRANGLE_API_KEY`   | [Unwrangle](https://unwrangle.com)                           | Costco product search & details             |
+| `BRIGHT_DATA_API_KEY` | [Bright Data](https://brightdata.com) Web Unlocker           | Alternative Costco provider (see below)     |
+| `PURE_API_KEY`        | Collect Pure                                                 | Spot prices and bid prices                  |
+| `GOLD_API_KEY`        | [Gold API](https://gold-api.com)                             | Not actively used (free tier needs no auth) |
+| `FMP_API_KEY`         | [Financial Modeling Prep](https://financialmodelingprep.com) | S&P 500 quotes                              |
+
+#### Switching the Costco provider
+
+The Costco feed can be served by either Unwrangle (default) or Bright Data Web Unlocker, selected with `COSTCO_PROVIDER`:
+
+- **Unwrangle** (`COSTCO_PROVIDER` unset or `unwrangle`): uses `UNWRANGLE_API_KEY`. Single `costco_search` call returns price + stock.
+- **Bright Data** (`COSTCO_PROVIDER=bright`): uses `BRIGHT_DATA_API_KEY` + `BRIGHT_DATA_ZONE` (default `gold_dashboard`, Web Unlocker zone with **Premium domains ON**). Costco does not server-render prices on the category page, so the Bright path discovers SKUs from the category page, then reads price + stock from each product detail page's `window.digitalData` block. Costco intermittently 502s, so each fetch retries up to 5×.
+
+To switch: set `COSTCO_PROVIDER=bright` and `BRIGHT_DATA_API_KEY` in Convex env. To fall back, unset `COSTCO_PROVIDER` (or set it to `unwrangle`). No code change or redeploy required.
 
 ### Clerk Authentication
 

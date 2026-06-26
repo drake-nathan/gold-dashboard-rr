@@ -5,7 +5,7 @@ import { internalAction, internalMutation, query } from "./_generated/server";
 import {
   fetchCostcoProductDetails,
   fetchCostcoSearchProducts,
-  getUnwrangleApiKey,
+  getCostcoApiKey,
 } from "./costco/api";
 import { manuallyMatchProductHelper, matchCostcoProductToPureHelper } from "./costco/matching";
 import {
@@ -18,12 +18,13 @@ import {
 export const fetchNewData = internalAction({
   args: {},
   handler: async (ctx) => {
-    const apiKey = getUnwrangleApiKey();
+    const apiKey = getCostcoApiKey();
     const timestamp = Date.now();
     let fetchRunId: string | undefined;
 
     try {
-      const { processedProducts, remainingCredits } = await fetchCostcoSearchProducts(apiKey);
+      const { discoveredItemNumbers, processedProducts, remainingCredits } =
+        await fetchCostcoSearchProducts(apiKey);
 
       console.info(
         `Found ${processedProducts.length} metal products (${
@@ -35,7 +36,6 @@ export const fetchNewData = internalAction({
       let priceChanges = 0;
       let stockChanges = 0;
       const updatedProductIds = new Set<string>();
-      const seenProductIds = new Set(processedProducts.map((product) => product.id));
 
       for (const product of processedProducts) {
         const result = await ctx.runMutation(internal.costco.upsertProduct, {
@@ -55,14 +55,31 @@ export const fetchNewData = internalAction({
         });
       }
 
+      // OOS sweep. Bright provides a catalog snapshot (item numbers from the
+      // category page), so we mark a product OOS only when it has truly dropped
+      // out of the catalog — matched against stored retailerId. A failed detail
+      // fetch leaves the product in the catalog set, so it keeps its last-known
+      // state instead of being wrongly marked out of stock. Unwrangle has no
+      // separate discovery step, so it falls back to "missing from search = OOS"
+      // matched on productId.
+      const outOfStockArgs =
+        discoveredItemNumbers === undefined
+          ? {
+              matchField: "productId" as const,
+              seenProductIds: processedProducts.map((product) => product.id),
+              timestamp,
+            }
+          : {
+              matchField: "retailerId" as const,
+              seenProductIds: discoveredItemNumbers,
+              timestamp,
+            };
+
       const outOfStockResult: {
         productsUpdated: number;
         stockChanges: number;
         updatedProductIds: string[];
-      } = await ctx.runMutation(internal.costco.markUnseenProductsOutOfStock, {
-        seenProductIds: [...seenProductIds],
-        timestamp,
-      });
+      } = await ctx.runMutation(internal.costco.markUnseenProductsOutOfStock, outOfStockArgs);
 
       stockChanges += outOfStockResult.stockChanges;
       productsUpdated += outOfStockResult.productsUpdated;
@@ -127,6 +144,7 @@ export const upsertProduct = internalMutation({
 
 export const markUnseenProductsOutOfStock = internalMutation({
   args: {
+    matchField: v.optional(v.union(v.literal("productId"), v.literal("retailerId"))),
     seenProductIds: v.array(v.string()),
     timestamp: v.number(),
   },
@@ -319,7 +337,7 @@ export const fetchProductDetails = internalAction({
     productId: v.string(),
     productUrl: v.string(),
   },
-  handler: (_ctx, args) => fetchCostcoProductDetails({ ...args, apiKey: getUnwrangleApiKey() }),
+  handler: (_ctx, args) => fetchCostcoProductDetails({ ...args, apiKey: getCostcoApiKey() }),
 });
 
 export const getInStockProductsForVerification = internalMutation({
