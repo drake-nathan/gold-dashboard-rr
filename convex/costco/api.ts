@@ -252,7 +252,7 @@ const fetchBrightProductDetails = async (
   if (!detail) {
     throw new Error(`Bright Data: could not parse product detail for ${args.productUrl}`);
   }
-  const price = Number.parseFloat(detail.priceMin || detail.priceMax);
+  const price = Number(detail.priceMin || detail.priceMax);
   return {
     brand: null,
     creditsRemaining: -1,

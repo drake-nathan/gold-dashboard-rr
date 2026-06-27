@@ -6,8 +6,7 @@ import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { evaluateFeatureFlags } from "@/lib/feature-flags.server";
 
 import type { Route } from "./+types/index";
-import { AlertsPage } from "./alerts-page";
-
+export { AlertsPage as default } from './alerts-page';
 export const meta = () => [
   { title: "Alerts - Dashboard.Gold" },
   {
@@ -35,7 +34,7 @@ export const loader = async (args: Route.LoaderArgs) => {
   return null;
 };
 
-export default AlertsPage;
+
 
 export const ErrorBoundary = () => {
   const error = useRouteError();

@@ -85,7 +85,7 @@ export const brightDetailToProcessed = (
   detail: BrightDetail,
   url: string,
 ): null | ProcessedProduct => {
-  const price = Number.parseFloat(detail.priceMin || detail.priceMax);
+  const price = Number(detail.priceMin || detail.priceMax);
   if (!Number.isFinite(price)) return null;
   const weight = deriveMetalWeight(detail.name);
   const raw: RawProduct = {

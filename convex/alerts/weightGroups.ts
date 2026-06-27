@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-export const troyOuncesPerGram = 1 / 31.103_476_8;
+export const troyOuncesPerGram = 1 / 31.1034768;
 export const categoryWeightToleranceOz = 0.05;
 
 export const categoryWeightGroupValidator = v.union(

@@ -16,7 +16,7 @@ import { modules } from "./test.setup";
 
 let seq = 0;
 
-const inStockProduct = (overrides: { name?: string; productId: string; retailerId: string; }) => ({
+const inStockProduct = (overrides: { name?: string; productId: string; retailerId: string }) => ({
   brand: null,
   categories: ["https://www.costco.com/precious-metals.html"],
   currentInStock: true,

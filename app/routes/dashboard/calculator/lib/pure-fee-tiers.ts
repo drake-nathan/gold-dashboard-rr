@@ -35,7 +35,7 @@ export const PURE_FEE_TIERS: PureFeeTier[] = [
     silverPlatPalladiumFeeRate: 0.0093, // 0.93%
   },
   {
-    bullionFeeRate: 0.006_25, // 0.625%
+    bullionFeeRate: 0.00625, // 0.625%
     id: "pure-gold",
     name: "Pure Gold",
     requiredQuarterlySales: 300_000,

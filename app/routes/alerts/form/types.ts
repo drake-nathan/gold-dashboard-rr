@@ -120,7 +120,7 @@ export const buildAlertPayload = (values: AlertFormValues, productOptions?: Prod
   }
 
   if (values.formType === "threshold") {
-    const parsedAboveSpot = Number.parseFloat(values.aboveSpotThreshold);
+    const parsedAboveSpot = Number(values.aboveSpotThreshold);
     payload.aboveSpotThreshold =
       values.aboveSpotThreshold.trim() && Number.isFinite(parsedAboveSpot) ? parsedAboveSpot : null;
     payload.metalType = values.thresholdMetal || null;

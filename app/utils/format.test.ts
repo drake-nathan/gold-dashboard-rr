@@ -75,11 +75,11 @@ test("formatPercentage formats negative percentages", () => {
 });
 
 test("formatPercentage respects custom decimal places", () => {
-  expect(formatPercentage(5.123_45, 0)).toBe("5%");
-  expect(formatPercentage(5.123_45, 1)).toBe("5.1%");
-  expect(formatPercentage(5.123_45, 2)).toBe("5.12%");
-  expect(formatPercentage(5.123_45, 3)).toBe("5.123%");
-  expect(formatPercentage(5.123_45, 4)).toBe("5.1235%"); // toFixed uses banker's rounding
+  expect(formatPercentage(5.12345, 0)).toBe("5%");
+  expect(formatPercentage(5.12345, 1)).toBe("5.1%");
+  expect(formatPercentage(5.12345, 2)).toBe("5.12%");
+  expect(formatPercentage(5.12345, 3)).toBe("5.123%");
+  expect(formatPercentage(5.12345, 4)).toBe("5.1235%"); // toFixed uses banker's rounding
 });
 
 test("formatPercentage rounds correctly with custom decimals", () => {

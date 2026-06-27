@@ -217,7 +217,7 @@ test("calculates net profit percentage correctly", () => {
   // Costco price: $4000
   // Percentage: ($30.75 / $4000) * 100 = 0.76875%
 
-  expect(result.netProfitPercentage).toBeCloseTo(0.768_75, 4);
+  expect(result.netProfitPercentage).toBeCloseTo(0.76875, 4);
 });
 
 // ============================================================================

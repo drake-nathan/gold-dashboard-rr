@@ -167,7 +167,7 @@ export const CardManagerDrawer = ({
       signupBonusEnabled: card.signupBonus?.enabled ?? false,
       signupBonusPoints: card.signupBonus?.pointsBonus ?? 0,
       signupBonusSpend: card.signupBonus?.spendRequirement ?? 0,
-      valuePerPointCents: Number.parseFloat((card.valuePerPoint * 100).toFixed(2)), // Convert dollars to cents and round to 2 decimals
+      valuePerPointCents: Number((card.valuePerPoint * 100).toFixed(2)), // Convert dollars to cents and round to 2 decimals
     });
     setEditMode({ cardId: card.id, type: "edit" });
   };
@@ -424,7 +424,7 @@ export const CardManagerDrawer = ({
                               field.onBlur();
                             }}
                             onChange={(e) => {
-                              field.onChange(Number.parseFloat(e.target.value));
+                              field.onChange(Number(e.target.value));
                             }}
                             placeholder="1.5"
                             ref={field.ref}
@@ -456,7 +456,7 @@ export const CardManagerDrawer = ({
                               field.onBlur();
                             }}
                             onChange={(e) => {
-                              field.onChange(Number.parseFloat(e.target.value));
+                              field.onChange(Number(e.target.value));
                             }}
                             placeholder="2.1"
                             ref={field.ref}
@@ -512,7 +512,7 @@ export const CardManagerDrawer = ({
                                     field.onBlur();
                                   }}
                                   onChange={(e) => {
-                                    field.onChange(Number.parseFloat(e.target.value));
+                                    field.onChange(Number(e.target.value));
                                   }}
                                   placeholder="60000"
                                   ref={field.ref}
@@ -546,7 +546,7 @@ export const CardManagerDrawer = ({
                                     field.onBlur();
                                   }}
                                   onChange={(e) => {
-                                    field.onChange(Number.parseFloat(e.target.value));
+                                    field.onChange(Number(e.target.value));
                                   }}
                                   placeholder="4000"
                                   ref={field.ref}

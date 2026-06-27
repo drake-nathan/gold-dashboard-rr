@@ -68,7 +68,7 @@ export const extractWeightInOz = (metalWeight: null | string): null | number => 
   );
 
   if (weightMatch?.groups?.weight && weightMatch.groups.unit) {
-    const weight = Number.parseFloat(weightMatch.groups.weight);
+    const weight = Number(weightMatch.groups.weight);
     const unit = weightMatch.groups.unit.toLowerCase();
 
     if (unit === "gram" || unit === "g") {
@@ -140,13 +140,13 @@ export const extractCountMultiplier = (name: string): number => {
   // Match patterns like "20-count", "20 count", "20-pack", "20 pack"
   const countMatch = /(?<count>\d+)[\s-]*(?<unit>count|pack|piece|pc)/iu.exec(lowerName);
   if (countMatch?.groups?.count) {
-    return Number.parseInt(countMatch.groups.count, 10);
+    return Math.trunc(Number(countMatch.groups.count));
   }
 
   // Match patterns like "box of 20", "set of 20"
   const ofMatch = /(?<container>box|set|pack)\s+of\s+(?<count>\d+)/iu.exec(lowerName);
   if (ofMatch?.groups?.count) {
-    return Number.parseInt(ofMatch.groups.count, 10);
+    return Math.trunc(Number(ofMatch.groups.count));
   }
 
   return 1;

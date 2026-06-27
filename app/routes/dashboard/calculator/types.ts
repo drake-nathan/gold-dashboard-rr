@@ -1,8 +1,5 @@
-import {
-  type CreditCard,
-  calculateCashbackPercentage,
-} from "@/features/credit-cards/lib/credit-cards";
-
+import {type CreditCard, calculateCashbackPercentage} from "@/features/credit-cards/lib/credit-cards";
+export { type CreditCard } from '@/features/credit-cards/lib/credit-cards';
 import type { PureFeeTier } from "./lib/pure-fee-tiers";
 
 // Legacy type for backward compatibility
@@ -23,7 +20,7 @@ export const toLegacyCard = (card: CreditCard): LegacyCreditCard => ({
 });
 
 // Export the new type as well
-export type { CreditCard };
+
 
 export interface CalculatorSettings {
   costcoMembershipEnabled: boolean;

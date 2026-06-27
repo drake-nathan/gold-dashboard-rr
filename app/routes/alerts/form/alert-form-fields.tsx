@@ -258,7 +258,7 @@ export const AlertFormFields = ({
           modal={false}
           onValueChange={(value) => {
             if (!value) return;
-            onChange({ cooldownMinutes: Number.parseInt(value, 10) });
+            onChange({ cooldownMinutes: Math.trunc(Number(value)) });
           }}
           value={String(values.cooldownMinutes)}
         >
