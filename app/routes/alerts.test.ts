@@ -1,8 +1,7 @@
+import type { LoaderFunctionArgs } from "react-router";
 import { expect, test, vi } from "vitest";
 
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
-
-import type { Route } from "./alerts/+types/index";
 
 const getAuthMock = vi.fn();
 const evaluateFeatureFlagsMock = vi.fn();
@@ -15,7 +14,7 @@ vi.mock("@/lib/feature-flags.server", () => ({
   evaluateFeatureFlags: evaluateFeatureFlagsMock,
 }));
 
-const createLoaderArgs = (): Route.LoaderArgs => ({
+const createLoaderArgs = (): LoaderFunctionArgs => ({
   context: new Map(),
   params: {},
   pattern: "/alerts",

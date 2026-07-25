@@ -1,11 +1,9 @@
 import { getAuth } from "@clerk/react-router/server";
-import { redirect, useRouteError } from "react-router";
+import { type LoaderFunctionArgs, redirect, useRouteError } from "react-router";
 
 import { RouteErrorPage } from "@/components/ui/route-error-page";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { evaluateFeatureFlags } from "@/lib/feature-flags.server";
-
-import type { Route } from "./+types/index";
 
 export { AlertsPage as default } from "./alerts-page";
 export const meta = () => [
@@ -17,7 +15,9 @@ export const meta = () => [
   { content: "noindex, nofollow", name: "robots" },
 ];
 
-export const loader = async (args: Route.LoaderArgs) => {
+// Route is unhooked from routes.ts (site shut down), so the generated
+// `./+types/index` no longer exists — use the framework arg type directly.
+export const loader = async (args: LoaderFunctionArgs) => {
   const auth = await getAuth(args);
   // Signed-out users see the in-page sign-in prompt; they can't reach gated UI
   // until they authenticate, at which point this loader re-runs.

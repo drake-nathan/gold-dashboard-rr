@@ -5,7 +5,6 @@ import { useRouteError } from "react-router";
 
 import { RouteErrorPage } from "@/components/ui/route-error-page";
 
-import type { Route } from "./+types/index";
 import { DashboardContent } from "./dashboard-content";
 import { type DashboardStats } from "./types";
 
@@ -73,7 +72,9 @@ export const loader = async () => {
   return { preloadedProducts, preloadedSummary };
 };
 
-const Home = ({ loaderData }: Route.ComponentProps) => {
+// Route is unhooked from routes.ts (site shut down), so the generated
+// `./+types/index` no longer exists — derive props from the loader instead.
+const Home = ({ loaderData }: { loaderData: Awaited<ReturnType<typeof loader>> }) => {
   const summary = usePreloadedQuery(loaderData.preloadedSummary);
   const products = usePreloadedQuery(loaderData.preloadedProducts);
 
