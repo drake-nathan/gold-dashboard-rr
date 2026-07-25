@@ -1,11 +1,6 @@
 import { createContext, useContext } from "react";
 
-export type UpgradeFlowSource =
-  | "alerts_page"
-  | "announcement_modal"
-  | "header"
-  | "mobile_menu"
-  | "product_card";
+export type UpgradeFlowSource = "alerts_page" | "header" | "mobile_menu" | "product_card";
 
 export interface UpgradeFlowContextValue {
   open: (source: UpgradeFlowSource) => void;

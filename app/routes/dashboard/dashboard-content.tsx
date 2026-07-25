@@ -2,7 +2,6 @@ import { usePostHog } from "posthog-js/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useIsClient } from "usehooks-ts";
 
-import { FeatureAnnouncementModal } from "@/components/feature-announcement-modal";
 import { ErrorBoundary as UIErrorBoundary } from "@/components/ui/error-boundary";
 
 import { CalculatorSettingsDrawer } from "./calculator/calculator-settings-drawer";
@@ -136,86 +135,82 @@ export const DashboardContent = ({ stats }: DashboardContentProps) => {
   ]);
 
   return (
-    <>
-      <main className="container mx-auto flex-1 px-4 py-6">
-        <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
-          <Stats
-            lastFetch={stats.lastFetch}
-            marketPrices={stats.marketPrices}
-            totalCashbackPercentage={totalCashbackPercentage}
-          />
-        </UIErrorBoundary>
-
-        <Filters
-          availableCards={availableCards}
-          calculatorSettings={calculatorSettings}
-          isClientReady={isClient}
-          metalFilter={metalFilter}
-          onOpenCardManager={() => {
-            setCardManagerOpen(true);
-          }}
-          onOpenSettings={() => {
-            setSettingsDrawerOpen(true);
-          }}
-          setCalculatorSettings={(settings) => {
-            void updateCalculatorSettings(settings);
-          }}
-          setMetalFilter={setMetalFilter}
-          setShowOutOfStock={setShowOutOfStock}
-          setSortOption={setSortOption}
-          showOutOfStock={showOutOfStock}
-          sortOption={sortOption}
+    <main className="container mx-auto flex-1 px-4 py-6">
+      <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
+        <Stats
+          lastFetch={stats.lastFetch}
+          marketPrices={stats.marketPrices}
+          totalCashbackPercentage={totalCashbackPercentage}
         />
+      </UIErrorBoundary>
 
-        <CardManagerDrawer
-          cards={availableCards}
-          onCardsChange={(cards, selectCardId) => {
-            void handleCardsChange(cards, selectCardId);
-          }}
-          onClose={() => {
-            setCardManagerOpen(false);
-          }}
-          onResetAll={handleResetAll}
-          open={cardManagerOpen}
-        />
+      <Filters
+        availableCards={availableCards}
+        calculatorSettings={calculatorSettings}
+        isClientReady={isClient}
+        metalFilter={metalFilter}
+        onOpenCardManager={() => {
+          setCardManagerOpen(true);
+        }}
+        onOpenSettings={() => {
+          setSettingsDrawerOpen(true);
+        }}
+        setCalculatorSettings={(settings) => {
+          void updateCalculatorSettings(settings);
+        }}
+        setMetalFilter={setMetalFilter}
+        setShowOutOfStock={setShowOutOfStock}
+        setSortOption={setSortOption}
+        showOutOfStock={showOutOfStock}
+        sortOption={sortOption}
+      />
 
-        <CalculatorSettingsDrawer
-          calculatorSettings={calculatorSettings}
-          onOpenCardManager={() => {
-            setCardManagerOpen(true);
-          }}
-          onOpenChange={setSettingsDrawerOpen}
-          open={settingsDrawerOpen}
-          setCalculatorSettings={(settings) => {
-            void updateCalculatorSettings(settings);
-          }}
-        />
+      <CardManagerDrawer
+        cards={availableCards}
+        onCardsChange={(cards, selectCardId) => {
+          void handleCardsChange(cards, selectCardId);
+        }}
+        onClose={() => {
+          setCardManagerOpen(false);
+        }}
+        onResetAll={handleResetAll}
+        open={cardManagerOpen}
+      />
 
-        {sortedProducts.length === 0 ? (
-          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
-            <div className="text-center">
-              <p className="text-lg font-medium text-muted-foreground">No products found</p>
-              <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
-            </div>
+      <CalculatorSettingsDrawer
+        calculatorSettings={calculatorSettings}
+        onOpenCardManager={() => {
+          setCardManagerOpen(true);
+        }}
+        onOpenChange={setSettingsDrawerOpen}
+        open={settingsDrawerOpen}
+        setCalculatorSettings={(settings) => {
+          void updateCalculatorSettings(settings);
+        }}
+      />
+
+      {sortedProducts.length === 0 ? (
+        <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
+          <div className="text-center">
+            <p className="text-lg font-medium text-muted-foreground">No products found</p>
+            <p className="text-sm text-muted-foreground">Try adjusting your filters</p>
           </div>
-        ) : (
-          <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
-              {sortedProducts.map((product) => (
-                <ProductCard
-                  calculations={productCalculationsByProduct.get(product)}
-                  calculatorSettings={calculatorSettings}
-                  key={product.productId}
-                  marketPrices={stats.marketPrices}
-                  product={product}
-                />
-              ))}
-            </div>
-          </UIErrorBoundary>
-        )}
-      </main>
-
-      <FeatureAnnouncementModal />
-    </>
+        </div>
+      ) : (
+        <UIErrorBoundary showDetails={import.meta.env.MODE === "development"}>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(350px,1fr))]">
+            {sortedProducts.map((product) => (
+              <ProductCard
+                calculations={productCalculationsByProduct.get(product)}
+                calculatorSettings={calculatorSettings}
+                key={product.productId}
+                marketPrices={stats.marketPrices}
+                product={product}
+              />
+            ))}
+          </div>
+        </UIErrorBoundary>
+      )}
+    </main>
   );
 };

@@ -2,8 +2,8 @@
  * Upgrade Flow Provider
  *
  * Owns the open state of the global UpgradeDialog so any surface — header
- * button, announcement modal, alerts page banner, product card upsell — can
- * trigger checkout without re-implementing the open/close + Stripe glue.
+ * button, alerts page banner, product card upsell — can trigger checkout
+ * without re-implementing the open/close + Stripe glue.
  *
  * Every caller passes a `source` identifier so `upgrade_dialog_opened` lands
  * in PostHog with consistent attribution. That funnel property is the whole

@@ -126,10 +126,6 @@ vi.mock("./dashboard/cards/card-manager-drawer", () => ({
   CardManagerDrawer: () => null,
 }));
 
-vi.mock("@/components/feature-announcement-modal", () => ({
-  FeatureAnnouncementModal: () => null,
-}));
-
 const baseLoaderData = {
   preloadedProducts: {
     goldProducts: [

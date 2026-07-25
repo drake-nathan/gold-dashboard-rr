@@ -80,7 +80,6 @@ export default defineConfig({
         "app/routes/dashboard/hooks/use-dashboard-filters.ts",
         "app/features/subscription/hooks/use-subscription.ts",
         "app/features/observability/observability-sync.tsx",
-        "app/components/feature-announcement-modal.tsx",
       ],
       rules: {
         "react/react-compiler": "off",
