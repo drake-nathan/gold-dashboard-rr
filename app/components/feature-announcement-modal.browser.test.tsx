@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
 import type * as FeatureFlagsModule from "@/lib/feature-flags";
@@ -67,6 +67,11 @@ const importModal = async () => {
 };
 
 beforeEach(() => {
+  // The modal self-expires at EXPIRATION_DATE (2026-07-01), so these tests must
+  // pin the clock inside the announcement window or they start failing once
+  // that date passes. Fake only Date — browser-mode element polling needs real
+  // timers to make progress.
+  vi.useFakeTimers({ now: new Date("2026-06-01T12:00:00"), toFake: ["Date"] });
   localStorage.clear();
   sessionStorage.clear();
   mockAuthState = { isLoaded: true, isSignedIn: true };
@@ -78,6 +83,10 @@ beforeEach(() => {
   captureMock.mockClear();
   openUpgradeFlowMock.mockClear();
   vi.resetModules();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 // =============================================================================

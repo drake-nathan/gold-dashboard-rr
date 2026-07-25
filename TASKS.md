@@ -16,7 +16,10 @@
 
 ## Up Next
 
+- Migrate local env to varlock + 1Password (in progress) → [.tasks/varlock-migration.md]
 - Define a canonical env schema and replace ad hoc env validation/access across app, Convex, Docker, and hosted config → [.epics/environment-config-hardening.md]
+- Fix react-compiler refs-during-render violations in `app/features/subscription/hooks/use-subscription.ts` (17 warnings, baselined off in `oxlint.config.ts`)
+- Decide the fate of the feature announcement modal — its `EXPIRATION_DATE` (2026-07-01) has passed, so `app/components/feature-announcement-modal.tsx` no longer renders in prod: extend the window or delete the component
 - Standardize remaining UI primitive composition on Base UI `render` and reduce compatibility-only `asChild` usage
 - Remove temporary Convex `dashboard:getStats` compatibility query after stale cached clients age out
 - Fix dashboard filter URL updates so rapid changes do not clobber other search params → [.tasks/dashboard-filter-url-state.md]

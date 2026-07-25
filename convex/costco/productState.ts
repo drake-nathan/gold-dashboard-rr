@@ -197,7 +197,7 @@ export const markUnseenProductsOutOfStockHelper = async (
     const key = matchField === "retailerId" ? product.retailerId : product.productId;
     // When matching on retailerId, a product with no retailerId can't be confirmed
     // gone — leave it untouched rather than risk a false out-of-stock.
-    if (key == null || seenIds.has(key)) {
+    if (!key || seenIds.has(key)) {
       continue;
     }
 

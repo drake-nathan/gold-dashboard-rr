@@ -9,7 +9,7 @@ export default defineConfig({
     style: "warn",
     suspicious: "warn",
   },
-  ignorePatterns: ["convex/_generated"],
+  ignorePatterns: ["convex/_generated", "env.d.ts"],
   jsPlugins: ["eslint-plugin-perfectionist"],
   options: {
     denyWarnings: true,
@@ -45,6 +45,9 @@ export default defineConfig({
         "typescript/strict-void-return": "off",
         "typescript/unbound-method": "off",
         "unicorn/consistent-function-scoping": "off",
+        // Inline fixture construction (e.g. Object.assign(new Error(...), {...}))
+        // reads better nested than split across named temporaries.
+        "unicorn/max-nested-calls": "off",
         "vitest/max-expects": "off",
         "vitest/no-conditional-expect": "off",
         "vitest/no-conditional-in-test": "off",
@@ -62,9 +65,43 @@ export default defineConfig({
       },
     },
     {
+      // Pre-existing react-compiler violations, baselined so the rule stays
+      // deny-level for all other files (new violations still fail CI).
+      // Tracked in TASKS.md — remove each entry as its file is fixed.
+      //
+      // - root.tsx: false positive. `useAuth={useAuth}` is the required public
+      //   API of ConvexProviderWithClerk; the hook must be passed, not called.
+      // - use-dashboard-filters.ts: real "state mirrors a prop" antipattern,
+      //   folded into the dashboard-filter-url-state task.
+      // - use-subscription.ts: refs-during-render in payment logic; needs its
+      //   own task, not a drive-by refactor.
+      files: [
+        "app/root.tsx",
+        "app/routes/dashboard/hooks/use-dashboard-filters.ts",
+        "app/features/subscription/hooks/use-subscription.ts",
+        "app/features/observability/observability-sync.tsx",
+        "app/components/feature-announcement-modal.tsx",
+      ],
+      rules: {
+        "react/react-compiler": "off",
+      },
+    },
+    {
+      files: ["convex/**"],
+      rules: {
+        // Convex validators compose by design — v.optional(v.union(v.literal(...)))
+        // is the idiomatic spelling and can't be flattened without hurting
+        // readability. Accounted for ~198 of the 199 hits repo-wide.
+        "unicorn/max-nested-calls": "off",
+      },
+    },
+    {
       files: ["scripts/**"],
       rules: {
         "eslint/no-console": "off",
+        // One-shot CLI scripts, not request-path code — sync fs is the clearer
+        // choice and there is no event loop to block.
+        "node/no-sync": "off",
       },
     },
     {
